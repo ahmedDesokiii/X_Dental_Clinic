@@ -1,4 +1,4 @@
-﻿namespace SchoolPsychologist.Constants
+﻿namespace Dental.Constants
 {
     public class Permissions
     {

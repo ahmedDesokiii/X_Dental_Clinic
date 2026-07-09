@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using SchoolPsychologist.Data;
+using Dental.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 //var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ?? throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");;
@@ -95,9 +95,9 @@ using (var scope = app.Services.CreateScope())
     {
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
-        await SchoolPsychologist.Seeds.DefaultRoles.SeedAsync(userManager, roleManager);
-        await SchoolPsychologist.Seeds.DefaultUsers.SeedUserAsync(userManager, roleManager);
-        await SchoolPsychologist.Seeds.DefaultUsers.SeedAdminAsync(userManager, roleManager);
+        await Dental.Seeds.DefaultRoles.SeedAsync(userManager, roleManager);
+        await Dental.Seeds.DefaultUsers.SeedUserAsync(userManager, roleManager);
+        await Dental.Seeds.DefaultUsers.SeedAdminAsync(userManager, roleManager);
 
         logger.LogInformation("Finished Seeding Default Data");
         logger.LogInformation("Application Starting");

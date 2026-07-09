@@ -1,4 +1,4 @@
-﻿namespace SchoolPsychologist.Models.User
+﻿namespace Dental.Models.User
 {
     public class ApplicationRole : IdentityRole<int>
     {

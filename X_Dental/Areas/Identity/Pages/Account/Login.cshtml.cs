@@ -4,7 +4,7 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace SchoolPsychologist.Areas.Identity.Pages.Account
+namespace Dental.Areas.Identity.Pages.Account
 {
     [AllowAnonymous]
     public class LoginModel : PageModel

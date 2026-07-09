@@ -1,4 +1,4 @@
-﻿namespace SchoolPsychologist.ViewModels.User
+﻿namespace Dental.ViewModels.User
 {
     public class CheckBoxViewModel
     {

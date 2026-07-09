@@ -1,11 +1,11 @@
 ﻿
 global using Microsoft.EntityFrameworkCore;
 global using System.Data;
-global using SchoolPsychologist.Models.User;
-global using SchoolPsychologist.Constants;
-global using SchoolPsychologist.Data;
-global using SchoolPsychologist.Filters;
-global using SchoolPsychologist.Models;
+global using Dental.Models.User;
+global using Dental.Constants;
+global using Dental.Data;
+global using Dental.Filters;
+global using Dental.Models;
 global using Microsoft.AspNetCore.Authentication;
 global using Microsoft.AspNetCore.Authorization;
 global using Microsoft.AspNetCore.Identity;
@@ -28,4 +28,4 @@ global using System.Text.Json;
 global using System.Text.Json.Serialization;
 global using System.Globalization;
 global using JsonSerializer = System.Text.Json.JsonSerializer;
-global using SchoolPsychologist.ViewModels.User;
+global using Dental.ViewModels.User;

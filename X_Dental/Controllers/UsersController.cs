@@ -1,4 +1,4 @@
-﻿namespace SchoolPsychologist.Controllers
+﻿namespace Dental.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class UsersController : Controller

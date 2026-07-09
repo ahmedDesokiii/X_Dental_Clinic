@@ -11,9 +11,9 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
-using SchoolPsychologist.Models.User;
+using Dental.Models.User;
 
-namespace SchoolPsychologist.Areas.Identity.Pages.Account
+namespace Dental.Areas.Identity.Pages.Account
 {
     public class LoginWith2faModel : PageModel
     {

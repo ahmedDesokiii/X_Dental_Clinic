@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using SchoolPsychologist.Models;
+using Dental.Models;
 using System.Diagnostics;
 
-namespace SchoolPsychologist.Controllers
+namespace Dental.Controllers
 {
     public class HomeController : Controller
     {

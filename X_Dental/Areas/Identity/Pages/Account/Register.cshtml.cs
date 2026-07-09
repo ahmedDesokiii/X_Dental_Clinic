@@ -18,9 +18,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-using SchoolPsychologist.Models.User;
+using Dental.Models.User;
 
-namespace SchoolPsychologist.Areas.Identity.Pages.Account
+namespace Dental.Areas.Identity.Pages.Account
 {
     public class RegisterModel : PageModel
     {

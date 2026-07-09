@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using SchoolPsychologist.Data;
+using Dental.Data;
 
 #nullable disable
 
-namespace SchoolPsychologist.Data.Migrations
+namespace Dental.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20260420150944_CreateUsers")]
@@ -128,7 +128,7 @@ namespace SchoolPsychologist.Data.Migrations
                     b.ToTable("ERP_UserToken", (string)null);
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.User.ApplicationRole", b =>
+            modelBuilder.Entity("Dental.Models.User.ApplicationRole", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -162,7 +162,7 @@ namespace SchoolPsychologist.Data.Migrations
                     b.ToTable("ERP_Roles", (string)null);
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.User.ApplicationUser", b =>
+            modelBuilder.Entity("Dental.Models.User.ApplicationUser", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -264,7 +264,7 @@ namespace SchoolPsychologist.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
-                    b.HasOne("SchoolPsychologist.Models.User.ApplicationRole", null)
+                    b.HasOne("Dental.Models.User.ApplicationRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -273,7 +273,7 @@ namespace SchoolPsychologist.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
                 {
-                    b.HasOne("SchoolPsychologist.Models.User.ApplicationUser", null)
+                    b.HasOne("Dental.Models.User.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -282,7 +282,7 @@ namespace SchoolPsychologist.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
                 {
-                    b.HasOne("SchoolPsychologist.Models.User.ApplicationUser", null)
+                    b.HasOne("Dental.Models.User.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -291,13 +291,13 @@ namespace SchoolPsychologist.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
                 {
-                    b.HasOne("SchoolPsychologist.Models.User.ApplicationRole", null)
+                    b.HasOne("Dental.Models.User.ApplicationRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SchoolPsychologist.Models.User.ApplicationUser", null)
+                    b.HasOne("Dental.Models.User.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -306,7 +306,7 @@ namespace SchoolPsychologist.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
-                    b.HasOne("SchoolPsychologist.Models.User.ApplicationUser", null)
+                    b.HasOne("Dental.Models.User.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using SchoolPsychologist.Models.User;
+using Dental.Models.User;
 
-namespace SchoolPsychologist.Areas.Identity.Pages.Account.Manage
+namespace Dental.Areas.Identity.Pages.Account.Manage
 {
     public class SetPasswordModel : PageModel
     {

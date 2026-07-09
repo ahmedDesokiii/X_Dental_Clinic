@@ -1,5 +1,5 @@
 ﻿
-namespace SchoolPsychologist.Models.User
+namespace Dental.Models.User
 {
     public class ApplicationUser : IdentityUser<int>
     {

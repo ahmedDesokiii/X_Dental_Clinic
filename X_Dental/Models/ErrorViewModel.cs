@@ -1,4 +1,4 @@
-namespace SchoolPsychologist.Models
+namespace Dental.Models
 {
     public class ErrorViewModel
     {

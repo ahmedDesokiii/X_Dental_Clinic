@@ -1,11 +1,11 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
-using SchoolPsychologist.Models;
-using SchoolPsychologist.Models.User;
-using SchoolPsychologist.Models.User;
+using Dental.Models;
+using Dental.Models.User;
+using Dental.Models.User;
 using System.Reflection.Emit;
 
-namespace SchoolPsychologist.Data
+namespace Dental.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, int>
     {

@@ -1,4 +1,4 @@
-﻿namespace SchoolPsychologist.Filters
+﻿namespace Dental.Filters
 {
     public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
     {

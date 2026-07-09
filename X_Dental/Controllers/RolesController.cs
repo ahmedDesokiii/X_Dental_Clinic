@@ -1,7 +1,7 @@
-﻿using SchoolPsychologist.Models.User;
-using SchoolPsychologist.ViewModels.User;
+﻿using Dental.Models.User;
+using Dental.ViewModels.User;
 
-namespace SchoolPsychologist.Controllers
+namespace Dental.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class RolesController : Controller

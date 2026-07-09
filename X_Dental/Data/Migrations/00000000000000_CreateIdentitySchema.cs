@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Migrations;
 using System;
 
-namespace SchoolPsychologist.Data.Migrations
+namespace Dental.Data.Migrations
 {
     public partial class CreateIdentitySchema : Migration
     {

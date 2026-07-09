@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 
-namespace SchoolPsychologist.Filters
+namespace Dental.Filters
 {
     public class PermissionPolicyProvider : Microsoft.AspNetCore.Authorization.IAuthorizationPolicyProvider
     {

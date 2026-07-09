@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace SchoolPsychologist.Constants
+namespace Dental.Constants
 {
     public static class EnumHelper
     {

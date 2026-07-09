@@ -1,8 +1,8 @@
 ﻿
 
-using SchoolPsychologist.Models.User;
+using Dental.Models.User;
 
-namespace SchoolPsychologist.Seeds
+namespace Dental.Seeds
 {
     public static class DefaultRoles
     {

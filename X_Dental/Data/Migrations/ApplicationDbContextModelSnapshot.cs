@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using SchoolPsychologist.Data;
+using Dental.Data;
 
 #nullable disable
 
-namespace SchoolPsychologist.Data.Migrations
+namespace Dental.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
@@ -125,7 +125,7 @@ namespace SchoolPsychologist.Data.Migrations
                     b.ToTable("ERP_UserToken", (string)null);
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.DTOs.PsychologyCaseDto", b =>
+            modelBuilder.Entity("Dental.DTOs.PsychologyCaseDto", b =>
                 {
                     b.Property<int>("Id")
                         .HasColumnType("int");
@@ -151,7 +151,7 @@ namespace SchoolPsychologist.Data.Migrations
                     b.ToView(null, (string)null);
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.Parent", b =>
+            modelBuilder.Entity("Dental.Models.Parent", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -192,7 +192,7 @@ namespace SchoolPsychologist.Data.Migrations
                     b.ToTable("Parents");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.Psy_Case", b =>
+            modelBuilder.Entity("Dental.Models.Psy_Case", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -234,7 +234,7 @@ namespace SchoolPsychologist.Data.Migrations
                     b.ToTable("Psy_Cases");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.Psy_Report", b =>
+            modelBuilder.Entity("Dental.Models.Psy_Report", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -275,7 +275,7 @@ namespace SchoolPsychologist.Data.Migrations
                     b.ToTable("Psy_Reports");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.PsychologyReport", b =>
+            modelBuilder.Entity("Dental.Models.PsychologyReport", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -317,7 +317,7 @@ namespace SchoolPsychologist.Data.Migrations
                     b.ToTable("PsychologyReports");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.SchoolClass", b =>
+            modelBuilder.Entity("Dental.Models.SchoolClass", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -338,7 +338,7 @@ namespace SchoolPsychologist.Data.Migrations
                     b.ToTable("Classes");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.SocialReport", b =>
+            modelBuilder.Entity("Dental.Models.SocialReport", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -375,7 +375,7 @@ namespace SchoolPsychologist.Data.Migrations
                     b.ToTable("SocialReports");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.Student", b =>
+            modelBuilder.Entity("Dental.Models.Student", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -442,7 +442,7 @@ namespace SchoolPsychologist.Data.Migrations
                     b.ToTable("Students");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.StudentAttendance", b =>
+            modelBuilder.Entity("Dental.Models.StudentAttendance", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -469,7 +469,7 @@ namespace SchoolPsychologist.Data.Migrations
                     b.ToTable("StudentAttendances");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.TeacherReport", b =>
+            modelBuilder.Entity("Dental.Models.TeacherReport", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -513,7 +513,7 @@ namespace SchoolPsychologist.Data.Migrations
                     b.ToTable("TeacherReports");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.User.ApplicationRole", b =>
+            modelBuilder.Entity("Dental.Models.User.ApplicationRole", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -547,7 +547,7 @@ namespace SchoolPsychologist.Data.Migrations
                     b.ToTable("ERP_Roles", (string)null);
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.User.ApplicationUser", b =>
+            modelBuilder.Entity("Dental.Models.User.ApplicationUser", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -649,7 +649,7 @@ namespace SchoolPsychologist.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
-                    b.HasOne("SchoolPsychologist.Models.User.ApplicationRole", null)
+                    b.HasOne("Dental.Models.User.ApplicationRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -658,7 +658,7 @@ namespace SchoolPsychologist.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
                 {
-                    b.HasOne("SchoolPsychologist.Models.User.ApplicationUser", null)
+                    b.HasOne("Dental.Models.User.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -667,7 +667,7 @@ namespace SchoolPsychologist.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
                 {
-                    b.HasOne("SchoolPsychologist.Models.User.ApplicationUser", null)
+                    b.HasOne("Dental.Models.User.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -676,13 +676,13 @@ namespace SchoolPsychologist.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
                 {
-                    b.HasOne("SchoolPsychologist.Models.User.ApplicationRole", null)
+                    b.HasOne("Dental.Models.User.ApplicationRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SchoolPsychologist.Models.User.ApplicationUser", null)
+                    b.HasOne("Dental.Models.User.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -691,16 +691,16 @@ namespace SchoolPsychologist.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
-                    b.HasOne("SchoolPsychologist.Models.User.ApplicationUser", null)
+                    b.HasOne("Dental.Models.User.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.Psy_Case", b =>
+            modelBuilder.Entity("Dental.Models.Psy_Case", b =>
                 {
-                    b.HasOne("SchoolPsychologist.Models.Student", "Student")
+                    b.HasOne("Dental.Models.Student", "Student")
                         .WithMany("Cases")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -709,22 +709,22 @@ namespace SchoolPsychologist.Data.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.Psy_Report", b =>
+            modelBuilder.Entity("Dental.Models.Psy_Report", b =>
                 {
-                    b.HasOne("SchoolPsychologist.Models.Psy_Case", "Case")
+                    b.HasOne("Dental.Models.Psy_Case", "Case")
                         .WithMany()
                         .HasForeignKey("CaseId");
 
-                    b.HasOne("SchoolPsychologist.Models.Student", null)
+                    b.HasOne("Dental.Models.Student", null)
                         .WithMany("Reports")
                         .HasForeignKey("StudentId");
 
                     b.Navigation("Case");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.PsychologyReport", b =>
+            modelBuilder.Entity("Dental.Models.PsychologyReport", b =>
                 {
-                    b.HasOne("SchoolPsychologist.Models.Student", "Student")
+                    b.HasOne("Dental.Models.Student", "Student")
                         .WithMany("PsychologyReports")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -733,9 +733,9 @@ namespace SchoolPsychologist.Data.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.SocialReport", b =>
+            modelBuilder.Entity("Dental.Models.SocialReport", b =>
                 {
-                    b.HasOne("SchoolPsychologist.Models.Student", "Student")
+                    b.HasOne("Dental.Models.Student", "Student")
                         .WithMany("SocialReports")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -744,15 +744,15 @@ namespace SchoolPsychologist.Data.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.Student", b =>
+            modelBuilder.Entity("Dental.Models.Student", b =>
                 {
-                    b.HasOne("SchoolPsychologist.Models.SchoolClass", "Class")
+                    b.HasOne("Dental.Models.SchoolClass", "Class")
                         .WithMany("Students")
                         .HasForeignKey("ClassId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SchoolPsychologist.Models.Parent", "Parent")
+                    b.HasOne("Dental.Models.Parent", "Parent")
                         .WithMany("Students")
                         .HasForeignKey("ParentId");
 
@@ -761,9 +761,9 @@ namespace SchoolPsychologist.Data.Migrations
                     b.Navigation("Parent");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.StudentAttendance", b =>
+            modelBuilder.Entity("Dental.Models.StudentAttendance", b =>
                 {
-                    b.HasOne("SchoolPsychologist.Models.Student", "Student")
+                    b.HasOne("Dental.Models.Student", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -772,9 +772,9 @@ namespace SchoolPsychologist.Data.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.TeacherReport", b =>
+            modelBuilder.Entity("Dental.Models.TeacherReport", b =>
                 {
-                    b.HasOne("SchoolPsychologist.Models.Student", "Student")
+                    b.HasOne("Dental.Models.Student", "Student")
                         .WithMany("TeacherReports")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -783,17 +783,17 @@ namespace SchoolPsychologist.Data.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.Parent", b =>
+            modelBuilder.Entity("Dental.Models.Parent", b =>
                 {
                     b.Navigation("Students");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.SchoolClass", b =>
+            modelBuilder.Entity("Dental.Models.SchoolClass", b =>
                 {
                     b.Navigation("Students");
                 });
 
-            modelBuilder.Entity("SchoolPsychologist.Models.Student", b =>
+            modelBuilder.Entity("Dental.Models.Student", b =>
                 {
                     b.Navigation("Cases");
 

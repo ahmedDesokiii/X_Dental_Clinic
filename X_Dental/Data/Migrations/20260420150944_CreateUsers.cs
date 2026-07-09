@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace SchoolPsychologist.Data.Migrations
+namespace Dental.Data.Migrations
 {
     /// <inheritdoc />
     public partial class CreateUsers : Migration
