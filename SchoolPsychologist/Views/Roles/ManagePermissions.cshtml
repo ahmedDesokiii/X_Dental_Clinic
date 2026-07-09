@@ -1,0 +1,292 @@
+﻿@model PermissionsFormViewModel
+@{
+    ViewData["Title"] = "صلاحيات المستخدم";
+}
+@* <div class="card border-0 mb-3" style="background-color:#415E72 !important; border-radius:0 0 0 80px ">
+    <div class="d-flex text-center mx-auto pb-3">
+        <a asp-controller="Roles" asp-action="index" class="text-center fs-4 fw-bold text-decoration-none" style="color:#415E72 !important ">قائمة المجموعات</a>
+        <i class="bi bi-chevron-double-left fw-bold fs-3 mt-2 mx-3" style="color:#415E72 !important"></i>
+        <a class="text-center fs-1 fw-bold text-decoration-none" style="color:#415E72 !important ">@ViewData["Title"]</a>
+    </div>
+</div> *@
+<section class="container-fluid my-3" dir="rtl">
+    <form asp-action="ManagePermissions" method="post">
+
+        <!-- Header Card -->
+        <div class="card col-md-10 p-0 mx-auto justify-content-center mt-4">
+            <div class="card-header d-flex bg-info-subtle py-2 justify-content-start position-relative">
+                <div class="px-5">
+                    <h2 class="text-dark">@Model.RoleName</h2>
+                    <h4 class="text-dark">@Model.Details</h4>
+                    <span class="text-dark">إضافة / حذف صلاحيات للمستخدم</span>
+                </div>
+
+                
+                <button type="submit" title="حفظ صلاحيات المستخدم" class="btn send-btn position-absolute start-0 top-0 mt-3  ms-3 fs-5  rounded-3 "
+                        asp-route="@Model">
+                    <span class="fw-bold"> حفظ الصلاحيات</span>
+                    <i class="bi bi-floppy2 fs-5 pe-2 fw-bold"></i>
+                </button>
+            </div>
+        </div>
+
+
+
+        <!-- Search -->
+        <div class="mt-4 col-md-6 mx-auto mb-4">
+            <div class="input-group input-group-lg shadow-sm">
+                <span class="input-group-text bg-info-subtle border-0 rounded-end-3">
+                    <i class="bi bi-search fs-4 text-primary"></i>
+                </span>
+                <input type="text"
+                       id="permissionSearch"
+                       class="form-control border-0 text-center rounded-3 bg-white"
+                       placeholder="ابحث عن اسم الصلاحية أو اسم الموديول..." />
+                <button class="btn btn-outline-secondary d-none" id="clearSearch">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                
+            </div>
+        </div>
+
+        <!-- Modules Cards -->
+        <div class="col-md-10 mx-auto mt-4">
+            @{
+                var groupedModules = Model.RoleCalims
+                .Select((claim, index) => new { claim, index })
+                .GroupBy(x => x.claim.DisplayValue.Split('.')[1]);
+            }
+            <div class="row my-3">
+                @foreach (var module in groupedModules)
+                {
+                    
+                    var collapseId = $"collapse_{module.Key.Replace(" ", "_")}";
+
+                    <div class="col-md-4 module-card" data-module="@module.Key.ToLower()">
+                        <div class="card mb-4 shadow-sm permission-card">
+                            <div class="card-header fs-5 fw-bold d-flex justify-content-between align-items-center" dir="ltr"
+                                 style="background-color:#415E72 !important; cursor:pointer;"
+                                 data-bs-toggle="collapse"
+                                 data-bs-target="#@collapseId"
+                                 aria-expanded="true">
+
+                                <span class="text-white">
+                                    <i class="bi bi-pin-angle-fill fs-4 pe-3"></i>
+                                    @module.Key
+                                </span>
+
+                                <i class="bi bi-chevron-down text-white"></i>
+                            </div>
+
+                            <div id="@collapseId" class="collapse show">
+                                <div class="card-body p-0">
+
+                                    <table class="table table-hover m-0 table-bordered border-primary-subtle">
+                                        <thead>
+                                            <tr class="text-center">
+                                                <th class="fs-5 fw-bold bg-info-subtle">Permission</th>
+                                                <th class="fs-5 fw-bold bg-info-subtle">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in module)
+                                            {
+                                                <tr class="permission-row" data-permission="@item.claim.DisplayValue.Split('.')[2].ToLower()">
+                                                    
+                                                    <td class="text-center fs-6">
+                                                        @item.claim.DisplayValue.Split('.')[2]
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <input hidden asp-for="@Model.RoleCalims[item.index].DisplayValue" />
+                                                        <input type="checkbox"
+                                                               asp-for="@Model.RoleCalims[item.index].IsSelected"
+                                                               class="form-check-input border-1 border-primary fs-5" />
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                }
+            </div>
+        </div>
+
+    </form>
+</section>
+
+@section Scripts {
+    <script src="~/js/Roles.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const searchInput = document.getElementById("permissionSearch");
+            if (!searchInput) return;
+
+            // 🔹 Debounce function
+            function debounce(func, delay) {
+                let timeout;
+                return function () {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => {
+                        func.apply(this, arguments);
+                    }, delay);
+                };
+            }
+
+            // 🔹 Search logic
+            function searchPermissions() {
+
+                let value = searchInput.value.toLowerCase().trim();
+                let modules = document.querySelectorAll(".module-card");
+
+                modules.forEach(module => {
+
+                    let moduleName = module.dataset.module;
+                    let rows = module.querySelectorAll(".permission-row");
+                    let collapseDiv = module.querySelector(".collapse");
+
+                    let found = false;
+
+                    rows.forEach(row => {
+                        let permission = row.dataset.permission;
+
+                        if (
+                            permission.includes(value) ||
+                            moduleName.includes(value)
+                        ) {
+                            row.style.display = "";
+                            found = true;
+                        } else {
+                            row.style.display = "none";
+                        }
+                    });
+
+                    // إظهار / إخفاء الموديول
+                    module.style.display = found ? "" : "none";
+
+                    // فتح الـ collapse لو فيه نتيجة
+                    if (value !== "" && found && collapseDiv) {
+                        bootstrap.Collapse
+                            .getOrCreateInstance(collapseDiv)
+                            .show();
+                    }
+
+                    // لما السيرش يكون فاضي
+                    if (value === "") {
+                        rows.forEach(row => row.style.display = "");
+                        module.style.display = "";
+                    }
+                });
+            }
+
+            // 🔹 Apply debounce (300ms)
+            searchInput.addEventListener(
+                "keyup",
+                debounce(searchPermissions, 300)
+            );
+
+        });
+
+    </script>
+}
+@* <section class="container-fluid mt-5">
+    <div class="col-md-1"></div>
+    <form asp-action="ManagePermissions" method="post">
+        <div class="card col-md-10 p-0 mx-auto justify-content-center mt-4">
+            <div class="card-header d-flex bg-info-subtle py-2 justify-content-start">
+                <div class="px-5">
+                    <h2 class="text-dark">@Model.RoleName</h2>
+                    <h4 class="text-dark fs-5">@Model.Details</h4>
+                    <span class="text-dark">إضافة / حذف صلاحيات للمستخدم</span>
+                </div>
+
+
+                <button type="submit" title="حفظ صلاحيات المستخدم" class="btn btn-success fs-5 rounded-3 position-absolute start-0 ms-3 mt-2"
+                        asp-route="@Model">
+                    <i class="bi bi-floppy2 fs-5 fw-bold"></i> <br /> <span class="fw-bold"> حفظ الصـلاحيات</span>
+                </button>
+
+                <div class="row">
+                    <div class="col-md-1"></div>
+                        <div class="col-md-9">
+                        
+                    </div>
+                </div>
+                <div>
+                   
+                </div>
+
+               
+            </div>
+            <div class="card-body row w-75 mx-auto p-0 justify-content-center">
+
+                <div id="Roles" class="tabcontent">
+                    <table class="table table-hover display nowrap  px-0 table-bordered border-primary-subtle" id="tablePermissions">
+                        <thead>
+                            <tr class="text-center">
+                                <th class="text-white text-center fs-5" style="background-color:#415E72 !important;"></th>
+                                <th class="text-white text-center fs-5" style="background-color:#415E72 !important;">الوحدة</th>
+                                <th class="text-white text-center fs-5" style="background-color:#415E72 !important;">الصلاحية</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                          
+                            @for (int i = 0; i < Model.RoleCalims.Count; i++)
+                            {
+                                <tr>
+                                    <td class="text-center">
+                                       
+                                            <input hidden asp-for="@Model.RoleCalims[i].DisplayValue" />
+                                            <input  type="checkbox" asp-for="@Model.RoleCalims[i].IsSelected" class="form-check-input border-1 border-primary fs-5 " />
+                                       
+                                    </td>
+                                    <td class="fw-bold fs-5 px-1  m-0 text-success text-center"><span class="bg-success-subtle p-2 rounded-5">@Model.RoleCalims[i].DisplayValue.Split('.')[1]</span></td>
+                                    <td class="fs-6 text-center">@Model.RoleCalims[i].DisplayValue.Split('.')[2]</td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+        </div>
+    </form>
+    <div class="col-md-1"></div>
+
+</section>
+
+@section Scripts {
+    <script src="~/js/Roles.js"></script>
+} *@
+
+<style>
+    .send-btn {
+        background: linear-gradient(135deg, #25D366, #128C7E);
+        border: none;
+        color: #fff;
+        border-radius: 10px;
+        padding: 8px 22px;
+        transition: all .25s ease-in-out;
+    }
+
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(0,0,0,.15);
+            opacity: .95;
+        }
+
+        .send-btn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+</style>

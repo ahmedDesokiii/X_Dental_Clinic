@@ -1,0 +1,18 @@
+﻿@page
+@model AccessDeniedModel
+@{
+    ViewData["Title"] = "دخول غير مسموح";
+}
+<div class="card border-0" style="background-color:#415E72 !important; border-radius:0 0 0 80px ">
+    <span class="text-center fw-bold fs-1  pb-3" style="color:#415E72 !important ">
+        صلاحيات المستخدم
+        <i class="bi bi-exclamation-lg pe-2 fs-1"></i>
+    </span>
+</div>
+<header>
+    <div class="text-center">
+        <i class="bi bi-shield-exclamation fs-1 link-danger"></i>
+        <h1 class="link-danger">@ViewData["Title"] !</h1>
+        <p class="link-primary "> ليس لديك صلاحية للدخول لهذه الصفحة برجاء التواصل مع مدير النظام !</p>
+    </div>
+</header>

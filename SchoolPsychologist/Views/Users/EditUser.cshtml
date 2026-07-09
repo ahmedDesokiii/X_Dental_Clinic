@@ -1,0 +1,108 @@
+﻿@model ProfileFormViewModel
+@{
+    ViewData["Title"] = "تعديل مستخدم ";
+}
+
+
+<section class="container-fluid mt-3">
+    <div class="row">
+        <div class="col-md-1"></div>
+        <form asp-controller="Users" asp-action="EditUser" method="post">
+            <div class="card col-md-10 p-0 mx-auto justify-content-center">
+                <div class="card-header d-flex align-items-center justify-content-start bg-info-subtle">
+                    <span class="fs-3 fw-bold link-success px-5">
+                        <i class="bi bi-person-fill-check fs-2 ms-3"></i>
+                        @ViewData["Title"]
+                    </span>
+                    <button onclick="
+                        document.getElementById('passUser').value = document.getElementById('pass').value;"
+                            type="submit" title="حفظ تعديلات المستخدم" class="btn send-btn position-absolute start-0 top-0 mt-2  ms-3 fs-5  rounded-3 ">
+                        <span class="fw-bold"> حفظ التعديلات</span>
+                        <i class="bi bi-floppy2 fs-5 fw-bold me-2"></i>
+                    </button>
+                    
+                </div>
+                <div class="card-body row justify-content-center">
+                    <div class="col-md-6">
+                        <input type="hidden" asp-for="@Model.Id">
+
+                        <!-- User Name -->
+                        <div class="input-group mb-2">
+                            <span class="input-group-text bg-info-subtle fw-bold rounded-end-3" id="inputGroup-sizing-default ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;اسم المستخدم&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                            <input disabled id="userName" asp-for="@Model.UserName" class="form-control text-center" autocomplete="on" aria-required="true" placeholder="" type="text" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" style="border-top-left-radius : 20px ;border-left-color:red;border-left-width:3px;">
+                        </div>
+
+                        <!-- PassUser -->
+                        <div class="input-group mb-2">
+                            <span class="input-group-text bg-info-subtle border-start-0 fw-bold rounded-end-3" id="inputGroup-sizing-default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;كلمة المرور&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                            <input disabled id="passUser" dir="ltr" asp-for="@Model.PassUser" class="form-control text-center" autocomplete="on" aria-required="true" type="text" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" style="border-top-left-radius : 20px ;border-left-width:3px;">
+                        </div>
+
+                        <!-- Name-Ar -->
+                        <div class="input-group mb-2">
+                            <span class="input-group-text bg-info-subtle fw-bold rounded-end-3" id="inputGroup-sizing-default ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;الاسـم - عربي&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                            <input required id="nameAr" asp-for="@Model.FullName_Ar" class="form-control text-center" autocomplete="on" aria-required="true" placeholder="ادخل الاسم عربي - اجباري..." type="text" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" style="border-top-left-radius : 20px ;border-left-color:red;border-left-width:3px;">
+                        </div>
+                        <span asp-validation-for="@Model.FullName_Ar" class="text-danger"></span>
+
+
+                        <!-- PhoneNumber -->
+                        <div class="input-group mb-2">
+                            <span class="input-group-text bg-info-subtle fw-bold rounded-end-3" id="inputGroup-sizing-default ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; رقم الموبيل &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                            <input id="phoneNum" asp-for="@Model.PhoneNumber" class="form-control text-center" autocomplete="on" aria-required="true" placeholder="ادخل رقم الموبيل - يفضل عليه WhatsApp! ..." type="text" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" style="border-top-left-radius : 20px ;border-left-color:red;border-left-width:3px;">
+                        </div>
+                        <span asp-validation-for="@Model.PhoneNumber" class="text-danger"></span>
+
+                        <!-- Gender -->
+                        <div class="input-group mb-2">
+                            <span class="input-group-text bg-info-subtle fw-bold rounded-end-3" id="inputGroup-sizing-default ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; الجنس &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+
+                            <select class="form-select text-center" id="inputGroupSelect01" asp-for="@Model.Gender" aria-required="true" style="border-top-left-radius : 20px ;border-left-width:3px;">
+                                <option value="male">ذكــر</option>
+                                <option value="female">انثـي</option>
+                            </select>
+                        </div>
+                        <span asp-validation-for="@Model.Gender" class="text-danger"></span>
+
+
+                        <!-- Email -->
+                        <div class="input-group mb-2">
+                            <span class="input-group-text bg-info-subtle fw-bold rounded-end-3" id="inputGroup-sizing-default ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;البريد الالكتروني&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+
+                            <input id="email" asp-for="@Model.Email" class="form-control text-center" autocomplete="on" aria-required="true" placeholder="ادخل البريد الالكتروني الخاص بك ..." type="text" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" style="border-top-left-radius : 20px ;border-left-width:3px;">
+                        </div>
+                        <span asp-validation-for="@Model.Email" class="text-danger"></span>
+
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+</section>
+
+@section Scripts {
+    @*  <partial name="_ValidationScriptsPartial" /> *@
+}
+<style>
+    .send-btn {
+        background: linear-gradient(135deg, #25D366, #128C7E);
+        border: none;
+        color: #fff;
+        border-radius: 10px;
+        padding: 8px 22px;
+        transition: all .25s ease-in-out;
+    }
+
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(0,0,0,.15);
+            opacity: .95;
+        }
+
+        .send-btn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+</style>

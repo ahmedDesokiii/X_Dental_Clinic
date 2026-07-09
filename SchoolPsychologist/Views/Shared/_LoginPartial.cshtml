@@ -1,0 +1,53 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using SchoolPsychologist.Models.User
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<ul class="div px-3 d-flex mt-2">
+
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <div class="nav-item mx-3 mt-3" >
+            @* <a class="nav-link text-primary" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage"> @UserManager.GetUserAsync(User).Result.FullName_Ar</a> *@
+            <a class="nav-link  link-offset-1-hover" style="color:#B7CADB;font-size:12px" href="#" title="تحديث البيانات">
+                <i class="bi bi-person-circle fw-bold ms-2 fs-6" style="color:#B7CADB !important"></i>@UserManager.GetUserAsync(User).Result.FullName_Ar <br class="p-0 m-0">
+            </a>
+        </div>
+
+        <div class="nav-item">
+            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("index", "Home", new { area = "" })">
+                <button type="submit" class=" btn  btn-danger mt-1 btn-sm rounded-3" style="font-size:16px !important">
+                    <i class="bi bi-door-open-fill fs-5 ps-2"></i>خروج
+                </button>
+            </form>
+        </div>
+    }
+    else
+    {
+        <div class="nav-item">
+            <a class="btn btn-outline-success mt-1 btn-sm rounded-3" style="font-size:16px !important" asp-area="Identity" asp-page="/Account/Login">
+                <i class="bi bi-door-closed fs-5 ps-2"></i>دخـول
+            </a>
+        </div>
+    }
+</ul>
+
+<style>
+    .quote-btn-logout {
+        background: linear-gradient(135deg, #F63049, #D6CFB4);
+        border: none;
+        padding: 5px 10px;
+        color: #fff;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+
+    .quote-btn-login {
+        background: linear-gradient(135deg,#F96E5B, #415E72);
+        border: none;
+        padding: 5px 10px;
+        color:#fff;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+</style>

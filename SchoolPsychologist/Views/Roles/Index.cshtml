@@ -1,0 +1,150 @@
+﻿@model List<ApplicationRole>
+
+@{
+    ViewData["Title"] = "قائمة المجموعات";
+    int index = 0;
+}
+
+<!-- Main content -->
+<section class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <div class="card p-0">
+                <div class="card-header d-flex align-items-center justify-content-start bg-info-subtle py-0">
+                    <div class="col-md-1">
+                        <!-- Button trigger modal -->
+                        <button type="button" title="إضافة مجموعة جديدة" class="btn btn-outline-dark border-0 bg-transparent ms-3 fs-1  rounded-3 " data-bs-toggle="modal" data-bs-target="#exampleModal" onclick="Rest()">
+                            <i class="bi bi-cloud-plus-fill fs-1 fw-bold" style="color:#415E72 !important;"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-10 text-center">
+                        <span class="fs-2 fw-bold" style="color:#415E72 !important;">
+                            قائمة المجموعات
+                            <i class="bi bi-collection pe-2 fs-3" style="color:#415E72 !important;"></i>
+                        </span>
+                    </div>
+                </div>
+                <!-- /.card-header -->
+
+                <div class="card-body p-0">
+                    <!-- Tab links -->
+                    @*  <div class="tab">
+                        <button class="tablinks" onclick="openCity('event', 'Users')" id="defaultOpen">قائمة المستخدمين</button>
+                    </div> *@
+                    <!-- Tab content -->
+                    @if (!Model.Any())
+                    {
+                        <div class="alert  alert-warning mt-5">
+                            <h4 class="alert-heading">لا يوجد مجموعات !</h4>
+                            <p class="mb-0">لم يتم اضافة مجموعات للتطبيق حتي الآن</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div id="Roles" class="tabcontent">
+                            <table class="table table-hover display  px-0 table-bordered border-primary-subtle" id="tableUser">
+                                <thead>
+                                    <tr class="text-center">
+                                        <th class="text-white text-center fs-6" style="width:5%;background-color:#415E72 !important;"></th>
+                                        <th class="text-white text-center fs-6" style="width:20%;background-color:#415E72 !important;">المجموعة</th>
+                                        <th class="text-white text-center fs-6" style="width:55%;background-color:#415E72 !important;">الوصـف</th>
+                                        <th class="text-white text-center fs-6" style="width:20%;background-color:#415E72 !important;">اجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var role in Model)
+                                    {
+                                        index++;
+                                        <tr class="text-center">
+                                            <td class="fs-5 text-center fw-bold px-1 py-1 m-0">@index</td>
+                                            <td class="fw-bold fs-5 px-1  m-0 text-success"><span class="bg-success-subtle p-2 rounded-5">@role.Name</span></td>
+                                            <td class="fs-6 m-0">@role.Details</td>
+                                            <td class="py-1 px-1 m-0">
+                                                <a class="btn fw-bold btn-outline-dark bg-transparent border-0 text-center p-0 mx-1 fs-4" title="صلاحيات" asp-controller="Roles" asp-action="ManagePermissions" asp-route-roleId="@role.Id"><i class="bi bi-shield-lock"></i></a>
+                                                <a class="btn fw-bold btn-outline-dark bg-transparent border-0 p-0 mx-1 fs-4" title="تعديل" onclick="Edit('@role.Id','@role.Name','@role.Details')" data-bs-toggle="modal" data-bs-target="#exampleModal"><i class="bi bi-pencil-square"></i></a>
+                                                <a class="btn fw-bold btn-outline-dark bg-transparent border-0 p-0 mx-1 fs-4" title="حذف" asp-controller="Roles" asp-action="DeleteRole" asp-route-Id="@role.Id"> <i class="bi bi-trash3-fill"></i></a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="">
+                                    <tr class="text-center">
+                                        <th style="background-color:#FCBF49 !important;">مسلسل</th>
+                                        <th style="background-color:#FCBF49 !important;">المجموعة</th>
+                                        <th style="background-color:#FCBF49 !important;">الوصف</th>
+                                        <th style="background-color:#FCBF49 !important;">اجراءات</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+            <!-- /.card -->
+        </div>
+        <div class="col-md-2"></div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</section>
+<!-- /.content -->
+
+
+<partial name="_SaveRole" model="new RoleFormViewModel()" />
+
+@section Scripts {
+    <script src="~/js/Roles.js"></script>
+   
+    @if (!string.IsNullOrEmpty(Context.Session.GetString(Helper.MsgType)))
+    {
+        if (Context.Session.GetString(Helper.MsgType) == Helper.Success)
+        {
+            <script>
+                Swal.fire({
+                    title: '@Context.Session.GetString(Helper.Title)',
+                    text: '@Html.Raw(@Context.Session.GetString(Helper.Msg))',
+                    confirmButtonText: 'Ok',
+                    icon: 'success'
+
+                });
+            </script>
+
+        }
+        else
+        {
+            <script>
+
+                Swal.fire({
+                    title: '@Context.Session.GetString(Helper.Title)',
+                    text: '@Html.Raw(@Context.Session.GetString(Helper.Msg))',
+                    confirmButtonText: 'Ok',
+                    icon: 'warning'
+
+                });
+            </script>
+        }
+        Context.Session.SetString(Helper.MsgType, "");
+    }
+
+
+    <script>
+
+        let lbTitleEdit = '@Html.Raw("تعديل بيانات المجموعة")';
+        let lbEdit = '@Html.Raw("حفظ التعديلات")';
+        let lbAddNewRole = '@Html.Raw("إضافة مجموعة جديدة")';
+        let lbbtnSave = '@Html.Raw("حفظ البيانات")';
+
+        let lbTitleMsgDelete = '@Html.Raw("Delete")';
+        let lbTextMsgDelete = '@Html.Raw($"Are you sure delete role ? ")';
+        let lbconfirmButtonText = '@Html.Raw("Yes , Delete it")';
+        let lbcancelButtonText = '@Html.Raw("Cancle")';
+
+        let lbTitleDeletedOk = '@Html.Raw("Done")';
+        let lbMsgDeletedOkRole = '@Html.Raw("Role Deleted Successfully")';
+        let lbSuccess = '@Html.Raw(Helper.Success)';
+
+    </script>
+}

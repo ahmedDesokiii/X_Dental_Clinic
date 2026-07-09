@@ -1,0 +1,266 @@
+﻿@model SocialReportVM
+
+@{
+    ViewData["Title"] = "التقرير الاجتماعي";
+    int cNo = 0;
+}
+
+<div class="container-fluid px-0 mt-4">
+
+    <div class="row mx-auto">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header d-flex align-items-center bg-info-subtle py-2">
+                    <span class="fs-2 fw-bold link-success">
+                        بيانات الطالب
+                    </span>
+                
+                </div>
+                <div class="card-body">
+                    <!-- Image -->
+                    <div class="text-center my-0">
+                        @* src="~/images/default-user.png" *@
+                        <img id="imgPreview"
+                             src="@Model.StudentData?.ImagePath"
+                             class="rounded-circle "
+                             width="100"
+                             height="100"
+                             style="object-fit:cover;" />
+                    </div>
+
+                    <!-- Code -->
+                    <div class="input-group mt-2 row mx-auto">
+                        <span class="input-group-text fw-bold rounded-end-3 col-md-4 bg-info-subtle py-0"
+                              style="color:#415E72;">
+                            كود الطالب
+                        </span>
+
+                        <input asp-for="StudentData.Code"
+                               id="studentCode"
+                               class="form-control text-center rounded-start-3 py-0"
+                               placeholder="ادخل كود الطالب" />
+                    </div>
+
+                    <!-- Name -->
+                    <div class="input-group mt-2 row mx-auto">
+                        <span class="input-group-text fw-bold rounded-end-3 col-md-4 bg-info-subtle py-0"
+                              style="color:#415E72;">
+                            اسم الطالب
+                        </span>
+
+                        <input asp-for="StudentData.FullName"
+                               id="studentName"
+                               class="form-control text-center rounded-start-3 py-0"
+                               placeholder="ادخل اسم الطالب" />
+                    </div>
+
+                    <!-- National ID -->
+                    <div class="input-group mt-2 row mx-auto">
+                        <span class="input-group-text fw-bold rounded-end-3 col-md-4 bg-info-subtle py-0">
+                            الرقم القومي
+                        </span>
+
+                        <input asp-for="StudentData.NationalId"
+                               id="nationalId"
+                               class="form-control text-center rounded-start-3 py-0"
+                               placeholder="14 رقم" />
+                    </div>
+
+                    <!-- Gender -->
+                    <div class="input-group mt-2 row mx-auto">
+                        <span class="input-group-text fw-bold rounded-end-3 col-md-4 py-0 bg-info-subtle">
+                            النوع
+                        </span>
+                        <select asp-for="StudentData.Gender"
+                                asp-items="Html.GetEnumSelectList<Gender>()"
+                                class=" form-control text-center rounded-start-3 py-0">
+                        </select>
+                    </div>
+                    <!-- Gender -->
+                    <div class="input-group mt-2 row mx-auto">
+                        <span class="input-group-text fw-bold rounded-start-3 col-md-4 py-0 bg-info-subtle">
+                            الديانة
+                        </span>
+                        <select asp-for="StudentData.Region"
+                                asp-items="Html.GetEnumSelectList<Region>()"
+                                class="form-control text-center rounded-start-3 py-0">
+                        </select>
+                    </div>
+                    @*
+            <!-- Class -->
+            <div class="input-group mt-2 row mx-auto">
+                <span class="input-group-text fw-bold rounded-end-3 col-md-4 bg-info-subtle">
+                    الفصل
+                </span>
+
+                 <select asp-for="StudentData.ClassId"
+                        id="classId"
+                        class="form-control text-center"
+                        asp-items="@(new SelectList(Model.StudentData.Classes, "Id", "Name"))">
+                </select> 
+            </div>
+
+             <!-- Parent -->
+            <div class="input-group mt-2 row mx-auto">
+                <span class="input-group-text fw-bold rounded-end-3 col-md-4 bg-info-subtle">
+                    ولي الأمر
+                </span>
+
+                <select asp-for="NewStudent.ParentId"
+                        id="parentId"
+                        class="form-control text-center"
+                        asp-items="@(new SelectList(Model.Parents, "Id", "FullName"))">
+                </select>
+            </div> *@
+
+                    <!-- Phone -->
+                    <div class="input-group mt-2 row mx-auto">
+                        <span class="input-group-text fw-bold rounded-start-3 col-md-4 py-0 bg-info-subtle">
+                            رقم الهاتف
+                        </span>
+
+                        <input asp-for="StudentData.Phone"
+                               id="phone"
+                               class="form-control text-center rounded-start-3 py-0"
+                               placeholder="اختياري" />
+                    </div>
+
+                    <!-- Address -->
+                    <div class="input-group mt-2 row mx-auto">
+                        <span class="input-group-text fw-bold rounded-start-3 col-md-4 py-0 bg-info-subtle">
+                            العنوان
+                        </span>
+
+                        <input asp-for="StudentData.Address"
+                               id="address"
+                               class="form-control py-0 text-center rounded-start-3" />
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        <div class="col-md-9">
+            <div class="card p-0">
+
+        <!-- Header -->
+        <div class="card-header d-flex align-items-center bg-info-subtle py-0">
+
+            <div class="col-md-1">
+                <button onclick="clearSocialForm()"
+                        class="btn btn-outline-dark border-0 bg-transparent fs-1"
+                        data-bs-toggle="modal"
+                        data-bs-target="#socialModal"
+                title="اضافة تقرير اجتماعي">
+
+                            <i class="bi bi-file-earmark-text-fill"></i>
+                </button>
+            </div>
+
+            <div class="col-md-10 text-center">
+                <span class="fs-2 fw-bold link-success">
+                    التقرير الاجتماعي
+                </span>
+            </div>
+
+        </div>
+
+        <!-- Alerts -->
+        <div class="px-3 mt-2">
+
+            @if (Model.Reports.Any(x => x.EconomicLevel == EconomicLevel.ضعيف))
+            {
+                <div class="alert alert-danger text-center">
+                    ⚠ حالات ذات مستوى اقتصادي منخفض
+                </div>
+            }
+
+        </div>
+
+        <!-- Table -->
+        <div class="card-body text-center">
+
+            @if (!Model.Reports.Any())
+            {
+                <div class="alert alert-warning">
+                    لا يوجد تقارير
+                </div>
+            }
+            else
+            {
+                <table class="table table-hover table-bordered border-primary-subtle">
+
+                    <thead class="bg-dark text-white">
+                        <tr>
+                            <td>#</td>
+                            <td>الحالة الأسرية</td>
+                            <td>المستوى الاقتصادي</td>
+                            <td>العلاقة الأسرية</td>
+                            <td>التاريخ</td>
+                            <td>إجراء</td>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var r in Model.Reports)
+                        {
+                            cNo++;
+
+                            string ecoClass = r.EconomicLevel switch
+                            {
+                                EconomicLevel.ضعيف => "bg-danger-subtle text-danger fw-bold",
+                                EconomicLevel.متوسط => "bg-warning-subtle",
+                                _ => "bg-success-subtle"
+                            };
+
+                            <tr>
+                                <td>@cNo</td>
+                                <td>@r.FamilyStatus</td>
+                                <td class="@ecoClass">@r.EconomicLevel</td>
+                                <td>@r.FamilyRelation</td>
+                                <td>@r.ReportDate.ToShortDateString()</td>
+
+                                <td>
+                                    <button onclick="editSocial('@r.Id','@r.FamilyStatus','@r.EconomicLevel','@r.FamilyRelation','@r.Notes')"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#socialModal">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+
+                </table>
+            }
+
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+
+<partial name="_SocialModal" model="Model" />
+
+@section Scripts{
+    <script>
+
+        function editSocial(id, family, eco, rel, notes) {
+
+            $('#socialId').val(id);
+            $('#family').val(parseInt(family));
+            $('#eco').val(parseInt(eco));
+            $('#rel').val(parseInt(rel));
+            $('#notes').val(notes);
+        }
+
+        function clearSocialForm() {
+
+            $('#socialId').val(0);
+            $('#family').val(1);
+            $('#eco').val(1);
+            $('#rel').val(1);
+            $('#notes').val('');
+        }
+
+    </script>
+}

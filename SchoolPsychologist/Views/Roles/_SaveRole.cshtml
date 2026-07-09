@@ -1,0 +1,72 @@
+﻿@model RoleFormViewModel
+
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+
+            <!-- Header -->
+            <div class="modal-header text-white rounded-top-4"
+                 style="background-color:#758A93"
+                 dir="rtl">
+                <h5 class="modal-title fw-bold" id="title">
+                    إدارة مجموعة الصلاحيات
+                </h5>
+                <button type="button"
+                        class="btn-close btn-close-white ms-0"
+                        data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body bg-light" dir="rtl">
+                <form asp-action="_SaveRole" asp-controller="Roles" method="post">
+
+                    <input type="hidden" asp-for="RoleId" id="roleId" />
+
+                    <!-- Role Name -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            اسم المجموعة
+                        </label>
+                        <input asp-for="Name"
+                               id="roleName"
+                               class="form-control rounded-pill text-center"
+                               placeholder="ادخل اسم المجموعة..."
+                               required />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Role Details -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            وصف المجموعة
+                        </label>
+                        <textarea asp-for="Details"
+                                  id="roleDetails"
+                                  class="form-control rounded-4 text-center"
+                                  rows="3"
+                                  placeholder="ادخل وصف المجموعة..."></textarea>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="submit"
+                                id="btnSave"
+                                class="btn btn-success px-4 rounded-pill">
+                            
+                            حفظ
+                            <i class="bi bi-check-circle me-1"></i>
+                        </button>
+
+                        <button type="button"
+                                class="btn btn-outline-secondary px-4 rounded-pill"
+                                data-bs-dismiss="modal">
+                            إلغاء
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
