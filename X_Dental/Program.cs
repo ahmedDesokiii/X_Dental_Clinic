@@ -1,7 +1,10 @@
-using Microsoft.AspNetCore.Localization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Dental.Data;
+using Dental.Modules.Patients.InterfacesPatients;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 //var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ?? throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");;
@@ -12,6 +15,12 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(
     options => options.UseSqlServer(connectionString));
 
+builder.Services.AddAutoMapper(cfg =>{}, typeof(Program).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+#region Validation
+
+builder.Services.AddFluentValidationAutoValidation();
+#endregion
 
 
 builder.Services.AddControllersWithViews(); // Adds MVC services\
@@ -76,9 +85,7 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 });
 
 #region Scoped Services
-//builder.Services.AddScoped<IComplaintService, ComplaintService>();
-////user data services
-//builder.Services.AddScoped<UserDataService>();
+builder.Services.AddScoped<IPatientService, PatientService>();
 #endregion
 builder.Services.AddHttpClient();
 

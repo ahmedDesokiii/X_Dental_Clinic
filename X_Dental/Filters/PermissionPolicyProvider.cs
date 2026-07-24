@@ -22,7 +22,7 @@ namespace Dental.Filters
             return FallbackPolicyProvider.GetDefaultPolicyAsync();
         }
 
-        public Task<AuthorizationPolicy> GetPolicyAsync(string policyName)
+        public Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)
         {
             if (policyName.StartsWith("Permission", StringComparison.OrdinalIgnoreCase))
             {

@@ -6,24 +6,34 @@
 @inject RoleManager<ApplicationRole> RoleManager
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" data-theme="light">
 <head>
     <meta name="autocomplete" content="off">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Dental</title>
+    <title>@ViewData["Title"] - عيادة د/ محمد الخولي</title>
 
-    <!-- Bootstrap-->
+    <!-- Bootstrap (base only) -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 
-    <!-- Main CSS -->
+    <!-- Fonts: Beiruti (Arabic) + Ubuntu Condensed (Latin) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Beiruti:wght@200..900&family=Ubuntu+Condensed&display=swap" rel="stylesheet">
+
+    <!-- Premium Design System v2.0 -->
+    <link rel="stylesheet" href="~/css/clinic-design-system-v2.css" asp-append-version="true" />
+
+    <!-- Page-specific styles -->
+    @await RenderSectionAsync("Styles", required: false)
+
+    <!-- Legacy CSS — TODO: Migrate and remove -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/CreationStyle.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/executive-dashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Dental.styles.css" asp-append-version="true" />
 
-
-    <!-- Icons & Fonts -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Beiruti:wght@200..900&display=swap">
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="icon" type="image/x-icon" href="~/images/sklogo.ico">
 
@@ -32,132 +42,186 @@
 
     <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.3.4/css/dataTables.dataTables.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/columncontrol/1.1.1/css/columnControl.dataTables.css" />
 
     <!-- SweetAlert -->
     <link href="~/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
 
-    <!-- ================= JS (Core First) ================= -->
-    <!--  jQuery -->
+    <!-- JS (core first) -->
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-
-    <!-- Plugins -->
     <script src="https://cdn.datatables.net/2.3.4/js/dataTables.js"></script>
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.2/moment.min.js"></script>
-
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.4/css/dataTables.dataTables.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/columncontrol/1.1.1/css/columnControl.dataTables.css" />
-    <link rel="stylesheet" href="~/css/bootstrap.min.css" />
-
 </head>
 
-<body dir="rtl" style=" background: linear-gradient(115deg,  #7AE2CF,#ABE0F0  );border: none;">
-    <header>
+<body>
 
-        <!-- 🔷 Top Bar -->
-        <div class="top-bar py-0 bg-transparent mt-2">
-            <div class="container-fluid d-flex justify-content-between align-items-center">
+    <div class="app-shell">
 
-                <!-- Logo -->
-                <div class="d-flex align-items-center me-5">
-                    <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
-                        <img src="~/images/familyLogo.png" style="height:100px">
+        <!-- Sidebar Overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+        <!-- ============ Sidebar ============ -->
+        <aside class="app-sidebar" id="appSidebar">
+            <div class="sidebar-brand">
+                <span class="mark">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C9.6 2 8.1 3.2 6.7 3.2c-1.7 0-3.2 1.5-3.2 4 0 2.1.6 3.9 1.1 5.9.5 2 .9 4.3 1.6 5.9.5 1.2 1.1 2 1.9 2 1.1 0 1.3-2.5 1.6-4.2.2-1.2.6-2.1 1.3-2.1s1.1.9 1.3 2.1c.3 1.7.5 4.2 1.6 4.2.8 0 1.4-.8 1.9-2 .7-1.6 1.1-3.9 1.6-5.9.5-2 1.1-3.8 1.1-5.9 0-2.5-1.5-4-3.2-4C15.9 3.2 14.4 2 12 2z" fill="white" />
+                    </svg>
+                </span>
+                <div class="brand-text">
+                    <strong>د/ محمد الخولي</strong>
+                    <span>Dental Suite</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a asp-controller="Home" asp-action="Index" class="sidebar-link" data-title="لوحة التحكم">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    <span>لوحة التحكم</span>
+                </a>
+
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <div class="sidebar-section-label">العيادة</div>
+
+                    <a asp-controller="Patients" asp-action="Index" class="sidebar-link" data-title="قائمة المرضى">
+                        <i class="bi bi-people-fill"></i>
+                        <span>قائمة المرضى</span>
                     </a>
-                </div>
 
-                <!-- Contact Info -->
-                <div class="d-flex gap-5 ms-5">
+                    <a href="#" class="sidebar-link" data-title="المواعيد">
+                        <i class="bi bi-calendar2-week-fill"></i>
+                        <span>المواعيد</span>
+                    </a>
 
-                    <div class="info-box">
-                        <i class="bi bi-telephone-fill"></i>
-                        <div>
-                            <small class="fw-bold">اتصل بنا !</small>
-                            <p> 01000025879 &nbsp; 20+</p>
-                        </div>
-                    </div>
+                    <a href="#" class="sidebar-link" data-title="الفواتير والمدفوعات">
+                        <i class="bi bi-cash-coin"></i>
+                        <span>الفواتير والمدفوعات</span>
+                    </a>
 
-                    <div class="info-box">
-                        <i class="bi bi-geo-alt-fill"></i>
-                        <div>
-                            <small class="fw-bold">العنوان</small>
-                            <p>  طنطا - سبرباي</p>
-                        </div>
-                    </div>
-                    <div class="info-box">
-                        <i class="bi bi-envelope-at-fill"></i>
-                        <div>
-                            <small class="fw-bold">البريد الالكتروني</small>
-                            <p>adesokiii88@gmail.com</p>
-                        </div>
-                    </div>
-                </div>
+                    <a href="#" class="sidebar-link" data-title="العلاجات">
+                        <i class="bi bi-clipboard2-pulse-fill"></i>
+                        <span>العلاجات</span>
+                    </a>
 
-            </div>
-        </div>
-
-
-        <!-- 🔷 Navbar -->
-        <div class="main-navbar ">
-            <div class="container-fluid d-flex justify-content-between align-items-center ">
-
-                <!-- Menu -->
-                <ul class="nav-menu mt-0">
-
-                    @if (SignInManager.IsSignedIn(User))
+                    @if (User.IsInRole(Roles.Admin.ToString()))
                     {
-                        @if (User.IsInRole(Roles.Admin.ToString()))
-                        {
-                            <li><a style="font-size:20px !important" asp-controller="Users" asp-action="Index">المستخدمين</a></li>
-                            <li><a style="font-size:20px !important" asp-controller="Roles" asp-action="Index">المجموعات</a></li>
-                        }
+                        <div class="sidebar-section-label">الإدارة</div>
 
-                        
-                        @if ((AuthorizationService.AuthorizeAsync(User, Permissions.Students.View_Students).Result.Succeeded))
-                        {
-                            <li><a style="font-size:20px !important" asp-controller="Students" asp-action="ListStudents">قائمة الطلاب  </a></li>
-                        }
-                        
-                        
+                        <a asp-controller="Users" asp-action="Index" class="sidebar-link" data-title="المستخدمين">
+                            <i class="bi bi-person-badge-fill"></i>
+                            <span>المستخدمين</span>
+                        </a>
+
+                        <a asp-controller="Roles" asp-action="Index" class="sidebar-link" data-title="المجموعات">
+                            <i class="bi bi-shield-lock-fill"></i>
+                            <span>المجموعات</span>
+                        </a>
+
+                        <a href="#" class="sidebar-link" data-title="التقارير">
+                            <i class="bi bi-bar-chart-line-fill"></i>
+                            <span>التقارير</span>
+                        </a>
                     }
-                    <li><a style="font-size:20px !important" href="https://www.facebook.com/share/1B3xKJX65H/" target="_blank">د/ محمد الخولي  </a></li>
+                }
+            </nav>
 
-                </ul>
+            <div class="sidebar-footer">
+                <a class="sidebar-clinic-link" href="https://www.facebook.com/share/1B3xKJX65H/" target="_blank" data-title="صفحة العيادة">
+                    <i class="bi bi-facebook"></i>
+                    <span>صفحة العيادة</span>
+                </a>
+            </div>
+        </aside>
 
-                <!-- Right -->
-                <div class="nav-right">
-                    <partial name="_LoginPartial" />
+        <!-- ============ Main Column ============ -->
+        <div class="app-main">
+
+            <!-- Topbar — Floating Glass -->
+            <header class="app-topbar">
+                <div class="topbar-left">
+                    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Toggle menu">
+                        <i class="bi bi-list"></i>
+                    </button>
+
+                    <div class="topbar-search">
+                        <i class="bi bi-search"></i>
+                        <input type="text" placeholder="بحث عن مريض، فاتورة، موعد..." />
+                    </div>
                 </div>
 
-            </div>
-        </div>
+                <div class="topbar-actions">
+                    <!-- Theme Toggle -->
+                    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="تبديل الوضع">
+                        <i class="bi bi-moon-fill" id="themeIcon"></i>
+                    </button>
 
-    </header>
-    <div class="container-fluid   px-0 mx-0" dir="rtl">
-        <main role="main" class="mb-2">
-            @RenderBody()
-        </main>
+                    <button class="topbar-btn" title="الإشعارات" id="notificationBtn">
+                        <i class="bi bi-bell-fill"></i>
+                        <span class="badge">3</span>
+                    </button>
+
+                    <button class="topbar-btn" title="الرسائل">
+                        <i class="bi bi-chat-left-text-fill"></i>
+                    </button>
+
+                    <!-- User Menu -->
+                    <div class="user-menu" id="userMenu" onclick="toggleUserDropdown()">
+                        <div class="user-avatar">
+                            @(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "م")
+                        </div>
+                        <div class="user-info">
+                            <span class="name">@(User.Identity?.Name ?? "مستخدم")</span>
+                            <span class="role">
+                                @(User.IsInRole(Roles.Admin.ToString()) ? "مدير النظام" : "طبيب")
+                            </span>
+                        </div>
+                        <i class="bi bi-chevron-down"></i>
+
+                        <!-- Dropdown -->
+                        <div class="user-dropdown" id="userDropdown">
+                            <a href="#" class="dropdown-item">
+                                <i class="bi bi-person"></i>
+                                <span>الملف الشخصي</span>
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="bi bi-gear"></i>
+                                <span>الإعدادات</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post" style="margin:0;">
+                                <button type="submit" class="dropdown-item danger">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                    <span>تسجيل الخروج</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="app-content" dir="auto">
+                @RenderBody()
+            </main>
+        </div>
     </div>
 
+    <!-- Floating Action Button -->
+    <button class="fab" id="fabBtn" title="إجراء سريع" onclick="showQuickActions()">
+        <i class="bi bi-plus-lg"></i>
+    </button>
+
     <!-- ================= Scripts ================= -->
-    <!-- Bootstrap after jQuery -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Select2 -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-    <!-- SweetAlert -->
     <script src="~/sweetalert2/sweetalert2.all.min.js"></script>
-
-    <!-- SignalR -->
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
-
-    <!-- Firebase  -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js"></script>
 
-
-    <!-- ================= Your Scripts ================= -->
-
+    <!-- App Scripts -->
     <script src="~/js/site.js"></script>
     <script src="~/js/login.js"></script>
     <script src="~/js/Users.js"></script>
@@ -172,12 +236,131 @@
     <script src="~/js/alert-adapter.js"></script>
     <script src="~/js/global-actions.js"></script>
     <script src="~/js/Employee.js"></script>
-    <!-- Init -->
+
     <script>
         $(document).ready(function () {
-        $('.searchable').select2();
+        // Initialize Select2
+        $('.searchable').select2({
+        dir: 'rtl',
+        width: '100%'
         });
+
+        // Mark active sidebar link based on current URL
+        var path = window.location.pathname.toLowerCase();
+        $('.sidebar-link').each(function () {
+        var href = ($(this).attr('href') || '').toLowerCase();
+        if (href && href !== '#' && path.indexOf(href) === 0) {
+        $(this).addClass('active');
+        }
+        });
+
+        // Close dropdowns when clicking outside
+        $(document).on('click', function (e) {
+        if (!$(e.target).closest('#userMenu').length) {
+        $('#userDropdown').removeClass('show');
+        $('#userMenu').removeClass('active');
+        }
+        });
+
+        // Animate stat cards on scroll
+        animateOnScroll();
+        });
+
+        // Sidebar Toggle
+        function toggleSidebar() {
+        const sidebar = document.getElementById('appSidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const isMobile = window.innerWidth <= 768;
+
+        if (isMobile) {
+        sidebar.classList.toggle('mobile-open');
+        overlay.classList.toggle('active');
+        } else {
+        sidebar.classList.toggle('collapsed');
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        }
+        }
+
+        // Restore sidebar state
+        (function () {
+        const sidebar = document.getElementById('appSidebar');
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed && window.innerWidth > 768) {
+        sidebar.classList.add('collapsed');
+        }
+        })();
+
+        // User Dropdown Toggle
+        function toggleUserDropdown() {
+        const dropdown = document.getElementById('userDropdown');
+        const menu = document.getElementById('userMenu');
+        dropdown.classList.toggle('show');
+        menu.classList.toggle('active');
+        }
+
+        // Theme Toggle
+        function toggleTheme() {
+        const html = document.documentElement;
+        const icon = document.getElementById('themeIcon');
+        const currentTheme = html.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+        html.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+
+        if (newTheme === 'dark') {
+        icon.classList.remove('bi-moon-fill');
+        icon.classList.add('bi-sun-fill');
+        } else {
+        icon.classList.remove('bi-sun-fill');
+        icon.classList.add('bi-moon-fill');
+        }
+        }
+
+        // Restore theme
+        (function () {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        const icon = document.getElementById('themeIcon');
+        if (savedTheme === 'dark' && icon) {
+        icon.classList.remove('bi-moon-fill');
+        icon.classList.add('bi-sun-fill');
+        }
+        })();
+
+        // Handle window resize
+        window.addEventListener('resize', function () {
+        const sidebar = document.getElementById('appSidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        if (window.innerWidth > 768) {
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('active');
+        }
+        });
+
+        // Animate elements on scroll
+        function animateOnScroll() {
+        const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+        if (entry.isIntersecting) {
+        entry.target.style.animationPlayState = 'running';
+        }
+        });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.stat-card, .card').forEach(el => {
+        observer.observe(el);
+        });
+        }
+
+        // Quick Actions FAB
+        function showQuickActions() {
+        // You can implement a modal or dropdown here
+        console.log('Quick actions clicked');
+        }
     </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

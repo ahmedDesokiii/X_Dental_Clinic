@@ -6,7 +6,7 @@
 }
 
 <!-- Main content -->
-<section class="container-fluid mt-4">
+<section class="container-fluid mt-4" dir="rtl">
     <div class="row">
         <div class="col-md-1"></div>
         <div class="col-md-10">
@@ -95,6 +95,9 @@
 
 <partial name="_SaveRole" model="new RoleFormViewModel()" />
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+}
 @section Scripts {
     <script src="~/js/Roles.js"></script>
    

@@ -2,21 +2,73 @@
 @{
     ViewData["Title"] = "قائمة المستخدمين";
     Layout = "~/Views/Shared/_Layout.cshtml";
-
-    string state = "";
 }
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" />
+    <style>
+        #tableUser tfoot th {
+            padding: 4px 8px;
+            background-color: #FCBF49 !important;
+        }
+
+        #tableUser tfoot input {
+            width: 100%;
+            padding: 4px 8px;
+            font-size: 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+
+            #tableUser tfoot input:focus {
+                outline: none;
+                border-color: #415E72;
+                box-shadow: 0 0 0 2px rgba(65, 94, 114, 0.15);
+            }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 4px 10px;
+            margin: 0 2px;
+            border-radius: 4px;
+        }
+
+            .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+                background: #415E72 !important;
+                color: white !important;
+                border: 1px solid #415E72 !important;
+            }
+
+            .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+                background: #e2e8f0 !important;
+                border: 1px solid #cbd5e1 !important;
+            }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @@keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+}
+
 <!-- Main content -->
-
-<section class="container-fluid mt-4">
+<section class="container-fluid mt-4" dir="rtl">
     <div class="row">
-
         <div class="col-md-1"></div>
         <div class="col-md-10">
             <div class="card p-0">
                 <div class="card-header d-flex align-items-center justify-content-start bg-info-subtle py-0">
                     <div class="col-md-1">
-                        <!-- Button trigger modal -->
-                        <a title="إضافة مستخدم جديد" class="btn btn-outline-dark border-0 bg-transparent ms-3 fs-1  rounded-3 " asp-action="AddUser" asp-controller="Users">
+                        <a title="إضافة مستخدم جديد" class="btn btn-outline-dark border-0 bg-transparent ms-3 fs-1 rounded-3" asp-action="AddUser" asp-controller="Users">
                             <i class="bi bi-person-fill-add fs-1 fw-bold" style="color:#415E72 !important;"></i>
                         </a>
                     </div>
@@ -27,133 +79,294 @@
                         </span>
                     </div>
                 </div>
-                <!-- /.card-header -->
-
                 <div class="card-body p-0">
-                    <!-- Tab links -->
-                    @*  <div class="tab">
-                        <button class="tablinks" onclick="openCity('event', 'Users')" id="defaultOpen">قائمة المستخدمين</button>
-                    </div> *@
-                    <!-- Tab content -->
-                    @if (!Model.Any())
-                    {
-                        <div class="alert  alert-warning mt-5">
-                            <h4 class="alert-heading">لا يوجد مستخدمين !</h4>
-                            <p class="mb-0">لم يتم اضافة مستخدمين للتطبيق حتي الآن</p>
-                        </div>
-                    }
-                    else
-                    {
-
-                        <div id="Users" class="tabcontent">
-                            <table class="table table-hover display nowrap  px-0 table-bordered border-primary-subtle" id="tableUser">
-                                <thead>
-                                    <tr class="text-center">
-                                        <th class=" text-white text-center fs-6" style="width:7%;background-color:#415E72 !important;">الكود</th>
-                                        <th class=" text-white text-center fs-6" style="width:15%;background-color:#415E72 !important;">الاسـم</th>
-                                        <th class=" text-white text-center fs-6" style="width:7%;background-color:#415E72 !important;">اسم المستخدم</th>
-                                        <th class=" text-white text-center fs-6" style="width:9%;background-color:#415E72 !important;">التليفون</th>
-                                        <th class=" text-white text-center fs-6" style="width:20%;background-color:#415E72 !important;">المجموعات</th>
-                                        <th class=" text-white text-center fs-6" style="width:7%;background-color:#415E72 !important;">الحالة</th>
-                                        <th class=" text-white text-center fs-6" style="width:15%;background-color:#415E72 !important;">اجراءات</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var user in Model)
-                                    {
-                                        if (user.CurrentState == 0)
-                                            state = "غير نشط";
-                                        if (user.CurrentState == 1)
-                                            state = "معلق";
-                                        if (user.CurrentState == 2)
-                                            state = "نشط";
-
-                                        <tr class="text-center">
-                                            <td class="fs-6 text-center  px-1  py-1">@user.Code</td>
-                                            <td class="fs-6 px-1 py-1 "><span class="link-dark">@user.FullName_Ar</span></td>
-                                            <td class="fs-6 px-1">@user.UserName</td>
-                                            <td class="fs-6 text-center px-1">@user.PhoneNumber</td>
-                                            <td class=" fs-6 px-1 py-1">@string.Join(" , ", user.Roles.ToList())</td>
-                                            @if (state.Equals("نشط"))
-                                            {
-                                                <td class="fw-bold fs-6 px-1 py-2 m-0 text-success"><span class="bg-success-subtle p-2 rounded-5">@state</span></td>
-                                            }
-                                            else if (state.Equals("معلق"))
-                                            {
-                                                <td class="fw-bold fs-6 px-1 py-2 m-0 text-warning"><span class="bg-warning-subtle p-2 rounded-5">@state</span></td>
-                                            }
-                                            else if (state.Equals("غير نشط"))
-                                            {
-                                                <td class="fw-bold fs-6 px-1 py-2 m-0 text-danger"><span class="bg-danger-subtle p-2 rounded-5">@state</span></td>
-                                            }
-
-                                            <td class="py-1">
-                                                <a class="btn fw-bold btn-outline-dark bg-transparent border-0 text-center p-0 mx-1 fs-5" title="مجموعات" asp-controller="Users" asp-action="ManageRoles" asp-route-userId="@user.Id"><i class="bi bi-view-stacked"></i><br></a>
-                                                <a class="btn fw-bold btn-outline-dark bg-transparent border-0 p-0 mx-1 fs-5" title="تعديل" asp-controller="Users" asp-action="EditUser" asp-route-userId="@user.Id"><i class="bi bi-pencil-square"></i><br></a>
-                                                <a class="btn fw-bold btn-outline-dark bg-transparent  border-0 p-0 mx-1 fs-5" title="حـذف" asp-controller="Users" asp-action="DeleteUser" asp-route-Id="@user.Id"><i class="bi bi-trash3-fill"></i><br></a>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                                <tfoot class="bg-danger-subtle">
-                                    <tr class="text-center">
-                                        <th style="width:7%;background-color:#FCBF49 !important;">الكود</th>
-                                        <th style="width:7%;background-color:#FCBF49 !important;">الاسـم</th>
-                                        <th style="width:7%;background-color:#FCBF49 !important;">المستخدم</th>
-                                        <th style="width:7%;background-color:#FCBF49 !important;">التليفون</th>
-                                        <th style="width:7%;background-color:#FCBF49 !important;">المجموعات</th>
-                                        <th style="width:7%;background-color:#FCBF49 !important;">الحالة</th>
-                                        <th style="width:7%;background-color:#FCBF49 !important;">اجراءات</th>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    }
+                    <div id="Users" class="tabcontent">
+                        <table class="table table-hover display nowrap px-0 table-bordered border-primary-subtle" id="tableUser" style="width:100%">
+                            <thead>
+                                <tr class="text-center">
+                                    <th class="text-white text-center fs-6" style="background-color:#415E72 !important;">الكود</th>
+                                    <th class="text-white text-center fs-6" style="background-color:#415E72 !important;">الاسـم</th>
+                                    <th class="text-white text-center fs-6" style="background-color:#415E72 !important;">اسم المستخدم</th>
+                                    <th class="text-white text-center fs-6" style="background-color:#415E72 !important;">التليفون</th>
+                                    <th class="text-white text-center fs-6" style="background-color:#415E72 !important;">المجموعات</th>
+                                    <th class="text-white text-center fs-6" style="background-color:#415E72 !important;">الحالة</th>
+                                    <th class="text-white text-center fs-6" style="background-color:#415E72 !important;">اجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data loaded via AJAX -->
+                            </tbody>
+                            @* <tfoot>
+                                <tr>
+                                    <th>الكود</th>
+                                    <th>الاسـم</th>
+                                    <th>المستخدم</th>
+                                    <th>التليفون</th>
+                                    <th>المجموعات</th>
+                                    <th>الحالة</th>
+                                    <th>اجراءات</th>
+                                </tr>
+                            </tfoot> *@
+                        </table>
+                    </div>
                 </div>
-                <!-- /.card-body -->
             </div>
-            <!-- /.card -->
-            <!-- /.card -->
         </div>
         <div class="col-md-1"></div>
-        <!-- /.col -->
     </div>
-    <!-- /.row -->
 </section>
-<!-- /.content -->
+
+@Html.AntiForgeryToken()
+
 @section Scripts {
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
-    
-    @if (!string.IsNullOrEmpty(Context.Session.GetString(Helper.MsgType)))
+    <script>
+        $(document).ready(function () {
+        // ⚡ FIX: Destroy existing DataTable if already initialized
+        if ($.fn.DataTable.isDataTable('#tableUser')) {
+        $('#tableUser').DataTable().destroy();
+        // Remove any existing event handlers on footer inputs
+        $('#tableUser tfoot').off();
+        }
+
+        // Build footer search inputs
+        $('#tableUser tfoot th').each(function () {
+        var title = $(this).text();
+        $(this).html('<input type="text" placeholder="بحث بـ ' + title + '" class="form-control form-control-sm" />');
+        });
+
+        var table = $('#tableUser').DataTable({
+        processing: true,
+        serverSide: true,
+        responsive: true,
+        autoWidth: true,
+        pageLength: 10,
+        lengthMenu: [10, 25, 50, 100, 200, 400, 1000],
+        ordering: true,
+        retrieve: true,  // ⚡ FIX: Allow re-initialization without error
+
+        ajax: {
+        url: '/Users/GetUsersData',
+        type: 'POST',
+        contentType: 'application/json',
+        data: function(d) {
+        return JSON.stringify(d);
+        },
+        error: function(xhr, error, thrown) {
+        console.error('DataTables error:', error, thrown);
+        Swal.fire({
+        title: 'خطأ',
+        text: 'فشل تحميل البيانات من الخادم',
+        icon: 'error',
+        confirmButtonColor: '#415E72'
+        });
+        }
+        },
+
+        columns: [
+        {
+        data: 'code',
+        name: 'code',
+        className: 'text-center fs-6',
+        searchable: true,
+        orderable: true
+        },
+        {
+        data: 'fullName_Ar',
+        name: 'fullNameAr',
+        className: 'fs-6',
+        render: function(data) {
+        return '<span class="link-dark fw-semibold">' + (data || '-') + '</span>';
+        },
+        searchable: true,
+        orderable: true
+        },
+        {
+        data: 'userName',
+        name: 'userName',
+        className: 'fs-6 text-center',
+        searchable: true,
+        orderable: true
+        },
+        {
+        data: 'phoneNumber',
+        name: 'phoneNumber',
+        className: 'fs-6 text-center',
+        render: function(data) {
+        return data ? '<span style="font-family: monospace; direction: ltr;">' + data + '</span>' : '-';
+        },
+        searchable: true,
+        orderable: true
+        },
+        {
+        data: 'roles',
+        name: 'roles',
+        className: 'fs-6',
+        render: function(data) {
+        if (!data || data.length === 0) return '<span class="text-muted">-</span>';
+        return data.join(' ، ');
+        },
+        searchable: true,
+        orderable: false
+        },
+        {
+        data: 'currentState',
+        name: 'currentState',
+        className: 'text-center',
+        render: function(data) {
+        if (data === 2) {
+        return '<span class="badge bg-success-subtle text-success fw-bold px-2 py-2 rounded-5"><i class="bi bi-check-circle-fill"></i> نشط</span>';
+        } else if (data === 1) {
+        return '<span class="badge bg-warning-subtle text-warning fw-bold px-2 py-2 rounded-5"><i class="bi bi-pause-circle-fill"></i> معلق</span>';
+        } else {
+        return '<span class="badge bg-danger-subtle text-danger fw-bold px-2 py-2 rounded-5"><i class="bi bi-x-circle-fill"></i> غير نشط</span>';
+        }
+        },
+        searchable: true,
+        orderable: true
+        },
+        {
+        data: null,
+        orderable: false,
+        searchable: false,
+        className: 'text-center',
+        render: function(data) {
+        return `
+        <a class="btn fw-bold btn-outline-dark bg-transparent border-0 text-center p-0 mx-1 fs-5"
+        title="مجموعات" href="/Users/ManageRoles?userId=${data.id}">
+        <i class="bi bi-view-stacked"></i>
+        </a>
+        <a class="btn fw-bold btn-outline-dark bg-transparent border-0 p-0 mx-1 fs-5"
+        title="تعديل" href="/Users/EditUser?userId=${data.id}">
+        <i class="bi bi-pencil-square"></i>
+        </a>
+        <button type="button" class="btn fw-bold btn-outline-dark bg-transparent border-0 p-0 mx-1 fs-5"
+        title="حـذف" onclick="deleteUser(${data.id})">
+        <i class="bi bi-trash3-fill"></i>
+        </button>`;
+        }
+        }
+        ],
+
+        layout: {
+        topStart: {
+        search: {
+        placeholder: 'ابحث هنا... !'
+        }
+        },
+        topEnd: {
+        pageLength: {
+        menu: [10, 25, 50, 100, 200, 400, 1000]
+        }
+        },
+        bottomEnd: {
+        paging: {
+        buttons: 6
+        }
+        }
+        },
+
+        language: {
+        search: '<i class="bi bi-search"></i>',
+        searchPlaceholder: 'ابحث هنا... !',
+        lengthMenu: '_MENU_',
+        info: 'إظهار _START_ إلى _END_ من أصل _TOTAL_ سجل',
+        zeroRecords: 'لم يعثر على أي سجل',
+        paginate: {
+        first: 'الأول',
+        previous: 'السابق',
+        next: 'التالي',
+        last: 'الأخير'
+        },
+        processing: '<i class="bi bi-arrow-repeat spin"></i> جاري التحميل...'
+        },
+
+        deferRender: true,
+
+        initComplete: function() {
+        // Apply footer column search
+        var api = this.api();
+        api.columns().every(function () {
+        var that = this;
+        $('input', this.footer()).on('keyup change clear', function () {
+        if (that.search() !== this.value) {
+        that.search(this.value).draw();
+        }
+        });
+        });
+        }
+        });
+        });
+
+        function deleteUser(id) {
+        Swal.fire({
+        title: 'هل أنت متأكد؟',
+        text: 'سيتم تعطيل المستخدم من النظام',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#415E72',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'نعم، احذف!',
+        cancelButtonText: 'إلغاء',
+        reverseButtons: true
+        }).then((result) => {
+        if (result.isConfirmed) {
+        $.ajax({
+        url: '/Users/DeleteUser',
+        type: 'POST',
+        data: { Id: id },
+        headers: {
+        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+        },
+        success: function(response) {
+        if (response.success) {
+        $('#tableUser').DataTable().ajax.reload();
+        Swal.fire({
+        title: 'تم!',
+        text: response.message || 'تم تعطيل المستخدم بنجاح.',
+        icon: 'success',
+        confirmButtonColor: '#415E72',
+        confirmButtonText: 'حسناً',
+        timer: 2000,
+        timerProgressBar: true
+        });
+        } else {
+        Swal.fire({
+        title: 'خطأ',
+        text: response.message || 'حدث خطأ أثناء الحذف',
+        icon: 'error',
+        confirmButtonColor: '#415E72',
+        confirmButtonText: 'حسناً'
+        });
+        }
+        },
+        error: function() {
+        Swal.fire({
+        title: 'خطأ',
+        text: 'فشل الاتصال بالخادم',
+        icon: 'error',
+        confirmButtonColor: '#415E72',
+        confirmButtonText: 'حسناً'
+        });
+        }
+        });
+        }
+        });
+        }
+    </script>
+
+    @if (TempData[Helper.MsgType] != null)
     {
-        if (Context.Session.GetString(Helper.MsgType) == Helper.Success)
-        {
-            <script>
-
-                Swal.fire({
-                    title: '@Context.Session.GetString(Helper.Title)',
-                    text: '@Html.Raw(@Context.Session.GetString(Helper.Msg))',
-                    confirmButtonText: 'Ok',
-                    icon: 'success'
-                });
-            </script>
-
-        }
-        else
-        {
-            <script>
-
-                Swal.fire({
-                    title: '@Context.Session.GetString(Helper.Title)',
-                    text: '@Html.Raw(@Context.Session.GetString(Helper.Msg))',
-                    confirmButtonText: 'Ok',
-                    icon: 'error'
-                });
-            </script>
-        }
-        Context.Session.SetString(Helper.MsgType, "");
+        <script>
+            Swal.fire({
+            title: '@TempData[Helper.Title]',
+            text: '@Html.Raw(TempData[Helper.Msg])',
+            confirmButtonText: 'حسناً',
+            icon: '@(TempData[Helper.MsgType]?.ToString() == Helper.Success ? "success" : "error")',
+            confirmButtonColor: '#415E72'
+            });
+        </script>
     }
-
 }
-
-    

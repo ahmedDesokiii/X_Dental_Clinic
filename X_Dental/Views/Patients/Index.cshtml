@@ -1,0 +1,678 @@
+﻿@model Dental.Modules.Patients.ViewModels.PatientIndexViewModel
+@{
+    ViewData["Title"] = "قائمة المرضى";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" />
+    <style>
+        :root {
+            --brand: #415E72;
+            --brand-dark: #2f4757;
+            --brand-light: #eaf1f5;
+            --radius-lg: 18px;
+            --radius-md: 12px;
+            --shadow-soft: 0 4px 20px rgba(15, 30, 40, 0.06);
+            --shadow-hover: 0 10px 28px rgba(15, 30, 40, 0.12);
+        }
+
+        body {
+            background: #f4f6f8;
+        }
+
+        .patients-hero {
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+            border-radius: var(--radius-lg);
+            padding: 26px 32px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-soft);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .patients-hero::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 90% -10%, rgba(255,255,255,0.12), transparent 55%);
+            }
+
+            .patients-hero .hero-title {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .patients-hero .hero-icon {
+                width: 52px;
+                height: 52px;
+                background: rgba(255,255,255,0.15);
+                border-radius: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5rem;
+            }
+
+            .patients-hero h1 {
+                font-size: 1.4rem;
+                font-weight: 700;
+                margin: 0;
+            }
+
+            .patients-hero p {
+                font-size: 0.85rem;
+                margin: 2px 0 0;
+                opacity: 0.85;
+            }
+
+        .btn-add-patient {
+            background: #fff;
+            color: var(--brand-dark);
+            border: none;
+            padding: 11px 22px;
+            border-radius: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: transform .2s ease, box-shadow .2s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+            .btn-add-patient:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+                color: var(--brand-dark);
+            }
+
+        .stat-card {
+            background: #fff;
+            border-radius: var(--radius-md);
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: var(--shadow-soft);
+            transition: transform .25s ease, box-shadow .25s ease;
+            height: 100%;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-3px);
+                box-shadow: var(--shadow-hover);
+            }
+
+        .stat-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .stat-total .stat-icon {
+            background: linear-gradient(135deg,#415E72,#2f4757);
+        }
+
+        .stat-general .stat-icon {
+            background: linear-gradient(135deg,#0ea5b7,#0891a1);
+        }
+
+        .stat-ortho .stat-icon {
+            background: linear-gradient(135deg,#f59e0b,#d97706);
+        }
+
+        .stat-both .stat-icon {
+            background: linear-gradient(135deg,#8b5cf6,#7c3aed);
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #1f2937;
+            line-height: 1.1;
+        }
+
+        .stat-label {
+            font-size: 0.78rem;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .patients-card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-soft);
+            overflow: hidden;
+            border: none;
+        }
+
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid #eef1f3;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .pill-toggle {
+            display: inline-flex;
+            background: #eef2f5;
+            border-radius: 999px;
+            padding: 4px;
+            gap: 2px;
+        }
+
+            .pill-toggle .pill-btn {
+                border: none;
+                background: transparent;
+                padding: 8px 18px;
+                border-radius: 999px;
+                font-size: 0.85rem;
+                font-weight: 700;
+                color: #64748b;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                transition: all .25s ease;
+                cursor: pointer;
+            }
+
+                .pill-toggle .pill-btn.active {
+                    background: #fff;
+                    color: var(--brand-dark);
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                }
+
+                .pill-toggle .pill-btn:hover:not(.active) {
+                    color: var(--brand);
+                }
+
+        #tablePatients thead th {
+            background: var(--brand) !important;
+            color: #fff !important;
+            font-size: 0.82rem;
+            font-weight: 700;
+            border: none !important;
+            padding: 14px 10px;
+        }
+
+        #tablePatients tbody td {
+            padding: 12px 10px;
+            vertical-align: middle;
+            border-color: #f1f3f5;
+        }
+
+        #tablePatients tbody tr {
+            transition: background-color .2s ease, transform .15s ease;
+            opacity: 0;
+            animation: rowFadeIn .4s ease forwards;
+        }
+
+            #tablePatients tbody tr:hover {
+                background-color: var(--brand-light) !important;
+            }
+
+        @@keyframes rowFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #tablePatients tbody tr:nth-child(1) {
+            animation-delay: .02s;
+        }
+
+        #tablePatients tbody tr:nth-child(2) {
+            animation-delay: .05s;
+        }
+
+        #tablePatients tbody tr:nth-child(3) {
+            animation-delay: .08s;
+        }
+
+        #tablePatients tbody tr:nth-child(4) {
+            animation-delay: .11s;
+        }
+
+        #tablePatients tbody tr:nth-child(5) {
+            animation-delay: .14s;
+        }
+
+        #tablePatients tbody tr:nth-child(6) {
+            animation-delay: .17s;
+        }
+
+        #tablePatients tbody tr:nth-child(7) {
+            animation-delay: .20s;
+        }
+
+        #tablePatients tbody tr:nth-child(8) {
+            animation-delay: .23s;
+        }
+
+        .patient-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .patient-name-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .action-icon-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            transition: all .2s ease;
+        }
+
+            .action-icon-btn:hover {
+                background: var(--brand-light);
+                color: var(--brand-dark);
+                transform: translateY(-1px);
+            }
+
+            .action-icon-btn.danger:hover {
+                background: #fee2e2;
+                color: #dc2626;
+            }
+
+        .table-loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            backdrop-filter: blur(1px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .2s ease;
+        }
+
+            .table-loading-overlay.show {
+                opacity: 1;
+                pointer-events: all;
+            }
+
+        .loading-pulse {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--brand-dark);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+            .loading-pulse i {
+                animation: spin 0.9s linear infinite;
+                font-size: 1.3rem;
+            }
+
+        @@keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 5px 12px;
+            margin: 0 2px;
+            border-radius: 8px;
+        }
+
+            .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+                background: var(--brand) !important;
+                color: #fff !important;
+                border: 1px solid var(--brand) !important;
+            }
+
+            .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+                background: var(--brand-light) !important;
+                border: 1px solid #cbd5e1 !important;
+            }
+
+        #tablePatients_filter input {
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+            padding: 6px 12px;
+        }
+    </style>
+}
+
+<section class="container-fluid mt-4" dir="rtl">
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+
+            <div class="patients-hero">
+                <div class="hero-title">
+                    <div class="hero-icon"><i class="bi bi-people-fill"></i></div>
+                    <div>
+                        <h1>قائمة المرضى</h1>
+                        <p>إدارة ملفات المرضى - عام وتقويم في مكان واحد</p>
+                    </div>
+                </div>
+                <a asp-action="Create" asp-controller="Patients" class="btn-add-patient">
+                    <i class="bi bi-person-plus-fill"></i> إضافة مريض جديد
+                </a>
+            </div>
+
+            <div class="row g-3 mb-3" id="statsRow">
+                <div class="col-6 col-md-3">
+                    <div class="stat-card stat-total">
+                        <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+                        <div>
+                            <span class="stat-value" data-target="0" id="statTotal">0</span>
+                            <span class="stat-label d-block">إجمالي المرضى</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card stat-general">
+                        <div class="stat-icon"><i class="bi bi-tooth"></i></div>
+                        <div>
+                            <span class="stat-value" data-target="0" id="statGeneral">0</span>
+                            <span class="stat-label d-block">علاج عام</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card stat-ortho">
+                        <div class="stat-icon"><i class="bi bi-braces"></i></div>
+                        <div>
+                            <span class="stat-value" data-target="0" id="statOrtho">0</span>
+                            <span class="stat-label d-block">تقويم أسنان</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card stat-both">
+                        <div class="stat-icon"><i class="bi bi-heart-pulse-fill"></i></div>
+                        <div>
+                            <span class="stat-value" data-target="0" id="statBoth">0</span>
+                            <span class="stat-label d-block">الملفين معًا</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card patients-card p-0">
+                <div class="filter-bar">
+                    <div class="pill-toggle" id="categoryFilterGroup">
+                        <button type="button" class="pill-btn active" data-category="">
+                            <i class="bi bi-grid-fill"></i> الكل
+                        </button>
+                        <button type="button" class="pill-btn" data-category="General">
+                            <i class="bi bi-tooth"></i> عام
+                        </button>
+                        <button type="button" class="pill-btn" data-category="Orthodontics">
+                            <i class="bi bi-braces"></i> تقويم
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-body p-0 position-relative">
+                    <div class="table-loading-overlay" id="tableLoadingOverlay">
+                        <div class="loading-pulse">
+                            <i class="bi bi-arrow-repeat"></i> جاري تحميل البيانات...
+                        </div>
+                    </div>
+
+                    <div class="table-responsive px-3 pb-3">
+                        <table class="table table-hover align-middle display nowrap" id="tablePatients" style="width:100%">
+                            <thead>
+                                <tr class="text-center">
+                                    <th class="text-center">الكود</th>
+                                    <th class="text-center">الاسم</th>
+                                    <th class="text-center">الهاتف</th>
+                                    <th class="text-center">النوع</th>
+                                    <th class="text-center">العمر</th>
+                                    <th class="text-center">نوع الملف</th>
+                                    <th class="text-center">الحالة</th>
+                                    <th class="text-center">اجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+        var currentCategoryFilter = '';
+
+        function animateCount(el, target) {
+        var startTime = null;
+        var duration = 900;
+        function step(ts) {
+        if (!startTime) startTime = ts;
+        var progress = Math.min((ts - startTime) / duration, 1);
+        el.text(Math.floor(progress * target));
+        if (progress < 1) requestAnimationFrame(step);
+        else el.text(target);
+        }
+        requestAnimationFrame(step);
+        }
+
+        function loadStats() {
+        $.get('/Patients/GetPatientsStats', function (res) {
+        animateCount($('#statTotal'), res.total || 0);
+        animateCount($('#statGeneral'), res.general || 0);
+        animateCount($('#statOrtho'), res.ortho || 0);
+        animateCount($('#statBoth'), res.both || 0);
+        });
+        }
+        loadStats();
+
+        var table = $('#tablePatients').DataTable({
+        processing: true,
+        serverSide: true,
+        responsive: true,
+        autoWidth: false,
+        pageLength: 10,
+        lengthMenu: [10, 25, 50, 100, 200, 400, 1000],
+        ordering: true,
+
+        ajax: {
+        url: '/Patients/GetPatientsData',
+        type: 'POST',
+        contentType: 'application/json',
+        data: function (d) {
+        d.categoryFilter = currentCategoryFilter;
+        return JSON.stringify(d);
+        },
+        error: function (xhr, error, thrown) {
+        console.error('DataTables error:', error, thrown);
+        Swal.fire({ title: 'خطأ', text: 'فشل تحميل البيانات من الخادم', icon: 'error', confirmButtonColor: '#415E72' });
+        }
+        },
+
+        columns: [
+        {
+        data: 'patientCode', name: 'patientCode', className: 'text-center fs-6',
+        render: function (data) { return '<span class="badge bg-secondary" style="font-family: monospace;">' + (data || '-') + '</span>'; }
+        },
+        {
+        data: null, name: 'fullNameAr', className: 'fs-6',
+        render: function (data) {
+        var name = data.fullNameAr || '-';
+        var initials = name.split(' ').filter(Boolean).slice(0, 2).map(function (p) { return p[0]; }).join('');
+        return '<div class="patient-name-cell">' +
+        '<div class="patient-avatar">' + (initials || '?') + '</div>' +
+        '<span class="link-dark fw-semibold">' + name + '</span>' +
+        '</div>';
+        }
+        },
+        {
+        data: 'phone', name: 'phone', className: 'fs-6 text-center',
+        render: function (data) { return data ? '<span style="font-family: monospace; direction: ltr;">' + data + '</span>' : '-'; }
+        },
+        { data: 'genderBadge', name: 'genderName', className: 'text-center', searchable: false },
+        {
+        data: 'age', name: 'age', className: 'text-center fs-6',
+        render: function (data) { return data || '<span class="text-muted">-</span>'; }
+        },
+        { data: 'categoryBadge', name: 'category', className: 'text-center', orderable: false, searchable: false },
+        { data: 'statusBadge', name: 'isActive', className: 'text-center', searchable: false },
+        {
+        data: null, orderable: false, searchable: false, className: 'text-center',
+        render: function (data) {
+        return `
+        <a class="action-icon-btn" title="عرض التفاصيل" href="/Patients/Details/${data.id}">
+        <i class="bi bi-eye"></i>
+        </a>
+        <a class="action-icon-btn" title="تعديل" href="/Patients/Edit/${data.id}">
+        <i class="bi bi-pencil-square"></i>
+        </a>
+        <button type="button" class="action-icon-btn danger" title="حذف" onclick="deletePatient(${data.id})">
+        <i class="bi bi-trash3-fill"></i>
+        </button>`;
+        }
+        }
+        ],
+
+        layout: {
+        topStart: { search: { placeholder: 'ابحث بالاسم، الكود، أو الهاتف...' } },
+        topEnd: { pageLength: { menu: [10, 25, 50, 100, 200, 400, 1000] } },
+        bottomEnd: { paging: { buttons: 6 } }
+        },
+
+        language: {
+        search: '<i class="bi bi-search"></i>',
+        searchPlaceholder: 'ابحث هنا... !',
+        lengthMenu: '_MENU_',
+        info: 'إظهار _START_ إلى _END_ من أصل _TOTAL_ سجل',
+        zeroRecords: 'لم يعثر على أي سجل',
+        paginate: { first: 'الأول', previous: 'السابق', next: 'التالي', last: 'الأخير' },
+        processing: ''
+        },
+
+        deferRender: true,
+
+        drawCallback: function () {
+        $('#tablePatients tbody tr').each(function () {
+        $(this).css('animation', 'none');
+        void this.offsetWidth;
+        $(this).css('animation', '');
+        });
+        }
+        });
+
+        $('#tablePatients').on('processing.dt', function (e, settings, processing) {
+        $('#tableLoadingOverlay').toggleClass('show', processing);
+        });
+
+        $('.pill-btn').on('click', function () {
+        $('.pill-btn').removeClass('active');
+        $(this).addClass('active');
+        currentCategoryFilter = $(this).data('category');
+        table.ajax.reload();
+        });
+        });
+
+        function deletePatient(id) {
+        Swal.fire({
+        title: 'هل أنت متأكد؟',
+        text: 'سيتم تعطيل المريض من النظام',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#415E72',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'نعم، احذف!',
+        cancelButtonText: 'إلغاء',
+        reverseButtons: true
+        }).then((result) => {
+        if (result.isConfirmed) {
+        $.ajax({
+        url: '/Patients/Delete',
+        type: 'POST',
+        data: { id: id },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        success: function (response) {
+        if (response.success) {
+        $('#tablePatients').DataTable().ajax.reload();
+        Swal.fire({ title: 'تم الحذف!', text: response.message || 'تم تعطيل المريض بنجاح.', icon: 'success', confirmButtonColor: '#415E72', confirmButtonText: 'حسناً', timer: 2000, timerProgressBar: true });
+        } else {
+        Swal.fire({ title: 'خطأ', text: response.message || 'حدث خطأ أثناء الحذف', icon: 'error', confirmButtonColor: '#415E72', confirmButtonText: 'حسناً' });
+        }
+        },
+        error: function () {
+        Swal.fire({ title: 'خطأ', text: 'فشل الاتصال بالخادم', icon: 'error', confirmButtonColor: '#415E72', confirmButtonText: 'حسناً' });
+        }
+        });
+        }
+        });
+        }
+    </script>
+
+    @if (TempData[Helper.MsgType] != null)
+    {
+        <script>
+            Swal.fire({
+            title: '@TempData[Helper.Title]',
+            text: '@Html.Raw(TempData[Helper.Msg])',
+            confirmButtonText: 'حسناً',
+            icon: '@(TempData[Helper.MsgType]?.ToString() == Helper.Success ? "success" : "error")',
+            confirmButtonColor: '#415E72'
+            });
+        </script>
+    }
+}

@@ -1,0 +1,355 @@
+﻿@using Dental.Modules.Patients.DTOs
+@model Dental.Modules.Patients.DTOs.UpdatePatientDto
+
+@{
+    ViewData["Title"] = "Edit Patient";
+
+    // Get SelectLists from ViewBag
+    var genderList = ViewBag.Genders as SelectList ?? new SelectList(new List<SelectListItem>());
+    var bloodGroupList = ViewBag.BloodGroups as SelectList ?? new SelectList(new List<SelectListItem>());
+}
+
+<style>
+    /* ── Header ── */
+    .patient-page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #fff;
+        border-radius: 14px;
+        padding: 16px 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        border: 1px solid rgba(122, 226, 207, 0.3);
+    }
+
+        .patient-page-header .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .patient-page-header .header-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: #0f766e;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .patient-page-header .header-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #134e4a;
+            margin: 0;
+        }
+
+        .patient-page-header .header-subtitle {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin: 2px 0 0 0;
+        }
+
+    .btn-save-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #0f766e;
+        color: #fff;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 8px rgba(15, 118, 110, 0.25);
+    }
+
+        .btn-save-header:hover {
+            background: #115e59;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(15, 118, 110, 0.35);
+        }
+
+    /* ── Equal Height Cards ── */
+    .cards-row-equal {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+        .cards-row-equal > [class*="col-"] {
+            display: flex;
+            flex-direction: column;
+        }
+
+    .patient-form-card {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid rgba(122, 226, 207, 0.25);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        overflow: hidden;
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
+        margin-bottom: 16px;
+    }
+
+        .patient-form-card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transform: translateY(-1px);
+        }
+
+    .card-header-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 18px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #fff;
+        flex-shrink: 0;
+    }
+
+        .card-header-bar i {
+            font-size: 1.1rem;
+        }
+
+    .card-body-inner {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 18px;
+    }
+
+    /* Color-coded headers */
+    .header-name {
+        background: #0f766e;
+    }
+
+    .header-personal {
+        background: #0d9488;
+    }
+
+    .header-contact {
+        background: #14b8a6;
+    }
+
+    .header-notes {
+        background: #5eead4;
+        color: #134e4a !important;
+    }
+
+    /* ── Fields ── */
+    .field-wrapper label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .field-wrapper .required {
+        color: #dc2626;
+    }
+
+    .field-wrapper .form-control,
+    .field-wrapper .form-select {
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 0.9rem;
+        color: #111827;
+        background: #fff;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+        .field-wrapper .form-control:focus,
+        .field-wrapper .form-select:focus {
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+            outline: none;
+        }
+
+        .field-wrapper .form-control::placeholder {
+            color: #9ca3af;
+        }
+
+    .field-wrapper .text-danger {
+        font-size: 0.8rem;
+        margin-top: 4px;
+        display: block;
+    }
+
+    /* ── Notes Textarea ── */
+    .notes-textarea {
+        flex: 1;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        padding: 12px;
+        font-size: 0.9rem;
+        color: #111827;
+        resize: vertical;
+        min-height: 120px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+        .notes-textarea:focus {
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+            outline: none;
+        }
+
+    /* ── Responsive ── */
+    @@media (max-width: 900px) {
+        .patient-page-header {
+            flex-direction: column;
+            gap: 14px;
+            text-align: center;
+        }
+
+            .patient-page-header .header-left {
+                flex-direction: column;
+            }
+    }
+</style>
+
+<div class="container-fluid" dir="ltr">
+
+    <!-- 🔷 Header with Save Button -->
+    <div class="patient-page-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="bi bi-pencil-square"></i>
+            </div>
+            <div>
+                <h5 class="header-title">Edit Patient</h5>
+                <p class="header-subtitle">Update patient information</p>
+            </div>
+        </div>
+        <button type="submit" form="patientForm" class="btn-save-header">
+            <i class="bi bi-check-lg"></i>
+            Save Changes
+        </button>
+    </div>
+
+    <!-- 🔷 Form -->
+    <form id="patientForm" asp-action="Edit" method="post">
+
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <!-- ✅ Cards Row with Equal Height -->
+        <div class="row cards-row-equal">
+
+            <!-- Patient Name -->
+            <div class="col-3">
+                <div class="patient-form-card">
+                    <div class="card-header-bar header-name">
+                        <i class="bi bi-person-fill"></i>
+                        Patient Name
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="field-wrapper">
+                            <label>Full Name <span class="required">*</span></label>
+                            <input asp-for="FullNameAr" class="form-control" placeholder="Enter patient name" />
+                            <span asp-validation-for="FullNameAr" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Information -->
+            <div class="col-3">
+                <div class="patient-form-card">
+                    <div class="card-header-bar header-personal">
+                        <i class="bi bi-card-checklist"></i>
+                        Personal Information
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="field-wrapper">
+                            <label>Gender</label>
+                            <!-- ✅ asp-items from ViewBag -->
+                            <select asp-for="GenderId" asp-items="@genderList" class="form-select">
+                                <option value="">-- Select --</option>
+                            </select>
+                        </div>
+                        <div class="field-wrapper mt-3">
+                            <label>Birth Date</label>
+                            <input asp-for="DateOfBirth" type="date" class="form-control" />
+                        </div>
+                        <div class="field-wrapper mt-3">
+                            <label>Blood Group</label>
+                            <!-- ✅ asp-items from ViewBag -->
+                            <select asp-for="BloodGroupId" asp-items="@bloodGroupList" class="form-select">
+                                <option value="">-- Select --</option>
+                            </select>
+                        </div>
+                        <div class="field-wrapper mt-3">
+                            <label>National ID</label>
+                            <input asp-for="NationalId" class="form-control" placeholder="14 digits" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="col-3">
+                <div class="patient-form-card">
+                    <div class="card-header-bar header-contact">
+                        <i class="bi bi-telephone-fill"></i>
+                        Contact Information
+                    </div>
+                    <div class="card-body-inner">
+                        <div class="field-wrapper">
+                            <label>Mobile <span class="required">*</span></label>
+                            <input asp-for="Mobile" class="form-control" placeholder="+20 xxx xxx xxxx" />
+                        </div>
+                        <div class="field-wrapper mt-3">
+                            <label>Phone</label>
+                            <input asp-for="Phone" class="form-control" placeholder="Optional" />
+                        </div>
+                        <div class="field-wrapper mt-3">
+                            <label>Email</label>
+                            <input asp-for="Email" class="form-control" placeholder="patient@email.com" />
+                        </div>
+                        <div class="field-wrapper mt-3">
+                            <label>Address</label>
+                            <input asp-for="Address" class="form-control" placeholder="Enter address" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="col-3">
+                <div class="patient-form-card">
+                    <div class="card-header-bar header-notes">
+                        <i class="bi bi-journal-text"></i>
+                        Notes & Observations
+                    </div>
+                    <div class="card-body-inner">
+                        <textarea asp-for="Notes" class="form-control notes-textarea" placeholder="Enter any additional notes, observations, or special instructions about the patient..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

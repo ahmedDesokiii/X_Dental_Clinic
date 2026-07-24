@@ -1,0 +1,137 @@
+﻿@using Dental.Modules.Patients.DTOs
+@model Dental.Modules.Patients.DTOs.CreatePatientDto
+
+@{
+    ViewData["Title"] = "Add Patient";
+}
+
+<!-- 🔷 Page Header -->
+<div class="page-header">
+    <div class="heading">
+        <div class="icon-tile"><i class="bi bi-person-plus-fill"></i></div>
+        <div>
+            <h1>إضافة مريض جديد</h1>
+            <p class="sub">أكمل بيانات تسجيل المريض</p>
+        </div>
+    </div>
+    <div class="actions">
+        <a asp-action="Index" class="btn btn-ghost">إلغاء</a>
+        <button type="submit" form="patientForm" class="btn btn-primary">
+            <i class="bi bi-check-lg"></i> حفظ المريض
+        </button>
+    </div>
+</div>
+
+<!-- 🔷 Form -->
+<form id="patientForm" asp-action="Create" method="post">
+
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="form-grid">
+
+        <!-- Patient Name -->
+        <div>
+            <div class="card h-100">
+                <div class="section-head tone-navy">
+                    <i class="bi bi-person-fill"></i> اسم المريض
+                </div>
+                <div class="card-body">
+                    <div class="field">
+                        <label>الاسم الكامل <span class="req">*</span></label>
+                        <input asp-for="FullNameAr" class="form-control" placeholder="ادخل اسم المريض" />
+                        <span asp-validation-for="FullNameAr" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personal Information -->
+        <div>
+            <div class="card h-100">
+                <div class="section-head tone-coral">
+                    <i class="bi bi-card-checklist"></i> البيانات الشخصية
+                </div>
+                <div class="card-body">
+                    <div class="field">
+                        <label>النوع</label>
+                        <select asp-for="GenderId" class="form-select">
+                            <option value="">-- اختر --</option>
+                            <option value="1">ذكر</option>
+                            <option value="2">أنثى</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>تاريخ الميلاد</label>
+                        <input asp-for="DateOfBirth" type="date" class="form-control" />
+                    </div>
+                    <div class="field">
+                        <label>فصيلة الدم</label>
+                        <select asp-for="BloodGroupId" class="form-select">
+                            <option value="">-- اختر --</option>
+                            <option value="1">A+</option>
+                            <option value="2">A-</option>
+                            <option value="3">B+</option>
+                            <option value="4">B-</option>
+                            <option value="5">AB+</option>
+                            <option value="6">AB-</option>
+                            <option value="7">O+</option>
+                            <option value="8">O-</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>الرقم القومي</label>
+                        <input asp-for="NationalId" class="form-control" placeholder="14 رقم" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div>
+            <div class="card h-100">
+                <div class="section-head tone-teal">
+                    <i class="bi bi-telephone-fill"></i> بيانات التواصل
+                </div>
+                <div class="card-body">
+                    <div class="field">
+                        <label>الموبايل <span class="req">*</span></label>
+                        <input asp-for="Mobile" class="form-control" placeholder="+20 xxx xxx xxxx" />
+                    </div>
+                    <div class="field">
+                        <label>تليفون</label>
+                        <input asp-for="Phone" class="form-control" placeholder="اختياري" />
+                    </div>
+                    <div class="field">
+                        <label>البريد الإلكتروني</label>
+                        <input asp-for="Email" class="form-control" placeholder="patient@email.com" />
+                    </div>
+                    <div class="field">
+                        <label>العنوان</label>
+                        <input asp-for="Address" class="form-control" placeholder="ادخل العنوان" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div>
+            <div class="card h-100">
+                <div class="section-head tone-light">
+                    <i class="bi bi-journal-text"></i> ملاحظات
+                </div>
+                <div class="card-body d-flex flex-column flex-fill">
+                    <textarea asp-for="Notes" class="form-control notes-textarea" placeholder="أي ملاحظات أو تعليمات خاصة بالمريض..."></textarea>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

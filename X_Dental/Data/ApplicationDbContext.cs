@@ -1,8 +1,9 @@
 ﻿
-using Microsoft.EntityFrameworkCore;
 using Dental.Models;
+using Dental.Models.Patient;
 using Dental.Models.User;
 using Dental.Models.User;
+using Microsoft.EntityFrameworkCore;
 using System.Reflection.Emit;
 
 namespace Dental.Data
@@ -17,6 +18,7 @@ namespace Dental.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
             #region EF - Users | Roles
 
             builder.Entity<ApplicationUser>().ToTable("ERP_WebUsers");
@@ -35,5 +37,15 @@ namespace Dental.Data
         {
             base.OnConfiguring(optionsBuilder);
         }
+
+        public DbSet<Patient> Patients => Set<Patient>();
+        public DbSet<Gender> Genders => Set<Gender>();
+        public DbSet<BloodGroup> BloodGroups => Set<BloodGroup>();
+        public DbSet<PatientContact> PatientContacts => Set<PatientContact>();
+        public DbSet<PatientMedicalInfo> PatientMedicalInfo => Set<PatientMedicalInfo>();
+        public DbSet<PatientDocument> PatientDocuments => Set<PatientDocument>();
+        public DbSet<Tag> Tags => Set<Tag>();
+        public DbSet<PatientTag> PatientTags => Set<PatientTag>();
+        public DbSet<Visit> Visits => Set<Visit>();
     }
 }
