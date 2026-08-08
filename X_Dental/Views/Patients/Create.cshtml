@@ -2,136 +2,186 @@
 @model Dental.Modules.Patients.DTOs.CreatePatientDto
 
 @{
-    ViewData["Title"] = "Add Patient";
+    ViewData["Title"] = "إضافة مريض جديد";
+    var genderList = ViewBag.Genders as SelectList ?? new SelectList(new List<SelectListItem>());
+    var bloodGroupList = ViewBag.BloodGroups as SelectList ?? new SelectList(new List<SelectListItem>());
 }
 
-<!-- 🔷 Page Header -->
-<div class="page-header">
-    <div class="heading">
-        <div class="icon-tile"><i class="bi bi-person-plus-fill"></i></div>
-        <div>
-            <h1>إضافة مريض جديد</h1>
-            <p class="sub">أكمل بيانات تسجيل المريض</p>
+@section Styles {
+    <link rel="stylesheet" href="~/css/patients-theme.css" />
+}
+
+<section class="container-fluid mt-4" dir="rtl">
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+
+            <!-- 🔷 Hero Header -->
+            <div class="erp-hero">
+                <div class="hero-title">
+                    <div class="hero-icon"><i class="bi bi-person-plus-fill"></i></div>
+                    <div>
+                        <h1>إضافة مريض جديد</h1>
+                        <p>أكمل بيانات تسجيل المريض</p>
+                    </div>
+                </div>
+                <div class="hero-actions">
+                    <a asp-action="Index" class="btn-hero btn-hero-ghost">
+                        <i class="bi bi-x-lg"></i> إلغاء
+                    </a>
+                    <button type="submit" form="patientForm" class="btn-hero btn-hero-light">
+                        <i class="bi bi-check-lg"></i> حفظ المريض
+                    </button>
+                </div>
+            </div>
+
+            <form id="patientForm" asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-3">
+
+                    <!-- Patient Identity -->
+                    <div class="col-12 col-lg-3">
+                        <div class="erp-card">
+                            <div class="erp-card-header tone-identity">
+                                <i class="bi bi-person-fill"></i> هوية المريض
+                            </div>
+                            <div class="erp-card-body">
+                                <div class="identity-preview">
+                                    <div class="avatar-preview" id="avatarPreview">؟</div>
+                                    <div>
+                                        <div class="fw-bold" id="namePreview" style="min-height:1.2em;">مريض جديد</div>
+                                        <span class="code-chip"><i class="bi bi-magic"></i> كود تلقائي عند الحفظ</span>
+                                    </div>
+                                </div>
+
+                                <div class="erp-field">
+                                    <label>الاسم الكامل <span class="required">*</span></label>
+                                    <input asp-for="FullNameAr" id="fullNameInput" class="form-control" placeholder="ادخل اسم المريض" autocomplete="off" />
+                                    <span asp-validation-for="FullNameAr" class="text-danger"></span>
+                                </div>
+
+                                <div class="erp-field">
+                                    <label>الاسم بالإنجليزية</label>
+                                    <input asp-for="FullNameEn" class="form-control" placeholder="Optional" autocomplete="off" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Personal Information -->
+                    <div class="col-12 col-lg-3">
+                        <div class="erp-card">
+                            <div class="erp-card-header tone-personal">
+                                <i class="bi bi-card-checklist"></i> البيانات الشخصية
+                            </div>
+                            <div class="erp-card-body">
+                                <div class="erp-field">
+                                    <label>النوع</label>
+                                    <div class="gender-chip-group" id="genderChipGroup">
+                                        <label class="gender-chip male">
+                                            <input type="radio" name="GenderId" value="1" />
+                                            <i class="bi bi-gender-male"></i> ذكر
+                                        </label>
+                                        <label class="gender-chip female">
+                                            <input type="radio" name="GenderId" value="2" />
+                                            <i class="bi bi-gender-female"></i> أنثى
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="erp-field">
+                                    <label>تاريخ الميلاد</label>
+                                    <input asp-for="DateOfBirth" type="date" class="form-control" />
+                                </div>
+                                <div class="erp-field">
+                                    <label>فصيلة الدم</label>
+                                    <select asp-for="BloodGroupId" asp-items="@bloodGroupList" class="form-select">
+                                        <option value="">-- اختر --</option>
+                                    </select>
+                                </div>
+                                <div class="erp-field">
+                                    <label>الرقم القومي</label>
+                                    <input asp-for="NationalId" class="form-control" placeholder="14 رقم" maxlength="14" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="col-12 col-lg-3">
+                        <div class="erp-card">
+                            <div class="erp-card-header tone-contact">
+                                <i class="bi bi-telephone-fill"></i> بيانات التواصل
+                            </div>
+                            <div class="erp-card-body">
+                                <div class="erp-field">
+                                    <label>الموبايل <span class="required">*</span></label>
+                                    <input asp-for="Mobile" class="form-control" placeholder="01xxxxxxxxx" dir="ltr" />
+                                    <span asp-validation-for="Mobile" class="text-danger"></span>
+                                </div>
+                                <div class="erp-field">
+                                    <label>تليفون</label>
+                                    <input asp-for="Phone" class="form-control" placeholder="اختياري" dir="ltr" />
+                                </div>
+                                <div class="erp-field">
+                                    <label>البريد الإلكتروني</label>
+                                    <input asp-for="Email" class="form-control" placeholder="patient@email.com" dir="ltr" />
+                                </div>
+                                <div class="erp-field">
+                                    <label>العنوان</label>
+                                    <input asp-for="Address" class="form-control" placeholder="ادخل العنوان" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="col-12 col-lg-3">
+                        <div class="erp-card">
+                            <div class="erp-card-header tone-notes">
+                                <i class="bi bi-journal-text"></i> ملاحظات
+                            </div>
+                            <div class="erp-card-body">
+                                <div class="erp-field d-flex flex-column flex-fill">
+                                    <label>ملاحظات إضافية</label>
+                                    <textarea asp-for="Notes" class="form-control erp-textarea" placeholder="أي ملاحظات أو تعليمات خاصة بالمريض..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+
         </div>
+        <div class="col-md-1"></div>
     </div>
-    <div class="actions">
-        <a asp-action="Index" class="btn btn-ghost">إلغاء</a>
-        <button type="submit" form="patientForm" class="btn btn-primary">
-            <i class="bi bi-check-lg"></i> حفظ المريض
-        </button>
-    </div>
-</div>
-
-<!-- 🔷 Form -->
-<form id="patientForm" asp-action="Create" method="post">
-
-    @Html.AntiForgeryToken()
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-    <div class="form-grid">
-
-        <!-- Patient Name -->
-        <div>
-            <div class="card h-100">
-                <div class="section-head tone-navy">
-                    <i class="bi bi-person-fill"></i> اسم المريض
-                </div>
-                <div class="card-body">
-                    <div class="field">
-                        <label>الاسم الكامل <span class="req">*</span></label>
-                        <input asp-for="FullNameAr" class="form-control" placeholder="ادخل اسم المريض" />
-                        <span asp-validation-for="FullNameAr" class="text-danger"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Personal Information -->
-        <div>
-            <div class="card h-100">
-                <div class="section-head tone-coral">
-                    <i class="bi bi-card-checklist"></i> البيانات الشخصية
-                </div>
-                <div class="card-body">
-                    <div class="field">
-                        <label>النوع</label>
-                        <select asp-for="GenderId" class="form-select">
-                            <option value="">-- اختر --</option>
-                            <option value="1">ذكر</option>
-                            <option value="2">أنثى</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label>تاريخ الميلاد</label>
-                        <input asp-for="DateOfBirth" type="date" class="form-control" />
-                    </div>
-                    <div class="field">
-                        <label>فصيلة الدم</label>
-                        <select asp-for="BloodGroupId" class="form-select">
-                            <option value="">-- اختر --</option>
-                            <option value="1">A+</option>
-                            <option value="2">A-</option>
-                            <option value="3">B+</option>
-                            <option value="4">B-</option>
-                            <option value="5">AB+</option>
-                            <option value="6">AB-</option>
-                            <option value="7">O+</option>
-                            <option value="8">O-</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label>الرقم القومي</label>
-                        <input asp-for="NationalId" class="form-control" placeholder="14 رقم" />
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Contact Information -->
-        <div>
-            <div class="card h-100">
-                <div class="section-head tone-teal">
-                    <i class="bi bi-telephone-fill"></i> بيانات التواصل
-                </div>
-                <div class="card-body">
-                    <div class="field">
-                        <label>الموبايل <span class="req">*</span></label>
-                        <input asp-for="Mobile" class="form-control" placeholder="+20 xxx xxx xxxx" />
-                    </div>
-                    <div class="field">
-                        <label>تليفون</label>
-                        <input asp-for="Phone" class="form-control" placeholder="اختياري" />
-                    </div>
-                    <div class="field">
-                        <label>البريد الإلكتروني</label>
-                        <input asp-for="Email" class="form-control" placeholder="patient@email.com" />
-                    </div>
-                    <div class="field">
-                        <label>العنوان</label>
-                        <input asp-for="Address" class="form-control" placeholder="ادخل العنوان" />
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Notes -->
-        <div>
-            <div class="card h-100">
-                <div class="section-head tone-light">
-                    <i class="bi bi-journal-text"></i> ملاحظات
-                </div>
-                <div class="card-body d-flex flex-column flex-fill">
-                    <textarea asp-for="Notes" class="form-control notes-textarea" placeholder="أي ملاحظات أو تعليمات خاصة بالمريض..."></textarea>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-</form>
+</section>
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        // ✅ Live avatar + name preview while typing
+        const nameInput = document.getElementById('fullNameInput');
+        const namePreview = document.getElementById('namePreview');
+        const avatarPreview = document.getElementById('avatarPreview');
+
+        nameInput.addEventListener('input', function () {
+            const name = this.value.trim();
+            namePreview.textContent = name || 'مريض جديد';
+            const initials = name.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('');
+            avatarPreview.textContent = initials || '؟';
+        });
+
+        // ✅ Gender chip visual toggle
+        document.querySelectorAll('#genderChipGroup input[type=radio]').forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                document.querySelectorAll('.gender-chip').forEach(c => c.classList.remove('checked'));
+                this.closest('.gender-chip').classList.add('checked');
+            });
+        });
+    </script>
 }

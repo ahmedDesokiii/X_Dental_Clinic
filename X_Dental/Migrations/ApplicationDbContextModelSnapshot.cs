@@ -185,10 +185,6 @@ namespace Dental.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("Occupation")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
                     b.Property<string>("PatientCode")
                         .IsRequired()
                         .HasMaxLength(20)

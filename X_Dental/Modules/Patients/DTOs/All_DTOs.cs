@@ -99,7 +99,6 @@ namespace Dental.Modules.Patients.DTOs
         public string? Email { get; set; }
         public string? Address { get; set; }
         public int? BloodGroupId { get; set; }
-        public string? Occupation { get; set; }
         public string? Notes { get; set; }
         public Gender? Gender { get; set; }
     }

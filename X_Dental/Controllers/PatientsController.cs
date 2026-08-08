@@ -240,19 +240,20 @@ namespace Dental.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreatePatientDto dto)
         {
+            if (!ModelState.IsValid)
+            {
+                await LoadSelectListsAsync(dto.GenderId, dto.BloodGroupId);
+                return View(dto);
+            }
+
             try
             {
-                // ⚡ Use cached gender instead of DB query
-                var gender = await GetGenderCachedAsync(dto.GenderId);
-                dto.Gender = gender;
-                dto.FullNameEn = dto.FullNameEn ?? "";
-
                 var result = await _patientService.CreateAsync(dto);
 
                 if (!result.Success)
                 {
                     ModelState.AddModelError("", result.Message);
-                    await LoadSelectListsAsync();
+                    await LoadSelectListsAsync(dto.GenderId, dto.BloodGroupId);
                     return View(dto);
                 }
 
@@ -266,7 +267,7 @@ namespace Dental.Controllers
             {
                 _logger.LogError(ex, "Error creating patient");
                 ModelState.AddModelError("", "حدث خطأ أثناء إضافة المريض");
-                await LoadSelectListsAsync();
+                await LoadSelectListsAsync(dto.GenderId, dto.BloodGroupId);
                 return View(dto);
             }
         }
@@ -412,7 +413,7 @@ namespace Dental.Controllers
                 return await _context.Genders.AsNoTracking().ToListAsync();
             });
 
-            return genders?.FirstOrDefault(g => g.Id == genderId.Value);
+            return genders?.FirstOrDefault(g => g.Code == genderId.Value.ToString());
         }
         #endregion
     }

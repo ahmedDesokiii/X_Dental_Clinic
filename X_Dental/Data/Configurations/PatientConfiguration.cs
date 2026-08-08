@@ -62,8 +62,8 @@ namespace Dental.Data.Configurations
 
 
 
-            builder.Property(x => x.Occupation)
-                .HasMaxLength(150);
+            //builder.Property(x => x.Occupation)
+            //    .HasMaxLength(150);
 
 
 

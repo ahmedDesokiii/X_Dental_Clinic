@@ -16,12 +16,16 @@ public class PatientService : IPatientService
 {
     private readonly ApplicationDbContext _context;
     private readonly IMapper _mapper;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public PatientService(ApplicationDbContext context, IMapper mapper)
+    public PatientService(ApplicationDbContext context, IMapper mapper, UserManager<ApplicationUser> userManager)
     {
         _context = context;
         _mapper = mapper;
+        _userManager = userManager;
     }
+
+
 
     // ── Helper: Generate Patient Code ──
     public async Task<string> GeneratePatientCodeAsync()
@@ -118,7 +122,7 @@ public class PatientService : IPatientService
         var patient = _mapper.Map<Patient>(dto);
         patient.PatientCode = await GeneratePatientCodeAsync();
         patient.IsActive = true;
-
+        patient.CreatedBy = 1;
         await _context.Patients.AddAsync(patient);
         await _context.SaveChangesAsync();
 
