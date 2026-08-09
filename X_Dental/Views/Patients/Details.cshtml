@@ -1,65 +1,76 @@
-﻿@model Dental.Modules.Patients.ViewModels.PatientProfileViewModel
-
+﻿@using Dental.Models.Patient
+@using Dental.Modules.Patients.DTOs
+@model Dental.Modules.Patients.ViewModels.PatientProfileViewModel
 @{
-    ViewData["Title"] = "Patient Profile";
+    ViewData["Title"] = $"ملف المريض — {Model.Patient.FullNameAr}";
     var patient = Model.Patient;
-
-    // Calculate initials from Arabic name
     var initials = "";
     if (!string.IsNullOrEmpty(patient.FullNameAr))
     {
         var parts = patient.FullNameAr.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         initials = string.Join("", parts.Take(2).Select(p => p[0]));
     }
-
-    // Get gender icon
-    var genderIcon = patient.Gender?.NameAr == "ذكر" ? "gender-male" : "gender-female";
     var genderIconClass = patient.Gender?.NameAr == "ذكر" ? "bi-gender-male" : "bi-gender-female";
+    var patientTypeClass = patient.PatientType switch
+    {
+        PatientType.Orthodontics => "ortho",
+        PatientType.Both => "both",
+        _ => "general"
+    };
+    var patientTypeLabel = patient.PatientType switch
+    {
+        PatientType.Orthodontics => "تقويم",
+        PatientType.Both => "عام + تقويم",
+        _ => "عام"
+    };
 }
 
 <style>
-    /* ── Dashboard Container ── */
+    /* ── Medical Soft Theme ── */
     .patient-dashboard {
-        padding: 8px;
+        padding: 12px;
+        background: #f1f5f9;
+        min-height: 100vh;
     }
 
-    /* ── Header ── */
+    /* Header */
     .dash-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         background: #fff;
         border-radius: 16px;
-        padding: 20px 24px;
+        padding: 20px 28px;
         margin-bottom: 16px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-        border: 1px solid rgba(122, 226, 207, 0.3);
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
 
     .patient-profile {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 18px;
     }
 
     .patient-avatar-lg {
-        width: 64px;
-        height: 64px;
-        border-radius: 16px;
-        background: #0f766e;
+        width: 68px;
+        height: 68px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #14b8a6, #0d9488);
         color: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.4rem;
-        font-weight: 700;
+        font-size: 1.5rem;
+        font-weight: 800;
+        box-shadow: 0 4px 12px rgba(13,148,136,0.2);
     }
 
     .patient-info h2 {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #111827;
-        margin: 0 0 8px 0;
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #1e293b;
+        margin: 0 0 10px 0;
     }
 
     .patient-meta {
@@ -71,14 +82,40 @@
     .meta-tag {
         display: flex;
         align-items: center;
-        gap: 4px;
-        background: #f0fdfa;
-        color: #0f766e;
-        padding: 4px 10px;
+        gap: 6px;
+        background: #f8fafc;
+        color: #475569;
+        padding: 5px 12px;
         border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 500;
+        font-size: 0.82rem;
+        font-weight: 600;
+        border: 1px solid #e2e8f0;
     }
+
+    .type-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+
+        .type-badge.general {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .type-badge.ortho {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .type-badge.both {
+            background: #ede9fe;
+            color: #5b21b6;
+        }
 
     .header-actions {
         display: flex;
@@ -88,10 +125,10 @@
     .btn-dash {
         display: flex;
         align-items: center;
-        gap: 6px;
-        padding: 10px 18px;
+        gap: 8px;
+        padding: 10px 20px;
         border-radius: 10px;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 0.9rem;
         border: none;
         cursor: pointer;
@@ -100,109 +137,149 @@
     }
 
     .btn-edit {
-        background: #f3f4f6;
-        color: #374151;
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #e2e8f0;
     }
 
         .btn-edit:hover {
-            background: #e5e7eb;
-            color: #111827;
+            background: #e2e8f0;
+            color: #0f172a;
         }
 
     .btn-appointment {
-        background: #0f766e;
+        background: linear-gradient(135deg, #14b8a6, #0d9488);
         color: #fff;
-        box-shadow: 0 2px 8px rgba(15, 118, 110, 0.25);
+        box-shadow: 0 4px 12px rgba(13,148,136,0.2);
     }
 
         .btn-appointment:hover {
-            background: #115e59;
             transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(13,148,136,0.3);
         }
 
-    /* ── Stats Bar ── */
+    .btn-session {
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(99,102,241,0.2);
+    }
+
+        .btn-session:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(99,102,241,0.3);
+        }
+
+    /* Stats Bar */
     .stats-bar {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 12px;
-        margin-bottom: 16px;
+        margin-bottom: 20px;
     }
 
     .stat-item {
         background: #fff;
-        border-radius: 12px;
-        padding: 14px 16px;
+        border-radius: 14px;
+        padding: 18px 20px;
         display: flex;
         align-items: center;
-        gap: 12px;
-        border: 1px solid rgba(122, 226, 207, 0.25);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        gap: 14px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        transition: all 0.25s ease;
     }
 
+        .stat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            border-color: #cbd5e1;
+        }
+
     .stat-icon-sm {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        color: #fff;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         flex-shrink: 0;
     }
 
+        .stat-icon-sm.teal {
+            background: #f0fdfa;
+            color: #0f766e;
+        }
+
+        .stat-icon-sm.green {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .stat-icon-sm.red {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .stat-icon-sm.blue {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
     .stat-num {
         display: block;
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: #111827;
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #1e293b;
     }
 
     .stat-label-sm {
-        font-size: 0.75rem;
-        color: #6b7280;
+        font-size: 0.78rem;
+        color: #64748b;
+        font-weight: 600;
     }
 
-    /* ── Tabs Navigation ── */
+    /* Tabs */
     .tabs-nav {
         display: flex;
-        gap: 4px;
+        gap: 6px;
         background: #fff;
-        padding: 6px;
-        border-radius: 12px;
-        margin-bottom: 16px;
-        border: 1px solid rgba(122, 226, 207, 0.25);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        padding: 8px;
+        border-radius: 14px;
+        margin-bottom: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
         overflow-x: auto;
     }
 
     .tab-btn {
         display: flex;
         align-items: center;
-        gap: 6px;
-        padding: 10px 16px;
-        border-radius: 8px;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 10px;
         border: none;
         background: transparent;
-        color: #6b7280;
-        font-weight: 600;
-        font-size: 0.85rem;
+        color: #64748b;
+        font-weight: 700;
+        font-size: 0.88rem;
         cursor: pointer;
         white-space: nowrap;
         transition: all 0.2s ease;
     }
 
         .tab-btn:hover {
-            background: #f0fdfa;
-            color: #0f766e;
+            background: #f8fafc;
+            color: #334155;
         }
 
         .tab-btn.active {
-            background: #0f766e;
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
             color: #fff;
+            box-shadow: 0 4px 12px rgba(13,148,136,0.2);
         }
 
-    /* ── Tab Content ── */
+    /* Tab Content */
     .tab-content {
         display: none;
         animation: fadeIn 0.3s ease;
@@ -224,7 +301,7 @@
         }
     }
 
-    /* ── Overview Grid ── */
+    /* Info Cards */
     .tab-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -234,10 +311,15 @@
     .info-card {
         background: #fff;
         border-radius: 14px;
-        border: 1px solid rgba(122, 226, 207, 0.25);
-        box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
         overflow: hidden;
+        transition: all 0.2s;
     }
+
+        .info-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
 
         .info-card.full-width {
             grid-column: 1 / -1;
@@ -246,17 +328,17 @@
     .info-header {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         padding: 14px 18px;
-        background: #f9fafb;
-        border-bottom: 1px solid #e5e7eb;
-        font-weight: 700;
+        background: #f8fafc;
+        border-bottom: 1px solid #f1f5f9;
+        font-weight: 800;
         font-size: 0.95rem;
-        color: #111827;
+        color: #1e293b;
     }
 
         .info-header i {
-            color: #0f766e;
+            color: #14b8a6;
             font-size: 1.1rem;
         }
 
@@ -269,7 +351,7 @@
         justify-content: space-between;
         align-items: center;
         padding: 10px 0;
-        border-bottom: 1px solid #f3f4f6;
+        border-bottom: 1px solid #f1f5f9;
     }
 
         .info-row:last-child {
@@ -278,69 +360,271 @@
 
     .info-label {
         font-size: 0.85rem;
-        color: #6b7280;
-        font-weight: 500;
+        color: #64748b;
+        font-weight: 600;
     }
 
     .info-value {
-        font-size: 0.9rem;
-        color: #111827;
-        font-weight: 600;
+        font-size: 0.92rem;
+        color: #1e293b;
+        font-weight: 700;
     }
+
+        .info-value.text-danger {
+            color: #dc2626;
+            font-weight: 800;
+        }
 
     .blood-badge {
         background: #fee2e2;
         color: #dc2626;
-        padding: 2px 10px;
+        padding: 3px 10px;
         border-radius: 6px;
         font-size: 0.8rem;
+        font-weight: 700;
     }
 
     .notes-text {
-        color: #374151;
-        line-height: 1.6;
-        font-size: 0.9rem;
+        color: #475569;
+        line-height: 1.7;
+        font-size: 0.92rem;
         margin: 0;
     }
 
-    /* ── Placeholder Tabs ── */
+    /* Placeholder */
     .placeholder-tab {
         background: #fff;
         border-radius: 14px;
-        border: 1px solid rgba(122, 226, 207, 0.25);
-        box-shadow: 0 2px 10px rgba(0,0,0,0.04);
-        padding: 40px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        padding: 48px;
         text-align: center;
     }
 
     .placeholder-icon {
-        width: 64px;
-        height: 64px;
-        border-radius: 16px;
+        width: 72px;
+        height: 72px;
+        border-radius: 20px;
         background: #f0fdfa;
-        color: #0f766e;
+        color: #14b8a6;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.8rem;
-        margin: 0 auto 16px;
+        font-size: 2rem;
+        margin: 0 auto 20px;
     }
 
     .placeholder-tab h3 {
         font-size: 1.2rem;
-        font-weight: 700;
-        color: #111827;
+        font-weight: 800;
+        color: #1e293b;
         margin: 0 0 8px 0;
     }
 
     .placeholder-tab p {
-        color: #6b7280;
-        font-size: 0.9rem;
+        color: #64748b;
+        font-size: 0.92rem;
         margin: 0 0 24px 0;
     }
 
-    /* ── Responsive ── */
-    @@media (max-width: 900px) {
+    /* Timeline */
+    .timeline {
+        position: relative;
+        padding-left: 24px;
+    }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e2e8f0;
+        }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 20px;
+        padding-left: 20px;
+    }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #14b8a6;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px #14b8a6;
+        }
+
+    .timeline-date {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .timeline-title {
+        font-weight: 800;
+        color: #1e293b;
+        font-size: 0.95rem;
+    }
+
+    .timeline-desc {
+        color: #64748b;
+        font-size: 0.85rem;
+        margin-top: 2px;
+    }
+
+    /* Modal Custom */
+    .custom-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .custom-modal.show {
+            display: flex;
+        }
+
+    .modal-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(15,23,42,0.45);
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-box {
+        position: relative;
+        z-index: 1;
+        width: 90%;
+        max-width: 480px;
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+        animation: modalSlide 0.25s ease;
+    }
+
+    @@keyframes modalSlide {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.98);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 24px;
+        background: linear-gradient(135deg, #14b8a6, #0d9488);
+        color: #fff;
+        border-radius: 20px 20px 0 0;
+    }
+
+        .modal-head h5 {
+            margin: 0;
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .modal-foot {
+        padding: 0 24px 24px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .form-label-custom {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #475569;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-control-custom {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        color: #1e293b;
+        background: #fff;
+        transition: all 0.2s;
+        outline: none;
+    }
+
+        .form-control-custom:focus {
+            border-color: #14b8a6;
+            box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+        }
+
+        .form-control-custom:disabled {
+            background: #f8fafc;
+            color: #94a3b8;
+        }
+
+    .btn-modal {
+        padding: 10px 22px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-modal-cancel {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+        .btn-modal-cancel:hover {
+            background: #e2e8f0;
+        }
+
+    .btn-modal-save {
+        background: linear-gradient(135deg, #14b8a6, #0d9488);
+        color: #fff;
+    }
+
+        .btn-modal-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(13,148,136,0.3);
+        }
+
+    /* Responsive */
+    @@media (max-width: 1100px) {
+        .tab-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .stats-bar {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 768px) {
         .dash-header {
             flex-direction: column;
             gap: 16px;
@@ -351,12 +635,9 @@
             flex-direction: column;
         }
 
-        .patient-meta {
+        .header-actions {
+            width: 100%;
             justify-content: center;
-        }
-
-        .stats-bar {
-            grid-template-columns: repeat(2, 1fr);
         }
 
         .tab-grid {
@@ -369,7 +650,7 @@
     }
 </style>
 
-<div class="container-fluid patient-dashboard" dir="ltr">
+<div class="container-fluid patient-dashboard" dir="rtl">
 
     <!-- 🔷 Header -->
     <div class="dash-header">
@@ -380,221 +661,281 @@
                 <div class="patient-meta">
                     <span class="meta-tag"><i class="bi bi-hash"></i> @patient.PatientCode</span>
                     <span class="meta-tag"><i class="bi @genderIconClass"></i> @patient.Gender?.NameAr</span>
-                    <span class="meta-tag"><i class="bi bi-calendar"></i> @patient.Age Years</span>
-                    <span class="meta-tag"><i class="bi bi-droplet"></i> @(patient.BloodGroup?.Name ?? "N/A")</span>
-                    <span class="meta-tag"><i class="bi bi-telephone"></i> @patient.Mobile</span>
+                    <span class="meta-tag"><i class="bi bi-calendar"></i> @(patient.Age) سنة</span>
+                    <span class="meta-tag"><i class="bi bi-droplet"></i> @(patient.BloodGroup?.Name ?? "-")</span>
+                    <span class="type-badge @patientTypeClass"><i class="bi bi-tooth"></i> @patientTypeLabel</span>
                 </div>
             </div>
         </div>
         <div class="header-actions">
             <a asp-action="Edit" asp-route-id="@patient.Id" class="btn-dash btn-edit">
-                <i class="bi bi-pencil-square"></i> Edit
+                <i class="bi bi-pencil-square"></i> تعديل
             </a>
-            <a href="#" class="btn-dash btn-appointment">
-                <i class="bi bi-calendar-plus"></i> New Appointment
+            <button type="button" class="btn-dash btn-appointment" onclick="openApptModal()">
+                <i class="bi bi-calendar-plus"></i> موعد جديد
+            </button>
+            <a asp-controller="Clinical" asp-action="Session" asp-route-patientId="@patient.Id" class="btn-dash btn-session">
+                <i class="bi bi-clipboard-pulse"></i> فتح سيشن
             </a>
+           
         </div>
     </div>
+
+    @* <partial name="_WeeklyCalendar" /> *@
+
 
     <!-- 🔷 Stats Bar -->
     <div class="stats-bar">
         <div class="stat-item">
-            <div class="stat-icon-sm" style="background:#0f766e"><i class="bi bi-calendar-check"></i></div>
+            <div class="stat-icon-sm teal"><i class="bi bi-calendar-check"></i></div>
             <div>
                 <span class="stat-num">@Model.VisitsCount</span>
-                <span class="stat-label-sm">Visits</span>
+                <span class="stat-label-sm">الزيارات</span>
             </div>
         </div>
         <div class="stat-item">
-            <div class="stat-icon-sm" style="background:#0d9488"><i class="bi bi-cash-stack"></i></div>
+            <div class="stat-icon-sm green"><i class="bi bi-cash-stack"></i></div>
             <div>
                 <span class="stat-num">@Model.TotalPaid.ToString("N0")</span>
-                <span class="stat-label-sm">Total Paid (EGP)</span>
+                <span class="stat-label-sm">المدفوع (ج.م)</span>
             </div>
         </div>
         <div class="stat-item">
-            <div class="stat-icon-sm" style="background:#14b8a6"><i class="bi bi-credit-card"></i></div>
+            <div class="stat-icon-sm red"><i class="bi bi-credit-card"></i></div>
             <div>
                 <span class="stat-num">@Model.TotalDue.ToString("N0")</span>
-                <span class="stat-label-sm">Balance Due</span>
+                <span class="stat-label-sm">المتبقي</span>
             </div>
         </div>
         <div class="stat-item">
-            <div class="stat-icon-sm" style="background:#5eead4;color:#134e4a"><i class="bi bi-clock-history"></i></div>
+            <div class="stat-icon-sm blue"><i class="bi bi-clock-history"></i></div>
             <div>
                 <span class="stat-num">@Model.AppointmentsCount</span>
-                <span class="stat-label-sm">Upcoming</span>
+                <span class="stat-label-sm">المواعيد القادمة</span>
             </div>
         </div>
     </div>
 
-    <!-- 🔷 Tabs Navigation -->
+    <!-- 🔷 Tabs -->
     <div class="tabs-nav">
         <button class="tab-btn active" onclick="switchTab('overview', this)">
-            <i class="bi bi-person-lines-fill"></i> Overview
+            <i class="bi bi-person-lines-fill"></i> نظرة عامة
+        </button>
+        <button class="tab-btn" onclick="switchTab('timeline', this)">
+            <i class="bi bi-clock-history"></i> التاريخ الطبي
         </button>
         <button class="tab-btn" onclick="switchTab('teeth', this)">
             <i class="bi bi-grid-3x3-gap"></i> Dental Chart
         </button>
-        <button class="tab-btn" onclick="switchTab('sessions', this)">
-            <i class="bi bi-clipboard-pulse"></i> Sessions
+        <button class="tab-btn" onclick="switchTab('plans', this)">
+            <i class="bi bi-clipboard-check"></i> خطط العلاج
         </button>
         <button class="tab-btn" onclick="switchTab('xrays', this)">
-            <i class="bi bi-image"></i> X-Rays
+            <i class="bi bi-image"></i> الأشعة
         </button>
         <button class="tab-btn" onclick="switchTab('prescriptions', this)">
-            <i class="bi bi-file-medical"></i> Prescriptions
-        </button>
-        <button class="tab-btn" onclick="switchTab('photos', this)">
-            <i class="bi bi-camera"></i> Photos
+            <i class="bi bi-file-medical"></i> الروشتات
         </button>
         <button class="tab-btn" onclick="switchTab('payments', this)">
-            <i class="bi bi-cash-coin"></i> Payments
+            <i class="bi bi-cash-coin"></i> المدفوعات
+        </button>
+        <button class="tab-btn" onclick="switchTab('docs', this)">
+            <i class="bi bi-folder"></i> المستندات
         </button>
     </div>
 
     <!-- 🔷 Tab: Overview -->
     <div class="tab-content active" id="overview">
         <div class="tab-grid">
-            <!-- Personal Info -->
             <div class="info-card">
-                <div class="info-header"><i class="bi bi-person-vcard"></i> Personal Information</div>
+                <div class="info-header"><i class="bi bi-person-vcard"></i> البيانات الشخصية</div>
                 <div class="info-body">
-                    <div class="info-row">
-                        <span class="info-label">Full Name</span>
-                        <span class="info-value">@patient.FullNameAr</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Date of Birth</span>
-                        <span class="info-value">@(patient.DateOfBirth?.ToString("dd/MM/yyyy") ?? "N/A")</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">National ID</span>
-                        <span class="info-value">@(patient.NationalId ?? "N/A")</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Blood Group</span>
-                        <span class="info-value"><span class="blood-badge">@(patient.BloodGroup?.Name ?? "N/A")</span></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Occupation</span>
-                        <span class="info-value">@(patient.Occupation ?? "N/A")</span>
-                    </div>
+                    <div class="info-row"><span class="info-label">الاسم</span><span class="info-value">@patient.FullNameAr</span></div>
+                    <div class="info-row"><span class="info-label">تاريخ الميلاد</span><span class="info-value">@(patient.DateOfBirth?.ToString("dd/MM/yyyy") ?? "-")</span></div>
+                    <div class="info-row"><span class="info-label">الرقم القومي</span><span class="info-value">@(patient.NationalId ?? "-")</span></div>
+                    <div class="info-row"><span class="info-label">فصيلة الدم</span><span class="info-value"><span class="blood-badge">@(patient.BloodGroup?.Name ?? "-")</span></span></div>
+                    <div class="info-row"><span class="info-label">المهنة</span><span class="info-value">@(patient.Occupation ?? "-")</span></div>
                 </div>
             </div>
-
-            <!-- Contact Info -->
             <div class="info-card">
-                <div class="info-header"><i class="bi bi-telephone-plus"></i> Contact Information</div>
+                <div class="info-header"><i class="bi bi-telephone-plus"></i> بيانات التواصل</div>
                 <div class="info-body">
-                    <div class="info-row">
-                        <span class="info-label">Mobile</span>
-                        <span class="info-value">@(patient.Mobile ?? "N/A")</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Phone</span>
-                        <span class="info-value">@(patient.Phone ?? "N/A")</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Email</span>
-                        <span class="info-value">@(patient.Email ?? "N/A")</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Address</span>
-                        <span class="info-value">@(patient.Address ?? "N/A")</span>
-                    </div>
+                    <div class="info-row"><span class="info-label">الموبايل</span><span class="info-value" dir="ltr">@(patient.Mobile ?? "-")</span></div>
+                    <div class="info-row"><span class="info-label">التليفون</span><span class="info-value" dir="ltr">@(patient.Phone ?? "-")</span></div>
+                    <div class="info-row"><span class="info-label">البريد</span><span class="info-value">@(patient.Email ?? "-")</span></div>
+                    <div class="info-row"><span class="info-label">العنوان</span><span class="info-value">@(patient.Address ?? "-")</span></div>
                 </div>
             </div>
-
-            <!-- Medical History -->
             <div class="info-card">
-                <div class="info-header"><i class="bi bi-heart-pulse"></i> Medical History</div>
+                <div class="info-header"><i class="bi bi-heart-pulse"></i> التاريخ الطبي</div>
                 <div class="info-body">
-                    <div class="info-row">
-                        <span class="info-label">Allergies</span>
-                        <span class="info-value @(string.IsNullOrEmpty(patient.Allergies) ? "" : "text-danger")">
-                            @(string.IsNullOrEmpty(patient.Allergies) ? "None" : patient.Allergies)
-                        </span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Chronic Diseases</span>
-                        <span class="info-value">@(patient.ChronicDiseases ?? "None")</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Current Medications</span>
-                        <span class="info-value">@(patient.CurrentMedications ?? "None")</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Last Visit</span>
-                        <span class="info-value">@(patient.LastVisit?.ToString("dd/MM/yyyy") ?? "N/A")</span>
-                    </div>
+                    <div class="info-row"><span class="info-label">الحساسية</span><span class="info-value @(string.IsNullOrEmpty(patient.Allergies) ? "" : "text-danger")">@(patient.Allergies ?? "لا يوجد")</span></div>
+                    <div class="info-row"><span class="info-label">أمراض مزمنة</span><span class="info-value">@(patient.ChronicDiseases ?? "لا يوجد")</span></div>
+                    <div class="info-row"><span class="info-label">الأدوية الحالية</span><span class="info-value">@(patient.CurrentMedications ?? "لا يوجد")</span></div>
+                    <div class="info-row"><span class="info-label">التدخين</span><span class="info-value">@(patient.SmokingStatus ?? "-")</span></div>
                 </div>
             </div>
-
-            <!-- Notes -->
             <div class="info-card">
-                <div class="info-header"><i class="bi bi-journal-text"></i> Notes & Observations</div>
+                <div class="info-header"><i class="bi bi-journal-text"></i> ملاحظات</div>
                 <div class="info-body">
-                    <p class="notes-text">@(patient.Notes ?? "No notes available.")</p>
+                    <p class="notes-text">@(patient.Notes ?? "لا توجد ملاحظات.")</p>
+                </div>
+            </div>
+            <div class="info-card full-width">
+                <div class="info-header"><i class="bi bi-activity"></i> آخر النشاطات</div>
+                <div class="info-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-date">@DateTime.Now.ToString("dd MMM yyyy")</div>
+                            <div class="timeline-title">فتح ملف المريض</div>
+                            <div class="timeline-desc">تم فتح الملف من لوحة التحكم</div>
+                        </div>
+                        @if (patient.LastVisit.HasValue)
+                        {
+                            <div class="timeline-item">
+                                <div class="timeline-date">@patient.LastVisit.Value.ToString("dd MMM yyyy")</div>
+                                <div class="timeline-title">آخر زيارة</div>
+                                <div class="timeline-desc">زيارة علاجية</div>
+                            </div>
+                        }
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 🔷 Tab: Dental Chart (Placeholder) -->
+    <!-- 🔷 Tab: Timeline -->
+    <div class="tab-content" id="timeline">
+        <div class="info-card">
+            <div class="info-header"><i class="bi bi-clock-history"></i> التاريخ الطبي الكامل</div>
+            <div class="info-body">
+                <div class="timeline">
+                    @foreach (var visit in Model.Sessions ?? new List<SessionDto>())
+                    {
+                        <div class="timeline-item">
+                            <div class="timeline-date">@visit.SessionDate.ToString("dd MMM yyyy")</div>
+                            <div class="timeline-title">@visit.ProcedureName</div>
+                            <div class="timeline-desc">@visit.Notes</div>
+                        </div>
+                    }
+                    @if ((Model.Sessions?.Count ?? 0) == 0)
+                    {
+                        <div class="placeholder-tab" style="border:none; box-shadow:none; padding:32px;">
+                            <div class="placeholder-icon"><i class="bi bi-clock-history"></i></div>
+                            <h3>لا توجد نشاطات مسجلة</h3>
+                            <p>ستظهر هنا جميع الزيارات والإجراءات والمدفوعات</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔷 Tab: Dental Chart -->
     <div class="tab-content" id="teeth">
         <div class="placeholder-tab">
             <div class="placeholder-icon"><i class="bi bi-grid-3x3-gap"></i></div>
             <h3>Dental Chart</h3>
-            <p>Interactive dental chart will be displayed here showing all 32 teeth with their conditions, treatments, and history.</p>
+            <p>الرسم التفاعلي للأسنان مع حالة كل سن والإجراءات السابقة</p>
+            <a asp-controller="Clinical" asp-action="Session" asp-route-patientId="@patient.Id" class="btn-dash btn-session" style="display:inline-flex;">
+                <i class="bi bi-clipboard-pulse"></i> فتح في السيشن
+            </a>
         </div>
     </div>
 
-    <!-- 🔷 Tab: Sessions (Placeholder) -->
-    <div class="tab-content" id="sessions">
+    <!-- 🔷 Tab: Treatment Plans -->
+    <div class="tab-content" id="plans">
         <div class="placeholder-tab">
-            <div class="placeholder-icon"><i class="bi bi-clipboard-pulse"></i></div>
-            <h3>Treatment Sessions</h3>
-            <p>Complete history of all treatment sessions, procedures, and clinical notes.</p>
+            <div class="placeholder-icon"><i class="bi bi-clipboard-check"></i></div>
+            <h3>خطط العلاج</h3>
+            <p>الخطط العلاجية المستقبلية والمكتملة</p>
         </div>
     </div>
 
-    <!-- 🔷 Tab: X-Rays (Placeholder) -->
+    <!-- 🔷 Tab: X-Rays -->
     <div class="tab-content" id="xrays">
         <div class="placeholder-tab">
             <div class="placeholder-icon"><i class="bi bi-image"></i></div>
-            <h3>X-Ray Images</h3>
-            <p>All radiographic images and scans will be displayed here with zoom and comparison features.</p>
+            <h3>الأشعة</h3>
+            <p>جميع الصور الأشعة مع إمكانية التكبير والمقارنة</p>
         </div>
     </div>
 
-    <!-- 🔷 Tab: Prescriptions (Placeholder) -->
+    <!-- 🔷 Tab: Prescriptions -->
     <div class="tab-content" id="prescriptions">
         <div class="placeholder-tab">
             <div class="placeholder-icon"><i class="bi bi-file-medical"></i></div>
-            <h3>Prescriptions</h3>
-            <p>All medical prescriptions and medication history.</p>
+            <h3>الروشتات</h3>
+            <p>جميع الروشتات والأدوية المكتوبة</p>
         </div>
     </div>
 
-    <!-- 🔷 Tab: Photos (Placeholder) -->
-    <div class="tab-content" id="photos">
-        <div class="placeholder-tab">
-            <div class="placeholder-icon"><i class="bi bi-camera"></i></div>
-            <h3>Patient Photos</h3>
-            <p>Before/after photos and intraoral images.</p>
-        </div>
-    </div>
-
-    <!-- 🔷 Tab: Payments (Placeholder) -->
+    <!-- 🔷 Tab: Payments -->
     <div class="tab-content" id="payments">
         <div class="placeholder-tab">
             <div class="placeholder-icon"><i class="bi bi-cash-coin"></i></div>
-            <h3>Payment History</h3>
-            <p>Complete payment records, invoices, and balance tracking.</p>
+            <h3>سجل المدفوعات</h3>
+            <p>جميع الدفعات والفواتير والأرصدة</p>
         </div>
     </div>
 
+    <!-- 🔷 Tab: Documents -->
+    <div class="tab-content" id="docs">
+        <div class="placeholder-tab">
+            <div class="placeholder-icon"><i class="bi bi-folder"></i></div>
+            <h3>المستندات</h3>
+            <p>بطاقات التأمين، الموافقات، المستندات الشخصية</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- 🔷 Custom Appointment Modal -->
+<div class="custom-modal" id="apptModal">
+    <div class="modal-overlay" onclick="closeApptModal()"></div>
+    <div class="modal-box">
+        <div class="modal-head">
+            <h5><i class="bi bi-calendar-plus me-2"></i> موعد جديد</h5>
+            <button type="button" class="btn-close btn-close-white" onclick="closeApptModal()"></button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="apptPatientId" value="@patient.Id" />
+            <div class="mb-3">
+                <label class="form-label-custom">المريض</label>
+                <input type="text" class="form-control-custom" value="@patient.FullNameAr" disabled />
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-6">
+                    <label class="form-label-custom">التاريخ <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control-custom" id="apptDate" />
+                </div>
+                <div class="col-6">
+                    <label class="form-label-custom">الوقت <span class="text-danger">*</span></label>
+                    <input type="time" class="form-control-custom" id="apptTime" />
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label-custom">السبب / الملاحظات</label>
+                <textarea class="form-control-custom" id="apptReason" rows="2" placeholder="مثال: تركيب تاج، متابعة..."></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label-custom">المدة</label>
+                <select class="form-control-custom" id="apptDuration">
+                    <option value="15">15 دقيقة</option>
+                    <option value="30" selected>30 دقيقة</option>
+                    <option value="45">45 دقيقة</option>
+                    <option value="60">ساعة</option>
+                    <option value="90">ساعة ونص</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-foot">
+            <button type="button" class="btn-modal btn-modal-cancel" onclick="closeApptModal()">إلغاء</button>
+            <button type="button" class="btn-modal btn-modal-save" onclick="saveAppt()">
+                <i class="bi bi-check-lg"></i> حفظ الموعد
+            </button>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -605,5 +946,65 @@
             btn.classList.add('active');
             document.getElementById(tabId).classList.add('active');
         }
+
+        // ── Modal ──
+        function openApptModal() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('apptDate').value = tomorrow.toISOString().split('T')[0];
+            document.getElementById('apptTime').value = '09:00';
+            document.getElementById('apptModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeApptModal() {
+            document.getElementById('apptModal').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        async function saveAppt() {
+            const patientId = parseInt(document.getElementById('apptPatientId').value);
+            const date = document.getElementById('apptDate').value;
+            const time = document.getElementById('apptTime').value;
+            const reason = document.getElementById('apptReason').value;
+            const duration = parseInt(document.getElementById('apptDuration').value);
+
+            if (!date || !time) {
+                Swal.fire({ title: 'مطلوب', text: 'اختر التاريخ والوقت', icon: 'warning', confirmButtonColor: '#14b8a6' });
+                return;
+            }
+
+            const appointmentDate = new Date(`${date}T${time}`);
+
+            const data = {
+                PatientId: patientId,
+                AppointmentDate: appointmentDate.toISOString(),
+                Duration: duration,
+                Reason: reason,
+                Status: 1
+            };
+
+            try {
+                const res = await fetch('/Clinical/CreateAppointment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    closeApptModal();
+                    Swal.fire({ title: 'تم!', text: 'تم إنشاء الموعد بنجاح', icon: 'success', confirmButtonColor: '#14b8a6', timer: 2000, showConfirmButton: false });
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    Swal.fire({ title: 'خطأ', text: result.message || 'فشل الحفظ', icon: 'error', confirmButtonColor: '#14b8a6' });
+                }
+            } catch (err) {
+                Swal.fire({ title: 'خطأ', text: 'مشكلة في الاتصال', icon: 'error', confirmButtonColor: '#14b8a6' });
+            }
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeApptModal(); });
     </script>
 }

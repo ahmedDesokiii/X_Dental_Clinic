@@ -63,6 +63,7 @@ namespace Dental.Modules.Patients.DTOs
         public string? Allergies { get; set; }
         public string? ChronicDiseases { get; set; }
         public string? CurrentMedications { get; set; }
+        public string? SmokingStatus { get; set; }
 
         // Dental History
         public DateTime? LastVisit { get; set; }
@@ -75,6 +76,9 @@ namespace Dental.Modules.Patients.DTOs
         public decimal TotalPaid { get; set; }
         public decimal TotalDue { get; set; }
         public DateTime? NextVisitDate { get; set; }
+
+
+        public PatientType PatientType { get; set; }
     }
 
     // ── Patient Lookup DTO (For Search/Dropdowns) ──
@@ -101,6 +105,19 @@ namespace Dental.Modules.Patients.DTOs
         public int? BloodGroupId { get; set; }
         public string? Notes { get; set; }
         public Gender? Gender { get; set; }
+
+        // ⭐ NEW
+        public PatientType PatientType { get; set; } = PatientType.General;
+
+        // Medical Info
+        public string? Allergies { get; set; }
+        public string? ChronicDiseases { get; set; }
+        public string? CurrentMedications { get; set; }
+        public string? MedicalNotes { get; set; }
+        public string? SmokingStatus { get; set; }
+        public bool IsPregnant { get; set; }
+        public string? EmergencyNotes { get; set; }
+
     }
 
     // ── Update Patient DTO ──
@@ -122,5 +139,7 @@ namespace Dental.Modules.Patients.DTOs
         public string? Address { get; set; }
         public string? Occupation { get; set; }
         public string? Notes { get; set; }
+
+        public PatientType PatientType { get; set; }
     }
 }

@@ -1,13 +1,293 @@
-﻿<li class="nav-item dropdown " style="color:#415E72">
-    <a class="nav-link" data-bs-toggle="dropdown">
-        <div class="notification-wrapper">
-            <i class="bi bi-bell-fill fs-3"></i>
-            <span id="notifCount" class="notification-badge"></span>
-        </div>
-    </a>
-
-    <div class="dropdown-menu  dropdown-menu-end notification-menu">
-        <div class="fs-4 fw-bold text-center link-danger">الاشعارات</div>
-        <div id="notifList"></div>
+﻿<!-- Views/Shared/_ProfessionalPayments.cshtml -->
+<div class="payments-container">
+    <div class="payments-header">
+        <h4><i class="bi bi-credit-card-2-front"></i> المدفوعات</h4>
+        <button class="btn-add-payment" onclick="openPaymentModal()">
+            <i class="bi bi-plus-lg"></i> تسجيل دفعة
+        </button>
     </div>
-</li>
+
+    <div class="payment-cards" id="paymentCards">
+        @foreach (var payment in Model.Visit.Payments)
+        {
+            <div class="payment-card">
+                <div class="payment-main">
+                    <div class="payment-icon">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <div class="payment-info">
+                        <div class="payment-amount">@payment.Amount.ToString("N0") EGP</div>
+                        <div class="payment-desc">@payment.Description</div>
+                        <div class="payment-meta">
+                            <span class="method-badge @payment.Method.ToString().ToLower()">@payment.Method</span>
+                            <span class="receipt-no"><i class="bi bi-receipt"></i> @payment.ReceiptNo</span>
+                            <span class="payment-date"><i class="bi bi-calendar"></i> @payment.PaymentDate.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Payment Form Modal -->
+    <div class="payment-modal" id="paymentModal" style="display:none;">
+        <div class="modal-glass">
+            <h5>تسجيل دفعة جديدة</h5>
+            <div class="form-group">
+                <label>المبلغ</label>
+                <input type="number" class="form-glass" id="payAmount" />
+            </div>
+            <div class="form-group">
+                <label>طريقة الدفع</label>
+                <select class="form-glass" id="payMethod">
+                    <option value="Cash">نقدي</option>
+                    <option value="CreditCard">فيزا</option>
+                    <option value="BankTransfer">تحويل بنكي</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>السبب / الإجراءات المدفوعة</label>
+                <textarea class="form-glass" id="payDesc" rows="2" placeholder="مثال: دفعة جزئية — Crown 16"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-glass btn-cancel" onclick="closePaymentModal()">إلغاء</button>
+                <button class="btn-glass btn-save" onclick="submitPayment()">حفظ الدفعة</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .payments-container {
+        padding: 10px;
+    }
+
+    .payments-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+        .payments-header h4 {
+            margin: 0;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+    .btn-add-payment {
+        background: linear-gradient(135deg, #0d9488, #0891b2);
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 16px rgba(13,148,136,0.3);
+        transition: all 0.3s;
+    }
+
+        .btn-add-payment:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(13,148,136,0.4);
+        }
+
+    .payment-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .payment-card {
+        background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid rgba(226,232,240,0.8);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        transition: all 0.3s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .payment-card:hover {
+            transform: translateX(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            border-color: rgba(13,148,136,0.3);
+        }
+
+    .payment-main {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .payment-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+        color: #16a34a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+    }
+
+    .payment-amount {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .payment-desc {
+        color: #475569;
+        font-size: 0.9rem;
+        margin-top: 4px;
+    }
+
+    .payment-meta {
+        display: flex;
+        gap: 10px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+    }
+
+    .method-badge {
+        padding: 4px 12px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+        .method-badge.cash {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .method-badge.creditcard {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .method-badge.banktransfer {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+    .receipt-no, .payment-date {
+        font-size: 0.8rem;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Modal */
+    .payment-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(15,23,42,0.4);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        animation: fadeIn 0.3s;
+    }
+
+    .modal-glass {
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 32px;
+        width: 90%;
+        max-width: 480px;
+        border: 1px solid rgba(255,255,255,0.5);
+        box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        animation: scaleIn 0.3s;
+    }
+
+        .modal-glass h5 {
+            margin: 0 0 20px 0;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+    .form-glass {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.8);
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        outline: none;
+    }
+
+        .form-glass:focus {
+            border-color: #0d9488;
+            box-shadow: 0 0 0 4px rgba(13,148,136,0.1);
+        }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 24px;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #0d9488, #0891b2);
+        color: #fff;
+    }
+
+        .btn-save:hover {
+            box-shadow: 0 8px 24px rgba(13,148,136,0.4);
+            transform: translateY(-2px);
+        }
+</style>
+
+<script>
+    function openPaymentModal() { document.getElementById('paymentModal').style.display = 'flex'; }
+    function closePaymentModal() { document.getElementById('paymentModal').style.display = 'none'; }
+    async function submitPayment() {
+        const data = {
+            VisitId: @Model.Visit.Id,
+            Amount: parseFloat(document.getElementById('payAmount').value),
+            Method: document.getElementById('payMethod').value,
+            Description: document.getElementById('payDesc').value
+        };
+        const res = await fetch('/Clinical/AddPayment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (result.success) {
+            // Update UI dynamically
+            document.getElementById('sumPaid').textContent = (parseFloat(document.getElementById('sumPaid').textContent.replace(/,/g,'')) + data.Amount).toLocaleString();
+            document.getElementById('sumRemaining').textContent = result.remaining.toLocaleString();
+            closePaymentModal();
+            location.reload(); // or prepend new card
+        }
+    }
+</script>

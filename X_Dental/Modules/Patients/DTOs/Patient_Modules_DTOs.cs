@@ -1,4 +1,7 @@
-﻿namespace Dental.Modules.Patients.DTOs
+﻿using Dental.Models.Clinic;
+using Dental.Models.Patient;
+
+namespace Dental.Modules.Patients.DTOs
 {
 
     // ============================================================
@@ -181,19 +184,19 @@
         public string Notes { get; set; } = string.Empty;
     }
 
-    public enum ToothStatus
-    {
-        Healthy,
-        Decayed,          // Cavity
-        Treated,          // Filled/Root canal
-        Missing,
-        Extracted,
-        Impacted,
-        Crown,
-        Bridge,
-        Implant,
-        Fractured
-    }
+    //public enum ToothStatus
+    //{
+    //    Healthy,
+    //    Decayed,          // Cavity
+    //    Treated,          // Filled/Root canal
+    //    Missing,
+    //    Extracted,
+    //    Impacted,
+    //    Crown,
+    //    Bridge,
+    //    Implant,
+    //    Fractured
+    //}
 
     public enum ToothSurface
     {

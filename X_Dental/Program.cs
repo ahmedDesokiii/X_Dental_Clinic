@@ -1,5 +1,6 @@
 using Dental.Data;
 using Dental.Modules.Patients.InterfacesPatients;
+using Dental.Modules.Patients.ServicesPatients;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Identity;

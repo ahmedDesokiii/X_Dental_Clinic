@@ -1,5 +1,6 @@
 ﻿
 using Dental.Models;
+using Dental.Models.Clinic;
 using Dental.Models.Patient;
 using Dental.Models.User;
 using Dental.Models.User;
@@ -30,22 +31,70 @@ namespace Dental.Data
             builder.Entity<IdentityUserToken<int>>().ToTable("ERP_UserToken");
             #endregion
 
+            builder.Entity<Visit>()
+        .Property(v => v.TotalAmount)
+        .HasPrecision(18, 2);
+
+            builder.Entity<Visit>()
+                .Property(v => v.Discount)
+                .HasPrecision(18, 2);
+
+            builder.Entity<Visit>()
+                .Property(v => v.PaidAmount)
+                .HasPrecision(18, 2);
+
+            builder.Entity<VisitProcedure>()
+                .Property(v => v.UnitPrice)
+                .HasPrecision(18, 2);
+
+            builder.Entity<VisitPayment>()
+                .Property(v => v.Amount)
+                .HasPrecision(18, 2);
+
+            builder.Entity<ProcedureCatalog>()
+                .Property(p => p.DefaultPrice)
+                .HasPrecision(18, 2);
+
+            builder.Entity<TreatmentPlanItem>()
+                .Property(t => t.EstimatedCost)
+                .HasPrecision(18, 2);
+
+            builder.Entity<TreatmentPlanItem>()
+                .Property(t => t.Discount)
+                .HasPrecision(18, 2);
+
         }
-      
-       
+
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
         }
 
-        public DbSet<Patient> Patients => Set<Patient>();
-        public DbSet<Gender> Genders => Set<Gender>();
-        public DbSet<BloodGroup> BloodGroups => Set<BloodGroup>();
-        public DbSet<PatientContact> PatientContacts => Set<PatientContact>();
-        public DbSet<PatientMedicalInfo> PatientMedicalInfo => Set<PatientMedicalInfo>();
-        public DbSet<PatientDocument> PatientDocuments => Set<PatientDocument>();
-        public DbSet<Tag> Tags => Set<Tag>();
-        public DbSet<PatientTag> PatientTags => Set<PatientTag>();
-        public DbSet<Visit> Visits => Set<Visit>();
+        public DbSet<Patient> Patients { get; set; }
+        public DbSet<Gender> Genders { get; set; }
+        public DbSet<BloodGroup> BloodGroups { get; set; }
+        public DbSet<PatientContact> PatientContacts { get; set; }
+        public DbSet<PatientDocument> PatientDocuments { get; set; }
+        public DbSet<PatientMedicalInfo> PatientMedicalInfos { get; set; }
+        public DbSet<PatientTag> PatientTags { get; set; }
+        public DbSet<PatientXRay> PatientXRays { get; set; }
+        public DbSet<Tag> Tags { get; set; }
+        public DbSet<TreatmentCatalog> TreatmentCatalogs { get; set; }
+        public DbSet<Visit> Visits { get; set; }
+
+        // ⭐ NEW
+        public DbSet<Appointment> Appointments { get; set; }
+        public DbSet<Prescription> Prescriptions { get; set; }
+        public DbSet<PrescriptionItem> PrescriptionItems { get; set; }
+        public DbSet<DiagnosisCatalog> DiagnosisCatalogs { get; set; }
+        public DbSet<ProcedureCatalog> ProcedureCatalogs { get; set; }
+        public DbSet<VisitDiagnosis> VisitDiagnoses { get; set; }
+        public DbSet<VisitProcedure> VisitProcedures { get; set; }
+        public DbSet<VisitPayment> VisitPayments { get; set; }
+        public DbSet<DentalChartEntry> DentalChartEntries { get; set; }
+        public DbSet<TreatmentPlan> TreatmentPlans { get; set; }
+        public DbSet<TreatmentPlanItem> TreatmentPlanItems { get; set; }
+        public DbSet<TreatmentSession> TreatmentSessions { get; set; }
     }
 }

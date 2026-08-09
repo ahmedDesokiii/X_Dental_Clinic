@@ -77,6 +77,25 @@
                                 <i class="bi bi-card-checklist"></i> البيانات الشخصية
                             </div>
                             <div class="erp-card-body">
+
+                                <div class="erp-field">
+                                    <label>نوع الملف <span class="required">*</span></label>
+                                    <div class="type-chip-group">
+                                        <label class="type-chip general">
+                                            <input type="radio" name="PatientType" value="1" checked />
+                                            <i class="bi bi-tooth"></i> عام
+                                        </label>
+                                        <label class="type-chip ortho">
+                                            <input type="radio" name="PatientType" value="2" />
+                                            <i class="bi bi-braces"></i> تقويم
+                                        </label>
+                                        <label class="type-chip both">
+                                            <input type="radio" name="PatientType" value="3" />
+                                            <i class="bi bi-heart-pulse"></i> كلاهما
+                                        </label>
+                                    </div>
+                                </div>
+
                                 <div class="erp-field">
                                     <label>النوع</label>
                                     <div class="gender-chip-group" id="genderChipGroup">
@@ -136,7 +155,7 @@
                         </div>
                     </div>
 
-                    <!-- Notes -->
+                    @* <!-- Notes -->
                     <div class="col-12 col-lg-3">
                         <div class="erp-card">
                             <div class="erp-card-header tone-notes">
@@ -146,6 +165,33 @@
                                 <div class="erp-field d-flex flex-column flex-fill">
                                     <label>ملاحظات إضافية</label>
                                     <textarea asp-for="Notes" class="form-control erp-textarea" placeholder="أي ملاحظات أو تعليمات خاصة بالمريض..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div> *@
+
+                    <!-- Medical History Card جديد -->
+                    <div class="col-12 col-lg-3">
+                        <div class="erp-card">
+                            <div class="erp-card-header tone-medical">
+                                <i class="bi bi-heart-pulse-fill"></i> التاريخ الطبي
+                            </div>
+                            <div class="erp-card-body">
+                                <div class="erp-field">
+                                    <label>الحساسية</label>
+                                    <input name="MedicalInfo.Allergies" class="form-control" placeholder="مثال: بنسلين، ليدوكايين..." />
+                                </div>
+                                <div class="erp-field">
+                                    <label>أمراض مزمنة</label>
+                                    <input name="MedicalInfo.ChronicDiseases" class="form-control" placeholder="سكري، ضغط..." />
+                                </div>
+                                <div class="erp-field">
+                                    <label>الأدوية الحالية</label>
+                                    <input name="MedicalInfo.CurrentMedications" class="form-control" />
+                                </div>
+                                <div class="erp-field">
+                                    <label>ملاحظات طبية عاجلة</label>
+                                    <textarea name="MedicalInfo.EmergencyNotes" class="form-control erp-textarea" style="min-height:60px;" placeholder="أي تحذيرات للدكتور..."></textarea>
                                 </div>
                             </div>
                         </div>
@@ -184,4 +230,55 @@
             });
         });
     </script>
+
+    <style>
+        .type-chip-group {
+            display: flex;
+            gap: 8px;
+            flex-direction: column;
+        }
+
+        .type-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            background: #fff;
+            cursor: pointer;
+            font-weight: 700;
+            color: #475569;
+            transition: all 0.25s;
+        }
+
+            .type-chip input {
+                display: none;
+            }
+
+            .type-chip.general:has(input:checked) {
+                background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+                border-color: #3b82f6;
+                color: #1e40af;
+                box-shadow: 0 4px 12px rgba(59,130,246,0.2);
+            }
+
+            .type-chip.ortho:has(input:checked) {
+                background: linear-gradient(135deg, #fef3c7, #fde68a);
+                border-color: #f59e0b;
+                color: #92400e;
+                box-shadow: 0 4px 12px rgba(245,158,11,0.2);
+            }
+
+            .type-chip.both:has(input:checked) {
+                background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+                border-color: #8b5cf6;
+                color: #5b21b6;
+                box-shadow: 0 4px 12px rgba(139,92,246,0.2);
+            }
+
+        .tone-medical {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+    </style>
 }

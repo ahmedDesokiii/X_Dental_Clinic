@@ -1,7 +1,8 @@
 ﻿// ============================================================
-// 📁 File: Controllers/PatientsController.cs (OPTIMIZED)
+// 📁 File: Controllers/PatientsController.cs (FINAL)
 // ============================================================
 
+using AutoMapper;
 using Dental.Core.Pagination;
 using Dental.Models.DataTables;
 using Dental.Models.Patient;
@@ -13,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using static Dental.Constants.EnumHelper;
 
 namespace Dental.Controllers
 {
@@ -22,26 +24,25 @@ namespace Dental.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IMemoryCache _cache;
         private readonly ILogger<PatientsController> _logger;
+        private readonly IMapper _mapper;
 
         public PatientsController(
             IPatientService patientService,
             ApplicationDbContext context,
             IMemoryCache cache,
-            ILogger<PatientsController> logger)
+            ILogger<PatientsController> logger,
+            IMapper mapper)
         {
             _patientService = patientService;
             _context = context;
             _cache = cache;
             _logger = logger;
+            _mapper = mapper;
         }
 
         #region 🚀 Index (Server-Side DataTables)
-        /// <summary>
-        /// Main Index view - now lightweight, DataTables loads data via AJAX
-        /// </summary>
         public IActionResult Index()
         {
-            // ⚡ No database query here! DataTables will fetch via AJAX
             return View();
         }
 
@@ -61,17 +62,12 @@ namespace Dental.Controllers
             return Json(new { total, general, ortho, both });
         }
 
-
-        /// <summary>
-        /// DataTables Server-Side endpoint for Patients
-        /// </summary>
         [HttpPost]
         public async Task<IActionResult> GetPatientsData([FromBody] DataTableRequest request)
         {
             try
             {
-                // ✅ فلتر النوع - مش جزء من DataTableRequest الافتراضي، بنقراه من الفورم مباشرة
-                var categoryFilter = request.CategoryFilter; // "", "General", "Orthodontics"
+                var categoryFilter = request.CategoryFilter;
 
                 var query = _context.Patients
                     .AsNoTracking()
@@ -88,7 +84,6 @@ namespace Dental.Controllers
                     query = query.Where(p => p.Visits.Any(v => v.Category == VisitCategory.Orthodontics));
                 }
 
-                // ── Global Search ──
                 if (!string.IsNullOrWhiteSpace(request.Search?.Value))
                 {
                     var search = request.Search.Value.Trim().ToLower();
@@ -104,7 +99,6 @@ namespace Dental.Controllers
                 var recordsTotal = await _context.Patients.CountAsync();
                 var recordsFiltered = await query.CountAsync();
 
-                // ── Sorting ──
                 if (request.Order.Any() && request.Columns.Any())
                 {
                     var order = request.Order.First();
@@ -128,7 +122,6 @@ namespace Dental.Controllers
                     query = query.OrderByDescending(p => p.Id);
                 }
 
-                // ── Paging + Projection ──
                 var data = await query
                     .Skip(request.Start)
                     .Take(request.Length)
@@ -168,35 +161,6 @@ namespace Dental.Controllers
         }
         #endregion
 
-        #region Legacy Index (for backward compatibility)
-        /// <summary>
-        /// Legacy Index with pagination - kept for reference
-        /// </summary>
-        [Obsolete("Use Index() with DataTables Server-Side instead")]
-        public async Task<IActionResult> IndexLegacy(string? search, int page = 1)
-        {
-            var request = new PagedRequest
-            {
-                Search = search,
-                PageNumber = page,
-                PageSize = 20
-            };
-
-            var result = await _patientService.GetPagedAsync(request);
-
-            var model = new PatientIndexViewModel
-            {
-                Search = search,
-                PageNumber = page,
-                PageSize = 20,
-                Patients = (List<PatientDto>)(result.Data?.Items ?? new List<PatientDto>()),
-                TotalCount = result.Data?.TotalCount ?? 0
-            };
-
-            return View("Index", model);
-        }
-        #endregion
-
         #region Details
         public async Task<IActionResult> Details(int id)
         {
@@ -211,12 +175,12 @@ namespace Dental.Controllers
             var model = new PatientProfileViewModel
             {
                 Patient = result.Data,
-                VisitsCount = result.Data.VisitsCount,           // ✅ حقيقي دلوقتي
-                AppointmentsCount = 0,                             // TODO: لما نبني موديول Appointments
-                TotalPaid = result.Data.TotalPaid,                 // ✅ حقيقي دلوقتي
-                TotalDue = result.Data.TotalDue,                   // ✅ حقيقي دلوقتي
+                VisitsCount = result.Data.VisitsCount,
+                AppointmentsCount = 0,
+                TotalPaid = result.Data.TotalPaid,
+                TotalDue = result.Data.TotalDue,
                 DentalChart = null,
-                Sessions = new List<SessionDto>(),                 // TODO: لما نبني Visit Controller
+                Sessions = new List<SessionDto>(),
                 XRays = new List<XRayDto>(),
                 Prescriptions = new List<PrescriptionDto>(),
                 Photos = new List<PhotoDto>(),
@@ -231,7 +195,6 @@ namespace Dental.Controllers
         [HttpGet]
         public async Task<IActionResult> Create()
         {
-            // ⚡ Cache lookup data
             await LoadSelectListsAsync();
             return View();
         }
@@ -248,20 +211,51 @@ namespace Dental.Controllers
 
             try
             {
-                var result = await _patientService.CreateAsync(dto);
+                // 1️⃣ إنشاء المريض
+                var patient = _mapper.Map<Patient>(dto);
+                patient.PatientCode = await _patientService.GeneratePatientCodeAsync();
+                patient.IsActive = true;
+                patient.CreatedBy = 1;
 
-                if (!result.Success)
+                // Medical Info لو موجود في الـ DTO
+                if (!string.IsNullOrWhiteSpace(dto.Allergies)
+                    || !string.IsNullOrWhiteSpace(dto.ChronicDiseases)
+                    || !string.IsNullOrWhiteSpace(dto.CurrentMedications))
                 {
-                    ModelState.AddModelError("", result.Message);
-                    await LoadSelectListsAsync(dto.GenderId, dto.BloodGroupId);
-                    return View(dto);
+                    patient.MedicalInfo = new PatientMedicalInfo
+                    {
+                        Allergies = dto.Allergies,
+                        ChronicDiseases = dto.ChronicDiseases,
+                        CurrentMedications = dto.CurrentMedications,
+                        MedicalNotes = dto.MedicalNotes,
+                        SmokingStatus = dto.SmokingStatus,
+                        IsPregnant = dto.IsPregnant,
+                        EmergencyNotes = dto.EmergencyNotes
+                    };
                 }
+
+                await _context.Patients.AddAsync(patient);
+                await _context.SaveChangesAsync();
+
+                // 2️⃣ إنشاء Visit تلقائي بعد الحفظ
+                var visit = new Visit
+                {
+                    PatientId = patient.Id,
+                    VisitDate = DateTime.Now,
+                    Status = VisitStatus.InProgress,
+                    FollowUpType = FollowUpType.Normal,
+                    Category = VisitCategory.General // أو نحدده من PatientType
+                };
+
+                await _context.Visits.AddAsync(visit);
+                await _context.SaveChangesAsync();
 
                 TempData[Helper.MsgType] = Helper.Success;
                 TempData[Helper.Title] = "تم بنجاح";
-                TempData[Helper.Msg] = "تم إضافة المريض بنجاح";
+                TempData[Helper.Msg] = "تم إضافة المريض وفتح سيشن جديد";
 
-                return RedirectToAction(nameof(Index));
+                // 3️⃣ التوجيه للسيشن مباشرة
+                return RedirectToAction("Session", "Clinical", new { patientId = patient.Id, visitId = visit.Id });
             }
             catch (Exception ex)
             {
@@ -299,7 +293,8 @@ namespace Dental.Controllers
                 Email = patient.Email,
                 Address = patient.Address,
                 Occupation = patient.Occupation,
-                Notes = patient.Notes
+                Notes = patient.Notes,
+                PatientType = patient.PatientType // ⭐ لو موجود في الـ DTO
             };
 
             return View(model);
@@ -351,7 +346,6 @@ namespace Dental.Controllers
             if (string.IsNullOrWhiteSpace(term) || term.Length < 2)
                 return Json(new List<object>());
 
-            // ⚡ Limit results + AsNoTracking
             var patients = await _context.Patients
                 .AsNoTracking()
                 .Where(p =>
@@ -373,9 +367,6 @@ namespace Dental.Controllers
         #endregion
 
         #region ⚡ Helper Methods
-        /// <summary>
-        /// Load SelectLists with caching
-        /// </summary>
         private async Task LoadSelectListsAsync(int? selectedGenderId = null, int? selectedBloodGroupId = null)
         {
             var genders = await _cache.GetOrCreateAsync("genders_select", async entry =>
@@ -398,22 +389,6 @@ namespace Dental.Controllers
 
             ViewBag.Genders = new SelectList(genders, "Id", "NameAr", selectedGenderId);
             ViewBag.BloodGroups = new SelectList(bloodGroups, "Id", "Name", selectedBloodGroupId);
-        }
-
-        /// <summary>
-        /// Get gender from cache or DB
-        /// </summary>
-        private async Task<Gender?> GetGenderCachedAsync(int? genderId)
-        {
-            if (!genderId.HasValue) return null;
-
-            var genders = await _cache.GetOrCreateAsync("genders_all", async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2);
-                return await _context.Genders.AsNoTracking().ToListAsync();
-            });
-
-            return genders?.FirstOrDefault(g => g.Code == genderId.Value.ToString());
         }
         #endregion
     }

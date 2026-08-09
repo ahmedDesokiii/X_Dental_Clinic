@@ -1,0 +1,96 @@
+﻿@using Dental.Models.Patient
+@using Dental.Modules.Clinical.ViewModels
+@model SessionViewModel
+@{
+    ViewData["Title"] = $"سيشن — {Model.Patient.FullNameAr}";
+    var initials = string.Join("", Model.Patient.FullNameAr.Split(' ').Take(2).Select(x => x[0]));
+}
+
+<div class="session-shell" dir="rtl">
+    <!-- Header: بيانات المريض + ملخص السيشن -->
+    <div class="session-header-glass">
+        <div class="patient-strip">
+            <div class="patient-avatar-xl">@initials</div>
+            <div class="patient-meta">
+                <h2>@Model.Patient.FullNameAr</h2>
+                <div class="meta-row">
+                    <span class="badge-type @(Model.Patient.PatientType == PatientType.Orthodontics ? "ortho" : "general")">
+                        <i class="bi @(Model.Patient.PatientType == PatientType.Orthodontics ? "bi-braces" : "bi-tooth")"></i>
+                        @(Model.Patient.PatientType == PatientType.Orthodontics ? "تقويم" : "عام")
+                    </span>
+                    <span class="meta-chip"><i class="bi bi-telephone"></i> @Model.Patient.Mobile</span>
+                    <span class="meta-chip"><i class="bi bi-droplet"></i> @(Model.Patient.BloodGroup?.Name ?? "-")</span>
+                    <span class="meta-chip text-danger"><i class="bi bi-exclamation-triangle"></i> @(Model.Patient.Allergies ?? "لا يوجد حساسية")</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ملخص مالي ديناميكي -->
+        <div class="visit-summary-cards">
+            <div class="sum-card total">
+                <span class="sum-label">إجمالي</span>
+                <span class="sum-value" id="sumTotal">@Model.Visit.TotalAmount.ToString("N0")</span>
+            </div>
+            <div class="sum-card discount">
+                <span class="sum-label">الخصم</span>
+                <span class="sum-value" id="sumDiscount">@Model.Visit.Discount.ToString("N0")</span>
+            </div>
+            <div class="sum-card paid">
+                <span class="sum-label">المدفوع</span>
+                <span class="sum-value" id="sumPaid">@Model.Visit.PaidAmount.ToString("N0")</span>
+            </div>
+            <div class="sum-card remaining @(Model.Visit.Remaining > 0 ? "has-due" : "")">
+                <span class="sum-label">المتبقي</span>
+                <span class="sum-value" id="sumRemaining">@Model.Visit.Remaining.ToString("N0")</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="session-tabs-nav">
+        <button class="session-tab active" onclick="switchSessionTab('overview', this)">
+            <i class="bi bi-clipboard-pulse"></i> نظرة عامة
+        </button>
+        <button class="session-tab" onclick="switchSessionTab('dentalchart', this)">
+            <i class="bi bi-grid-3x3-gap"></i> Dental Chart
+        </button>
+        <button class="session-tab" onclick="switchSessionTab('diagnosis', this)">
+            <i class="bi bi-activity"></i> التشخيص
+        </button>
+        <button class="session-tab" onclick="switchSessionTab('procedures', this)">
+            <i class="bi bi-list-check"></i> الإجراءات
+        </button>
+        <button class="session-tab" onclick="switchSessionTab('xrays', this)">
+            <i class="bi bi-image"></i> الأشعة
+        </button>
+        <button class="session-tab" onclick="switchSessionTab('payments', this)">
+            <i class="bi bi-credit-card"></i> المدفوعات
+        </button>
+        <button class="session-tab" onclick="switchSessionTab('prescription', this)">
+            <i class="bi bi-file-medical"></i> الروشتة
+        </button>
+    </div>
+
+    <!-- Tab Contents -->
+    <div class="session-tab-content active" id="tab-overview">
+        @await Html.PartialAsync("_SessionOverview", Model)
+    </div>
+    <div class="session-tab-content" id="tab-dentalchart">
+        @await Html.PartialAsync("_DentalChartInteractive", Model)
+    </div>
+    <div class="session-tab-content" id="tab-diagnosis">
+        @await Html.PartialAsync("_DynamicDiagnosis", Model)
+    </div>
+    <div class="session-tab-content" id="tab-procedures">
+        @await Html.PartialAsync("_DynamicProcedures", Model)
+    </div>
+    <div class="session-tab-content" id="tab-xrays">
+        @await Html.PartialAsync("_SessionXRays", Model)
+    </div>
+    <div class="session-tab-content" id="tab-payments">
+        @await Html.PartialAsync("_ProfessionalPayments", Model)
+    </div>
+    <div class="session-tab-content" id="tab-prescription">
+        @await Html.PartialAsync("_SessionPrescription", Model)
+    </div>
+</div>
