@@ -1,139 +1,778 @@
 ﻿@model Dental.Modules.Patients.DTOs.DentalChartDto
+@using Dental.Models.Patient
+@using System.Linq
+@using System.Text.Json
+
+@{
+    string StatusClass(ToothStatus s) => s.ToString().ToLower();
+    ToothStatus GetStatus(int num) => Model.Teeth.FirstOrDefault(t => t.ToothNumber == num)?.Status ?? ToothStatus.Healthy;
+    string GetHistory(int num)
+    {
+        var tooth = Model.Teeth.FirstOrDefault(t => t.ToothNumber == num);
+        return tooth != null ? JsonSerializer.Serialize(tooth.Treatments) : "[]";
+    }
+}
 
 <div class="dental-chart-shell">
-    <div class="chart-toolbar">
-        <div class="legend-bar">
-            <span class="legend-item"><span class="dot healthy"></span> سليم</span>
-            <span class="legend-item"><span class="dot decayed"></span> تسوس</span>
-            <span class="legend-item"><span class="dot treated"></span> معالج</span>
-            <span class="legend-item"><span class="dot missing"></span> مفقود</span>
-            <span class="legend-item"><span class="dot extracted"></span> مخلوع</span>
-            <span class="legend-item"><span class="dot rootcanal"></span> عصب</span>
-            <span class="legend-item"><span class="dot crown"></span> تاج</span>
-            <span class="legend-item"><span class="dot implant"></span> زرعة</span>
-        </div>
-        <a asp-action="NewSession" asp-route-patientId="@Model.PatientId" class="btn-save-chart" style="text-decoration:none;">
-            <i class="bi bi-pencil"></i> فتح سيشن للتعديل
-        </a>
-    </div>
+    <div class="page" style="max-width:820px;margin:0 auto;">
 
-    <div class="chart-canvas" id="chartCanvasRO">
-        <div class="arch-label">الفك العلوي</div>
-        <div class="teeth-row upper">
-            @for (int i = 11; i <= 18; i++)
-            {
-                var tooth = Model.Teeth.FirstOrDefault(t => t.ToothNumber == i);
-                var status = tooth?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                var history = tooth != null ? System.Text.Json.JsonSerializer.Serialize(tooth.Treatments) : "[]";
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" data-history='@history' onclick="selectToothRO(@i)">
-                    <span class="tooth-num">@i</span>
-                    <div class="tooth-body">
-                        <div class="surface top"></div>
-                        <div class="surface right"></div>
-                        <div class="surface bottom"></div>
-                        <div class="surface left"></div>
-                        <div class="surface center"></div>
-                    </div>
-                </div>
-            }
-            @for (int i = 21; i <= 28; i++)
-            {
-                var tooth = Model.Teeth.FirstOrDefault(t => t.ToothNumber == i);
-                var status = tooth?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                var history = tooth != null ? System.Text.Json.JsonSerializer.Serialize(tooth.Treatments) : "[]";
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" data-history='@history' onclick="selectToothRO(@i)">
-                    <span class="tooth-num">@i</span>
-                    <div class="tooth-body">
-                        <div class="surface top"></div>
-                        <div class="surface right"></div>
-                        <div class="surface bottom"></div>
-                        <div class="surface left"></div>
-                        <div class="surface center"></div>
-                    </div>
-                </div>
-            }
-        </div>
-
-        <div class="arch-divider"></div>
-
-        <div class="arch-label">الفك السفلي</div>
-        <div class="teeth-row lower">
-            @for (int i = 41; i <= 48; i++)
-            {
-                var tooth = Model.Teeth.FirstOrDefault(t => t.ToothNumber == i);
-                var status = tooth?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                var history = tooth != null ? System.Text.Json.JsonSerializer.Serialize(tooth.Treatments) : "[]";
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" data-history='@history' onclick="selectToothRO(@i)">
-                    <span class="tooth-num">@i</span>
-                    <div class="tooth-body">
-                        <div class="surface top"></div>
-                        <div class="surface right"></div>
-                        <div class="surface bottom"></div>
-                        <div class="surface left"></div>
-                        <div class="surface center"></div>
-                    </div>
-                </div>
-            }
-            @for (int i = 31; i <= 38; i++)
-            {
-                var tooth = Model.Teeth.FirstOrDefault(t => t.ToothNumber == i);
-                var status = tooth?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                var history = tooth != null ? System.Text.Json.JsonSerializer.Serialize(tooth.Treatments) : "[]";
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" data-history='@history' onclick="selectToothRO(@i)">
-                    <span class="tooth-num">@i</span>
-                    <div class="tooth-body">
-                        <div class="surface top"></div>
-                        <div class="surface right"></div>
-                        <div class="surface bottom"></div>
-                        <div class="surface left"></div>
-                        <div class="surface center"></div>
-                    </div>
-                </div>
-            }
-        </div>
-    </div>
-
-    <!-- Read-only history modal -->
-    <div class="tooth-modal" id="toothModalRO" style="display:none;">
-        <div class="modal-glass" style="max-width: 420px;">
-            <div class="tooth-modal-head">
-                <h5><i class="bi bi-grid-3x3-gap"></i> تاريخ السن <span id="selectedToothNumRO"></span></h5>
-                <button class="btn-close-modal" onclick="closeToothModalRO()"><i class="bi bi-x-lg"></i></button>
+        <div class="hero">
+            <div class="hero-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8">
+                    <path d="M12 3c-2.4 0-3.6 1.3-4.8 1.3-1.6 0-2.7-1-3.5-.4-.9.7-.7 2.4-.4 3.9.4 2.2 1.1 6.6 2 9.3.5 1.5 1 2.9 2.1 2.9 1.4 0 1.4-3 2.6-3s1.2 3 2.6 3c1.1 0 1.6-1.4 2.1-2.9.9-2.7 1.6-7.1 2-9.3.3-1.5.5-3.2-.4-3.9-.8-.6-1.9.4-3.5.4C15.6 4.3 14.4 3 12 3Z" />
+                </svg>
             </div>
-            <div class="tooth-modal-body" id="toothHistoryBody">
-                <p class="text-muted">لا يوجد تاريخ علاج مسجل لهذا السن.</p>
+            <div>
+                <h1>مخطط الأسنان</h1>
+                <p>عرض تاريخ الأسنان والحالات المسجلة</p>
             </div>
-            <div class="tooth-modal-foot">
-                <button class="btn-glass btn-cancel" onclick="closeToothModalRO()">إغلاق</button>
+        </div>
+
+        <div class="chart-card">
+            <div class="toolbar">
+                <div class="legend">
+                    <span class="legend-item"><span class="dot healthy"></span> سليم</span>
+                    <span class="legend-item"><span class="dot decayed"></span> تسوس</span>
+                    <span class="legend-item"><span class="dot treated"></span> معالج</span>
+                    <span class="legend-item"><span class="dot missing"></span> مفقود</span>
+                    <span class="legend-item"><span class="dot extracted"></span> مخلوع</span>
+                    <span class="legend-item"><span class="dot rootcanal"></span> عصب</span>
+                    <span class="legend-item"><span class="dot crown"></span> تاج</span>
+                    <span class="legend-item"><span class="dot implant"></span> زرعة</span>
+                </div>
+                <a asp-action="NewSession" asp-route-patientId="@Model.PatientId" class="btn-save" style="text-decoration:none;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4"><path d="M20 6 9 17l-5-5" /></svg>
+                    فتح سيشن للتعديل
+                </a>
+            </div>
+
+            <div class="stage" id="stageRO">
+                <svg class="bg-arcs" viewBox="0 0 620 632" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <linearGradient id="gumUpperRO" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#f8d3ca" />
+                            <stop offset="100%" stop-color="#f2b6a8" />
+                        </linearGradient>
+                        <linearGradient id="gumLowerRO" x1="0" y1="1" x2="0" y2="0">
+                            <stop offset="0%" stop-color="#f8d3ca" />
+                            <stop offset="100%" stop-color="#f2b6a8" />
+                        </linearGradient>
+                    </defs>
+                    <path id="upperArchPathRO" fill="url(#gumUpperRO)" opacity="0"></path>
+                    <path id="lowerArchPathRO" fill="url(#gumLowerRO)" opacity="0"></path>
+                </svg>
+
+                <div class="arch-caption" style="top:2%;">الفك العلوي</div>
+                <div class="arch-caption" style="bottom:2%;">الفك السفلي</div>
+
+                <div class="center-mark">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M12 3c-2.4 0-3.6 1.3-4.8 1.3-1.6 0-2.7-1-3.5-.4-.9.7-.7 2.4-.4 3.9.4 2.2 1.1 6.6 2 9.3.5 1.5 1 2.9 2.1 2.9 1.4 0 1.4-3 2.6-3s1.2 3 2.6 3c1.1 0 1.6-1.4 2.1-2.9.9-2.7 1.6-7.1 2-9.3.3-1.5.5-3.2-.4-3.9-.8-.6-1.9.4-3.5.4C15.6 4.3 14.4 3 12 3Z" />
+                    </svg>
+                </div>
+
+                <!-- Upper Right 11-18 -->
+                @for (int i = 0; i < 8; i++)
+                {
+                    int num = 11 + i;
+                    var st = GetStatus(num);
+                    var hist = GetHistory(num);
+                    <div class="tooth-node" data-tooth="@num" data-status="@StatusClass(st)" data-history='@hist' data-arch="upper" data-index="@i">
+                        <div class="tooth-shape @StatusClass(st)"></div>
+                    </div>
+                    <div class="badge @StatusClass(st)" data-badge-for="@num" data-arch="upper" data-index="@i">@num</div>
+                }
+                <!-- Upper Left 21-28 -->
+                @for (int i = 0; i < 8; i++)
+                {
+                    int num = 21 + i;
+                    var st = GetStatus(num);
+                    var hist = GetHistory(num);
+                    <div class="tooth-node" data-tooth="@num" data-status="@StatusClass(st)" data-history='@hist' data-arch="upper" data-index="@(8 + i)">
+                        <div class="tooth-shape @StatusClass(st)"></div>
+                    </div>
+                    <div class="badge @StatusClass(st)" data-badge-for="@num" data-arch="upper" data-index="@(8 + i)">@num</div>
+                }
+                <!-- Lower Right 41-48 -->
+                @for (int i = 0; i < 8; i++)
+                {
+                    int num = 41 + i;
+                    var st = GetStatus(num);
+                    var hist = GetHistory(num);
+                    <div class="tooth-node" data-tooth="@num" data-status="@StatusClass(st)" data-history='@hist' data-arch="lower" data-index="@i">
+                        <div class="tooth-shape @StatusClass(st)"></div>
+                    </div>
+                    <div class="badge @StatusClass(st)" data-badge-for="@num" data-arch="lower" data-index="@i">@num</div>
+                }
+                <!-- Lower Left 31-38 -->
+                @for (int i = 0; i < 8; i++)
+                {
+                    int num = 31 + i;
+                    var st = GetStatus(num);
+                    var hist = GetHistory(num);
+                    <div class="tooth-node" data-tooth="@num" data-status="@StatusClass(st)" data-history='@hist' data-arch="lower" data-index="@(8 + i)">
+                        <div class="tooth-shape @StatusClass(st)"></div>
+                    </div>
+                    <div class="badge @StatusClass(st)" data-badge-for="@num" data-arch="lower" data-index="@(8 + i)">@num</div>
+                }
             </div>
         </div>
     </div>
 </div>
 
-@* نفس الـ CSS بتاع الشيل بتاع الپارشل الأصلية (chart-toolbar, legend, tooth-box, tooth-body, tooth-modal...) —
-   انسخها من _DentalChartInteractive.cshtml كما هي، الكلاسات نفسها ومفيش تعارض لأن الـ ids مختلفة (RO suffix) *@
+<!-- Read-only Modal -->
+<div class="overlay" id="overlayRO">
+    <div class="modal">
+        <div class="modal-head">
+            <h3>تاريخ السن <span id="toothNumLabelRO"></span></h3>
+            <button id="closeModalRO">✕</button>
+        </div>
+        <div class="modal-body" id="toothHistoryBody">
+            <p class="text-muted" style="color:#94a3b8;text-align:center;">لا يوجد تاريخ علاج مسجل لهذا السن.</p>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-cancel" id="cancelBtnRO">إغلاق</button>
+        </div>
+    </div>
+</div>
 
-<script>
-    function selectToothRO(num) {
-        const box = document.querySelector(`#chartCanvasRO [data-tooth="${num}"]`);
-        const history = JSON.parse(box.dataset.history || '[]');
-        document.getElementById('selectedToothNumRO').textContent = '#' + num;
+<style>
+    :root {
+        --sky-50: #eafbfc;
+        --sky-100: #dcf5f7;
+        --teal-900: #0a4d4f;
+        --teal-700: #0d7377;
+        --teal-600: #0f9b8e;
+        --teal-500: #14b8a6;
+        --teal-400: #4fd8c6;
+        --teal-100: #c7f2ea;
+        --coral-300: #f6c6bc;
+        --coral-500: #eb9483;
+        --ink-900: #0b2e30;
+        --ink-600: #4b6b6c;
+        --white: #ffffff;
+        --st-healthy: #ffffff;
+        --st-healthy-line: #0f9b8e;
+        --st-decayed: #ef4444;
+        --st-treated: #3b82f6;
+        --st-missing: #cbd5e1;
+        --st-extracted: #334155;
+        --st-rootcanal: #f59e0b;
+        --st-crown: #a855f7;
+        --st-implant: #ec4899;
+    }
 
-        const body = document.getElementById('toothHistoryBody');
-        if (history.length === 0) {
-            body.innerHTML = '<p class="text-muted">لا يوجد تاريخ علاج مسجل لهذا السن.</p>';
-        } else {
-            body.innerHTML = history.map(h => `
-                <div style="border-bottom:1px solid #e2e8f0; padding:8px 0;">
-                    <strong>${h.procedureName ?? h.ProcedureName ?? '-'}</strong><br/>
-                    <small class="text-muted">${new Date(h.treatmentDate ?? h.TreatmentDate).toLocaleDateString('ar-EG')}</small>
-                    ${(h.notes ?? h.Notes) ? `<p class="mb-0">${h.notes ?? h.Notes}</p>` : ''}
-                </div>
-            `).join('');
+    .dental-chart-shell * {
+        box-sizing: border-box;
+    }
+
+    .dental-chart-shell {
+        font-family: 'Cairo',sans-serif;
+        background: radial-gradient(circle at 8% 6%, var(--teal-100) 0%, transparent 42%), radial-gradient(circle at 96% 90%, var(--coral-300) 0%, transparent 30%), var(--sky-50);
+        min-height: 100vh;
+        padding: 32px 16px;
+        color: var(--ink-900);
+    }
+
+    .hero {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: linear-gradient(135deg,var(--teal-700),var(--teal-500));
+        padding: 20px 24px;
+        border-radius: 22px;
+        color: #fff;
+        box-shadow: 0 14px 34px rgba(13,115,119,.28);
+        margin-bottom: 18px;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 90% -20%, rgba(255,255,255,.35), transparent 55%);
         }
-        document.getElementById('toothModalRO').style.display = 'flex';
+
+    .hero-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: rgba(255,255,255,.18);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        backdrop-filter: blur(6px);
     }
-    function closeToothModalRO() {
-        document.getElementById('toothModalRO').style.display = 'none';
+
+        .hero-icon svg {
+            width: 26px;
+            height: 26px;
+        }
+
+    .hero h1 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 800;
     }
+
+    .hero p {
+        margin: 2px 0 0;
+        font-size: .82rem;
+        opacity: .9;
+        font-weight: 600;
+    }
+
+    .chart-card {
+        background: rgba(255,255,255,.75);
+        backdrop-filter: blur(18px);
+        border: 1px solid rgba(255,255,255,.6);
+        border-radius: 26px;
+        padding: 22px;
+        box-shadow: 0 20px 50px rgba(10,77,79,.1);
+    }
+
+    .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
+    }
+
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 16px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: .76rem;
+        font-weight: 700;
+        color: var(--ink-600);
+    }
+
+    .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px rgba(0,0,0,.08);
+    }
+
+        .dot.healthy {
+            background: var(--st-healthy);
+            box-shadow: 0 0 0 1px var(--st-healthy-line);
+        }
+
+        .dot.decayed {
+            background: var(--st-decayed);
+        }
+
+        .dot.treated {
+            background: var(--st-treated);
+        }
+
+        .dot.missing {
+            background: var(--st-missing);
+        }
+
+        .dot.extracted {
+            background: var(--st-extracted);
+        }
+
+        .dot.rootcanal {
+            background: var(--st-rootcanal);
+        }
+
+        .dot.crown {
+            background: var(--st-crown);
+        }
+
+        .dot.implant {
+            background: var(--st-implant);
+        }
+
+    .btn-save {
+        border: none;
+        cursor: pointer;
+        background: linear-gradient(135deg,var(--teal-600),var(--teal-700));
+        color: #fff;
+        font-weight: 800;
+        font-size: .82rem;
+        padding: 10px 18px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 8px 20px rgba(13,148,136,.32);
+        transition: transform .2s ease, box-shadow .2s ease;
+        text-decoration: none;
+    }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 26px rgba(13,148,136,.4);
+        }
+
+    .stage {
+        position: relative;
+        width: 100%;
+        max-width: 620px;
+        margin: 10px auto 4px;
+        aspect-ratio: 1/1.02;
+    }
+
+        .stage svg.bg-arcs {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+    .tooth-node {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        transform: translate(-50%,-50%) scale(0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: popIn .55s cubic-bezier(.2,1.4,.4,1) forwards;
+        animation-delay: var(--d);
+        cursor: pointer;
+    }
+
+    @@keyframes popIn {
+        to {
+            transform: translate(-50%,-50%) scale(1);
+        }
+    }
+
+    .tooth-shape {
+        width: 100%;
+        height: 100%;
+        border-radius: 12px 12px 16px 16px;
+        background: var(--st-healthy);
+        border: 2.5px solid var(--st-healthy-line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        transition: transform .22s cubic-bezier(.3,1.5,.4,1), box-shadow .22s ease, border-color .22s ease;
+        box-shadow: 0 3px 8px rgba(10,77,79,.12);
+    }
+
+    .tooth-node:hover .tooth-shape {
+        transform: scale(1.22) translateY(-3px);
+        box-shadow: 0 10px 22px rgba(10,77,79,.25);
+        z-index: 5;
+    }
+
+    .tooth-shape.decayed {
+        background: #fee2e2;
+        border-color: var(--st-decayed);
+    }
+
+    .tooth-shape.treated {
+        background: #dbeafe;
+        border-color: var(--st-treated);
+    }
+
+    .tooth-shape.missing {
+        background: transparent;
+        border: 2.5px dashed var(--st-missing);
+        box-shadow: none;
+    }
+
+    .tooth-shape.extracted {
+        background: var(--st-extracted);
+        border-color: var(--st-extracted);
+    }
+
+        .tooth-shape.extracted::before, .tooth-shape.extracted::after {
+            content: '';
+            position: absolute;
+            width: 60%;
+            height: 2px;
+            background: #fca5a5;
+            top: 50%;
+            left: 20%;
+        }
+
+        .tooth-shape.extracted::before {
+            transform: rotate(45deg);
+        }
+
+        .tooth-shape.extracted::after {
+            transform: rotate(-45deg);
+        }
+
+    .tooth-shape.rootcanal {
+        background: #fef3c7;
+        border-color: var(--st-rootcanal);
+    }
+
+    .tooth-shape.crown {
+        background: #f3e8ff;
+        border-color: var(--st-crown);
+    }
+
+    .tooth-shape.implant {
+        background: #fce7f3;
+        border-color: var(--st-implant);
+    }
+
+    .badge {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--teal-600);
+        color: #fff;
+        font-size: .68rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(10,77,79,.25);
+        border: 2px solid #fff;
+        transform: translate(-50%,-50%) scale(0);
+        animation: popIn .5s cubic-bezier(.2,1.4,.4,1) forwards;
+        animation-delay: var(--d);
+        z-index: 4;
+    }
+
+        .badge.decayed {
+            background: var(--st-decayed);
+        }
+
+        .badge.treated {
+            background: var(--st-treated);
+        }
+
+        .badge.missing {
+            background: #94a3b8;
+        }
+
+        .badge.extracted {
+            background: var(--st-extracted);
+        }
+
+        .badge.rootcanal {
+            background: var(--st-rootcanal);
+        }
+
+        .badge.crown {
+            background: var(--st-crown);
+        }
+
+        .badge.implant {
+            background: var(--st-implant);
+        }
+
+    .center-mark {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 54px;
+        height: 54px;
+        transform: translate(-50%,-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: radial-gradient(circle,rgba(255,255,255,.9),rgba(255,255,255,.4));
+        box-shadow: 0 0 0 8px rgba(15,155,142,.06);
+        animation: breathe 3.2s ease-in-out infinite;
+    }
+
+        .center-mark svg {
+            width: 26px;
+            height: 26px;
+            color: var(--teal-600);
+        }
+
+    @@keyframes breathe {
+        0%, 100% {
+            box-shadow: 0 0 0 8px rgba(15,155,142,.06);
+        }
+
+        50% {
+            box-shadow: 0 0 0 14px rgba(15,155,142,.12);
+        }
+    }
+
+    .arch-caption {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: .7rem;
+        font-weight: 800;
+        color: var(--teal-700);
+        letter-spacing: .5px;
+        background: rgba(255,255,255,.7);
+        padding: 3px 12px;
+        border-radius: 20px;
+    }
+
+    .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(10,40,42,.45);
+        backdrop-filter: blur(6px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        animation: fadeIn .25s ease;
+    }
+
+        .overlay.show {
+            display: flex;
+        }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    .modal {
+        width: 100%;
+        max-width: 420px;
+        margin: 16px;
+        background: #fff;
+        border-radius: 22px;
+        overflow: hidden;
+        box-shadow: 0 30px 70px rgba(0,0,0,.3);
+        transform: translateY(24px) scale(.96);
+        opacity: 0;
+        transition: transform .35s cubic-bezier(.2,1.2,.3,1), opacity .35s ease;
+    }
+
+    .overlay.show .modal {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+
+    .modal-head {
+        padding: 18px 22px;
+        color: #fff;
+        background: linear-gradient(135deg,var(--teal-600),var(--teal-700));
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .modal-head h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .modal-head button {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255,255,255,.2);
+            color: #fff;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+    .modal-body {
+        padding: 20px 22px;
+    }
+
+    .modal-foot {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        padding: 14px 22px;
+        border-top: 1px solid var(--sky-100);
+    }
+
+    .btn {
+        border: none;
+        padding: 9px 18px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: .82rem;
+        cursor: pointer;
+        font-family: 'Cairo',sans-serif;
+    }
+
+    .btn-cancel {
+        background: var(--sky-100);
+        color: var(--ink-600);
+    }
+
+    @@media (max-width: 768px) {
+        .stage {
+            aspect-ratio: 1/1.15;
+        }
+
+        .tooth-node {
+            width: 34px;
+            height: 34px;
+        }
+
+        .badge {
+            width: 20px;
+            height: 20px;
+            font-size: .6rem;
+        }
+    }
+</style>
+<script>
+    /* ---------- geometry ---------- */
+    const VB_W = 620, VB_H = 632;
+    const cx = 310;
+    const upper = { cy: 220, rx: 250, ry: 150 };
+    const lower = { cy: 412, rx: 250, ry: 150 };
+    const N = 16;
+    const spread = 132;
+
+    function archPoint(cfg, angleDeg, radiusScale){
+        const rad = angleDeg * Math.PI / 180;
+        return {
+            x: cx + cfg.rx * radiusScale * Math.cos(rad),
+            y: cfg.cy + cfg.ry * radiusScale * Math.sin(rad)
+        };
+    }
+
+    function buildArchAngles(centerAngle){
+        const start = centerAngle + spread/2;
+        const end   = centerAngle - spread/2;
+        const angles = [];
+        for(let i=0;i<N;i++){
+            const t = i/(N-1);
+            angles.push(start + (end-start)*t);
+        }
+        return angles;
+    }
+
+    const upperAngles = buildArchAngles(270);
+    const lowerAngles = buildArchAngles(90);
+
+    function pctFromViewBox(x,y){
+        return { left: (x/VB_W*100)+'%', top: (y/VB_H*100)+'%' };
+    }
+
+    function makeArchPath(cfg, centerAngle){
+        const startA = (centerAngle + spread/2 + 14) * Math.PI/180;
+        const endA   = (centerAngle - spread/2 - 14) * Math.PI/180;
+        const rxOuter = cfg.rx + 40, ryOuter = cfg.ry + 40;
+        const rxInner = cfg.rx - 34, ryInner = cfg.ry - 34;
+        const p = (rx,ry,a)=>({x:cx+rx*Math.cos(a), y:cfg.cy+ry*Math.sin(a)});
+        const o1 = p(rxOuter,ryOuter,startA);
+        const o2 = p(rxOuter,ryOuter,endA);
+        const i1 = p(rxInner,ryInner,endA);
+        const i2 = p(rxInner,ryInner,startA);
+        return `M ${o1.x} ${o1.y} A ${rxOuter} ${ryOuter} 0 0 ${centerAngle===270?1:1} ${o2.x} ${o2.y}
+                L ${i1.x} ${i1.y} A ${rxInner} ${ryInner} 0 0 ${centerAngle===270?0:0} ${i2.x} ${i2.y} Z`;
+    }
+
+    /* ---------- draw gum arcs ---------- */
+    document.getElementById('upperArchPathRO').setAttribute('d', makeArchPath(upper,270));
+    document.getElementById('lowerArchPathRO').setAttribute('d', makeArchPath(lower,90));
+    document.getElementById('upperArchPathRO').style.transition = 'opacity .8s ease';
+    document.getElementById('lowerArchPathRO').style.transition = 'opacity .8s ease';
+    requestAnimationFrame(()=>{
+        setTimeout(()=>{
+            document.getElementById('upperArchPathRO').style.opacity = 1;
+            document.getElementById('lowerArchPathRO').style.opacity = 1;
+        }, 80);
+    });
+
+    /* ---------- position teeth + badges ---------- */
+    function positionArchElements(archName, cfg, angles){
+        const nodes = document.querySelectorAll(`.tooth-node[data-arch="${archName}"]`);
+        const badges = document.querySelectorAll(`.badge[data-arch="${archName}"]`);
+
+        nodes.forEach((node, idx)=>{
+            const angle = angles[idx];
+            const pt = archPoint(cfg, angle, 1);
+            const pos = pctFromViewBox(pt.x, pt.y);
+            node.style.left = pos.left;
+            node.style.top = pos.top;
+            node.style.setProperty('--d', (idx*0.045).toFixed(3)+'s');
+        });
+
+        badges.forEach((badge, idx)=>{
+            const angle = angles[idx];
+            const pt = archPoint(cfg, angle, 1.22);
+            const pos = pctFromViewBox(pt.x, pt.y);
+            badge.style.left = pos.left;
+            badge.style.top = pos.top;
+            badge.style.setProperty('--d', (idx*0.045+0.08).toFixed(3)+'s');
+        });
+    }
+
+    positionArchElements('upper', upper, upperAngles);
+    positionArchElements('lower', lower, lowerAngles);
+
+    /* ---------- modal / read-only history ---------- */
+    const overlayRO = document.getElementById('overlayRO');
+    const toothNumLabelRO = document.getElementById('toothNumLabelRO');
+    const toothHistoryBody = document.getElementById('toothHistoryBody');
+
+    function selectToothRO(num){
+        const box = document.querySelector(`#stageRO .tooth-node[data-tooth="${num}"]`);
+        if(!box) return;
+
+        const historyRaw = box.dataset.history || '[]';
+        let history = [];
+        try { history = JSON.parse(historyRaw); } catch(e){ history = []; }
+
+        toothNumLabelRO.textContent = '#' + num;
+
+        if(history.length === 0){
+            toothHistoryBody.innerHTML = '<p class="text-muted" style="color:#94a3b8;text-align:center;">لا يوجد تاريخ علاج مسجل لهذا السن.</p>';
+        } else {
+            toothHistoryBody.innerHTML = history.map(h => {
+                const proc = h.procedureName ?? h.ProcedureName ?? '-';
+                const dateRaw = h.treatmentDate ?? h.TreatmentDate;
+                const dateStr = dateRaw ? new Date(dateRaw).toLocaleDateString('ar-EG') : '-';
+                const notes = h.notes ?? h.Notes ?? '';
+                return `
+                    <div style="border-bottom:1px solid #e2e8f0; padding:10px 0;">
+                        <strong style="color:var(--ink-900);font-size:.9rem;">${proc}</strong><br/>
+                        <small style="color:#94a3b8;font-size:.75rem;">${dateStr}</small>
+                        ${notes ? `<p style="margin:4px 0 0;color:var(--ink-600);font-size:.82rem;">${notes}</p>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        overlayRO.classList.add('show');
+    }
+
+    function closeToothModalRO(){
+        overlayRO.classList.remove('show');
+    }
+
+    document.getElementById('closeModalRO').onclick = closeToothModalRO;
+    document.getElementById('cancelBtnRO').onclick = closeToothModalRO;
+    overlayRO.addEventListener('click', e=>{ if(e.target===overlayRO) closeToothModalRO(); });
+
+    /* ---------- bind clicks ---------- */
+    document.querySelectorAll('#stageRO .tooth-node').forEach(node=>{
+        node.addEventListener('click', ()=>{
+            const num = parseInt(node.dataset.tooth);
+            selectToothRO(num);
+        });
+    });
 </script>
