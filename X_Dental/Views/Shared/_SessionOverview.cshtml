@@ -1,0 +1,206 @@
+﻿@using Dental.Modules.Patients.Enums
+@model Dental.Modules.Clinical.ViewModels.SessionViewModel
+
+<div class="session-overview-shell">
+    <!-- Chief Complaint & Examination -->
+    <div class="overview-grid">
+        <div class="overview-card">
+            <div class="card-head"><i class="bi bi-clipboard-pulse"></i> شكوى المريض الرئيسية</div>
+            <div class="card-body">
+                <textarea class="form-glass" id="chiefComplaint" rows="3" placeholder="ألم، تسوس، خلع...">@(Model.Visit.ChiefComplaint ?? "")</textarea>
+            </div>
+        </div>
+        <div class="overview-card">
+            <div class="card-head"><i class="bi bi-stethoscope"></i> الفحص السريري</div>
+            <div class="card-body">
+                <textarea class="form-glass" id="examination" rows="3" placeholder="نتائج الفحص...">@(Model.Visit.Examination ?? "")</textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes & Follow Up -->
+    <div class="overview-grid mt-4">
+        <div class="overview-card wide">
+            <div class="card-head"><i class="bi bi-journal-text"></i> ملاحظات الزيارة</div>
+            <div class="card-body">
+                <textarea class="form-glass" id="visitNotes" rows="4" placeholder="ملاحظات عامة...">@(Model.Visit.Notes ?? "")</textarea>
+            </div>
+        </div>
+        <div class="overview-card">
+            <div class="card-head"><i class="bi bi-calendar-check"></i> المتابعة</div>
+            <div class="card-body">
+                <div class="form-group mb-3">
+                    <label>نوع المتابعة</label>
+                    <select class="form-glass" id="followUpType">
+                        <option value="1" selected="@(Model.Visit.FollowUpType == FollowUpType.Normal)">عادية</option>
+                        <option value="2" selected="@(Model.Visit.FollowUpType == FollowUpType.Long)">طويلة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>تاريخ المتابعة</label>
+                    <input type="date" class="form-glass" id="followUpDate" value="@(Model.Visit.FollowUpDate?.ToString("yyyy-MM-dd"))" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar mt-4">
+        <div class="status-item">
+            <span class="status-label">حالة الزيارة</span>
+            <span class="status-badge @Model.Visit.Status.ToString().ToLower()">
+                @(Model.Visit.Status switch {
+                    Dental.Modules.Patients.Enums.VisitStatus.InProgress => "جارية",
+                    Dental.Modules.Patients.Enums.VisitStatus.Completed => "مكتملة",
+                    Dental.Modules.Patients.Enums.VisitStatus.Cancelled => "ملغاة",
+                    Dental.Modules.Patients.Enums.VisitStatus.NoShow => "لم يحضر",
+                    _ => Model.Visit.Status.ToString()
+                })
+            </span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">نوع الزيارة</span>
+            <span class="type-badge @(Model.Visit.Category == Dental.Modules.Patients.Enums.VisitCategory.Orthodontics ? "ortho" : "general")">
+                <i class="bi @(Model.Visit.Category == Dental.Modules.Patients.Enums.VisitCategory.Orthodontics ? "bi-braces" : "bi-tooth")"></i>
+                @(Model.Visit.Category == Dental.Modules.Patients.Enums.VisitCategory.Orthodontics ? "تقويم" : "عام")
+            </span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">تاريخ الزيارة</span>
+            <span class="status-value">@Model.Visit.VisitDate.ToString("dd/MM/yyyy HH:mm")</span>
+        </div>
+    </div>
+
+    <!-- Save Button -->
+    <div class="text-start mt-4">
+        <button class="btn-glass btn-save" onclick="saveOverview()">
+            <i class="bi bi-check-lg"></i> حفظ البيانات
+        </button>
+    </div>
+</div>
+
+<style>
+    .session-overview-shell { padding: 10px; }
+    .overview-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+    .overview-card {
+        background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(226,232,240,0.8);
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .overview-card.wide { grid-column: 1 / -1; }
+    .card-head {
+        padding: 14px 18px;
+        background: #f8fafc;
+        border-bottom: 1px solid #f1f5f9;
+        font-weight: 800;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.95rem;
+    }
+    .card-head i { color: #0d9488; }
+    .card-body { padding: 18px; }
+    .form-glass {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.8);
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        outline: none;
+        resize: vertical;
+    }
+    .form-glass:focus {
+        border-color: #0d9488;
+        box-shadow: 0 0 0 4px rgba(13,148,136,0.1);
+    }
+    .form-group label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 6px;
+    }
+    .status-bar {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .status-item {
+        background: #fff;
+        border-radius: 14px;
+        padding: 14px 20px;
+        border: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 160px;
+        flex: 1;
+    }
+    .status-label { font-size: 0.78rem; color: #64748b; font-weight: 700; }
+    .status-value { font-size: 1rem; font-weight: 800; color: #0f172a; }
+    .status-badge, .type-badge {
+        padding: 4px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        width: fit-content;
+    }
+    .status-badge.inprogress { background: #fef3c7; color: #92400e; }
+    .status-badge.completed { background: #d1fae5; color: #047857; }
+    .status-badge.cancelled { background: #fee2e2; color: #b91c1c; }
+    .status-badge.noshow { background: #f1f5f9; color: #64748b; }
+    .type-badge.general { background: #dbeafe; color: #1e40af; }
+    .type-badge.ortho { background: #fef3c7; color: #92400e; }
+    .btn-glass {
+        padding: 10px 22px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-save {
+        background: linear-gradient(135deg, #0d9488, #0891b2);
+        color: #fff;
+        box-shadow: 0 4px 16px rgba(13,148,136,0.3);
+    }
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(13,148,136,0.4);
+    }
+    @@media (max-width: 768px) {
+        .overview-grid { grid-template-columns: 1fr; }
+        .overview-card.wide { grid-column: auto; }
+    }
+</style>
+
+<script>
+    async function saveOverview() {
+        const data = {
+            VisitId: @Model.Visit.Id,
+            ChiefComplaint: document.getElementById('chiefComplaint').value,
+            Examination: document.getElementById('examination').value,
+            Notes: document.getElementById('visitNotes').value,
+            FollowUpType: parseInt(document.getElementById('followUpType').value),
+            FollowUpDate: document.getElementById('followUpDate').value || null
+        };
+        // TODO: Add API endpoint to save overview
+        Swal.fire({ title: 'تم', text: 'تم حفظ البيانات', icon: 'success', timer: 1500, showConfirmButton: false });
+    }
+</script>

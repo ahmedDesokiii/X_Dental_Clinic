@@ -550,6 +550,86 @@ namespace Dental.Migrations
                     b.ToTable("DentalChartEntries");
                 });
 
+            modelBuilder.Entity("Dental.Models.Patient.DocumentType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NameEn")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DocumentTypes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            NameAr = "بطاقة الرقم القومي"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            NameAr = "تقرير أشعة"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            NameAr = "تأمين طبي"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            NameAr = "موافقة علاج"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            NameAr = "أخرى"
+                        });
+                });
+
             modelBuilder.Entity("Dental.Models.Patient.Gender", b =>
                 {
                     b.Property<int>("Id")
@@ -823,6 +903,8 @@ namespace Dental.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DocumentTypeId");
 
                     b.HasIndex("PatientId");
 
@@ -1262,6 +1344,9 @@ namespace Dental.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Examination")
                         .HasColumnType("nvarchar(max)");
 
@@ -1627,7 +1712,7 @@ namespace Dental.Migrations
                         .IsRequired();
 
                     b.HasOne("Dental.Models.Patient.Visit", "Visit")
-                        .WithMany()
+                        .WithMany("Appointments")
                         .HasForeignKey("VisitId");
 
                     b.Navigation("Patient");
@@ -1682,11 +1767,19 @@ namespace Dental.Migrations
 
             modelBuilder.Entity("Dental.Models.Patient.PatientDocument", b =>
                 {
+                    b.HasOne("Dental.Models.Patient.DocumentType", "DocumentType")
+                        .WithMany()
+                        .HasForeignKey("DocumentTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Dental.Models.Patient.Patient", "Patient")
                         .WithMany("Documents")
                         .HasForeignKey("PatientId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("DocumentType");
 
                     b.Navigation("Patient");
                 });
@@ -1775,7 +1868,7 @@ namespace Dental.Migrations
                         .IsRequired();
 
                     b.HasOne("Dental.Models.Patient.Visit", "Visit")
-                        .WithMany()
+                        .WithMany("TreatmentSessions")
                         .HasForeignKey("VisitId");
 
                     b.Navigation("TreatmentPlan");
@@ -1885,6 +1978,8 @@ namespace Dental.Migrations
 
             modelBuilder.Entity("Dental.Models.Patient.Visit", b =>
                 {
+                    b.Navigation("Appointments");
+
                     b.Navigation("Diagnoses");
 
                     b.Navigation("Payments");
@@ -1892,6 +1987,8 @@ namespace Dental.Migrations
                     b.Navigation("Prescriptions");
 
                     b.Navigation("Procedures");
+
+                    b.Navigation("TreatmentSessions");
 
                     b.Navigation("XRays");
                 });

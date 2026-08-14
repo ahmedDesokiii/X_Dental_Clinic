@@ -1,0 +1,139 @@
+﻿@model Dental.Modules.Patients.DTOs.DentalChartDto
+
+<div class="dental-chart-shell">
+    <div class="chart-toolbar">
+        <div class="legend-bar">
+            <span class="legend-item"><span class="dot healthy"></span> سليم</span>
+            <span class="legend-item"><span class="dot decayed"></span> تسوس</span>
+            <span class="legend-item"><span class="dot treated"></span> معالج</span>
+            <span class="legend-item"><span class="dot missing"></span> مفقود</span>
+            <span class="legend-item"><span class="dot extracted"></span> مخلوع</span>
+            <span class="legend-item"><span class="dot rootcanal"></span> عصب</span>
+            <span class="legend-item"><span class="dot crown"></span> تاج</span>
+            <span class="legend-item"><span class="dot implant"></span> زرعة</span>
+        </div>
+        <a asp-action="NewSession" asp-route-patientId="@Model.PatientId" class="btn-save-chart" style="text-decoration:none;">
+            <i class="bi bi-pencil"></i> فتح سيشن للتعديل
+        </a>
+    </div>
+
+    <div class="chart-canvas" id="chartCanvasRO">
+        <div class="arch-label">الفك العلوي</div>
+        <div class="teeth-row upper">
+            @for (int i = 11; i <= 18; i++)
+            {
+                var tooth = Model.Teeth.FirstOrDefault(t => t.ToothNumber == i);
+                var status = tooth?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
+                var history = tooth != null ? System.Text.Json.JsonSerializer.Serialize(tooth.Treatments) : "[]";
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" data-history='@history' onclick="selectToothRO(@i)">
+                    <span class="tooth-num">@i</span>
+                    <div class="tooth-body">
+                        <div class="surface top"></div>
+                        <div class="surface right"></div>
+                        <div class="surface bottom"></div>
+                        <div class="surface left"></div>
+                        <div class="surface center"></div>
+                    </div>
+                </div>
+            }
+            @for (int i = 21; i <= 28; i++)
+            {
+                var tooth = Model.Teeth.FirstOrDefault(t => t.ToothNumber == i);
+                var status = tooth?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
+                var history = tooth != null ? System.Text.Json.JsonSerializer.Serialize(tooth.Treatments) : "[]";
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" data-history='@history' onclick="selectToothRO(@i)">
+                    <span class="tooth-num">@i</span>
+                    <div class="tooth-body">
+                        <div class="surface top"></div>
+                        <div class="surface right"></div>
+                        <div class="surface bottom"></div>
+                        <div class="surface left"></div>
+                        <div class="surface center"></div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="arch-divider"></div>
+
+        <div class="arch-label">الفك السفلي</div>
+        <div class="teeth-row lower">
+            @for (int i = 41; i <= 48; i++)
+            {
+                var tooth = Model.Teeth.FirstOrDefault(t => t.ToothNumber == i);
+                var status = tooth?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
+                var history = tooth != null ? System.Text.Json.JsonSerializer.Serialize(tooth.Treatments) : "[]";
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" data-history='@history' onclick="selectToothRO(@i)">
+                    <span class="tooth-num">@i</span>
+                    <div class="tooth-body">
+                        <div class="surface top"></div>
+                        <div class="surface right"></div>
+                        <div class="surface bottom"></div>
+                        <div class="surface left"></div>
+                        <div class="surface center"></div>
+                    </div>
+                </div>
+            }
+            @for (int i = 31; i <= 38; i++)
+            {
+                var tooth = Model.Teeth.FirstOrDefault(t => t.ToothNumber == i);
+                var status = tooth?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
+                var history = tooth != null ? System.Text.Json.JsonSerializer.Serialize(tooth.Treatments) : "[]";
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" data-history='@history' onclick="selectToothRO(@i)">
+                    <span class="tooth-num">@i</span>
+                    <div class="tooth-body">
+                        <div class="surface top"></div>
+                        <div class="surface right"></div>
+                        <div class="surface bottom"></div>
+                        <div class="surface left"></div>
+                        <div class="surface center"></div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Read-only history modal -->
+    <div class="tooth-modal" id="toothModalRO" style="display:none;">
+        <div class="modal-glass" style="max-width: 420px;">
+            <div class="tooth-modal-head">
+                <h5><i class="bi bi-grid-3x3-gap"></i> تاريخ السن <span id="selectedToothNumRO"></span></h5>
+                <button class="btn-close-modal" onclick="closeToothModalRO()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="tooth-modal-body" id="toothHistoryBody">
+                <p class="text-muted">لا يوجد تاريخ علاج مسجل لهذا السن.</p>
+            </div>
+            <div class="tooth-modal-foot">
+                <button class="btn-glass btn-cancel" onclick="closeToothModalRO()">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* نفس الـ CSS بتاع الشيل بتاع الپارشل الأصلية (chart-toolbar, legend, tooth-box, tooth-body, tooth-modal...) —
+   انسخها من _DentalChartInteractive.cshtml كما هي، الكلاسات نفسها ومفيش تعارض لأن الـ ids مختلفة (RO suffix) *@
+
+<script>
+    function selectToothRO(num) {
+        const box = document.querySelector(`#chartCanvasRO [data-tooth="${num}"]`);
+        const history = JSON.parse(box.dataset.history || '[]');
+        document.getElementById('selectedToothNumRO').textContent = '#' + num;
+
+        const body = document.getElementById('toothHistoryBody');
+        if (history.length === 0) {
+            body.innerHTML = '<p class="text-muted">لا يوجد تاريخ علاج مسجل لهذا السن.</p>';
+        } else {
+            body.innerHTML = history.map(h => `
+                <div style="border-bottom:1px solid #e2e8f0; padding:8px 0;">
+                    <strong>${h.procedureName ?? h.ProcedureName ?? '-'}</strong><br/>
+                    <small class="text-muted">${new Date(h.treatmentDate ?? h.TreatmentDate).toLocaleDateString('ar-EG')}</small>
+                    ${(h.notes ?? h.Notes) ? `<p class="mb-0">${h.notes ?? h.Notes}</p>` : ''}
+                </div>
+            `).join('');
+        }
+        document.getElementById('toothModalRO').style.display = 'flex';
+    }
+    function closeToothModalRO() {
+        document.getElementById('toothModalRO').style.display = 'none';
+    }
+</script>

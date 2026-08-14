@@ -26,6 +26,90 @@
 }
 
 <style>
+
+    .pmt-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+
+    .pmt-summary-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 16px;
+        border: 1px solid #e2e8f0;
+        text-align: center;
+    }
+
+        .pmt-summary-card .pmt-label {
+            font-size: .75rem;
+            color: #64748b;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .pmt-summary-card .pmt-value {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .pmt-summary-card.is-paid .pmt-value {
+            color: #047857;
+        }
+
+        .pmt-summary-card.is-due .pmt-value {
+            color: #b91c1c;
+        }
+
+    table.pmt-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: .87rem;
+    }
+
+        table.pmt-table th {
+            text-align: right;
+            color: #64748b;
+            font-weight: 700;
+            padding: 8px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        table.pmt-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #f8fafc;
+        }
+
+    .pmt-badge-paid {
+        background: #d1fae5;
+        color: #047857;
+        padding: 2px 10px;
+        border-radius: 6px;
+        font-size: .72rem;
+        font-weight: 700;
+    }
+
+    .pmt-badge-due {
+        background: #fee2e2;
+        color: #b91c1c;
+        padding: 2px 10px;
+        border-radius: 6px;
+        font-size: .72rem;
+        font-weight: 700;
+    }
+
+    .btn-pmt-void {
+        background: none;
+        border: none;
+        color: #b91c1c;
+        cursor: pointer;
+        font-size: .78rem;
+    }
+
+
+
     /* ── Medical Soft Theme ── */
     .patient-dashboard {
         padding: 12px;
@@ -668,15 +752,31 @@
             </div>
         </div>
         <div class="header-actions">
+            
             <a asp-action="Edit" asp-route-id="@patient.Id" class="btn-dash btn-edit">
                 <i class="bi bi-pencil-square"></i> تعديل
             </a>
             <button type="button" class="btn-dash btn-appointment" onclick="openApptModal()">
                 <i class="bi bi-calendar-plus"></i> موعد جديد
             </button>
-            <a asp-controller="Clinical" asp-action="Session" asp-route-patientId="@patient.Id" class="btn-dash btn-session">
-                <i class="bi bi-clipboard-pulse"></i> فتح سيشن
-            </a>
+            @if (patient.PatientType == Dental.Models.Patient.PatientType.Both)
+                {
+                    <div class="dropdown d-inline-block">
+                        <button class="btn-dash btn-session dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-clipboard-pulse"></i> بدء سيشن جديد
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" asp-action="NewSession" asp-route-patientId="@patient.Id" asp-route-category="General">سيشن عام</a></li>
+                            <li><a class="dropdown-item" asp-action="NewSession" asp-route-patientId="@patient.Id" asp-route-category="Orthodontics">سيشن تقويم</a></li>
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <a asp-action="NewSession" asp-route-patientId="@patient.Id" class="btn-dash btn-session">
+                        <i class="bi bi-clipboard-pulse"></i> بدء سيشن جديد
+                    </a>
+                }
            
         </div>
     </div>
@@ -833,14 +933,20 @@
 
     <!-- 🔷 Tab: Dental Chart -->
     <div class="tab-content" id="teeth">
-        <div class="placeholder-tab">
-            <div class="placeholder-icon"><i class="bi bi-grid-3x3-gap"></i></div>
-            <h3>Dental Chart</h3>
-            <p>الرسم التفاعلي للأسنان مع حالة كل سن والإجراءات السابقة</p>
-            <a asp-controller="Clinical" asp-action="Session" asp-route-patientId="@patient.Id" class="btn-dash btn-session" style="display:inline-flex;">
-                <i class="bi bi-clipboard-pulse"></i> فتح في السيشن
-            </a>
-        </div>
+        @if (Model.DentalChart != null && Model.DentalChart.Teeth.Any())
+        {
+            @await Html.PartialAsync("_DentalChartReadOnly", Model.DentalChart)
+        }
+        else
+        {
+            <div class="placeholder-tab">
+                <div class="placeholder-icon"><i class="bi bi-grid-3x3-gap"></i></div>
+                <h3>لا يوجد رسم أسنان مسجل بعد</h3>
+                <a asp-action="NewSession" asp-route-patientId="@patient.Id" class="btn-dash btn-session" style="display:inline-flex;">
+                    <i class="bi bi-clipboard-pulse"></i> بدء سيشن لتسجيل الرسم
+                </a>
+            </div>
+        }
     </div>
 
     <!-- 🔷 Tab: Treatment Plans -->
@@ -853,12 +959,40 @@
     </div>
 
     <!-- 🔷 Tab: X-Rays -->
-    <div class="tab-content" id="xrays">
+    @* <div class="tab-content" id="xrays">
         <div class="placeholder-tab">
             <div class="placeholder-icon"><i class="bi bi-image"></i></div>
             <h3>الأشعة</h3>
             <p>جميع الصور الأشعة مع إمكانية التكبير والمقارنة</p>
         </div>
+    </div> *@
+    <div class="tab-content" id="xrays">
+        @if (Model.XRays.Any())
+        {
+            <div class="row">
+                @foreach (var xray in Model.XRays)
+                {
+                    <div class="col-3 mb-3">
+                        <div class="patient-form-card">
+                            <a href="@xray.ImageUrl" target="_blank">
+                                <img src="@xray.ImageUrl" style="width:100%; height:160px; object-fit:cover;" alt="@xray.FileName" />
+                            </a>
+                            <div class="card-body-inner">
+                                <small>@xray.TakenDate.ToString("dd/MM/yyyy")</small>
+                                <p class="mb-0">@xray.Description</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="placeholder-tab">
+                <div class="placeholder-icon"><i class="bi bi-image"></i></div>
+                <h3>لا توجد أشعة مرفوعة بعد</h3>
+            </div>
+        }
     </div>
 
     <!-- 🔷 Tab: Prescriptions -->
@@ -870,25 +1004,148 @@
         </div>
     </div>
 
-    <!-- 🔷 Tab: Payments -->
+    @* <!-- 🔷 Tab: Payments -->
     <div class="tab-content" id="payments">
         <div class="placeholder-tab">
             <div class="placeholder-icon"><i class="bi bi-cash-coin"></i></div>
             <h3>سجل المدفوعات</h3>
             <p>جميع الدفعات والفواتير والأرصدة</p>
         </div>
+    </div> *@
+
+    <!-- 🔷 Tab: Payments -->
+    <div class="tab-content" id="payments">
+        <div class="pmt-summary-grid">
+            <div class="pmt-summary-card">
+                <div class="pmt-label">إجمالي المطلوب</div>
+                <div class="pmt-value" id="pmtSumTotal">—</div>
+            </div>
+            <div class="pmt-summary-card">
+                <div class="pmt-label">إجمالي الخصم</div>
+                <div class="pmt-value" id="pmtSumDiscount">—</div>
+            </div>
+            <div class="pmt-summary-card is-paid">
+                <div class="pmt-label">إجمالي المدفوع</div>
+                <div class="pmt-value" id="pmtSumPaid">—</div>
+            </div>
+            <div class="pmt-summary-card is-due">
+                <div class="pmt-label">المتبقي</div>
+                <div class="pmt-value" id="pmtSumRemaining">—</div>
+            </div>
+        </div>
+
+        <div class="info-card full-width">
+            <div class="info-header"><i class="bi bi-clipboard2-data"></i> الزيارات</div>
+            <div class="info-body">
+                <table class="pmt-table">
+                    <thead>
+                        <tr><th>التاريخ</th><th>النوع</th><th>الإجمالي</th><th>الخصم</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr>
+                    </thead>
+                    <tbody id="pmtVisitsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="info-card full-width">
+            <div class="info-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <span><i class="bi bi-cash-stack"></i> سجل الدفعات</span>
+                <button class="btn-dash btn-session" style="display:inline-flex;" onclick="openTabPaymentModal()">
+                    <i class="bi bi-plus-lg"></i> دفعة جديدة
+                </button>
+            </div>
+            <div class="info-body">
+                <table class="pmt-table">
+                    <thead>
+                        <tr><th>التاريخ</th><th>الزيارة</th><th>المبلغ</th><th>الطريقة</th><th>رقم الإيصال</th><th>ملاحظات</th><th></th></tr>
+                    </thead>
+                    <tbody id="pmtPaymentsBody"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
+
+
     <!-- 🔷 Tab: Documents -->
-    <div class="tab-content" id="docs">
+   @*  <div class="tab-content" id="docs">
         <div class="placeholder-tab">
             <div class="placeholder-icon"><i class="bi bi-folder"></i></div>
             <h3>المستندات</h3>
             <p>بطاقات التأمين، الموافقات، المستندات الشخصية</p>
         </div>
+    </div> *@
+
+    <div class="tab-content" id="docs">
+        @if (Model.Documents.Any())
+        {
+            <table class="pmt-table">
+                <thead><tr><th>النوع</th><th>الملف</th><th>تاريخ الرفع</th><th>ملاحظات</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var doc in Model.Documents)
+                    {
+                        <tr>
+                            <td>@doc.DocumentTypeName</td>
+                            <td>@doc.FileName</td>
+                            <td>@doc.UploadedDate.ToString("dd/MM/yyyy")</td>
+                            <td>@doc.Description</td>
+                            <td><a href="@doc.FilePath" target="_blank" class="btn-dash btn-session" style="display:inline-flex;padding:6px 12px;"><i class="bi bi-download"></i></a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="placeholder-tab">
+                <div class="placeholder-icon"><i class="bi bi-folder"></i></div>
+                <h3>لا توجد مستندات مرفوعة بعد</h3>
+            </div>
+        }
     </div>
 
 </div>
+
+
+<!-- 🔷 Add Payment Modal (Tab) -->
+<div class="custom-modal" id="tabPayModal">
+    <div class="modal-overlay" onclick="closeTabPaymentModal()"></div>
+    <div class="modal-box">
+        <div class="modal-head">
+            <h5><i class="bi bi-cash-coin me-2"></i> تسجيل دفعة جديدة</h5>
+            <button type="button" class="btn-close btn-close-white" onclick="closeTabPaymentModal()"></button>
+        </div>
+        <div class="modal-body">
+            <div class="mb-3">
+                <label class="form-label-custom">الزيارة <span class="text-danger">*</span></label>
+                <select class="form-control-custom" id="tabPayVisitId"></select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label-custom">المبلغ <span class="text-danger">*</span></label>
+                <input type="number" step="0.01" class="form-control-custom" id="tabPayAmount" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label-custom">طريقة الدفع</label>
+                <select class="form-control-custom" id="tabPayMethod">
+                    <option value="0">نقدي</option>
+                    <option value="1">بطاقة ائتمان</option>
+                    <option value="2">بطاقة خصم</option>
+                    <option value="3">تحويل بنكي</option>
+                    <option value="4">تأمين</option>
+                    <option value="5">تقسيط</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label-custom">ملاحظات</label>
+                <textarea class="form-control-custom" id="tabPayDesc" rows="2"></textarea>
+            </div>
+        </div>
+        <div class="modal-foot">
+            <button type="button" class="btn-modal btn-modal-cancel" onclick="closeTabPaymentModal()">إلغاء</button>
+            <button type="button" class="btn-modal btn-modal-save" onclick="submitTabPayment()">حفظ الدفعة</button>
+        </div>
+    </div>
+</div>
+
 
 <!-- 🔷 Custom Appointment Modal -->
 <div class="custom-modal" id="apptModal">
@@ -947,6 +1204,128 @@
             document.getElementById(tabId).classList.add('active');
         }
 
+        // ── تاب المدفوعات: تحميل كشف الحساب ──
+        let pmtLoaded = false;
+        let pmtVisits = [];
+
+        function money(v) {
+            return Number(v).toLocaleString('ar-EG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        async function loadPaymentsTab() {
+            try {
+                const res = await fetch(`/Payments/GetStatement?patientId=@patient.Id`);
+                const result = await res.json();
+                if (!result.success) return;
+                renderPaymentsTab(result.data);
+                pmtLoaded = true;
+            } catch (err) {
+                console.error('Failed to load payments tab', err);
+            }
+        }
+
+        function renderPaymentsTab(data) {
+            pmtVisits = data.visits;
+
+            document.getElementById('pmtSumTotal').textContent = money(data.totalAmount);
+            document.getElementById('pmtSumDiscount').textContent = money(data.totalDiscount);
+            document.getElementById('pmtSumPaid').textContent = money(data.totalPaid);
+            document.getElementById('pmtSumRemaining').textContent = money(data.totalRemaining);
+
+            document.getElementById('pmtVisitsBody').innerHTML = data.visits.length ? data.visits.map(v => `
+                <tr>
+                    <td>${new Date(v.visitDate).toLocaleDateString('ar-EG')}</td>
+                    <td>${v.category === 2 ? 'تقويم' : 'عام'}</td>
+                    <td>${money(v.totalAmount)}</td>
+                    <td>${money(v.discount)}</td>
+                    <td>${money(v.paidAmount)}</td>
+                    <td>${money(v.remaining)}</td>
+                    <td>${v.isFullyPaid ? '<span class="pmt-badge-paid">مسدد</span>' : '<span class="pmt-badge-due">متبقي</span>'}</td>
+                </tr>`).join('') : '<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:16px;">لا توجد زيارات</td></tr>';
+
+            document.getElementById('pmtPaymentsBody').innerHTML = data.payments.length ? data.payments.map(p => `
+                <tr>
+                    <td>${new Date(p.paymentDate).toLocaleDateString('ar-EG')}</td>
+                    <td>${new Date(p.visitDate).toLocaleDateString('ar-EG')}</td>
+                    <td>${money(p.amount)}</td>
+                    <td>${p.methodText}</td>
+                    <td style="direction:ltr; text-align:right;">${p.receiptNo || '—'}</td>
+                    <td>${p.description || ''}</td>
+                    <td><button class="btn-pmt-void" onclick="voidTabPayment(${p.id})"><i class="bi bi-x-circle"></i> إلغاء</button></td>
+                </tr>`).join('') : '<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:16px;">لا توجد دفعات</td></tr>';
+
+            const dueVisits = data.visits.filter(v => v.remaining > 0);
+            document.getElementById('tabPayVisitId').innerHTML = dueVisits.length
+                ? dueVisits.map(v => `<option value="${v.visitId}">${new Date(v.visitDate).toLocaleDateString('ar-EG')} — متبقي ${money(v.remaining)}</option>`).join('')
+                : '<option value="">لا توجد زيارات عليها مبلغ متبقي</option>';
+        }
+
+        function openTabPaymentModal() {
+            document.getElementById('tabPayAmount').value = '';
+            document.getElementById('tabPayDesc').value = '';
+            document.getElementById('tabPayModal').classList.add('show');
+        }
+        function closeTabPaymentModal() {
+            document.getElementById('tabPayModal').classList.remove('show');
+        }
+
+        async function submitTabPayment() {
+            const visitId = parseInt(document.getElementById('tabPayVisitId').value);
+            const amount = parseFloat(document.getElementById('tabPayAmount').value);
+            const method = parseInt(document.getElementById('tabPayMethod').value);
+            const description = document.getElementById('tabPayDesc').value;
+
+            if (!visitId || !amount || amount <= 0) {
+                Swal.fire({ title: 'مطلوب', text: 'اختر الزيارة وادخل مبلغ صحيح', icon: 'warning', confirmButtonColor: '#14b8a6' });
+                return;
+            }
+
+            try {
+                const res = await fetch('/Payments/AddPayment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ VisitId: visitId, Amount: amount, Method: method, Description: description })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    closeTabPaymentModal();
+                    Swal.fire({ title: 'تم!', text: result.message, icon: 'success', confirmButtonColor: '#14b8a6', timer: 1500, showConfirmButton: false });
+                    loadPaymentsTab();
+                } else {
+                    Swal.fire({ title: 'تعذر الحفظ', text: result.message, icon: 'error' });
+                }
+            } catch (err) {
+                Swal.fire({ title: 'خطأ', text: 'مشكلة في الاتصال بالسيرفر', icon: 'error' });
+            }
+        }
+
+        async function voidTabPayment(paymentId) {
+            const confirmResult = await Swal.fire({
+                title: 'تأكيد الإلغاء',
+                text: 'هيتم إلغاء الدفعة دي وتصحيح رصيد الزيارة تلقائيًا. متأكد؟',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'أيوه، إلغاء',
+                cancelButtonText: 'رجوع',
+                confirmButtonColor: '#b91c1c'
+            });
+            if (!confirmResult.isConfirmed) return;
+
+            const res = await fetch(`/Payments/VoidPayment?paymentId=${paymentId}`, { method: 'POST' });
+            const result = await res.json();
+            if (result.success) {
+                Swal.fire({ title: 'تم', text: result.message, icon: 'success', timer: 1500, showConfirmButton: false });
+                loadPaymentsTab();
+            } else {
+                Swal.fire({ title: 'تعذر التنفيذ', text: result.message, icon: 'error' });
+            }
+        }
+
+        // تحميل بيانات المدفوعات أول ما الصفحة تفتح (البيانات خفيفة، مفيش داعي نستنى لحد ما يدوس على التاب)
+        document.addEventListener('DOMContentLoaded', loadPaymentsTab);
+
+
+
         // ── Modal ──
         function openApptModal() {
             const tomorrow = new Date();
@@ -984,14 +1363,16 @@
             };
 
             try {
-                const res = await fetch('/Clinical/CreateAppointment', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
-                    },
-                    body: JSON.stringify(data)
-                });
+                       const res = await fetch('/Appointments/Create', {  
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                PatientId: patientId,
+                AppointmentDate: appointmentDate.toISOString(),
+                DurationMinutes: duration,   
+                Reason: reason
+            })
+        });
                 const result = await res.json();
                 if (result.success) {
                     closeApptModal();

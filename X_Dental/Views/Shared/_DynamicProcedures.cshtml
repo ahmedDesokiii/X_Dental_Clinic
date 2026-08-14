@@ -1,0 +1,324 @@
+﻿<!-- Views/Shared/_DynamicDiagnosis.cshtml -->
+<div class="dynamic-diagnosis-shell">
+    <div class="diag-toolbar">
+        <div class="diag-filters">
+            <button class="filter-chip active" onclick="filterDiagnosis('all')">الكل</button>
+            <button class="filter-chip" onclick="filterDiagnosis('caries')">تسوس</button>
+            <button class="filter-chip" onclick="filterDiagnosis('periodontal')">لثوي</button>
+            <button class="filter-chip" onclick="filterDiagnosis('endodontic')">عصب</button>
+        </div>
+        <button class="btn-add-diag" onclick="openDiagModal()">
+            <i class="bi bi-plus-lg"></i> تشخيص جديد
+        </button>
+    </div>
+
+    <div class="diagnosis-list" id="diagnosisList">
+        @foreach (var d in Model.Visit.Diagnoses)
+        {
+            <div class="diagnosis-item" data-category="@d.Diagnosis.Category">
+                <div class="diag-tooth">@d.ToothNumber</div>
+                <div class="diag-body">
+                    <div class="diag-title">@d.Diagnosis.NameAr</div>
+                    <div class="diag-meta">
+                        <span class="surface-badges">
+                            @if (!string.IsNullOrEmpty(d.Surface))
+                            {
+                                foreach (var s in d.Surface.Split(','))
+                                {
+                                    <span class="surf-badge">@s</span>
+                                }
+                            }
+                        </span>
+                        <span class="diag-note">@d.Notes</span>
+                    </div>
+                </div>
+                <div class="diag-actions">
+                    <button class="icon-btn" onclick="editDiag(@d.Id)"><i class="bi bi-pencil"></i></button>
+                    <button class="icon-btn danger" onclick="deleteDiag(@d.Id)"><i class="bi bi-trash"></i></button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Add Diagnosis Modal -->
+<div class="diag-modal" id="diagModal" style="display:none;">
+    <div class="modal-glass" style="max-width: 500px;">
+        <h5><i class="bi bi-activity"></i> إضافة تشخيص</h5>
+        <div class="form-row">
+            <div class="form-group">
+                <label>التشخيص</label>
+                <select class="form-glass searchable-diag" id="diagCatalogId">
+                    @foreach (var cat in ViewBag.DiagnosisList)
+                    {
+                        <option value="@cat.Id">@cat.NameAr (@cat.Code)</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label>رقم السن</label>
+                <select class="form-glass" id="diagTooth">
+                    @foreach (var t in ViewBag.ToothList)
+                    {
+                        <option value="@t">@t</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>السطوح المتأثرة</label>
+            <div class="surface-toggle-group">
+                <label class="surf-toggle"><input type="checkbox" value="M" /> M</label>
+                <label class="surf-toggle"><input type="checkbox" value="D" /> D</label>
+                <label class="surf-toggle"><input type="checkbox" value="B" /> B</label>
+                <label class="surf-toggle"><input type="checkbox" value="L" /> L</label>
+                <label class="surf-toggle"><input type="checkbox" value="O" /> O</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>ملاحظات</label>
+            <textarea class="form-glass" id="diagNotes" rows="2"></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-glass btn-cancel" onclick="closeDiagModal()">إلغاء</button>
+            <button class="btn-glass btn-save" onclick="submitDiagnosis()">حفظ</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dynamic-diagnosis-shell {
+        padding: 10px;
+    }
+
+    .diag-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .diag-filters {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .filter-chip {
+        padding: 8px 16px;
+        border-radius: 999px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .filter-chip:hover {
+            border-color: #0d9488;
+            color: #0d9488;
+        }
+
+        .filter-chip.active {
+            background: linear-gradient(135deg, #0d9488, #0891b2);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(13,148,136,0.3);
+        }
+
+    .btn-add-diag {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 16px rgba(139,92,246,0.3);
+        transition: all 0.3s;
+    }
+
+        .btn-add-diag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(139,92,246,0.4);
+        }
+
+    .diagnosis-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .diagnosis-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: linear-gradient(135deg, #fff, #f8fafc);
+        border-radius: 16px;
+        padding: 16px 20px;
+        border: 1px solid rgba(226,232,240,0.8);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        transition: all 0.3s;
+        animation: slideInRight 0.4s ease backwards;
+    }
+
+        .diagnosis-item:hover {
+            transform: translateX(-6px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            border-color: rgba(139,92,246,0.3);
+        }
+
+    .diag-tooth {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+        color: #5b21b6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .diag-body {
+        flex: 1;
+    }
+
+    .diag-title {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 1rem;
+    }
+
+    .diag-meta {
+        display: flex;
+        gap: 10px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .surface-badges {
+        display: flex;
+        gap: 4px;
+    }
+
+    .surf-badge {
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 0.75rem;
+        font-weight: 700;
+        font-family: monospace;
+    }
+
+    .diag-note {
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+
+    .diag-actions {
+        display: flex;
+        gap: 6px;
+    }
+
+    .icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: none;
+        background: transparent;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .icon-btn:hover {
+            background: #f1f5f9;
+            color: #0d9488;
+            transform: scale(1.1);
+        }
+
+        .icon-btn.danger:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+    .surface-toggle-group {
+        display: flex;
+        gap: 10px;
+    }
+
+    .surf-toggle {
+        padding: 10px 16px;
+        border-radius: 12px;
+        border: 2px solid #e2e8f0;
+        background: #fff;
+        font-weight: 700;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+        .surf-toggle:has(input:checked) {
+            background: linear-gradient(135deg, #0d9488, #0891b2);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(13,148,136,0.3);
+        }
+
+        .surf-toggle input {
+            display: none;
+        }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 12px;
+    }
+</style>
+
+<script>
+    function openDiagModal() { document.getElementById('diagModal').style.display = 'flex'; }
+    function closeDiagModal() { document.getElementById('diagModal').style.display = 'none'; }
+    function filterDiagnosis(cat) {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        event.target.classList.add('active');
+        document.querySelectorAll('.diagnosis-item').forEach(item => {
+            item.style.display = (cat === 'all' || item.dataset.category === cat) ? 'flex' : 'none';
+        });
+    }
+    async function submitDiagnosis() {
+        const surfaces = Array.from(document.querySelectorAll('.surf-toggle input:checked')).map(cb => cb.value).join(',');
+        const data = {
+            VisitId: @Model.Visit.Id,
+            DiagnosisId: parseInt(document.getElementById('diagCatalogId').value),
+            ToothNumber: parseInt(document.getElementById('diagTooth').value),
+            Surface: surfaces,
+            Notes: document.getElementById('diagNotes').value,
+            IsPrimary: true
+        };
+        const res = await fetch('/Clinical/AddDiagnosis', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (res.ok) location.reload();
+    }
+</script>

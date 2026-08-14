@@ -6,6 +6,7 @@ using AutoMapper;
 using Dental.Core.Pagination;
 using Dental.Models.DataTables;
 using Dental.Models.Patient;
+using Dental.Modules.Clinical.DTOs;
 using Dental.Modules.Patients.DTOs;
 using Dental.Modules.Patients.Enums;
 using Dental.Modules.Patients.InterfacesPatients;
@@ -60,6 +61,39 @@ namespace Dental.Controllers
                 && p.Visits.Any(v => v.Category == VisitCategory.Orthodontics));
 
             return Json(new { total, general, ortho, both });
+        }
+
+        private static List<ToothSurfaceDto> ParseSurfaces(string? surfacesJson)
+        {
+            if (string.IsNullOrWhiteSpace(surfacesJson))
+                return new List<ToothSurfaceDto>();
+
+            try
+            {
+                var raw = System.Text.Json.JsonSerializer.Deserialize<List<ToothSurfaceRequest>>(surfacesJson) ?? new();
+                return raw.Select(s => new ToothSurfaceDto
+                {
+                    Surface = s.Surface switch
+                    {
+                        "M" => ToothSurface.Mesial,
+                        "D" => ToothSurface.Distal,
+                        "B" => ToothSurface.Buccal,
+                        "L" => ToothSurface.Lingual,
+                        "O" => ToothSurface.Occlusal,
+                        "I" => ToothSurface.Incisal,
+                        _ => ToothSurface.Occlusal
+                    },
+                    Condition = Enum.TryParse<SurfaceCondition>(s.Condition, true, out var cond)
+                        ? cond
+                        : SurfaceCondition.Healthy,
+                    Notes = string.Empty
+                }).ToList();
+            }
+            catch
+            {
+                // بيانات قديمة/تالفة — منسيبهاش توقف الصفحة كلها
+                return new List<ToothSurfaceDto>();
+            }
         }
 
         [HttpPost]
@@ -165,28 +199,134 @@ namespace Dental.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var result = await _patientService.GetByIdAsync(id);
-
             if (!result.Success || result.Data == null)
             {
                 TempData["Error"] = result.Message ?? "Patient not found";
                 return RedirectToAction(nameof(Index));
             }
 
+            var visits = await _context.Visits
+                .Where(v => v.PatientId == id)
+                .Include(v => v.Procedures).ThenInclude(p => p.Procedure)
+                .OrderByDescending(v => v.VisitDate)
+                .ToListAsync();
+
+            // ── التاريخ الطبي (Sessions) — من الزيارات الفعلية ──
+            var sessions = visits.Select(v => new SessionDto
+            {
+                Id = v.Id,
+                PatientId = v.PatientId,
+                SessionDate = v.VisitDate,
+                ProcedureName = v.Procedures.Any()
+                    ? string.Join("، ", v.Procedures.Select(p => p.Procedure.NameAr))
+                    : (v.ChiefComplaint ?? "زيارة عامة"),
+                Description = v.ChiefComplaint ?? string.Empty,
+                Notes = v.Notes ?? string.Empty,
+                Status = v.Status switch
+                {
+                    VisitStatus.InProgress => SessionStatus.InProgress,
+                    VisitStatus.Completed => SessionStatus.Completed,
+                    VisitStatus.Cancelled => SessionStatus.Cancelled,
+                    _ => SessionStatus.Scheduled
+                },
+                Cost = v.Procedures.Sum(p => p.TotalPrice),
+                ToothNumber = v.Procedures.FirstOrDefault()?.ToothNumber,
+                CreatedAt = v.CreatedDate
+            }).ToList();
+
+            // ── Dental Chart — مجمّع لكل سن، آخر حالة + كل العلاجات ──
+            var chartEntries = await _context.DentalChartEntries
+                .Where(d => d.PatientId == id)
+                .OrderByDescending(d => d.Date)
+                .ToListAsync();
+
+            DentalChartDto? dentalChart = null;
+            if (chartEntries.Any())
+            {
+                dentalChart = new DentalChartDto
+                {
+                    PatientId = id,
+                    LastUpdated = chartEntries.Max(e => e.Date),
+                    Teeth = chartEntries
+                        .GroupBy(e => e.ToothNumber)
+                        .Select(g =>
+                        {
+                            var latest = g.OrderByDescending(e => e.Date).First();
+                            return new ToothDto
+                            {
+                                ToothNumber = g.Key,
+                                ToothName = $"سن {g.Key}",
+                                Status = latest.Status,
+                                Notes = latest.Notes ?? string.Empty,
+                                Surfaces = ParseSurfaces(latest.SurfacesJson),
+                                Treatments = g.OrderByDescending(e => e.Date).Select(e => new ToothTreatmentDto
+                                {
+                                    Id = e.Id,
+                                    ProcedureName = e.ProcedureCode ?? "-",
+                                    TreatmentDate = e.Date,
+                                    Notes = e.Notes ?? string.Empty
+                                }).ToList()
+                            };
+                        })
+                        .OrderBy(t => t.ToothNumber)
+                        .ToList()
+                };
+            }
+
+            // ── الأشعة ──
+            var xrays = await _context.PatientXRays
+                .Where(x => x.PatientId == id)
+                .OrderByDescending(x => x.TakenDate)
+                .Select(x => new XRayDto
+                {
+                    Id = x.Id,
+                    PatientId = x.PatientId,
+                    FileName = x.FileName,
+                    FilePath = x.FilePath,
+                    ImageUrl = x.FilePath,
+                    Description = x.Notes ?? string.Empty,
+                    TakenDate = x.TakenDate,
+                    CreatedAt = x.CreatedDate
+                }).ToListAsync();
+
+            // ── المستندات ──
+            var documents = await _context.PatientDocuments
+                .Include(d => d.DocumentType)
+                .Where(d => d.PatientId == id && d.IsActive)
+                .OrderByDescending(d => d.UploadedDate)
+                .Select(d => new DocumentDto
+                {
+                    Id = d.Id,
+                    PatientId = d.PatientId,
+                    DocumentTypeName = d.DocumentType.NameAr,
+                    FileName = d.FileName,
+                    FilePath = d.FilePath,
+                    FileExtension = d.FileExtension,
+                    FileSize = d.FileSize,
+                    Description = d.Description,
+                    UploadedDate = d.UploadedDate
+                }).ToListAsync();
+
+            var appointmentsCount = await _context.Appointments
+                .CountAsync(a => a.PatientId == id
+                    && a.AppointmentDate >= DateTime.Now
+                    && a.Status != AppointmentStatus.Cancelled);
+
             var model = new PatientProfileViewModel
             {
                 Patient = result.Data,
-                VisitsCount = result.Data.VisitsCount,
-                AppointmentsCount = 0,
-                TotalPaid = result.Data.TotalPaid,
-                TotalDue = result.Data.TotalDue,
-                DentalChart = null,
-                Sessions = new List<SessionDto>(),
-                XRays = new List<XRayDto>(),
-                Prescriptions = new List<PrescriptionDto>(),
-                Photos = new List<PhotoDto>(),
-                Payments = new List<PaymentDto>()
+                VisitsCount = visits.Count,
+                AppointmentsCount = appointmentsCount,
+                TotalPaid = visits.Sum(v => v.PaidAmount),
+                TotalDue = visits.Sum(v => v.Remaining),
+                DentalChart = dentalChart,
+                Sessions = sessions,
+                XRays = xrays,
+                Prescriptions = new List<PrescriptionDto>(),   // نكملها لاحقًا
+                Photos = new List<PhotoDto>(),                 // نكملها لاحقًا
+                Payments = new List<PaymentDto>(),              // نكملها لاحقًا
+                Documents = documents
             };
-
             return View(model);
         }
         #endregion
@@ -272,7 +412,6 @@ namespace Dental.Controllers
         public async Task<IActionResult> Edit(int id)
         {
             var result = await _patientService.GetByIdAsync(id);
-
             if (!result.Success || result.Data == null)
                 return NotFound();
 
@@ -284,7 +423,7 @@ namespace Dental.Controllers
                 Id = patient.Id,
                 FullNameAr = patient.FullNameAr,
                 FullNameEn = patient.FullNameEn,
-                GenderId = (int)(patient.Gender?.Id),
+                GenderId = patient.Gender?.Id ?? 0,     
                 DateOfBirth = patient.DateOfBirth,
                 BloodGroupId = patient.BloodGroup?.Id,
                 NationalId = patient.NationalId,
@@ -294,30 +433,44 @@ namespace Dental.Controllers
                 Address = patient.Address,
                 Occupation = patient.Occupation,
                 Notes = patient.Notes,
-                PatientType = patient.PatientType // ⭐ لو موجود في الـ DTO
+                PatientType = patient.PatientType
             };
-
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        
         public async Task<IActionResult> Edit(UpdatePatientDto dto)
         {
-            var result = await _patientService.UpdateAsync(dto);
-
-            if (!result.Success)
+            if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", result.Message);
                 await LoadSelectListsAsync(dto.GenderId, dto.BloodGroupId);
                 return View(dto);
             }
 
-            TempData[Helper.MsgType] = Helper.Success;
-            TempData[Helper.Title] = "تم بنجاح";
-            TempData[Helper.Msg] = "تم تعديل بيانات المريض بنجاح";
+            try
+            {
+                var result = await _patientService.UpdateAsync(dto);
+                if (!result.Success)
+                {
+                    ModelState.AddModelError("", result.Message);
+                    await LoadSelectListsAsync(dto.GenderId, dto.BloodGroupId);
+                    return View(dto);
+                }
 
-            return RedirectToAction(nameof(Index));
+                TempData[Helper.MsgType] = Helper.Success;
+                TempData[Helper.Title] = "تم بنجاح";
+                TempData[Helper.Msg] = "تم تعديل بيانات المريض بنجاح";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating patient {PatientId}", dto.Id);
+                ModelState.AddModelError("", "حدث خطأ أثناء تعديل بيانات المريض");
+                await LoadSelectListsAsync(dto.GenderId, dto.BloodGroupId);
+                return View(dto);
+            }
         }
         #endregion
 
@@ -391,5 +544,31 @@ namespace Dental.Controllers
             ViewBag.BloodGroups = new SelectList(bloodGroups, "Id", "Name", selectedBloodGroupId);
         }
         #endregion
+
+
+        [HttpGet]
+        public async Task<IActionResult> NewSession(int patientId, VisitCategory? category = null)
+        {
+            var patient = await _context.Patients.FindAsync(patientId);
+            if (patient == null) return NotFound();
+
+            var resolvedCategory = category ?? (patient.PatientType == Dental.Models.Patient.PatientType.Orthodontics
+                ? VisitCategory.Orthodontics
+                : VisitCategory.General);
+
+            var visit = new Visit
+            {
+                PatientId = patientId,
+                VisitDate = DateTime.Now,
+                Status = VisitStatus.InProgress,
+                FollowUpType = FollowUpType.Normal,
+                Category = resolvedCategory
+            };
+            await _context.Visits.AddAsync(visit);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Session", "Clinical", new { patientId = patient.Id, visitId = visit.Id });
+        }
+
     }
 }

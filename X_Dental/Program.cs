@@ -1,6 +1,10 @@
 using Dental.Data;
+using Dental.Modules.Appointments.InterfacesAppointments;
+using Dental.Modules.Appointments.ServicesAppointments;
 using Dental.Modules.Patients.InterfacesPatients;
 using Dental.Modules.Patients.ServicesPatients;
+using Dental.Modules.Payments.InterfacesPayments;
+using Dental.Modules.Payments.ServicesPayments;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Identity;
@@ -27,6 +31,7 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddControllersWithViews(); // Adds MVC services\
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR();
@@ -87,6 +92,8 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 
 #region Scoped Services
 builder.Services.AddScoped<IPatientService, PatientService>();
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 #endregion
 builder.Services.AddHttpClient();
 

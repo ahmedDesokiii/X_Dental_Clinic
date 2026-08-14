@@ -36,5 +36,6 @@ namespace Dental.Models.Patient
         // Navigation
 
         public virtual Patient Patient { get; set; } = null!;
+        public virtual DocumentType DocumentType { get; set; } = null!;
     }
 }

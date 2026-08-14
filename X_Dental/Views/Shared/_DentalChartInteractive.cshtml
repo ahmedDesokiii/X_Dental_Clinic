@@ -1,0 +1,614 @@
+﻿@model Dental.Modules.Clinical.ViewModels.SessionViewModel
+
+<div class="dental-chart-shell">
+    <div class="chart-toolbar">
+        <div class="legend-bar">
+            <span class="legend-item"><span class="dot healthy"></span> سليم</span>
+            <span class="legend-item"><span class="dot decayed"></span> تسوس</span>
+            <span class="legend-item"><span class="dot treated"></span> معالج</span>
+            <span class="legend-item"><span class="dot missing"></span> مفقود</span>
+            <span class="legend-item"><span class="dot extracted"></span> مخلوع</span>
+            <span class="legend-item"><span class="dot rootcanal"></span> عصب</span>
+            <span class="legend-item"><span class="dot crown"></span> تاج</span>
+            <span class="legend-item"><span class="dot implant"></span> زرعة</span>
+        </div>
+        <button class="btn-save-chart" onclick="saveChart()">
+            <i class="bi bi-check-lg"></i> حفظ الرسمة
+        </button>
+    </div>
+
+    <div class="chart-canvas" id="chartCanvas">
+        <!-- Upper Arch -->
+        <div class="arch-label">الفك العلوي</div>
+        <div class="teeth-row upper">
+            @for (int i = 11; i <= 18; i++)
+            {
+                var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
+                var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="selectTooth(@i)">
+                    <span class="tooth-num">@i</span>
+                    <div class="tooth-body">
+                        <div class="surface top"></div>
+                        <div class="surface right"></div>
+                        <div class="surface bottom"></div>
+                        <div class="surface left"></div>
+                        <div class="surface center"></div>
+                    </div>
+                </div>
+            }
+            @for (int i = 21; i <= 28; i++)
+            {
+                var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
+                var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="selectTooth(@i)">
+                    <span class="tooth-num">@i</span>
+                    <div class="tooth-body">
+                        <div class="surface top"></div>
+                        <div class="surface right"></div>
+                        <div class="surface bottom"></div>
+                        <div class="surface left"></div>
+                        <div class="surface center"></div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Divider -->
+        <div class="arch-divider"></div>
+
+        <!-- Lower Arch -->
+        <div class="arch-label">الفك السفلي</div>
+        <div class="teeth-row lower">
+            @for (int i = 41; i <= 48; i++)
+            {
+                var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
+                var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="selectTooth(@i)">
+                    <span class="tooth-num">@i</span>
+                    <div class="tooth-body">
+                        <div class="surface top"></div>
+                        <div class="surface right"></div>
+                        <div class="surface bottom"></div>
+                        <div class="surface left"></div>
+                        <div class="surface center"></div>
+                    </div>
+                </div>
+            }
+            @for (int i = 31; i <= 38; i++)
+            {
+                var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
+                var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="selectTooth(@i)">
+                    <span class="tooth-num">@i</span>
+                    <div class="tooth-body">
+                        <div class="surface top"></div>
+                        <div class="surface right"></div>
+                        <div class="surface bottom"></div>
+                        <div class="surface left"></div>
+                        <div class="surface center"></div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Tooth Detail Modal -->
+    <div class="tooth-modal" id="toothModal" style="display:none;">
+        <div class="modal-glass" style="max-width: 420px;">
+            <div class="tooth-modal-head">
+                <h5><i class="bi bi-grid-3x3-gap"></i> تفاصيل السن <span id="selectedToothNum"></span></h5>
+                <button class="btn-close-modal" onclick="closeToothModal()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="tooth-modal-body">
+                <div class="form-group mb-3">
+                    <label>حالة السن</label>
+                    <select class="form-glass" id="toothStatus">
+                        <option value="1">سليم</option>
+                        <option value="2">تسوس</option>
+                        <option value="3">معالج</option>
+                        <option value="4">مفقود</option>
+                        <option value="5">مخلوع</option>
+                        <option value="6">مطمور</option>
+                        <option value="7">تاج</option>
+                        <option value="8">جسر</option>
+                        <option value="9">زرعة</option>
+                        <option value="10">مكسور</option>
+                        <option value="11">عصب</option>
+                        <option value="12">حشوة</option>
+                    </select>
+                </div>
+                <div class="form-group mb-3">
+                    <label>السطوح المتأثرة</label>
+                    <div class="surface-picker">
+                        <label class="surf-check"><input type="checkbox" value="M" /> M</label>
+                        <label class="surf-check"><input type="checkbox" value="D" /> D</label>
+                        <label class="surf-check"><input type="checkbox" value="B" /> B</label>
+                        <label class="surf-check"><input type="checkbox" value="L" /> L</label>
+                        <label class="surf-check"><input type="checkbox" value="O" /> O</label>
+                    </div>
+                </div>
+                <div class="form-group mb-3">
+                    <label>كود الإجراء</label>
+                    <input type="text" class="form-glass" id="toothProcedure" placeholder="مثال: RCT, CRN, FLL" />
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات</label>
+                    <textarea class="form-glass" id="toothNotes" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="tooth-modal-foot">
+                <button class="btn-glass btn-cancel" onclick="closeToothModal()">إلغاء</button>
+                <button class="btn-glass btn-save" onclick="applyToothChanges()">تطبيق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dental-chart-shell {
+        padding: 10px;
+    }
+
+    .chart-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .legend-bar {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #475569;
+    }
+
+    .dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px #e2e8f0;
+    }
+
+        .dot.healthy {
+            background: #22c55e;
+        }
+
+        .dot.decayed {
+            background: #ef4444;
+        }
+
+        .dot.treated {
+            background: #3b82f6;
+        }
+
+        .dot.missing {
+            background: #cbd5e1;
+        }
+
+        .dot.extracted {
+            background: #1e293b;
+        }
+
+        .dot.rootcanal {
+            background: #f59e0b;
+        }
+
+        .dot.crown {
+            background: #8b5cf6;
+        }
+
+        .dot.implant {
+            background: #ec4899;
+        }
+
+    .btn-save-chart {
+        background: linear-gradient(135deg, #0d9488, #0891b2);
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 16px rgba(13,148,136,0.3);
+    }
+
+    .chart-canvas {
+        background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+        border-radius: 20px;
+        border: 1px solid rgba(226,232,240,0.8);
+        padding: 24px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }
+
+    .arch-label {
+        text-align: center;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .arch-divider {
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+        margin: 24px 0;
+    }
+
+    .teeth-row {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+        .teeth-row.upper {
+            margin-bottom: 8px;
+        }
+
+        .teeth-row.lower {
+            margin-top: 8px;
+        }
+
+    .tooth-box {
+        width: 52px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+        padding: 6px 4px;
+        border-radius: 12px;
+        border: 2px solid transparent;
+    }
+
+        .tooth-box:hover {
+            transform: translateY(-4px);
+            background: #f0fdfa;
+            border-color: #99f6e4;
+        }
+
+        .tooth-box.selected {
+            border-color: #0d9488;
+            background: #f0fdfa;
+            box-shadow: 0 4px 12px rgba(13,148,136,0.2);
+        }
+
+        /* Status Colors */
+        .tooth-box.healthy .tooth-body {
+            background: #dcfce7;
+            border-color: #86efac;
+        }
+
+        .tooth-box.decayed .tooth-body {
+            background: #fee2e2;
+            border-color: #fca5a5;
+        }
+
+        .tooth-box.treated .tooth-body {
+            background: #dbeafe;
+            border-color: #93c5fd;
+        }
+
+        .tooth-box.missing .tooth-body {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            opacity: 0.5;
+        }
+
+        .tooth-box.extracted .tooth-body {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        .tooth-box.rootcanal .tooth-body {
+            background: #fef3c7;
+            border-color: #fde68a;
+        }
+
+        .tooth-box.crown .tooth-body {
+            background: #ede9fe;
+            border-color: #c4b5fd;
+        }
+
+        .tooth-box.implant .tooth-body {
+            background: #fce7f3;
+            border-color: #f9a8d4;
+        }
+
+        .tooth-box.fractured .tooth-body {
+            background: #ffedd5;
+            border-color: #fdba74;
+        }
+
+        .tooth-box.filling .tooth-body {
+            background: #ccfbf1;
+            border-color: #5eead4;
+        }
+
+    .tooth-num {
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: #64748b;
+        font-family: monospace;
+    }
+
+    .tooth-body {
+        width: 32px;
+        height: 40px;
+        border-radius: 8px;
+        border: 2px solid #e2e8f0;
+        position: relative;
+        background: #fff;
+        transition: all 0.2s;
+    }
+
+        .tooth-body .surface {
+            position: absolute;
+            background: rgba(0,0,0,0.06);
+        }
+
+            .tooth-body .surface.top {
+                top: 0;
+                left: 8px;
+                right: 8px;
+                height: 6px;
+                border-radius: 4px 4px 0 0;
+            }
+
+            .tooth-body .surface.bottom {
+                bottom: 0;
+                left: 8px;
+                right: 8px;
+                height: 6px;
+                border-radius: 0 0 4px 4px;
+            }
+
+            .tooth-body .surface.left {
+                left: 0;
+                top: 8px;
+                bottom: 8px;
+                width: 6px;
+                border-radius: 4px 0 0 4px;
+            }
+
+            .tooth-body .surface.right {
+                right: 0;
+                top: 8px;
+                bottom: 8px;
+                width: 6px;
+                border-radius: 0 4px 4px 0;
+            }
+
+            .tooth-body .surface.center {
+                inset: 10px;
+                border-radius: 4px;
+                background: rgba(0,0,0,0.04);
+            }
+
+    /* Modal */
+    .tooth-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(15,23,42,0.4);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        animation: fadeIn 0.3s;
+    }
+
+    .tooth-modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+        .tooth-modal-head h5 {
+            margin: 0;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+    .btn-close-modal {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: none;
+        background: #f1f5f9;
+        color: #64748b;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .tooth-modal-body {
+        margin-bottom: 20px;
+    }
+
+    .tooth-modal-foot {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .surface-picker {
+        display: flex;
+        gap: 8px;
+    }
+
+    .surf-check {
+        flex: 1;
+        text-align: center;
+        padding: 10px;
+        border-radius: 10px;
+        border: 2px solid #e2e8f0;
+        background: #fff;
+        font-weight: 700;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .surf-check:has(input:checked) {
+            background: linear-gradient(135deg, #0d9488, #0891b2);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(13,148,136,0.3);
+        }
+
+        .surf-check input {
+            display: none;
+        }
+
+    .form-group label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 6px;
+    }
+
+    .form-glass {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.8);
+        font-size: 0.95rem;
+        outline: none;
+        transition: all 0.2s;
+    }
+
+        .form-glass:focus {
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13,148,136,0.1);
+        }
+
+    .btn-glass {
+        padding: 9px 18px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-cancel {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #0d9488, #0891b2);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(13,148,136,0.3);
+    }
+
+        .btn-save:hover {
+            transform: translateY(-1px);
+        }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .teeth-row {
+            gap: 4px;
+        }
+
+        .tooth-box {
+            width: 40px;
+        }
+
+        .tooth-body {
+            width: 26px;
+            height: 34px;
+        }
+    }
+</style>
+
+<script>
+    let selectedToothId = null;
+    let chartData = [];
+
+    function selectTooth(num) {
+        selectedToothId = num;
+        document.querySelectorAll('.tooth-box').forEach(t => t.classList.remove('selected'));
+        document.querySelector(`[data-tooth="${num}"]`).classList.add('selected');
+        document.getElementById('selectedToothNum').textContent = '#' + num;
+        document.getElementById('toothModal').style.display = 'flex';
+    }
+    function closeToothModal() {
+        document.getElementById('toothModal').style.display = 'none';
+        document.querySelectorAll('.tooth-box').forEach(t => t.classList.remove('selected'));
+    }
+    function applyToothChanges() {
+        const status = parseInt(document.getElementById('toothStatus').value);
+        const surfaces = Array.from(document.querySelectorAll('.surf-check input:checked')).map(cb => cb.value);
+        const proc = document.getElementById('toothProcedure').value;
+        const notes = document.getElementById('toothNotes').value;
+
+        chartData.push({
+            Number: selectedToothId,
+            Status: status,
+            Surfaces: surfaces.map(s => ({ Surface: s, Condition: 'Treated' })),
+            ProcedureCode: proc,
+            Notes: notes
+        });
+
+        const toothEl = document.querySelector(`[data-tooth="${selectedToothId}"]`);
+        const statusClass = document.getElementById('toothStatus').options[document.getElementById('toothStatus').selectedIndex].text;
+        // Simple visual update — in real app map status ID to class
+        toothEl.style.borderColor = '#0d9488';
+        closeToothModal();
+    }
+    async function saveChart() {
+        if (chartData.length === 0) {
+            Swal.fire({ title: 'تنبيه', text: 'لم يتم إجراء تغييرات', icon: 'warning', confirmButtonColor: '#0d9488' });
+            return;
+        }
+        const payload = {
+            PatientId: @Model.Patient.Id,
+            VisitId: @Model.Visit.Id,
+            Teeth: chartData
+        };
+        const res = await fetch('/Clinical/SaveDentalChart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+            Swal.fire({ title: 'تم', text: 'تم حفظ رسمة الأسنان', icon: 'success', timer: 1500, showConfirmButton: false });
+            chartData = [];
+        }
+    }
+</script>

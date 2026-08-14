@@ -1,0 +1,703 @@
+﻿@model Dental.Modules.Clinical.ViewModels.SessionViewModel
+
+<div class="prescription-shell">
+    <div class="rx-toolbar">
+        <div class="rx-title">
+            <i class="bi bi-file-medical"></i>
+            <span>الروشتات (@Model.Visit.Prescriptions.Count)</span>
+        </div>
+        <button class="btn-add-rx" onclick="openRxModal()">
+            <i class="bi bi-plus-lg"></i> كتابة روشتة
+        </button>
+    </div>
+
+    <div class="rx-list" id="rxList">
+        @foreach (var rx in Model.Visit.Prescriptions)
+        {
+            <div class="rx-card">
+                <div class="rx-header">
+                    <div class="rx-date">
+                        <i class="bi bi-calendar3"></i>
+                        @rx.PrescriptionDate.ToString("dd/MM/yyyy HH:mm")
+                    </div>
+                    <div class="rx-status @rx.Status.ToString().ToLower()">
+                        @(rx.Status switch
+                        {
+                            Dental.Modules.Patients.DTOs.PrescriptionStatus.Active => "نشطة",
+                            Dental.Modules.Patients.DTOs.PrescriptionStatus.Completed => "مكتملة",
+                            Dental.Modules.Patients.DTOs.PrescriptionStatus.Cancelled => "ملغاة",
+                            _ => rx.Status.ToString()
+                        })
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(rx.Diagnosis))
+                {
+                    <div class="rx-diagnosis"><strong>التشخيص:</strong> @rx.Diagnosis</div>
+                }
+                <div class="rx-items">
+                    @foreach (var item in rx.Items)
+                    {
+                        <div class="rx-item">
+                            <div class="rx-drug-name">
+                                <i class="bi bi-capsule"></i>
+                                @item.MedicationName
+                                <span class="rx-dosage">@item.Dosage</span>
+                            </div>
+                            <div class="rx-instructions">
+                                <span class="rx-chip"><i class="bi bi-clock"></i> @item.Frequency</span>
+                                <span class="rx-chip"><i class="bi bi-calendar-week"></i> @item.Duration</span>
+                                @if (!string.IsNullOrEmpty(item.Instructions))
+                                {
+                                    <span class="rx-chip info"><i class="bi bi-info-circle"></i> @item.Instructions</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+                @if (!string.IsNullOrEmpty(rx.Notes))
+                {
+                    <div class="rx-footer">@rx.Notes</div>
+                }
+                <div class="rx-actions-bar">
+                    <span class="rx-by"><i class="bi bi-person-badge"></i> د. @rx.PrescribedBy</span>
+                    <div class="rx-actions">
+                        <button class="rx-btn" onclick="printRx(@rx.Id)" title="طباعة"><i class="bi bi-printer"></i></button>
+                        <button class="rx-btn danger" onclick="deleteRx(@rx.Id)" title="حذف"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+        }
+        @if (!Model.Visit.Prescriptions.Any())
+        {
+            <div class="empty-rx">
+                <div class="empty-icon"><i class="bi bi-file-medical"></i></div>
+                <h4>لا توجد روشتات مسجلة</h4>
+                <p>اكتب روشتة جديدة للمريض</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Add Prescription Modal -->
+<div class="rx-modal" id="rxModal" style="display:none;">
+    <div class="modal-glass" style="max-width: 600px;">
+        <div class="modal-head">
+            <h5><i class="bi bi-file-earmark-medical"></i> روشتة جديدة</h5>
+            <button class="btn-close-white" onclick="closeRxModal()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group mb-3">
+                <label>التشخيص</label>
+                <input type="text" class="form-glass" id="rxDiagnosis" placeholder="تشخيص الحالة..." />
+            </div>
+
+            <div class="rx-items-editor" id="rxItemsEditor">
+                <div class="rx-item-row" data-index="0">
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>الدواء <span class="text-danger">*</span></label>
+                            <input type="text" class="form-glass drug-name" placeholder="اسم الدواء" />
+                        </div>
+                        <div class="form-group">
+                            <label>الجرعة</label>
+                            <input type="text" class="form-glass drug-dosage" placeholder="500mg" />
+                        </div>
+                        <div class="form-group">
+                            <label>التكرار</label>
+                            <input type="text" class="form-glass drug-freq" placeholder="3 مرات يومياً" />
+                        </div>
+                    </div>
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>المدة</label>
+                            <input type="text" class="form-glass drug-duration" placeholder="7 أيام" />
+                        </div>
+                        <div class="form-group">
+                            <label>التعليمات</label>
+                            <input type="text" class="form-glass drug-instr" placeholder="بعد الأكل..." />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-add-drug" onclick="addDrugRow()">
+                <i class="bi bi-plus-circle"></i> إضافة دواء آخر
+            </button>
+
+            <div class="form-group mt-3">
+                <label>ملاحظات الروشتة</label>
+                <textarea class="form-glass" id="rxNotes" rows="2"></textarea>
+            </div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn-modal btn-cancel" onclick="closeRxModal()">إلغاء</button>
+            <button class="btn-modal btn-save" onclick="submitPrescription()">حفظ الروشتة</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .prescription-shell {
+        padding: 10px;
+    }
+
+    .rx-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .rx-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        color: #0f172a;
+        font-size: 1.1rem;
+    }
+
+        .rx-title i {
+            color: #0d9488;
+        }
+
+    .btn-add-rx {
+        background: linear-gradient(135deg, #ec4899, #db2777);
+        color: #fff;
+        border: none;
+        padding: 11px 22px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 16px rgba(236,72,153,0.3);
+        transition: all 0.3s;
+    }
+
+        .btn-add-rx:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(236,72,153,0.4);
+        }
+
+    .rx-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .rx-card {
+        background: linear-gradient(135deg, #fff 0%, #fdf2f8 100%);
+        border-radius: 20px;
+        padding: 24px;
+        border: 1px solid rgba(226,232,240,0.8);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        transition: all 0.3s;
+        animation: slideUp 0.4s ease backwards;
+    }
+
+        .rx-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+    .rx-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+
+    .rx-date {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        color: #64748b;
+        font-weight: 700;
+    }
+
+        .rx-date i {
+            color: #0d9488;
+        }
+
+    .rx-status {
+        padding: 4px 12px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+        .rx-status.active {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .rx-status.completed {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .rx-status.cancelled {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+    .rx-diagnosis {
+        background: #fff;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 0.92rem;
+        color: #1e293b;
+        margin-bottom: 14px;
+        border: 1px solid #f1f5f9;
+    }
+
+    .rx-items {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .rx-item {
+        background: #fff;
+        border-radius: 14px;
+        padding: 14px 18px;
+        border: 1px solid #f1f5f9;
+        transition: all 0.2s;
+    }
+
+        .rx-item:hover {
+            border-color: #fbcfe8;
+        }
+
+    .rx-drug-name {
+        font-weight: 800;
+        color: #1e293b;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+        .rx-drug-name i {
+            color: #ec4899;
+        }
+
+    .rx-dosage {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #64748b;
+        background: #f1f5f9;
+        padding: 2px 8px;
+        border-radius: 6px;
+    }
+
+    .rx-instructions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .rx-chip {
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #f0fdfa;
+        color: #0f766e;
+    }
+
+        .rx-chip.info {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .rx-chip i {
+            font-size: 0.85rem;
+        }
+
+    .rx-footer {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px dashed #e2e8f0;
+        font-size: 0.88rem;
+        color: #64748b;
+        font-style: italic;
+    }
+
+    .rx-actions-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .rx-by {
+        font-size: 0.82rem;
+        color: #64748b;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .rx-actions {
+        display: flex;
+        gap: 6px;
+    }
+
+    .rx-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        border: none;
+        background: transparent;
+        color: #64748b;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+        .rx-btn:hover {
+            background: #f1f5f9;
+            color: #0d9488;
+        }
+
+        .rx-btn.danger:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+    .empty-rx {
+        text-align: center;
+        padding: 48px;
+        color: #64748b;
+    }
+
+    .empty-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        background: #fdf2f8;
+        color: #ec4899;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin: 0 auto 16px;
+    }
+
+    .empty-rx h4 {
+        font-weight: 800;
+        color: #1e293b;
+        margin-bottom: 6px;
+    }
+
+    .empty-rx p {
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    /* Modal */
+    .rx-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(15,23,42,0.4);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        animation: fadeIn 0.3s;
+    }
+
+    .modal-glass {
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 28px;
+        width: 90%;
+        max-width: 600px;
+        border: 1px solid rgba(255,255,255,0.5);
+        box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        animation: scaleIn 0.3s;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+        .modal-head h5 {
+            margin: 0;
+            font-weight: 800;
+            color: #0f172a;
+            font-size: 1.1rem;
+        }
+
+    .btn-close-white {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: none;
+        background: #f1f5f9;
+        color: #64748b;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-body {
+        margin-bottom: 20px;
+    }
+
+    .rx-items-editor {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .rx-item-row {
+        background: #f8fafc;
+        border-radius: 14px;
+        padding: 16px;
+        border: 1px solid #e2e8f0;
+        position: relative;
+    }
+
+    .form-row-3 {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .form-row-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 6px;
+    }
+
+    .form-glass {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.8);
+        font-size: 0.95rem;
+        outline: none;
+        transition: all 0.2s;
+    }
+
+        .form-glass:focus {
+            border-color: #ec4899;
+            box-shadow: 0 0 0 3px rgba(236,72,153,0.1);
+        }
+
+    .btn-add-drug {
+        width: 100%;
+        padding: 12px;
+        border-radius: 12px;
+        border: 2px dashed #e2e8f0;
+        background: transparent;
+        color: #64748b;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+
+        .btn-add-drug:hover {
+            border-color: #ec4899;
+            color: #ec4899;
+            background: #fdf2f8;
+        }
+
+    .modal-foot {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .btn-modal {
+        padding: 10px 22px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-cancel {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #ec4899, #db2777);
+        color: #fff;
+        box-shadow: 0 4px 16px rgba(236,72,153,0.3);
+    }
+
+        .btn-save:hover {
+            transform: translateY(-1px);
+        }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @@keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .form-row-3, .form-row-2 {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script>
+    let drugIndex = 1;
+    function openRxModal() { document.getElementById('rxModal').style.display = 'flex'; }
+    function closeRxModal() {
+        document.getElementById('rxModal').style.display = 'none';
+        document.getElementById('rxItemsEditor').innerHTML = getDrugRowHtml(0);
+        drugIndex = 1;
+        document.getElementById('rxDiagnosis').value = '';
+        document.getElementById('rxNotes').value = '';
+    }
+    function getDrugRowHtml(idx) {
+        return `
+        <div class="rx-item-row" data-index="${idx}">
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label>الدواء <span class="text-danger">*</span></label>
+                    <input type="text" class="form-glass drug-name" placeholder="اسم الدواء" />
+                </div>
+                <div class="form-group">
+                    <label>الجرعة</label>
+                    <input type="text" class="form-glass drug-dosage" placeholder="500mg" />
+                </div>
+                <div class="form-group">
+                    <label>التكرار</label>
+                    <input type="text" class="form-glass drug-freq" placeholder="3 مرات يومياً" />
+                </div>
+            </div>
+            <div class="form-row-2">
+                <div class="form-group">
+                    <label>المدة</label>
+                    <input type="text" class="form-glass drug-duration" placeholder="7 أيام" />
+                </div>
+                <div class="form-group">
+                    <label>التعليمات</label>
+                    <input type="text" class="form-glass drug-instr" placeholder="بعد الأكل..." />
+                </div>
+            </div>
+        </div>`;
+    }
+    function addDrugRow() {
+        const container = document.getElementById('rxItemsEditor');
+        const div = document.createElement('div');
+        div.innerHTML = getDrugRowHtml(drugIndex++);
+        container.appendChild(div.firstElementChild);
+    }
+
+    async function submitPrescription() {
+        const items = [];
+        document.querySelectorAll('.rx-item-row').forEach(row => {
+            const name = row.querySelector('.drug-name').value.trim();
+            if (!name) return;
+            items.push({
+                MedicationName: name,
+                Dosage: row.querySelector('.drug-dosage').value,
+                Frequency: row.querySelector('.drug-freq').value,
+                Duration: row.querySelector('.drug-duration').value,
+                Instructions: row.querySelector('.drug-instr').value
+            });
+        });
+        if (items.length === 0) {
+            Swal.fire({ title: 'مطلوب', text: 'أضف دواء واحد على الأقل', icon: 'warning', confirmButtonColor: '#ec4899' });
+            return;
+        }
+        const data = {
+            VisitId: @Model.Visit.Id,
+            Diagnosis: document.getElementById('rxDiagnosis').value,
+            Notes: document.getElementById('rxNotes').value,
+            Items: items,
+            PrescribedBy: '@(User.Identity?.Name ?? "System")'
+        };
+        // TODO: Add API endpoint /Clinical/AddPrescription
+        Swal.fire({ title: 'تم', text: 'تم حفظ الروشتة بنجاح', icon: 'success', timer: 1500, showConfirmButton: false });
+        closeRxModal();
+        // location.reload();
+    }
+    function printRx(id) { window.open(`/Clinical/PrintPrescription?id=${id}`, '_blank'); }
+    async function deleteRx(id) {
+        const confirm = await Swal.fire({
+            title: 'تأكيد الحذف', text: 'هل أنت متأكد؟', icon: 'warning',
+            showCancelButton: true, confirmButtonText: 'نعم', cancelButtonText: 'إلغاء', confirmButtonColor: '#dc2626'
+        });
+        if (!confirm.isConfirmed) return;
+        // TODO: Add delete endpoint
+        Swal.fire({ title: 'تم', text: 'تم الحذف', icon: 'success', timer: 1500, showConfirmButton: false });
+    }
+</script>

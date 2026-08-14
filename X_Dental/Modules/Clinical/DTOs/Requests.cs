@@ -66,4 +66,22 @@ namespace Dental.Modules.Clinical.DTOs
         public int Duration { get; set; } = 30; // minutes
         public string? Reason { get; set; }
     }
+
+    public class AddPrescriptionRequest
+    {
+        public int VisitId { get; set; }
+        public string? Diagnosis { get; set; }
+        public string? Notes { get; set; }
+        public string? PrescribedBy { get; set; }
+        public List<PrescriptionItemRequest> Items { get; set; } = new();
+    }
+
+    public class PrescriptionItemRequest
+    {
+        public string MedicationName { get; set; } = string.Empty;
+        public string? Dosage { get; set; }
+        public string? Frequency { get; set; }
+        public string? Duration { get; set; }
+        public string? Instructions { get; set; }
+    }
 }

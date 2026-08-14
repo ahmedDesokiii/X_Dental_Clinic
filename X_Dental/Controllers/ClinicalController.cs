@@ -24,21 +24,21 @@ namespace Dental.Controllers
 
 
 
-        [HttpGet]
-        public async Task<IActionResult> Calendar()
-        {
-            return View();
-        }
-        [HttpGet]
-        public async Task<IActionResult> Payments()
-        {
-            return View();
-        }
+        //[HttpGet]
+        //public async Task<IActionResult> Calendar()
+        //{
+        //    return View();
+        //}
+        //[HttpGet]
+        //public async Task<IActionResult> Payments()
+        //{
+        //    return View();
+        //}
         
         [HttpGet]
         public async Task<IActionResult> Session(int patientId, int visitId)
         {
-            // ✅ استخدم Dental.Models.Patients.Patient مش Patient لوحده
+            
             var patient = await _context.Patients
                 .Include(p => p.Gender)
                 .Include(p => p.BloodGroup)
@@ -49,6 +49,10 @@ namespace Dental.Controllers
                 .Include(v => v.Diagnoses).ThenInclude(d => d.Diagnosis)
                 .Include(v => v.Procedures).ThenInclude(p => p.Procedure)
                 .Include(v => v.Payments)
+                .Include(v => v.TreatmentSessions)
+                .Include(v => v.Procedures)
+                .Include(v => v.Payments)
+                .Include(v => v.Procedures)
                 .Include(v => v.XRays)
                 .Include(v => v.Prescriptions)
                 .FirstOrDefaultAsync(v => v.Id == visitId);
@@ -145,8 +149,22 @@ namespace Dental.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveDentalChart([FromBody] SaveChartRequest req)
         {
+            // ⭐ Validation
+            if (req == null || req.Teeth == null || !req.Teeth.Any())
+                return Json(new { success = false, message = "لا توجد أسنان محددة." });
+
+            if (req.PatientId <= 0)
+                return Json(new { success = false, message = "معرف المريض غير صالح." });
+
+            var patientExists = await _context.Patients.AnyAsync(p => p.Id == req.PatientId && p.IsActive);
+            if (!patientExists)
+                return Json(new { success = false, message = "المريض غير موجود." });
+
             foreach (var tooth in req.Teeth)
             {
+                if (tooth.Number < 11 || tooth.Number > 48)
+                    return Json(new { success = false, message = $"رقم السن {tooth.Number} غير صالح." });
+
                 var entry = new DentalChartEntry
                 {
                     PatientId = req.PatientId,
@@ -164,6 +182,50 @@ namespace Dental.Controllers
             return Json(new { success = true });
         }
 
+        // ⭐ NEW: Add Prescription Endpoint
+        [HttpPost]
+        public async Task<IActionResult> AddPrescription([FromBody] AddPrescriptionRequest req)
+        {
+            if (req == null || req.Items == null || !req.Items.Any())
+                return Json(new { success = false, message = "الروشتة فارغة." });
+
+            if (req.VisitId <= 0)
+                return Json(new { success = false, message = "معرف الزيارة غير صالح." });
+
+            var visit = await _context.Visits.FindAsync(req.VisitId);
+            if (visit == null)
+                return Json(new { success = false, message = "الزيارة غير موجودة." });
+
+            var prescription = new Prescription
+            {
+                VisitId = req.VisitId,
+                PrescriptionDate = DateTime.Now,
+                Diagnosis = req.Diagnosis,
+                Notes = req.Notes,
+                Status = PrescriptionStatus.Active,
+                PrescribedBy = req.PrescribedBy ?? "System"
+            };
+
+            foreach (var item in req.Items)
+            {
+                if (string.IsNullOrWhiteSpace(item.MedicationName))
+                    continue;
+
+                prescription.Items.Add(new PrescriptionItem
+                {
+                    MedicationName = item.MedicationName,
+                    Dosage = item.Dosage,
+                    Frequency = item.Frequency,
+                    Duration = item.Duration,
+                    Instructions = item.Instructions
+                });
+            }
+
+            _context.Prescriptions.Add(prescription);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, data = prescription.Id });
+        }
 
         [HttpPost]
         public async Task<IActionResult> CreateAppointment([FromBody] CreateAppointmentRequest request)

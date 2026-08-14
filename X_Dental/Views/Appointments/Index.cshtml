@@ -1,0 +1,654 @@
+﻿@{
+    ViewData["Title"] = "المواعيد";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* ── إعادة استخدام نفس هوية التصميم الموجودة بالفعل في صفحة تفاصيل المريض ── */
+    .weekly-calendar-shell {
+        background: rgba(255,255,255,0.8);
+        backdrop-filter: blur(16px);
+        border-radius: 20px;
+        border: 1px solid rgba(226,232,240,0.6);
+        padding: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+    }
+
+    .calendar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .cal-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+    }
+
+    .cal-nav {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        color: #475569;
+        cursor: pointer;
+        transition: all .2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .cal-nav:hover {
+            background: #0d9488;
+            color: #fff;
+            border-color: #0d9488;
+        }
+
+    .week-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 12px;
+    }
+
+    .day-column {
+        background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(226,232,240,0.6);
+        min-height: 300px;
+        overflow: hidden;
+    }
+
+        .day-column.is-today {
+            border-color: rgba(13,148,136,0.5);
+            box-shadow: 0 0 0 2px rgba(13,148,136,0.15);
+        }
+
+    .day-header {
+        padding: 12px;
+        text-align: center;
+        border-bottom: 1px solid #f1f5f9;
+        background: linear-gradient(135deg, rgba(13,148,136,0.05), transparent);
+    }
+
+    .day-name {
+        font-size: .75rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .day-number {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .day-slots {
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 60px;
+    }
+
+    .patient-slot {
+        background: #fff;
+        border-radius: 12px;
+        padding: 12px;
+        border: 1px solid rgba(226,232,240,0.8);
+        cursor: pointer;
+        transition: all .2s;
+        border-inline-start: 4px solid #0d9488;
+    }
+
+        .patient-slot:hover {
+            transform: translateX(-4px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        }
+
+    .slot-time {
+        font-size: .75rem;
+        font-weight: 700;
+        color: #0d9488;
+        background: rgba(13,148,136,0.08);
+        padding: 2px 8px;
+        border-radius: 6px;
+        display: inline-block;
+        margin-bottom: 6px;
+    }
+
+    .slot-name {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: .9rem;
+        margin-bottom: 4px;
+    }
+
+    .slot-phone {
+        font-size: .8rem;
+        color: #64748b;
+        display: flex;
+        gap: 4px;
+        font-family: monospace;
+        direction: ltr;
+        justify-content: flex-end;
+    }
+
+    .slot-status {
+        margin-top: 6px;
+        font-size: .7rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 6px;
+        display: inline-block;
+    }
+
+    .status-scheduled {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .status-confirmed {
+        background: #cffafe;
+        color: #0e7490;
+    }
+
+    .status-checkedin {
+        background: #d1fae5;
+        color: #047857;
+    }
+
+    .status-inprogress {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-completed {
+        background: #e2e8f0;
+        color: #334155;
+    }
+
+    .status-cancelled {
+        background: #fee2e2;
+        color: #b91c1c;
+        text-decoration: line-through;
+    }
+
+    .status-noshow {
+        background: #fef2f2;
+        color: #991b1b;
+    }
+
+    .empty-day {
+        text-align: center;
+        color: #94a3b8;
+        padding: 20px 0;
+        font-size: .85rem;
+    }
+
+    /* ── Modal (نفس أسلوب صفحة تفاصيل المريض) ── */
+    .custom-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1050;
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .custom-modal.show {
+            display: flex;
+        }
+
+    .modal-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(15,23,42,0.5);
+    }
+
+    .modal-box {
+        position: relative;
+        background: #fff;
+        border-radius: 16px;
+        width: 100%;
+        max-width: 480px;
+        margin: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+
+    .modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        background: linear-gradient(135deg, #14b8a6, #0d9488);
+        color: #fff;
+    }
+
+        .modal-head h5 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .modal-foot {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        padding: 14px 20px;
+        border-top: 1px solid #f1f5f9;
+        flex-wrap: wrap;
+    }
+
+    .form-label-custom {
+        display: block;
+        font-size: .78rem;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 6px;
+    }
+
+    .form-control-custom {
+        width: 100%;
+        border: 1px solid #d8dee3;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: .9rem;
+    }
+
+    .btn-modal {
+        border: none;
+        padding: 9px 18px;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: .85rem;
+    }
+
+    .btn-modal-cancel {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .btn-modal-save {
+        background: #0d9488;
+        color: #fff;
+    }
+
+    .btn-modal-danger {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .btn-modal-info {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+</style>
+
+<div class="erp-hero">
+    <div class="hero-title">
+        <div class="hero-icon"><i class="bi bi-calendar2-week-fill"></i></div>
+        <div>
+            <h1>جدول المواعيد</h1>
+            <p>عرض وحجز وإدارة مواعيد المرضى أسبوعيًا</p>
+        </div>
+    </div>
+    <div class="hero-actions">
+        <button class="btn-hero btn-hero-light" onclick="openCreateModal()">
+            <i class="bi bi-plus-lg"></i> موعد جديد
+        </button>
+    </div>
+</div>
+
+<div class="weekly-calendar-shell">
+    <div class="calendar-header">
+        <button class="cal-nav" onclick="shiftWeek(-1)"><i class="bi bi-chevron-right"></i></button>
+        <h3 class="cal-title" id="weekRange">جاري التحميل...</h3>
+        <button class="cal-nav" onclick="shiftWeek(1)"><i class="bi bi-chevron-left"></i></button>
+    </div>
+    <div class="week-grid" id="weekGrid"></div>
+</div>
+
+<!-- 🔷 Create Appointment Modal -->
+<div class="custom-modal" id="apptModal">
+    <div class="modal-overlay" onclick="closeCreateModal()"></div>
+    <div class="modal-box">
+        <div class="modal-head">
+            <h5><i class="bi bi-calendar-plus me-2"></i> موعد جديد</h5>
+            <button type="button" class="btn-close btn-close-white" onclick="closeCreateModal()"></button>
+        </div>
+        <div class="modal-body">
+            <div class="mb-3">
+                <label class="form-label-custom">المريض <span class="text-danger">*</span></label>
+                <input type="text" class="form-control-custom" id="apptPatientSearch" placeholder="اكتب اسم المريض أو رقم الموبايل..." autocomplete="off" />
+                <input type="hidden" id="apptPatientId" />
+                <div id="apptPatientResults" style="border:1px solid #e2e8f0; border-radius:10px; margin-top:6px; max-height:160px; overflow-y:auto; display:none;"></div>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-6">
+                    <label class="form-label-custom">التاريخ <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control-custom" id="apptDate" />
+                </div>
+                <div class="col-6">
+                    <label class="form-label-custom">الوقت <span class="text-danger">*</span></label>
+                    <input type="time" class="form-control-custom" id="apptTime" />
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label-custom">المدة</label>
+                <select class="form-control-custom" id="apptDuration">
+                    <option value="15">15 دقيقة</option>
+                    <option value="30" selected>30 دقيقة</option>
+                    <option value="45">45 دقيقة</option>
+                    <option value="60">ساعة</option>
+                    <option value="90">ساعة ونص</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label-custom">السبب / الملاحظات</label>
+                <textarea class="form-control-custom" id="apptReason" rows="2" placeholder="مثال: تركيب تاج، متابعة..."></textarea>
+            </div>
+            <div id="apptConflictWarning" class="text-danger small" style="display:none;">
+                <i class="bi bi-exclamation-triangle-fill"></i> يوجد موعد آخر متعارض مع هذا التوقيت.
+            </div>
+        </div>
+        <div class="modal-foot">
+            <button type="button" class="btn-modal btn-modal-cancel" onclick="closeCreateModal()">إلغاء</button>
+            <button type="button" class="btn-modal btn-modal-save" onclick="saveAppointment()">
+                <i class="bi bi-check-lg"></i> حفظ الموعد
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 🔷 Appointment Details / Actions Modal -->
+<div class="custom-modal" id="detailsModal">
+    <div class="modal-overlay" onclick="closeDetailsModal()"></div>
+    <div class="modal-box">
+        <div class="modal-head">
+            <h5><i class="bi bi-calendar-check me-2"></i> تفاصيل الموعد</h5>
+            <button type="button" class="btn-close btn-close-white" onclick="closeDetailsModal()"></button>
+        </div>
+        <div class="modal-body" id="detailsBody">
+            <!-- يتم تعبئته ديناميكيًا -->
+        </div>
+        <div class="modal-foot" id="detailsActions">
+            <!-- الأزرار حسب حالة الموعد -->
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentWeekStart = getStartOfWeek(new Date());
+        let selectedAppointmentId = null;
+
+        function getStartOfWeek(date) {
+            const d = new Date(date);
+            const day = d.getDay(); // 0 = Sunday
+            d.setDate(d.getDate() - day);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        function formatDateOnly(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function shiftWeek(dir) {
+            currentWeekStart.setDate(currentWeekStart.getDate() + (dir * 7));
+            loadWeek();
+        }
+
+        const dayNames = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+        async function loadWeek() {
+            const start = new Date(currentWeekStart);
+            const end = new Date(currentWeekStart);
+            end.setDate(end.getDate() + 7);
+
+            document.getElementById('weekRange').textContent =
+                `${start.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })} — ${new Date(end - 1).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })}`;
+
+            let events = [];
+            try {
+                const res = await fetch(`/Appointments/GetEvents?start=${start.toISOString()}&end=${end.toISOString()}`);
+                const result = await res.json();
+                if (result.success) events = result.data;
+            } catch (err) {
+                console.error('Failed to load appointments', err);
+            }
+
+            renderWeek(start, events);
+        }
+
+        function renderWeek(weekStart, events) {
+            const grid = document.getElementById('weekGrid');
+            const today = formatDateOnly(new Date());
+            grid.innerHTML = '';
+
+            for (let i = 0; i < 7; i++) {
+                const day = new Date(weekStart);
+                day.setDate(day.getDate() + i);
+                const dayKey = formatDateOnly(day);
+                const dayEvents = events.filter(e => formatDateOnly(new Date(e.start)) === dayKey)
+                    .sort((a, b) => new Date(a.start) - new Date(b.start));
+
+                const col = document.createElement('div');
+                col.className = 'day-column' + (dayKey === today ? ' is-today' : '');
+                col.innerHTML = `
+                    <div class="day-header">
+                        <div class="day-name">${dayNames[day.getDay()]}</div>
+                        <div class="day-number">${day.getDate()}</div>
+                    </div>
+                    <div class="day-slots">
+                        ${dayEvents.length === 0 ? '<div class="empty-day">لا توجد مواعيد</div>' : ''}
+                        ${dayEvents.map(e => `
+                            <div class="patient-slot" onclick="openDetailsModal(${e.id})">
+                                <div class="slot-time">${new Date(e.start).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</div>
+                                <div class="slot-name">${e.patientName}</div>
+                                <div class="slot-phone"><i class="bi bi-telephone-fill"></i> ${e.patientMobile}</div>
+                                <span class="slot-status ${e.statusColorClass}">${e.statusText}</span>
+                            </div>
+                        `).join('')}
+                    </div>`;
+                grid.appendChild(col);
+            }
+        }
+
+        // ── إنشاء موعد جديد ──
+        function openCreateModal() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('apptDate').value = formatDateOnly(tomorrow);
+            document.getElementById('apptTime').value = '09:00';
+            document.getElementById('apptPatientId').value = '';
+            document.getElementById('apptPatientSearch').value = '';
+            document.getElementById('apptReason').value = '';
+            document.getElementById('apptConflictWarning').style.display = 'none';
+            document.getElementById('apptModal').classList.add('show');
+        }
+        function closeCreateModal() {
+            document.getElementById('apptModal').classList.remove('show');
+        }
+
+        // ── بحث سريع عن المريض (يعتمد على Endpoint البحث الموجود بالفعل في PatientsController لو متاح) ──
+        let patientSearchTimeout;
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('apptPatientSearch');
+            if (!searchInput) return;
+            searchInput.addEventListener('input', () => {
+                clearTimeout(patientSearchTimeout);
+                const keyword = searchInput.value.trim();
+                document.getElementById('apptPatientId').value = '';
+                if (keyword.length < 2) {
+                    document.getElementById('apptPatientResults').style.display = 'none';
+                    return;
+                }
+                patientSearchTimeout = setTimeout(() => searchPatients(keyword), 300);
+            });
+            loadWeek();
+        });
+
+        async function searchPatients(keyword) {
+            try {
+                // يستخدم الـ Endpoint الموجود بالفعل: PatientsController.Search(string term)
+                const res = await fetch(`/Patients/Search?term=${encodeURIComponent(keyword)}`);
+                const list = await res.json(); // الـ Action ده بيرجّع Array مباشرة، مش {success, data}
+                const box = document.getElementById('apptPatientResults');
+                if (!list.length) {
+                    box.style.display = 'none';
+                    return;
+                }
+                box.innerHTML = '';
+                list.forEach(function (p) {
+                    const item = document.createElement('div');
+                    item.style.padding = '8px 12px';
+                    item.style.cursor = 'pointer';
+                    item.style.borderBottom = '1px solid #f1f5f9';
+                    item.dataset.id = p.id;
+                    item.dataset.name = p.fullNameAr || '';
+                    item.textContent = (p.fullNameAr || '') + ' — ' + (p.phone || '');
+                    item.addEventListener('mousedown', function () {
+                        selectPatient(parseInt(item.dataset.id), item.dataset.name);
+                    });
+                    box.appendChild(item);
+                });
+                box.style.display = 'block';
+            } catch (err) {
+                console.error('Patient search failed', err);
+            }
+        }
+        function selectPatient(id, name) {
+            document.getElementById('apptPatientId').value = id;
+            document.getElementById('apptPatientSearch').value = name;
+            document.getElementById('apptPatientResults').style.display = 'none';
+        }
+
+        async function saveAppointment() {
+            const patientId = parseInt(document.getElementById('apptPatientId').value);
+            const date = document.getElementById('apptDate').value;
+            const time = document.getElementById('apptTime').value;
+            const duration = parseInt(document.getElementById('apptDuration').value);
+            const reason = document.getElementById('apptReason').value;
+
+            if (!patientId) {
+                Swal.fire({ title: 'مطلوب', text: 'اختر المريض من نتائج البحث', icon: 'warning', confirmButtonColor: '#14b8a6' });
+                return;
+            }
+            if (!date || !time) {
+                Swal.fire({ title: 'مطلوب', text: 'اختر التاريخ والوقت', icon: 'warning', confirmButtonColor: '#14b8a6' });
+                return;
+            }
+
+            const appointmentDate = new Date(`${date}T${time}`);
+
+            const data = {
+                PatientId: patientId,
+                AppointmentDate: appointmentDate.toISOString(),
+                DurationMinutes: duration,
+                Reason: reason
+            };
+
+            try {
+                const res = await fetch('/Appointments/Create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    closeCreateModal();
+                    Swal.fire({ title: 'تم!', text: result.message, icon: 'success', confirmButtonColor: '#14b8a6', timer: 1800, showConfirmButton: false });
+                    loadWeek();
+                } else {
+                    Swal.fire({ title: 'تعذر الحفظ', text: result.message, icon: 'error', confirmButtonColor: '#14b8a6' });
+                }
+            } catch (err) {
+                Swal.fire({ title: 'خطأ', text: 'مشكلة في الاتصال بالسيرفر', icon: 'error', confirmButtonColor: '#14b8a6' });
+            }
+        }
+
+        // ── تفاصيل الموعد + الإجراءات حسب الحالة ──
+        async function openDetailsModal(id) {
+            selectedAppointmentId = id;
+            const res = await fetch(`/Appointments/GetById?id=${id}`);
+            const result = await res.json();
+            if (!result.success) {
+                Swal.fire({ title: 'خطأ', text: result.message, icon: 'error' });
+                return;
+            }
+            const a = result.data;
+
+            document.getElementById('detailsBody').innerHTML = `
+                <div class="mb-2"><strong>${a.patientName}</strong> <span class="slot-status ${a.statusColorClass}">${a.statusText}</span></div>
+                <div class="mb-2" style="color:#64748b; font-size:.85rem;"><i class="bi bi-telephone"></i> ${a.patientMobile}</div>
+                <div class="mb-2" style="color:#64748b; font-size:.85rem;"><i class="bi bi-clock"></i> ${new Date(a.start).toLocaleString('ar-EG')} — ${a.durationMinutes} دقيقة</div>
+                ${a.reason ? `<div class="mb-2"><strong>السبب:</strong> ${a.reason}</div>` : ''}
+                ${a.notes ? `<div class="mb-2"><strong>ملاحظات:</strong> ${a.notes}</div>` : ''}
+            `;
+
+            const actions = [];
+            if (a.status === 1) { // Scheduled
+                actions.push(`<button class="btn-modal btn-modal-info" onclick="doAction('Confirm')">تأكيد</button>`);
+            }
+            if (a.status === 1 || a.status === 2) { // Scheduled/Confirmed
+                actions.push(`<button class="btn-modal btn-modal-save" onclick="doAction('CheckIn')">تسجيل حضور</button>`);
+                actions.push(`<button class="btn-modal btn-modal-danger" onclick="doAction('Cancel')">إلغاء</button>`);
+            }
+            if (a.status === 3 || a.status === 4) { // CheckedIn/InProgress
+                actions.push(`<button class="btn-modal btn-modal-save" onclick="convertToVisit()">بدء الزيارة</button>`);
+            }
+            actions.push(`<button class="btn-modal btn-modal-cancel" onclick="closeDetailsModal()">إغلاق</button>`);
+
+            document.getElementById('detailsActions').innerHTML = actions.join('');
+            document.getElementById('detailsModal').classList.add('show');
+        }
+        function closeDetailsModal() {
+            document.getElementById('detailsModal').classList.remove('show');
+        }
+
+        async function doAction(action) {
+            try {
+                const res = await fetch(`/Appointments/${action}?id=${selectedAppointmentId}`, { method: 'POST' });
+                const result = await res.json();
+                if (result.success) {
+                    closeDetailsModal();
+                    Swal.fire({ title: 'تم!', text: result.message, icon: 'success', confirmButtonColor: '#14b8a6', timer: 1500, showConfirmButton: false });
+                    loadWeek();
+                } else {
+                    Swal.fire({ title: 'تعذر التنفيذ', text: result.message, icon: 'error' });
+                }
+            } catch (err) {
+                Swal.fire({ title: 'خطأ', text: 'مشكلة في الاتصال بالسيرفر', icon: 'error' });
+            }
+        }
+
+        async function convertToVisit() {
+            try {
+                // 1 = General, 2 = Orthodontics — عدّل الافتراضي حسب سير العمل عندك
+                const res = await fetch(`/Appointments/ConvertToVisit?id=${selectedAppointmentId}&category=1`, { method: 'POST' });
+                const result = await res.json();
+                if (result.success) {
+                    // يوجّه لصفحة الكشف (Session) في ClinicalController مباشرة
+                    window.location.href = `/Clinical/Session?patientId=${result.patientId}&visitId=${result.visitId}`;
+                } else {
+                    Swal.fire({ title: 'تعذر التنفيذ', text: result.message, icon: 'error' });
+                }
+            } catch (err) {
+                Swal.fire({ title: 'خطأ', text: 'مشكلة في الاتصال بالسيرفر', icon: 'error' });
+            }
+        }
+    </script>
+}

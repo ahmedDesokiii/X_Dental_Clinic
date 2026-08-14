@@ -19,6 +19,7 @@ namespace Dental.Modules.Patients.ViewModels
         public List<PrescriptionDto> Prescriptions { get; set; } = new();
         public List<PhotoDto> Photos { get; set; } = new();
         public List<PaymentDto> Payments { get; set; } = new();
+        public List<DocumentDto> Documents { get; set; } = new();
         public decimal TotalCost => Payments?.Sum(p => p.Amount) ?? 0;
         public decimal BalanceDue => TotalCost - TotalPaid;
         public bool HasAllergies => !string.IsNullOrEmpty(Patient?.Allergies);
@@ -27,5 +28,6 @@ namespace Dental.Modules.Patients.ViewModels
         public int CompletedSessions => Sessions?.Count(s => s.Status == SessionStatus.Completed) ?? 0;
         public int UpcomingAppointments => AppointmentsCount;
         public bool HasUpcomingAppointment => Patient?.NextAppointment.HasValue ?? false;
+
     }
 }

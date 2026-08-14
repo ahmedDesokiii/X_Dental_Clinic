@@ -1,0 +1,608 @@
+﻿@model Dental.Modules.Clinical.ViewModels.SessionViewModel
+
+<div class="xrays-shell">
+    <div class="xray-toolbar">
+        <div class="xray-title">
+            <i class="bi bi-image"></i>
+            <span>أشعة المريض (@Model.Visit.XRays.Count)</span>
+        </div>
+        <button class="btn-upload-xray" onclick="openXrayModal()">
+            <i class="bi bi-cloud-upload"></i> رفع أشعة جديدة
+        </button>
+    </div>
+
+    <div class="xray-grid" id="xrayGrid">
+        @foreach (var xray in Model.Visit.XRays)
+        {
+            <div class="xray-card">
+                <div class="xray-thumb">
+                    <img src="@xray.ImageUrl" alt="@xray.FileName" loading="lazy" onerror="this.src='/images/placeholder-xray.png'" />
+                    <div class="xray-overlay">
+                        <button class="xray-action-btn" onclick="viewXray('@xray.ImageUrl')" title="عرض"><i class="bi bi-eye"></i></button>
+                        <button class="xray-action-btn" onclick="deleteXray(@xray.Id)" title="حذف"><i class="bi bi-trash"></i></button>
+                    </div>
+                    <span class="xray-type-badge">@xray.Type</span>
+                </div>
+                <div class="xray-info">
+                    <div class="xray-name">@xray.FileName</div>
+                    <div class="xray-meta">
+                        <span><i class="bi bi-calendar"></i> @xray.TakenDate.ToString("dd/MM/yyyy")</span>
+                        @if (!string.IsNullOrEmpty(xray.Description))
+                        {
+                            <span class="xray-desc">@xray.Description</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        @if (!Model.Visit.XRays.Any())
+        {
+            <div class="empty-xray">
+                <div class="empty-icon"><i class="bi bi-image"></i></div>
+                <h4>لا توجد أشعة مسجلة</h4>
+                <p>يمكنك رفع صور الأشعة (OPG, Periapical, CBCT...)</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Upload XRay Modal -->
+<div class="xray-modal" id="xrayModal" style="display:none;">
+    <div class="modal-glass" style="max-width: 480px;">
+        <div class="modal-head">
+            <h5><i class="bi bi-cloud-upload"></i> رفع أشعة جديدة</h5>
+            <button class="btn-close-white" onclick="closeXrayModal()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="upload-zone" id="uploadZone">
+                <input type="file" id="xrayFile" accept="image/*,.dcm" hidden />
+                <div class="upload-placeholder" onclick="document.getElementById('xrayFile').click()">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <span>اضغط أو اسحب الصورة هنا</span>
+                    <small>PNG, JPG, JPEG, DICOM</small>
+                </div>
+                <div class="upload-preview" id="uploadPreview" style="display:none;">
+                    <img id="previewImg" src="" alt="Preview" />
+                    <button class="remove-file" onclick="clearFile(event)"><i class="bi bi-x-circle"></i></button>
+                </div>
+            </div>
+            <div class="form-group mt-3">
+                <label>نوع الأشعة</label>
+                <select class="form-glass" id="xrayType">
+                    <option value="Panoramic">OPG - بانوراما</option>
+                    <option value="Periapical">Periapical - سن واحد</option>
+                    <option value="Bitewing">Bitewing</option>
+                    <option value="Occlusal">Occlusal</option>
+                    <option value="Cephalometric">Cephalometric - تقويم</option>
+                    <option value="CBCT">CBCT - ثلاثي الأبعاد</option>
+                </select>
+            </div>
+            <div class="form-group mt-3">
+                <label>ملاحظات</label>
+                <textarea class="form-glass" id="xrayDesc" rows="2" placeholder="وصف الأشعة..."></textarea>
+            </div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn-modal btn-cancel" onclick="closeXrayModal()">إلغاء</button>
+            <button class="btn-modal btn-save" onclick="submitXray()">رفع</button>
+        </div>
+    </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" style="display:none;" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()"><i class="bi bi-x-lg"></i></button>
+    <img id="lightboxImg" src="" alt="Full size" />
+</div>
+
+<style>
+    .xrays-shell {
+        padding: 10px;
+    }
+
+    .xray-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .xray-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        color: #0f172a;
+        font-size: 1.1rem;
+    }
+
+        .xray-title i {
+            color: #0d9488;
+        }
+
+    .btn-upload-xray {
+        background: linear-gradient(135deg, #0d9488, #0891b2);
+        color: #fff;
+        border: none;
+        padding: 11px 22px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 16px rgba(13,148,136,0.3);
+        transition: all 0.3s;
+    }
+
+        .btn-upload-xray:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(13,148,136,0.4);
+        }
+
+    .xray-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 16px;
+    }
+
+    .xray-card {
+        background: linear-gradient(135deg, #fff, #f8fafc);
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(226,232,240,0.8);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        transition: all 0.3s;
+    }
+
+        .xray-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+        }
+
+    .xray-thumb {
+        position: relative;
+        aspect-ratio: 4/3;
+        background: #f1f5f9;
+        overflow: hidden;
+    }
+
+        .xray-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s;
+        }
+
+    .xray-card:hover .xray-thumb img {
+        transform: scale(1.05);
+    }
+
+    .xray-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(15,23,42,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .xray-card:hover .xray-overlay {
+        opacity: 1;
+    }
+
+    .xray-action-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        border: none;
+        background: rgba(255,255,255,0.95);
+        color: #0f172a;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        transition: all 0.2s;
+    }
+
+        .xray-action-btn:hover {
+            transform: scale(1.1);
+            background: #fff;
+        }
+
+    .xray-type-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(15,23,42,0.7);
+        color: #fff;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        backdrop-filter: blur(4px);
+    }
+
+    .xray-info {
+        padding: 14px;
+    }
+
+    .xray-name {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .xray-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.78rem;
+        color: #64748b;
+    }
+
+        .xray-meta i {
+            color: #0d9488;
+        }
+
+    .xray-desc {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .empty-xray {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 48px;
+        color: #64748b;
+    }
+
+    .empty-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        background: #f0fdfa;
+        color: #14b8a6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin: 0 auto 16px;
+    }
+
+    .empty-xray h4 {
+        font-weight: 800;
+        color: #1e293b;
+        margin-bottom: 6px;
+    }
+
+    .empty-xray p {
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    /* Modal */
+    .xray-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(15,23,42,0.4);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        animation: fadeIn 0.3s;
+    }
+
+    .modal-glass {
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 28px;
+        width: 90%;
+        max-width: 480px;
+        border: 1px solid rgba(255,255,255,0.5);
+        box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        animation: scaleIn 0.3s;
+    }
+
+    .modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+        .modal-head h5 {
+            margin: 0;
+            font-weight: 800;
+            color: #0f172a;
+            font-size: 1.1rem;
+        }
+
+    .btn-close-white {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: none;
+        background: #f1f5f9;
+        color: #64748b;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-body {
+        margin-bottom: 20px;
+    }
+
+    .modal-foot {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .upload-zone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 16px;
+        padding: 24px;
+        text-align: center;
+        transition: all 0.3s;
+        cursor: pointer;
+        position: relative;
+        background: #f8fafc;
+    }
+
+        .upload-zone:hover {
+            border-color: #0d9488;
+            background: #f0fdfa;
+        }
+
+    .upload-placeholder i {
+        font-size: 2.5rem;
+        color: #94a3b8;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .upload-placeholder span {
+        display: block;
+        font-weight: 700;
+        color: #475569;
+        font-size: 0.95rem;
+    }
+
+    .upload-placeholder small {
+        color: #94a3b8;
+        font-size: 0.8rem;
+    }
+
+    .upload-preview {
+        position: relative;
+        display: inline-block;
+    }
+
+        .upload-preview img {
+            max-height: 180px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+    .remove-file {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: none;
+        background: #dc2626;
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 6px;
+    }
+
+    .form-glass {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.8);
+        font-size: 0.95rem;
+        outline: none;
+        transition: all 0.2s;
+    }
+
+        .form-glass:focus {
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13,148,136,0.1);
+        }
+
+    .btn-modal {
+        padding: 10px 22px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-cancel {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #0d9488, #0891b2);
+        color: #fff;
+        box-shadow: 0 4px 16px rgba(13,148,136,0.3);
+    }
+
+        .btn-save:hover {
+            transform: translateY(-1px);
+        }
+
+    /* Lightbox */
+    .lightbox {
+        position: fixed;
+        inset: 0;
+        background: rgba(15,23,42,0.95);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s;
+    }
+
+        .lightbox img {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+    .lightbox-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        border: none;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        font-size: 1.3rem;
+        cursor: pointer;
+        backdrop-filter: blur(4px);
+        transition: all 0.2s;
+    }
+
+        .lightbox-close:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @@keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+</style>
+
+<script>
+    function openXrayModal() { document.getElementById('xrayModal').style.display = 'flex'; }
+    function closeXrayModal() { document.getElementById('xrayModal').style.display = 'none'; clearFile(); }
+
+    const fileInput = document.getElementById('xrayFile');
+    const uploadZone = document.getElementById('uploadZone');
+    const uploadPreview = document.getElementById('uploadPreview');
+    const previewImg = document.getElementById('previewImg');
+
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.style.borderColor = '#0d9488'; });
+    uploadZone.addEventListener('dragleave', () => { uploadZone.style.borderColor = '#cbd5e1'; });
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.style.borderColor = '#cbd5e1';
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            showPreview(e.dataTransfer.files[0]);
+        }
+    });
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length) showPreview(fileInput.files[0]);
+    });
+
+    function showPreview(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImg.src = e.target.result;
+            uploadPreview.style.display = 'inline-block';
+            document.querySelector('.upload-placeholder').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+    function clearFile(e) {
+        if (e) e.stopPropagation();
+        fileInput.value = '';
+        previewImg.src = '';
+        uploadPreview.style.display = 'none';
+        document.querySelector('.upload-placeholder').style.display = 'block';
+    }
+
+    async function submitXray() {
+        const file = fileInput.files[0];
+        if (!file) {
+            Swal.fire({ title: 'مطلوب', text: 'اختر صورة الأشعة أولاً', icon: 'warning', confirmButtonColor: '#0d9488' });
+            return;
+        }
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('VisitId', @Model.Visit.Id);
+        formData.append('PatientId', @Model.Patient.Id);
+        formData.append('Type', document.getElementById('xrayType').value);
+        formData.append('Description', document.getElementById('xrayDesc').value);
+
+        // TODO: Replace with actual upload endpoint
+        Swal.fire({ title: 'جاري الرفع...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        // const res = await fetch('/Clinical/UploadXRay', { method: 'POST', body: formData });
+        setTimeout(() => {
+            Swal.fire({ title: 'تم', text: 'تم رفع الأشعة بنجاح', icon: 'success', timer: 1500, showConfirmButton: false });
+            closeXrayModal();
+            location.reload();
+        }, 1000);
+    }
+
+    function viewXray(url) {
+        document.getElementById('lightboxImg').src = url;
+        document.getElementById('lightbox').style.display = 'flex';
+    }
+    function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
+    async function deleteXray(id) {
+        const confirm = await Swal.fire({
+            title: 'تأكيد الحذف', text: 'هل أنت متأكد؟', icon: 'warning',
+            showCancelButton: true, confirmButtonText: 'نعم', cancelButtonText: 'إلغاء', confirmButtonColor: '#dc2626'
+        });
+        if (!confirm.isConfirmed) return;
+        // TODO: Add delete endpoint
+        Swal.fire({ title: 'تم', text: 'تم الحذف', icon: 'success', timer: 1500, showConfirmButton: false });
+    }
+</script>

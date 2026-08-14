@@ -18,6 +18,7 @@ namespace Dental.Modules.Clinical.DTOs
         public DateTime? FollowUpDate { get; set; }
         public VisitStatus Status { get; set; }
 
+        public VisitCategory Category { get; set; }
         // Financial
         public decimal TotalAmount { get; set; }
         public decimal Discount { get; set; }

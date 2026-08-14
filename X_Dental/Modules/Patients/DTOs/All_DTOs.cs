@@ -104,9 +104,7 @@ namespace Dental.Modules.Patients.DTOs
         public string? Address { get; set; }
         public int? BloodGroupId { get; set; }
         public string? Notes { get; set; }
-        public Gender? Gender { get; set; }
 
-        // ⭐ NEW
         public PatientType PatientType { get; set; } = PatientType.General;
 
         // Medical Info
@@ -117,7 +115,6 @@ namespace Dental.Modules.Patients.DTOs
         public string? SmokingStatus { get; set; }
         public bool IsPregnant { get; set; }
         public string? EmergencyNotes { get; set; }
-
     }
 
     // ── Update Patient DTO ──
@@ -127,11 +124,9 @@ namespace Dental.Modules.Patients.DTOs
         public string FullNameAr { get; set; } = string.Empty;
         public string? FullNameEn { get; set; }
 
-        // ✅ Add these:
         public int GenderId { get; set; }
         public DateOnly? DateOfBirth { get; set; }
         public int? BloodGroupId { get; set; }
-
         public string? NationalId { get; set; }
         public string? Phone { get; set; }
         public string? Mobile { get; set; }
@@ -141,5 +136,15 @@ namespace Dental.Modules.Patients.DTOs
         public string? Notes { get; set; }
 
         public PatientType PatientType { get; set; }
+
+        // ⭐ Medical Info - جديد
+        public string? Allergies { get; set; }
+        public string? ChronicDiseases { get; set; }
+        public string? CurrentMedications { get; set; }
+        public string? MedicalNotes { get; set; }
+        public string? SmokingStatus { get; set; }
+        public bool IsPregnant { get; set; }
+        public string? EmergencyNotes { get; set; }
     }
+
 }

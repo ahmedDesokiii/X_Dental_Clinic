@@ -129,6 +129,7 @@ namespace Dental.Modules.Patients.ServicesPatients
         }
 
         // ── Update ──
+        // ── Update ──
         public async Task<ServiceResult<bool>> UpdateAsync(UpdatePatientDto dto)
         {
             var patient = await _context.Patients
@@ -147,9 +148,36 @@ namespace Dental.Modules.Patients.ServicesPatients
             if (!string.IsNullOrWhiteSpace(dto.NationalId) && await ExistsNationalIdAsync(dto.NationalId, dto.Id))
                 return ServiceResult<bool>.Fail("الرقم القومي مسجل بالفعل لمريض آخر.");
 
+            // Update basic info
             patient.GenderId = dto.GenderId;
             patient.BloodGroupId = dto.BloodGroupId;
             _mapper.Map(dto, patient);
+
+            // ⭐ Update Medical Info
+            if (patient.MedicalInfo == null)
+            {
+                patient.MedicalInfo = new PatientMedicalInfo
+                {
+                    PatientId = patient.Id,
+                    Allergies = dto.Allergies,
+                    ChronicDiseases = dto.ChronicDiseases,
+                    CurrentMedications = dto.CurrentMedications,
+                    MedicalNotes = dto.MedicalNotes,
+                    SmokingStatus = dto.SmokingStatus,
+                    IsPregnant = dto.IsPregnant,
+                    EmergencyNotes = dto.EmergencyNotes
+                };
+            }
+            else
+            {
+                patient.MedicalInfo.Allergies = dto.Allergies;
+                patient.MedicalInfo.ChronicDiseases = dto.ChronicDiseases;
+                patient.MedicalInfo.CurrentMedications = dto.CurrentMedications;
+                patient.MedicalInfo.MedicalNotes = dto.MedicalNotes;
+                patient.MedicalInfo.SmokingStatus = dto.SmokingStatus;
+                patient.MedicalInfo.IsPregnant = dto.IsPregnant;
+                patient.MedicalInfo.EmergencyNotes = dto.EmergencyNotes;
+            }
 
             await _context.SaveChangesAsync();
 
@@ -170,7 +198,6 @@ namespace Dental.Modules.Patients.ServicesPatients
             return ServiceResult<bool>.Ok(true, "تم تعطيل المريض بنجاح.");
         }
 
-        // ── Get Paged List (Summary Only) ──
         public async Task<ServiceResult<PagedResult<PatientDto>>> GetPagedAsync(PagedRequest request)
         {
             var query = _context.Patients
@@ -186,6 +213,7 @@ namespace Dental.Modules.Patients.ServicesPatients
                     (x.Phone != null && x.Phone.Contains(search)));
             }
 
+            // ✅ FIX: حساب الـ Total قبل الـ Skip/Take
             var total = await query.CountAsync();
 
             var patientsEntity = await query

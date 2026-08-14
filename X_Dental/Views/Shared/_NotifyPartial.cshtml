@@ -276,7 +276,7 @@
             Method: document.getElementById('payMethod').value,
             Description: document.getElementById('payDesc').value
         };
-        const res = await fetch('/Clinical/AddPayment', {
+        const res = await fetch('/Payments/AddPayment', {   
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)

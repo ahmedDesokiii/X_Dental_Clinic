@@ -92,6 +92,19 @@ namespace Dental.Modules.Patients.DTOs
         public DateTime CreatedAt { get; set; }
     }
 
+    public class DocumentDto
+    {
+        public int Id { get; set; }
+        public int PatientId { get; set; }
+        public string DocumentTypeName { get; set; } = string.Empty;
+        public string FileName { get; set; } = string.Empty;
+        public string FilePath { get; set; } = string.Empty;
+        public string? FileExtension { get; set; }
+        public long? FileSize { get; set; }
+        public string? Description { get; set; }
+        public DateTime UploadedDate { get; set; }
+    }
+
     // ── Enums ──
 
     public enum SessionStatus

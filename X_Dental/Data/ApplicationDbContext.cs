@@ -63,6 +63,21 @@ namespace Dental.Data
                 .Property(t => t.Discount)
                 .HasPrecision(18, 2);
 
+        builder.Entity<PatientDocument>()
+           .HasOne(d => d.DocumentType)
+           .WithMany()
+           .HasForeignKey(d => d.DocumentTypeId)
+           .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<DocumentType>().HasData(
+              new DocumentType { Id = 1, NameAr = "بطاقة الرقم القومي", IsActive = true, CreatedDate = new DateTime(2026, 1, 1) },
+              new DocumentType { Id = 2, NameAr = "تقرير أشعة", IsActive = true, CreatedDate = new DateTime(2026, 1, 1) },
+              new DocumentType { Id = 3, NameAr = "تأمين طبي", IsActive = true, CreatedDate = new DateTime(2026, 1, 1) },
+              new DocumentType { Id = 4, NameAr = "موافقة علاج", IsActive = true, CreatedDate = new DateTime(2026, 1, 1) },
+              new DocumentType { Id = 5, NameAr = "أخرى", IsActive = true, CreatedDate = new DateTime(2026, 1, 1) }
+  );
+
+
         }
 
 
@@ -96,5 +111,6 @@ namespace Dental.Data
         public DbSet<TreatmentPlan> TreatmentPlans { get; set; }
         public DbSet<TreatmentPlanItem> TreatmentPlanItems { get; set; }
         public DbSet<TreatmentSession> TreatmentSessions { get; set; }
+        public DbSet<DocumentType> DocumentTypes { get; set; }
     }
 }

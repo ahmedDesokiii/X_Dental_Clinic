@@ -29,8 +29,10 @@
 
     <!-- Legacy CSS — TODO: Migrate and remove -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/clinic-design-system-v2.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/patients-theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/CreationStyle.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/executive-dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Dental.styles.css" asp-append-version="true" />
 
     <!-- Icons -->
@@ -90,12 +92,12 @@
                         <span>قائمة المرضى</span>
                     </a>
 
-                    <a asp-controller="Clinical" asp-action="Calendar" class="sidebar-link" data-title="المواعيد">
+                    <a asp-controller="Appointments" asp-action="Index" class="sidebar-link" data-title="المواعيد">
                         <i class="bi bi-calendar2-week-fill"></i>
                         <span>المواعيد</span>
                     </a>
 
-                    <a asp-controller="Clinical" asp-action="Payments" class="sidebar-link" data-title="الفواتير والمدفوعات">
+                    <a asp-controller="Payments" asp-action="Index" class="sidebar-link" data-title="المدفوعات والفواتير">
                         <i class="bi bi-cash-coin"></i>
                         <span>الفواتير والمدفوعات</span>
                     </a>
