@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
 using Dental.Models.Clinic;
+using Dental.Models.Patient;
 using Dental.Modules.Clinical.DTOs;    // ✅ الـ DTOs الجديدة
+using Dental.Modules.Clinical.ViewModels;
 using Dental.Modules.Patients.DTOs;
+using Dental.Modules.Patients.Enums;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static Dental.Constants.EnumHelper;
-using Dental.Models.Patient;
-using Dental.Modules.Clinical.ViewModels;
 
 namespace Dental.Controllers
 {
@@ -14,27 +16,16 @@ namespace Dental.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IWebHostEnvironment _env;
 
 
-        public ClinicalController(ApplicationDbContext context, IMapper mapper)
+        public ClinicalController(ApplicationDbContext context, IMapper mapper, IWebHostEnvironment env)
         {
             _context = context;
             _mapper = mapper;
+            _env = env;
         }
 
-
-
-        //[HttpGet]
-        //public async Task<IActionResult> Calendar()
-        //{
-        //    return View();
-        //}
-        //[HttpGet]
-        //public async Task<IActionResult> Payments()
-        //{
-        //    return View();
-        //}
-        
         [HttpGet]
         public async Task<IActionResult> Session(int patientId, int visitId)
         {
@@ -82,6 +73,158 @@ namespace Dental.Controllers
 
             return View(model);
         }
+
+
+
+        [HttpPost]
+        public async Task<IActionResult> SaveClinicalRecord([FromBody] SaveClinicalRecordRequest req)
+        {
+            // ---------- Validation ----------
+            if (req == null || req.ToothRecords == null || !req.ToothRecords.Any())
+                return Json(new { success = false, message = "لا توجد أي بيانات لحفظها." });
+
+            if (req.PatientId <= 0)
+                return Json(new { success = false, message = "معرّف المريض غير صالح." });
+
+            var patient = await _context.Patients.FirstOrDefaultAsync(p => p.Id == req.PatientId && p.IsActive);
+            if (patient == null)
+                return Json(new { success = false, message = "المريض غير موجود." });
+
+            var visit = await _context.Visits.FindAsync(req.VisitId);
+            if (visit == null)
+                return Json(new { success = false, message = "الزيارة/السيشن غير موجودة." });
+
+            var savedSummary = new List<object>();
+
+            // كل سنة (سن) بييجي منها: Dental Chart + Diagnosis (اختياري) + XRay (اختياري) + Prescription (اختياري)
+            foreach (var tooth in req.ToothRecords)
+            {
+                if (tooth.ToothNumber < 11 || tooth.ToothNumber > 48)
+                    return Json(new { success = false, message = $"رقم السن {tooth.ToothNumber} غير صالح." });
+
+                // 1) الدينتال شارت — دايمًا بيتحفظ لأنه هو أساس السجل
+                var chartEntry = new DentalChartEntry
+                {
+                    PatientId = req.PatientId,
+                    VisitId = req.VisitId,
+                    ToothNumber = tooth.ToothNumber,
+                    Status = tooth.Status,
+                    SurfacesJson = System.Text.Json.JsonSerializer.Serialize(tooth.Surfaces),
+                    ProcedureCode = tooth.ProcedureCode,
+                    Notes = tooth.Notes,
+                    Date = DateTime.Now
+                };
+                _context.DentalChartEntries.Add(chartEntry);
+
+                // 2) التشخيص — لو المستخدم اختار تشخيص لهذه السنة
+                if (tooth.DiagnosisCatalogId.HasValue && tooth.DiagnosisCatalogId.Value > 0)
+                {
+                    var diagExists = await _context.DiagnosisCatalogs.AnyAsync(d => d.Id == tooth.DiagnosisCatalogId.Value);
+                    if (diagExists)
+                    {
+                        var vd = new VisitDiagnosis
+                        {
+                            VisitId = req.VisitId,
+                            DiagnosisCatalogId = tooth.DiagnosisCatalogId.Value,
+                            ToothNumber = tooth.ToothNumber,
+                            Surface = tooth.DiagnosisSurface,
+                            Notes = tooth.DiagnosisNotes,
+                            IsPrimary = tooth.DiagnosisIsPrimary
+                        };
+                        _context.VisitDiagnoses.Add(vd);
+                    }
+                }
+
+                // 3) الأشعة — لو المستخدم رفع صورة لهذه السنة
+                if (!string.IsNullOrWhiteSpace(tooth.XRayBase64) && !string.IsNullOrWhiteSpace(tooth.XRayFileName))
+                {
+                    try
+                    {
+                        var uploadsRoot = Path.Combine(_env.WebRootPath, "uploads", "xrays");
+                        Directory.CreateDirectory(uploadsRoot);
+
+                        var safeName = $"{req.PatientId}_{tooth.ToothNumber}_{DateTime.Now:yyyyMMddHHmmssfff}_{Path.GetFileName(tooth.XRayFileName)}";
+                        var fullPath = Path.Combine(uploadsRoot, safeName);
+
+                        var base64Data = tooth.XRayBase64.Contains(",")
+                            ? tooth.XRayBase64.Substring(tooth.XRayBase64.IndexOf(",") + 1)
+                            : tooth.XRayBase64;
+
+                        await System.IO.File.WriteAllBytesAsync(fullPath, Convert.FromBase64String(base64Data));
+
+                        var xray = new PatientXRay
+                        {
+                            PatientId = req.PatientId,
+                            VisitId = req.VisitId,
+                            FileName = tooth.XRayFileName,
+                            FilePath = $"/uploads/xrays/{safeName}",
+                            TakenDate = DateTime.Now,
+                            Notes = $"سن {tooth.ToothNumber} — {tooth.XRayType} — {tooth.XRayNotes}"
+                        };
+                        _context.PatientXRays.Add(xray);
+                    }
+                    catch
+                    {
+                        // لو فشل رفع الصورة منمنعش حفظ باقي بيانات السن
+                    }
+                }
+
+                // 4) الروشتة — لو المستخدم ضاف أدوية مرتبطة بهذه السنة
+                if (tooth.PrescriptionItems != null && tooth.PrescriptionItems.Any(i => !string.IsNullOrWhiteSpace(i.MedicationName)))
+                {
+                    var prescription = new Prescription
+                    {
+                        VisitId = req.VisitId,
+                        PrescriptionDate = DateTime.Now,
+                        Diagnosis = $"سن {tooth.ToothNumber}",
+                        Notes = tooth.Notes,
+                        Status = PrescriptionStatus.Active,
+                        PrescribedBy = User?.Identity?.Name ?? "System"
+                    };
+                    foreach (var item in tooth.PrescriptionItems)
+                    {
+                        if (string.IsNullOrWhiteSpace(item.MedicationName)) continue;
+                        prescription.Items.Add(new PrescriptionItem
+                        {
+                            MedicationName = item.MedicationName,
+                            Dosage = item.Dosage,
+                            Frequency = item.Frequency,
+                            Duration = item.Duration,
+                            Instructions = item.Instructions
+                        });
+                    }
+                    _context.Prescriptions.Add(prescription);
+                }
+
+                savedSummary.Add(new { tooth = tooth.ToothNumber, status = tooth.Status.ToString() });
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, savedTeeth = savedSummary.Count, details = savedSummary });
+        }
+
+
+
+
+        [HttpPost]
+        public async Task<IActionResult> CompleteVisit(int visitId)
+        {
+            var visit = await _context.Visits.FindAsync(visitId);
+            if (visit == null)
+                return Json(new { success = false, message = "الزيارة غير موجودة." });
+
+            visit.Status = VisitStatus.Completed;
+            visit.EndDate = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true });
+        }
+
+
+
+
+
 
         [HttpPost]
         public async Task<IActionResult> AddDiagnosis([FromBody] AddDiagnosisRequest req)

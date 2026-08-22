@@ -61,7 +61,7 @@
         <div class="status-item">
             <span class="status-label">نوع الزيارة</span>
             <span class="type-badge @(Model.Visit.Category == Dental.Modules.Patients.Enums.VisitCategory.Orthodontics ? "ortho" : "general")">
-                <i class="bi @(Model.Visit.Category == Dental.Modules.Patients.Enums.VisitCategory.Orthodontics ? "bi-braces" : "bi-app-indicator")"></i>
+                <i class="bi @(Model.Visit.Category == Dental.Modules.Patients.Enums.VisitCategory.Orthodontics ? "bi-braces" : "bi-sign-intersection-side-fill")"></i>
                 @(Model.Visit.Category == Dental.Modules.Patients.Enums.VisitCategory.Orthodontics ? "تقويم" : "عام")
             </span>
         </div>

@@ -1,0 +1,133 @@
+@using Dental.Models.Patient
+@* ============================================================
+   Views/Shared/_SessionOverviewCompact.cshtml
+   عمود نظرة عامة (col-3) — بيانات شخصية + تواصل + تاريخ طبي
+   مرصوصة فوق بعض بشكل مضغوط بدل الجدول الأفقي القديم
+   ============================================================ *@
+@model Dental.Modules.Clinical.ViewModels.SessionViewModel
+
+<div class="side-panel">
+    <div class="side-panel-head">
+        <i class="bi bi-clipboard-pulse"></i> نظرة عامة
+    </div>
+
+    <div class="mini-card">
+        <div class="mini-card-title"><i class="bi bi-person-vcard"></i> البيانات الشخصية</div>
+        <div class="mini-row"><span>الاسم</span><b>@Model.Patient.FullNameAr</b></div>
+        <div class="mini-row"><span>العمر</span><b>@Model.Patient.Age سنة</b></div>
+        <div class="mini-row"><span>النوع</span><b>@(Model.Patient.Gender?.NameAr ?? "-")</b></div>
+        <div class="mini-row"><span>فصيلة الدم</span><b class="mini-badge">@(Model.Patient.BloodGroup?.Name ?? "-")</b></div>
+        <div class="mini-row">
+            <span>نوع الملف</span>
+            <b>
+                @(Model.Patient.PatientType == PatientType.Orthodontics
+                    ? "تقويم"
+                    : "عام")
+            </b>
+        </div>
+    </div>
+
+    <div class="mini-card">
+        <div class="mini-card-title"><i class="bi bi-telephone-plus"></i> بيانات التواصل</div>
+        <div class="mini-row"><span>الموبايل</span><b dir="ltr">@Model.Patient.Mobile</b></div>
+        <div class="mini-row"><span>التليفون</span><b dir="ltr">@(Model.Patient.Phone ?? "-")</b></div>
+        <div class="mini-row"><span>البريد</span><b>@(Model.Patient.Email ?? "-")</b></div>
+        <div class="mini-row"><span>العنوان</span><b>@(Model.Patient.Address ?? "-")</b></div>
+    </div>
+
+    <div class="mini-card">
+        <div class="mini-card-title"><i class="bi bi-heart-pulse"></i> التاريخ الطبي</div>
+        <div class="mini-row">
+            <span>الحساسية</span>
+            <b class="@(string.IsNullOrEmpty(Model.Patient.Allergies) ? "" : "danger-text")">
+                @(Model.Patient.Allergies ?? "لا يوجد")
+            </b>
+        </div>
+        <div class="mini-row"><span>أمراض مزمنة</span><b>@(Model.Patient.ChronicDiseases ?? "لا يوجد")</b></div>
+        <div class="mini-row"><span>الأدوية الحالية</span><b>@(Model.Patient.CurrentMedications ?? "لا يوجد")</b></div>
+        <div class="mini-row"><span>التدخين</span><b>@(Model.Patient.SmokingStatus ?? "-")</b></div>
+    </div>
+
+    <div class="mini-card">
+        <div class="mini-card-title"><i class="bi bi-journal-text"></i> بداية السيشن</div>
+        <div class="timeline-compact">
+            <div class="timeline-node">
+                <div class="timeline-date">@Model.Visit.VisitDate.ToString("dd MMM yyyy HH:mm")</div>
+                <div class="timeline-title">بدء السيشن</div>
+                <div class="timeline-desc">تم فتح السيشن للمريض</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .side-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        height: 100%;
+    }
+    .side-panel-head {
+        font-weight: 800;
+        font-size: 1rem;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 2px 2px;
+    }
+    .side-panel-head i { color: #0d9488; }
+    .mini-card {
+        background: rgba(255,255,255,.92);
+        border: 1px solid rgba(255,255,255,.6);
+        border-radius: 14px;
+        padding: 12px 14px;
+        box-shadow: 0 4px 16px rgba(10,77,79,.06);
+    }
+    .mini-card-title {
+        font-weight: 800;
+        font-size: .82rem;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .mini-card-title i { color: #0d9488; }
+    .mini-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+        font-size: .78rem;
+        padding: 5px 0;
+        border-bottom: 1px dashed #f1f5f9;
+    }
+    .mini-row:last-child { border-bottom: none; }
+    .mini-row span { color: #64748b; font-weight: 600; flex-shrink: 0; }
+    .mini-row b { color: #1e293b; font-weight: 700; text-align: left; }
+    .mini-row b.danger-text { color: #dc2626; }
+    .mini-badge {
+        background: #fee2e2;
+        color: #dc2626;
+        padding: 1px 8px;
+        border-radius: 6px;
+        font-size: .72rem;
+    }
+    .timeline-node { position: relative; padding-right: 14px; }
+    .timeline-node::before {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 4px;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #14b8a6;
+    }
+    .timeline-date { font-size: .68rem; color: #94a3b8; font-weight: 700; }
+    .timeline-title { font-weight: 800; color: #0f172a; font-size: .82rem; }
+    .timeline-desc { color: #64748b; font-size: .76rem; }
+</style>

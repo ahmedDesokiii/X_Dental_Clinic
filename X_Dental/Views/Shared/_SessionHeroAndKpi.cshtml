@@ -1,0 +1,95 @@
+@* ============================================================
+   ده الجزء اللي بيحل محل الـ Hero + Stats Grid القديمين في Session.cshtml
+   نفس البيانات (Model.Patient / Model.Visit) بس منسّق صح ومربوط
+   بزرار "رجوع" و"طباعة" فقط (زرار الإنهاء اتنقل لشريط الحفظ النهائي تحت)
+   ============================================================ *@
+@using static Dental.Constants.EnumHelper
+
+@model Dental.Modules.Clinical.ViewModels.SessionViewModel
+
+@{
+    var patientName = Model.Patient?.FullNameAr ?? "";
+
+    var initials = string.Join(
+        "",
+        patientName
+            .Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries
+            )
+            .Take(2)
+            .Select(x => x[0])
+    );
+
+    var sessionStatusClass = Model.Visit.Status switch
+    {
+        Dental.Modules.Patients.Enums.VisitStatus.Completed => "success",
+        Dental.Modules.Patients.Enums.VisitStatus.Cancelled => "danger",
+        _ => "warning"
+    };
+
+    var sessionStatusText = Model.Visit.Status switch
+    {
+        Dental.Modules.Patients.Enums.VisitStatus.Completed => "مكتمل",
+        Dental.Modules.Patients.Enums.VisitStatus.Cancelled => "ملغي",
+        _ => "قيد التنفيذ"
+    };
+}
+<div class="session-hero">
+    <div class="hero-content">
+        <div class="hero-avatar">
+            @initials
+        </div>
+        <div>
+            <h1>@Model.Patient.FullNameAr</h1>
+            <div class="hero-meta">
+                <span class="session-status-badge @sessionStatusClass">
+                    <i class="bi bi-circle-fill" style="font-size:0.5rem;"></i> @sessionStatusText
+                </span>
+                <span class="hero-meta-tag"><i class="bi bi-hash"></i> @Model.Patient.PatientCode</span>
+                <span class="hero-meta-tag"><i class="bi bi-telephone"></i> @Model.Patient.Mobile</span>
+                <span class="hero-meta-tag"><i class="bi bi-droplet"></i> @(Model.Patient.BloodGroup?.Name ?? "-")</span>
+                <span class="hero-meta-tag"><i class="bi bi-calendar"></i> @Model.Visit.VisitDate.ToString("dd/MM/yyyy")</span>
+            </div>
+        </div>
+    </div>
+    <div class="hero-actions">
+        <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.Patient.Id" class="btn-hero btn-hero-back">
+            <i class="bi bi-arrow-right"></i> رجوع لملف المريض
+        </a>
+        <button type="button" class="btn-hero btn-hero-print" onclick="window.print()">
+            <i class="bi bi-printer"></i> طباعة
+        </button>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card-glass">
+        <div class="stat-icon-box teal"><i class="bi bi-receipt"></i></div>
+        <div>
+            <span class="stat-value-lg" id="sumTotal">@Model.Visit.TotalAmount.ToString("N0")</span>
+            <span class="stat-label-lg d-block">الإجمالي (ج.م)</span>
+        </div>
+    </div>
+    <div class="stat-card-glass">
+        <div class="stat-icon-box blue"><i class="bi bi-percent"></i></div>
+        <div>
+            <span class="stat-value-lg" id="sumDiscount">@Model.Visit.Discount.ToString("N0")</span>
+            <span class="stat-label-lg d-block">الخصم</span>
+        </div>
+    </div>
+    <div class="stat-card-glass">
+        <div class="stat-icon-box green"><i class="bi bi-cash-stack"></i></div>
+        <div>
+            <span class="stat-value-lg" id="sumPaid">@Model.Visit.PaidAmount.ToString("N0")</span>
+            <span class="stat-label-lg d-block">المدفوع</span>
+        </div>
+    </div>
+    <div class="stat-card-glass">
+        <div class="stat-icon-box red"><i class="bi bi-credit-card"></i></div>
+        <div>
+            <span class="stat-value-lg" id="sumRemaining">@Model.Visit.Remaining.ToString("N0")</span>
+            <span class="stat-label-lg d-block">المتبقي</span>
+        </div>
+    </div>
+</div>

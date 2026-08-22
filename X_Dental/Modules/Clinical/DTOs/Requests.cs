@@ -4,6 +4,45 @@ using Dental.Modules.Patients.DTOs;
 
 namespace Dental.Modules.Clinical.DTOs
 {
+
+    // ============================================================
+    // الطلب الموحّد: بيوصف كل حاجة حصلت "للسنة" (السن) الواحدة
+    // خالل السيشن قبل الحفظ النهائي
+    // ============================================================
+    public class SaveClinicalRecordRequest
+    {
+        public int PatientId { get; set; }
+        public int VisitId { get; set; }
+        public List<ToothRecordRequest> ToothRecords { get; set; } = new();
+    }
+
+    public class ToothRecordRequest
+    {
+        // ---- بيانات السن / الدينتال شارت ----
+        public int ToothNumber { get; set; }
+        public Dental.Models.Patient.ToothStatus Status { get; set; }
+        public List<ToothSurfaceRequest> Surfaces { get; set; } = new();
+        public string? ProcedureCode { get; set; }
+        public string? Notes { get; set; }
+
+        // ---- التشخيص (اختياري) ----
+        public int? DiagnosisCatalogId { get; set; }
+        public string? DiagnosisSurface { get; set; }   // M,D,B,L,O
+        public string? DiagnosisNotes { get; set; }
+        public bool DiagnosisIsPrimary { get; set; } = true;
+
+        // ---- الأشعة (اختياري) ----
+        public string? XRayFileName { get; set; }
+        public string? XRayBase64 { get; set; }         // بيانات الصورة Base64
+        public string? XRayType { get; set; }
+        public string? XRayNotes { get; set; }
+
+        // ---- الروشتة الخاصة بالسن ده (اختياري) ----
+        public List<PrescriptionItemRequest> PrescriptionItems { get; set; } = new();
+    }
+
+
+
     // ── Diagnosis Request ──
     public class AddDiagnosisRequest
     {
