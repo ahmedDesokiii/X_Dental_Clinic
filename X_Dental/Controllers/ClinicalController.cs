@@ -86,6 +86,15 @@ namespace Dental.Controllers
         [HttpPost]
         public async Task<IActionResult> AddDiagnosis([FromBody] AddDiagnosisRequest req)
         {
+            // التحقق من صحة البيانات
+            if (req == null || req.DiagnosisId <= 0 || req.VisitId <= 0)
+                return Json(new { success = false, message = "بيانات غير صالحة." });
+
+            var diagnosis = await _context.DiagnosisCatalogs
+                .FirstOrDefaultAsync(d => d.Id == req.DiagnosisId && d.IsActive);
+            if (diagnosis == null)
+                return Json(new { success = false, message = "التشخيص غير موجود." });
+
             var vd = new VisitDiagnosis
             {
                 VisitId = req.VisitId,
@@ -95,11 +104,12 @@ namespace Dental.Controllers
                 Notes = req.Notes,
                 IsPrimary = req.IsPrimary
             };
+
             _context.VisitDiagnoses.Add(vd);
             await _context.SaveChangesAsync();
+
             return Json(new { success = true, data = vd });
         }
-
         [HttpPost]
         public async Task<IActionResult> AddProcedure([FromBody] AddProcedureRequest req)
         {
@@ -123,7 +133,7 @@ namespace Dental.Controllers
             if (visit != null) visit.TotalAmount += vp.TotalPrice;
 
             await _context.SaveChangesAsync();
-            return Json(new { success = true, data = vp, remaining = visit?.Remaining });
+            return Json(new { success = true, data = vp, remaining = 0});
         }
 
         [HttpPost]
@@ -143,7 +153,7 @@ namespace Dental.Controllers
             if (visit != null) visit.PaidAmount += req.Amount;
 
             await _context.SaveChangesAsync();
-            return Json(new { success = true, data = payment, remaining = visit?.Remaining });
+            return Json(new { success = true, data = payment, remaining = 0 });
         }
 
         [HttpPost]

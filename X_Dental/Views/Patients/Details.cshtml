@@ -26,357 +26,306 @@
 }
 
 <style>
-
-    .pmt-summary-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 14px;
-        margin-bottom: 20px;
+    :root {
+        --sc-teal-900: #0a4d4f;
+        --sc-teal-700: #0d7377;
+        --sc-teal-600: #0f9b8e;
+        --sc-teal-500: #14b8a6;
+        --sc-teal-100: #c7f2ea;
+        --sc-sky-50: #eafbfc;
+        --sc-sky-100: #dcf5f7;
+        --sc-coral-300: #f6c6bc;
+        --sc-ink-900: #0b2e30;
+        --sc-ink-600: #4b6b6c;
+        --brand: #0d9488;
+        --brand-dark: #0f766e;
+        --brand-light: #f0fdfa;
+        --radius-lg: 18px;
+        --radius-md: 12px;
+        --shadow-soft: 0 1px 3px rgba(15, 23, 42, 0.06);
+        --shadow-hover: 0 10px 26px rgba(10, 77, 79, 0.12);
+        --shadow-card: 0 20px 50px rgba(10, 77, 79, .08);
     }
 
-    .pmt-summary-card {
-        background: #fff;
-        border-radius: 14px;
-        padding: 16px;
-        border: 1px solid #e2e8f0;
-        text-align: center;
+    body {
+        background: radial-gradient(circle at 6% 4%, var(--sc-teal-100) 0%, transparent 38%), radial-gradient(circle at 97% 92%, var(--sc-coral-300) 0%, transparent 26%), var(--sc-sky-50);
     }
 
-        .pmt-summary-card .pmt-label {
-            font-size: .75rem;
-            color: #64748b;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .pmt-summary-card .pmt-value {
-            font-size: 1.15rem;
-            font-weight: 800;
-            color: #0f172a;
-        }
-
-        .pmt-summary-card.is-paid .pmt-value {
-            color: #047857;
-        }
-
-        .pmt-summary-card.is-due .pmt-value {
-            color: #b91c1c;
-        }
-
-    table.pmt-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: .87rem;
-    }
-
-        table.pmt-table th {
-            text-align: right;
-            color: #64748b;
-            font-weight: 700;
-            padding: 8px;
-            border-bottom: 2px solid #f1f5f9;
-        }
-
-        table.pmt-table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #f8fafc;
-        }
-
-    .pmt-badge-paid {
-        background: #d1fae5;
-        color: #047857;
-        padding: 2px 10px;
-        border-radius: 6px;
-        font-size: .72rem;
-        font-weight: 700;
-    }
-
-    .pmt-badge-due {
-        background: #fee2e2;
-        color: #b91c1c;
-        padding: 2px 10px;
-        border-radius: 6px;
-        font-size: .72rem;
-        font-weight: 700;
-    }
-
-    .btn-pmt-void {
-        background: none;
-        border: none;
-        color: #b91c1c;
-        cursor: pointer;
-        font-size: .78rem;
-    }
-
-
-
-    /* ── Medical Soft Theme ── */
-    .patient-dashboard {
-        padding: 12px;
-        background: #f1f5f9;
-        min-height: 100vh;
-    }
-
-    /* Header */
-    .dash-header {
+    /* ── Hero ── */
+    .patient-hero {
+        background: linear-gradient(135deg, var(--sc-teal-700), var(--sc-teal-500));
+        border-radius: var(--radius-lg);
+        padding: 24px 28px;
         display: flex;
+        align-items: center;
         justify-content: space-between;
-        align-items: center;
-        background: #fff;
-        border-radius: 16px;
-        padding: 20px 28px;
-        margin-bottom: 16px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    }
-
-    .patient-profile {
-        display: flex;
-        align-items: center;
-        gap: 18px;
-    }
-
-    .patient-avatar-lg {
-        width: 68px;
-        height: 68px;
-        border-radius: 18px;
-        background: linear-gradient(135deg, #14b8a6, #0d9488);
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        font-weight: 800;
-        box-shadow: 0 4px 12px rgba(13,148,136,0.2);
-    }
-
-    .patient-info h2 {
-        font-size: 1.35rem;
-        font-weight: 800;
-        color: #1e293b;
-        margin: 0 0 10px 0;
-    }
-
-    .patient-meta {
-        display: flex;
+        box-shadow: 0 14px 34px rgba(13, 115, 119, .28);
+        margin-bottom: 20px;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 16px;
+        position: relative;
+        overflow: hidden;
     }
 
-    .meta-tag {
+        .patient-hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 92% -20%, rgba(255,255,255,.32), transparent 55%);
+            pointer-events: none;
+        }
+
+        .patient-hero .hero-content {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .patient-hero .hero-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            background: rgba(255,255,255,.18);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: 800;
+            flex-shrink: 0;
+            backdrop-filter: blur(6px);
+            border: 2px solid rgba(255,255,255,.2);
+        }
+
+        .patient-hero h1 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin: 0;
+            color: #fff;
+        }
+
+        .patient-hero .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+    .hero-meta-tag {
         display: flex;
         align-items: center;
         gap: 6px;
-        background: #f8fafc;
-        color: #475569;
-        padding: 5px 12px;
+        background: rgba(255,255,255,.15);
+        color: #fff;
+        padding: 4px 12px;
         border-radius: 20px;
-        font-size: 0.82rem;
+        font-size: 0.8rem;
         font-weight: 600;
-        border: 1px solid #e2e8f0;
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,.1);
     }
 
-    .type-badge {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 0.82rem;
-        font-weight: 700;
-    }
-
-        .type-badge.general {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .type-badge.ortho {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .type-badge.both {
-            background: #ede9fe;
-            color: #5b21b6;
-        }
-
-    .header-actions {
+    .hero-actions {
         display: flex;
         gap: 10px;
+        position: relative;
+        z-index: 1;
+        flex-wrap: wrap;
     }
 
-    .btn-dash {
+    .btn-hero {
         display: flex;
         align-items: center;
         gap: 8px;
         padding: 10px 20px;
-        border-radius: 10px;
+        border-radius: 12px;
         font-weight: 700;
-        font-size: 0.9rem;
+        font-size: 0.88rem;
         border: none;
         cursor: pointer;
         transition: all 0.2s ease;
         text-decoration: none;
+        white-space: nowrap;
     }
 
-    .btn-edit {
-        background: #f1f5f9;
-        color: #334155;
-        border: 1px solid #e2e8f0;
+    .btn-hero-edit {
+        background: rgba(255,255,255,.9);
+        color: var(--sc-teal-700);
+        box-shadow: 0 4px 12px rgba(10, 40, 42, .15);
     }
 
-        .btn-edit:hover {
-            background: #e2e8f0;
-            color: #0f172a;
+        .btn-hero-edit:hover {
+            background: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(10, 40, 42, .22);
+            color: var(--sc-teal-700);
         }
 
-    .btn-appointment {
-        background: linear-gradient(135deg, #14b8a6, #0d9488);
+    .btn-hero-appt {
+        background: rgba(255,255,255,.15);
         color: #fff;
-        box-shadow: 0 4px 12px rgba(13,148,136,0.2);
+        border: 1px solid rgba(255,255,255,.25);
+        backdrop-filter: blur(4px);
     }
 
-        .btn-appointment:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(13,148,136,0.3);
+        .btn-hero-appt:hover {
+            background: rgba(255,255,255,.25);
+            transform: translateY(-2px);
         }
 
-    .btn-session {
+    .btn-hero-session {
         background: linear-gradient(135deg, #6366f1, #4f46e5);
         color: #fff;
-        box-shadow: 0 4px 12px rgba(99,102,241,0.2);
+        box-shadow: 0 4px 12px rgba(99,102,241,0.3);
     }
 
-        .btn-session:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(99,102,241,0.3);
+        .btn-hero-session:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99,102,241,0.4);
+            color: #fff;
         }
 
-    /* Stats Bar */
-    .stats-bar {
+    /* ── Stats ── */
+    .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 12px;
+        gap: 14px;
         margin-bottom: 20px;
     }
 
-    .stat-item {
-        background: #fff;
-        border-radius: 14px;
+    .stat-card-glass {
+        background: rgba(255,255,255,.78);
+        backdrop-filter: blur(14px);
+        border-radius: 16px;
         padding: 18px 20px;
         display: flex;
         align-items: center;
         gap: 14px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-        transition: all 0.25s ease;
+        border: 1px solid rgba(255,255,255,.6);
+        box-shadow: var(--shadow-soft);
+        transition: all .25s ease;
     }
 
-        .stat-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-            border-color: #cbd5e1;
+        .stat-card-glass:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
         }
 
-    .stat-icon-sm {
-        width: 44px;
-        height: 44px;
+    .stat-icon-box {
+        width: 46px;
+        height: 46px;
         border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
+        font-size: 1.15rem;
         flex-shrink: 0;
     }
 
-        .stat-icon-sm.teal {
+        .stat-icon-box.teal {
             background: #f0fdfa;
             color: #0f766e;
         }
 
-        .stat-icon-sm.green {
+        .stat-icon-box.green {
             background: #f0fdf4;
             color: #166534;
         }
 
-        .stat-icon-sm.red {
+        .stat-icon-box.red {
             background: #fef2f2;
             color: #dc2626;
         }
 
-        .stat-icon-sm.blue {
+        .stat-icon-box.blue {
             background: #eff6ff;
             color: #1d4ed8;
         }
 
-    .stat-num {
+    .stat-value-lg {
         display: block;
-        font-size: 1.3rem;
+        font-size: 1.4rem;
         font-weight: 800;
-        color: #1e293b;
+        color: var(--sc-ink-900);
+        line-height: 1.1;
     }
 
-    .stat-label-sm {
+    .stat-label-lg {
         font-size: 0.78rem;
-        color: #64748b;
+        color: var(--sc-ink-600);
         font-weight: 600;
     }
 
-    /* Tabs */
-    .tabs-nav {
-        display: flex;
-        gap: 6px;
-        background: #fff;
-        padding: 8px;
-        border-radius: 14px;
+    /* ── Tabs ── */
+    .tabs-container {
+        background: rgba(255,255,255,.82);
+        backdrop-filter: blur(16px);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,.6);
         margin-bottom: 20px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-        overflow-x: auto;
     }
 
-    .tab-btn {
+    .tabs-pill-bar {
+        display: flex;
+        gap: 6px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--sc-sky-100);
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+
+    .tab-pill {
         display: flex;
         align-items: center;
         gap: 8px;
         padding: 10px 18px;
-        border-radius: 10px;
+        border-radius: 999px;
         border: none;
         background: transparent;
-        color: #64748b;
+        color: var(--sc-ink-600);
         font-weight: 700;
-        font-size: 0.88rem;
+        font-size: 0.85rem;
         cursor: pointer;
         white-space: nowrap;
         transition: all 0.2s ease;
     }
 
-        .tab-btn:hover {
-            background: #f8fafc;
-            color: #334155;
+        .tab-pill:hover {
+            background: #fff;
+            color: var(--brand-dark);
         }
 
-        .tab-btn.active {
-            background: linear-gradient(135deg, #14b8a6, #0d9488);
+        .tab-pill.active {
+            background: linear-gradient(135deg, var(--sc-teal-600), var(--sc-teal-700));
             color: #fff;
-            box-shadow: 0 4px 12px rgba(13,148,136,0.2);
+            box-shadow: 0 4px 10px rgba(13,148,136,0.28);
         }
 
-    /* Tab Content */
-    .tab-content {
-        display: none;
-        animation: fadeIn 0.3s ease;
+        .tab-pill i {
+            font-size: 0.95rem;
+        }
+
+    .tab-panels {
+        padding: 20px;
     }
 
-        .tab-content.active {
+    .tab-panel {
+        display: none;
+        animation: panelFadeIn 0.35s ease;
+    }
+
+        .tab-panel.active {
             display: block;
         }
 
-    @@keyframes fadeIn {
+    @@keyframes panelFadeIn {
         from {
             opacity: 0;
-            transform: translateY(8px);
+            transform: translateY(10px);
         }
 
         to {
@@ -385,81 +334,116 @@
         }
     }
 
-    /* Info Cards */
-    .tab-grid {
+    /* ── Info Cards Grid ── */
+    .info-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 16px;
     }
 
-    .info-card {
-        background: #fff;
-        border-radius: 14px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    .info-card-glass {
+        background: rgba(255,255,255,.9);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,.6);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         overflow: hidden;
-        transition: all 0.2s;
+        transition: all 0.25s ease;
+        animation: cardFadeIn 0.5s ease forwards;
+        opacity: 0;
     }
 
-        .info-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        .info-card-glass:hover {
+            box-shadow: 0 8px 24px rgba(10, 77, 79, 0.08);
+            transform: translateY(-2px);
         }
 
-        .info-card.full-width {
+        .info-card-glass.full-width {
             grid-column: 1 / -1;
         }
 
-    .info-header {
+    @@keyframes cardFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .info-card-glass:nth-child(1) {
+        animation-delay: .05s;
+    }
+
+    .info-card-glass:nth-child(2) {
+        animation-delay: .1s;
+    }
+
+    .info-card-glass:nth-child(3) {
+        animation-delay: .15s;
+    }
+
+    .info-card-glass:nth-child(4) {
+        animation-delay: .2s;
+    }
+
+    .info-card-glass:nth-child(5) {
+        animation-delay: .25s;
+    }
+
+    .card-header-glass {
         display: flex;
         align-items: center;
         gap: 10px;
         padding: 14px 18px;
-        background: #f8fafc;
-        border-bottom: 1px solid #f1f5f9;
+        background: var(--sc-sky-50);
+        border-bottom: 1px solid var(--sc-sky-100);
         font-weight: 800;
         font-size: 0.95rem;
-        color: #1e293b;
+        color: var(--sc-ink-900);
     }
 
-        .info-header i {
-            color: #14b8a6;
+        .card-header-glass i {
+            color: var(--sc-teal-600);
             font-size: 1.1rem;
         }
 
-    .info-body {
+    .card-body-glass {
         padding: 16px 18px;
     }
 
-    .info-row {
+    .info-row-flex {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 10px 0;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid var(--sc-sky-100);
     }
 
-        .info-row:last-child {
+        .info-row-flex:last-child {
             border-bottom: none;
         }
 
-    .info-label {
+    .info-label-sm {
         font-size: 0.85rem;
-        color: #64748b;
+        color: var(--sc-ink-600);
         font-weight: 600;
     }
 
-    .info-value {
+    .info-value-sm {
         font-size: 0.92rem;
-        color: #1e293b;
+        color: var(--sc-ink-900);
         font-weight: 700;
     }
 
-        .info-value.text-danger {
+        .info-value-sm.text-danger {
             color: #dc2626;
             font-weight: 800;
         }
 
-    .blood-badge {
+    .blood-badge-new {
         background: #fee2e2;
         color: #dc2626;
         padding: 3px 10px;
@@ -468,82 +452,46 @@
         font-weight: 700;
     }
 
-    .notes-text {
+    .notes-text-new {
         color: #475569;
         line-height: 1.7;
         font-size: 0.92rem;
         margin: 0;
     }
 
-    /* Placeholder */
-    .placeholder-tab {
-        background: #fff;
-        border-radius: 14px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-        padding: 48px;
-        text-align: center;
-    }
-
-    .placeholder-icon {
-        width: 72px;
-        height: 72px;
-        border-radius: 20px;
-        background: #f0fdfa;
-        color: #14b8a6;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        margin: 0 auto 20px;
-    }
-
-    .placeholder-tab h3 {
-        font-size: 1.2rem;
-        font-weight: 800;
-        color: #1e293b;
-        margin: 0 0 8px 0;
-    }
-
-    .placeholder-tab p {
-        color: #64748b;
-        font-size: 0.92rem;
-        margin: 0 0 24px 0;
-    }
-
-    /* Timeline */
-    .timeline {
+    /* ── Timeline ── */
+    .timeline-container {
         position: relative;
-        padding-left: 24px;
+        padding-right: 24px;
     }
 
-        .timeline::before {
+        .timeline-container::before {
             content: '';
             position: absolute;
-            left: 8px;
+            right: 8px;
             top: 0;
             bottom: 0;
             width: 2px;
-            background: #e2e8f0;
+            background: var(--sc-sky-100);
         }
 
-    .timeline-item {
+    .timeline-node {
         position: relative;
         padding-bottom: 20px;
-        padding-left: 20px;
+        padding-right: 20px;
     }
 
-        .timeline-item::before {
+        .timeline-node::before {
             content: '';
             position: absolute;
-            left: -20px;
+            right: -20px;
             top: 4px;
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            background: #14b8a6;
+            background: var(--sc-teal-500);
             border: 2px solid #fff;
-            box-shadow: 0 0 0 2px #14b8a6;
+            box-shadow: 0 0 0 2px var(--sc-teal-500);
         }
 
     .timeline-date {
@@ -555,18 +503,202 @@
 
     .timeline-title {
         font-weight: 800;
-        color: #1e293b;
+        color: var(--sc-ink-900);
         font-size: 0.95rem;
     }
 
     .timeline-desc {
-        color: #64748b;
+        color: var(--sc-ink-600);
         font-size: 0.85rem;
         margin-top: 2px;
     }
 
-    /* Modal Custom */
-    .custom-modal {
+    /* ── Placeholder ── */
+    .placeholder-glass {
+        background: rgba(255,255,255,.9);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,.6);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        padding: 48px;
+        text-align: center;
+    }
+
+    .placeholder-icon-glass {
+        width: 72px;
+        height: 72px;
+        border-radius: 20px;
+        background: var(--brand-light);
+        color: var(--sc-teal-500);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto 20px;
+    }
+
+    .placeholder-glass h3 {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--sc-ink-900);
+        margin: 0 0 8px 0;
+    }
+
+    .placeholder-glass p {
+        color: var(--sc-ink-600);
+        font-size: 0.92rem;
+        margin: 0 0 24px 0;
+    }
+
+    /* ── Payments ── */
+    .pmt-summary-grid-new {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+
+    .pmt-summary-card-new {
+        background: rgba(255,255,255,.9);
+        border-radius: 14px;
+        padding: 16px;
+        border: 1px solid rgba(255,255,255,.6);
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        transition: all 0.2s;
+    }
+
+        .pmt-summary-card-new:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .pmt-summary-card-new .pmt-label {
+            font-size: .75rem;
+            color: var(--sc-ink-600);
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .pmt-summary-card-new .pmt-value {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--sc-ink-900);
+        }
+
+        .pmt-summary-card-new.is-paid .pmt-value {
+            color: #047857;
+        }
+
+        .pmt-summary-card-new.is-due .pmt-value {
+            color: #b91c1c;
+        }
+
+    table.pmt-table-new {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: .87rem;
+    }
+
+        table.pmt-table-new th {
+            text-align: right;
+            color: var(--sc-ink-600);
+            font-weight: 700;
+            padding: 10px 8px;
+            border-bottom: 2px solid var(--sc-sky-100);
+        }
+
+        table.pmt-table-new td {
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--sc-sky-100);
+        }
+
+    .pmt-badge-paid-new {
+        background: #d1fae5;
+        color: #047857;
+        padding: 2px 10px;
+        border-radius: 6px;
+        font-size: .72rem;
+        font-weight: 700;
+    }
+
+    .pmt-badge-due-new {
+        background: #fee2e2;
+        color: #b91c1c;
+        padding: 2px 10px;
+        border-radius: 6px;
+        font-size: .72rem;
+        font-weight: 700;
+    }
+
+    .btn-pmt-void-new {
+        background: none;
+        border: none;
+        color: #b91c1c;
+        cursor: pointer;
+        font-size: .78rem;
+        transition: all 0.2s;
+    }
+
+        .btn-pmt-void-new:hover {
+            color: #dc2626;
+            transform: scale(1.05);
+        }
+
+    /* ── X-Rays Grid ── */
+    .xray-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+
+    .xray-card {
+        background: rgba(255,255,255,.9);
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,.6);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        transition: all 0.25s ease;
+    }
+
+        .xray-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .xray-card img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            display: block;
+        }
+
+    .xray-card-body {
+        padding: 12px;
+    }
+
+        .xray-card-body small {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .xray-card-body p {
+            color: var(--sc-ink-900);
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin: 4px 0 0 0;
+        }
+
+    /* ── Documents ── */
+    .doc-table-container {
+        background: rgba(255,255,255,.9);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,.6);
+        overflow: hidden;
+    }
+
+    /* ── Modals ── */
+    .custom-modal-new {
         display: none;
         position: fixed;
         inset: 0;
@@ -575,18 +707,18 @@
         justify-content: center;
     }
 
-        .custom-modal.show {
+        .custom-modal-new.show {
             display: flex;
         }
 
-    .modal-overlay {
+    .modal-overlay-new {
         position: absolute;
         inset: 0;
         background: rgba(15,23,42,0.45);
         backdrop-filter: blur(4px);
     }
 
-    .modal-box {
+    .modal-box-new {
         position: relative;
         z-index: 1;
         width: 90%;
@@ -594,10 +726,11 @@
         background: #fff;
         border-radius: 20px;
         box-shadow: 0 25px 60px rgba(0,0,0,0.2);
-        animation: modalSlide 0.25s ease;
+        animation: modalSlideNew 0.25s ease;
+        overflow: hidden;
     }
 
-    @@keyframes modalSlide {
+    @@keyframes modalSlideNew {
         from {
             opacity: 0;
             transform: translateY(20px) scale(0.98);
@@ -609,66 +742,58 @@
         }
     }
 
-    .modal-head {
+    .modal-head-new {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 18px 24px;
-        background: linear-gradient(135deg, #14b8a6, #0d9488);
+        background: linear-gradient(135deg, var(--sc-teal-600), var(--sc-teal-700));
         color: #fff;
-        border-radius: 20px 20px 0 0;
     }
 
-        .modal-head h5 {
+        .modal-head-new h5 {
             margin: 0;
             font-weight: 800;
             font-size: 1.1rem;
         }
 
-    .modal-body {
+    .modal-body-new {
         padding: 24px;
     }
 
-    .modal-foot {
+    .modal-foot-new {
         padding: 0 24px 24px;
         display: flex;
         justify-content: flex-end;
         gap: 10px;
     }
 
-    .form-label-custom {
+    .form-label-custom-new {
         display: block;
         font-size: 0.82rem;
         font-weight: 700;
         color: #475569;
         margin-bottom: 6px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
 
-    .form-control-custom {
+    .form-control-custom-new {
         width: 100%;
         padding: 10px 14px;
-        border: 1.5px solid #e2e8f0;
+        border: 1.5px solid var(--sc-sky-100);
         border-radius: 10px;
         font-size: 0.95rem;
-        color: #1e293b;
+        color: var(--sc-ink-900);
         background: #fff;
         transition: all 0.2s;
         outline: none;
     }
 
-        .form-control-custom:focus {
-            border-color: #14b8a6;
+        .form-control-custom-new:focus {
+            border-color: var(--sc-teal-500);
             box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
         }
 
-        .form-control-custom:disabled {
-            background: #f8fafc;
-            color: #94a3b8;
-        }
-
-    .btn-modal {
+    .btn-modal-new {
         padding: 10px 22px;
         border-radius: 10px;
         font-weight: 700;
@@ -678,454 +803,446 @@
         transition: all 0.2s;
     }
 
-    .btn-modal-cancel {
+    .btn-modal-cancel-new {
         background: #f1f5f9;
         color: #475569;
     }
 
-        .btn-modal-cancel:hover {
+        .btn-modal-cancel-new:hover {
             background: #e2e8f0;
         }
 
-    .btn-modal-save {
-        background: linear-gradient(135deg, #14b8a6, #0d9488);
+    .btn-modal-save-new {
+        background: linear-gradient(135deg, var(--sc-teal-600), var(--sc-teal-700));
         color: #fff;
     }
 
-        .btn-modal-save:hover {
+        .btn-modal-save-new:hover {
             transform: translateY(-1px);
             box-shadow: 0 6px 16px rgba(13,148,136,0.3);
         }
 
-    /* Responsive */
-    @@media (max-width: 1100px) {
-        .tab-grid {
+    /* ── Responsive ── */
+    @@media (max-width: 1200px) {
+        .info-grid {
             grid-template-columns: repeat(2, 1fr);
         }
 
-        .stats-bar {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .pmt-summary-grid-new {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .xray-grid {
             grid-template-columns: repeat(2, 1fr);
         }
     }
 
     @@media (max-width: 768px) {
-        .dash-header {
+        .patient-hero {
             flex-direction: column;
-            gap: 16px;
             text-align: center;
         }
 
-        .patient-profile {
-            flex-direction: column;
-        }
+            .patient-hero .hero-content {
+                flex-direction: column;
+            }
 
-        .header-actions {
+        .hero-actions {
             width: 100%;
             justify-content: center;
         }
 
-        .tab-grid {
+        .info-grid {
             grid-template-columns: 1fr;
         }
 
-        .tabs-nav {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .tabs-pill-bar {
             flex-wrap: wrap;
+        }
+
+        .xray-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .pmt-summary-grid-new {
+            grid-template-columns: 1fr;
         }
     }
 </style>
 
-<div class="container-fluid patient-dashboard" dir="rtl">
+<div class="container-fluid" dir="rtl" style="padding: 12px;">
 
-    <!-- 🔷 Header -->
-    <div class="dash-header">
-        <div class="patient-profile">
-            <div class="patient-avatar-lg">@initials</div>
-            <div class="patient-info">
-                <h2>@patient.FullNameAr</h2>
-                <div class="patient-meta">
-                    <span class="meta-tag"><i class="bi bi-hash"></i> @patient.PatientCode</span>
-                    <span class="meta-tag"><i class="bi @genderIconClass"></i> @patient.Gender?.NameAr</span>
-                    <span class="meta-tag"><i class="bi bi-calendar"></i> @(patient.Age) سنة</span>
-                    <span class="meta-tag"><i class="bi bi-droplet"></i> @(patient.BloodGroup?.Name ?? "-")</span>
-                    <span class="type-badge @patientTypeClass"><i class="bi bi-tooth"></i> @patientTypeLabel</span>
+    <!-- 🔷 Hero Header -->
+    <div class="patient-hero">
+        <div class="hero-content">
+            <div class="hero-avatar">@initials</div>
+            <div>
+                <h1>@patient.FullNameAr</h1>
+                <div class="hero-meta">
+                    <span class="hero-meta-tag"><i class="bi bi-hash"></i> @patient.PatientCode</span>
+                    <span class="hero-meta-tag"><i class="bi @genderIconClass"></i> @patient.Gender?.NameAr</span>
+                    <span class="hero-meta-tag"><i class="bi bi-calendar"></i> @(patient.Age) سنة</span>
+                    <span class="hero-meta-tag"><i class="bi bi-droplet"></i> @(patient.BloodGroup?.Name ?? "-")</span>
+                    <span class="hero-meta-tag" style="background: rgba(255,255,255,.25);"><i class="bi bi-app-indicator"></i> @patientTypeLabel</span>
                 </div>
             </div>
         </div>
-        <div class="header-actions">
-            
-            <a asp-action="Edit" asp-route-id="@patient.Id" class="btn-dash btn-edit">
+        <div class="hero-actions">
+            <a asp-action="Edit" asp-route-id="@patient.Id" class="btn-hero btn-hero-edit">
                 <i class="bi bi-pencil-square"></i> تعديل
             </a>
-            <button type="button" class="btn-dash btn-appointment" onclick="openApptModal()">
+            <button type="button" class="btn-hero btn-hero-appt" onclick="openApptModal()">
                 <i class="bi bi-calendar-plus"></i> موعد جديد
             </button>
             @if (patient.PatientType == Dental.Models.Patient.PatientType.Both)
+            {
+                <div class="dropdown d-inline-block">
+                    <button class="btn-hero btn-hero-session dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-clipboard-pulse"></i> بدء سيشن جديد
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" style="border-radius: 12px; border: 1px solid var(--sc-sky-100); box-shadow: var(--shadow-hover);">
+                        <li><a class="dropdown-item" asp-action="NewSession" asp-route-patientId="@patient.Id" asp-route-category="General">سيشن عام</a></li>
+                        <li><a class="dropdown-item" asp-action="NewSession" asp-route-patientId="@patient.Id" asp-route-category="Orthodontics">سيشن تقويم</a></li>
+                    </ul>
+                </div>
+            }
+            else
+            {
+                <a asp-action="NewSession" asp-route-patientId="@patient.Id" class="btn-hero btn-hero-session">
+                    <i class="bi bi-clipboard-pulse"></i> بدء سيشن جديد
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- 🔷 Stats Bar -->
+    <div class="stats-grid">
+        <div class="stat-card-glass">
+            <div class="stat-icon-box teal"><i class="bi bi-calendar-check"></i></div>
+            <div>
+                <span class="stat-value-lg">@Model.VisitsCount</span>
+                <span class="stat-label-lg d-block">الزيارات</span>
+            </div>
+        </div>
+        <div class="stat-card-glass">
+            <div class="stat-icon-box green"><i class="bi bi-cash-stack"></i></div>
+            <div>
+                <span class="stat-value-lg">@Model.TotalPaid.ToString("N0")</span>
+                <span class="stat-label-lg d-block">المدفوع (ج.م)</span>
+            </div>
+        </div>
+        <div class="stat-card-glass">
+            <div class="stat-icon-box red"><i class="bi bi-credit-card"></i></div>
+            <div>
+                <span class="stat-value-lg">@Model.TotalDue.ToString("N0")</span>
+                <span class="stat-label-lg d-block">المتبقي</span>
+            </div>
+        </div>
+        <div class="stat-card-glass">
+            <div class="stat-icon-box blue"><i class="bi bi-clock-history"></i></div>
+            <div>
+                <span class="stat-value-lg">@Model.AppointmentsCount</span>
+                <span class="stat-label-lg d-block">المواعيد القادمة</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔷 Tabs Container -->
+    <div class="tabs-container">
+        <div class="tabs-pill-bar">
+            <button class="tab-pill active" onclick="switchTab('overview', this)">
+                <i class="bi bi-person-lines-fill"></i> نظرة عامة
+            </button>
+            <button class="tab-pill" onclick="switchTab('timeline', this)">
+                <i class="bi bi-clock-history"></i> التاريخ الطبي
+            </button>
+            <button class="tab-pill" onclick="switchTab('teeth', this)">
+                <i class="bi bi-grid-3x3-gap"></i> Dental Chart
+            </button>
+            <button class="tab-pill" onclick="switchTab('plans', this)">
+                <i class="bi bi-clipboard-check"></i> خطط العلاج
+            </button>
+            <button class="tab-pill" onclick="switchTab('xrays', this)">
+                <i class="bi bi-image"></i> الأشعة
+            </button>
+            <button class="tab-pill" onclick="switchTab('prescriptions', this)">
+                <i class="bi bi-file-medical"></i> الروشتات
+            </button>
+            <button class="tab-pill" onclick="switchTab('payments', this)">
+                <i class="bi bi-cash-coin"></i> المدفوعات
+            </button>
+            <button class="tab-pill" onclick="switchTab('docs', this)">
+                <i class="bi bi-folder"></i> المستندات
+            </button>
+        </div>
+
+        <div class="tab-panels">
+
+            <!-- 🔷 Tab: Overview -->
+            <div class="tab-panel active" id="overview">
+                <div class="info-grid">
+                    <div class="info-card-glass">
+                        <div class="card-header-glass"><i class="bi bi-person-vcard"></i> البيانات الشخصية</div>
+                        <div class="card-body-glass">
+                            <div class="info-row-flex"><span class="info-label-sm">الاسم</span><span class="info-value-sm">@patient.FullNameAr</span></div>
+                            <div class="info-row-flex"><span class="info-label-sm">تاريخ الميلاد</span><span class="info-value-sm">@(patient.DateOfBirth?.ToString("dd/MM/yyyy") ?? "-")</span></div>
+                            <div class="info-row-flex"><span class="info-label-sm">الرقم القومي</span><span class="info-value-sm">@(patient.NationalId ?? "-")</span></div>
+                            <div class="info-row-flex"><span class="info-label-sm">فصيلة الدم</span><span class="info-value-sm"><span class="blood-badge-new">@(patient.BloodGroup?.Name ?? "-")</span></span></div>
+                            @* <div class="info-row-flex"><span class="info-label-sm">المهنة</span><span class="info-value-sm">@(patient.Occupation ?? "-")</span></div> *@
+                        </div>
+                    </div>
+                    <div class="info-card-glass">
+                        <div class="card-header-glass"><i class="bi bi-telephone-plus"></i> بيانات التواصل</div>
+                        <div class="card-body-glass">
+                            <div class="info-row-flex"><span class="info-label-sm">الموبايل</span><span class="info-value-sm" dir="ltr">@(patient.Mobile ?? "-")</span></div>
+                           @*  <div class="info-row-flex"><span class="info-label-sm">التليفون</span><span class="info-value-sm" dir="ltr">@(patient.Phone ?? "-")</span></div>
+                            <div class="info-row-flex"><span class="info-label-sm">البريد</span><span class="info-value-sm">@(patient.Email ?? "-")</span></div> *@
+                            <div class="info-row-flex"><span class="info-label-sm">العنوان</span><span class="info-value-sm">@(patient.Address ?? "-")</span></div>
+                        </div>
+                    </div>
+                    <div class="info-card-glass">
+                        <div class="card-header-glass"><i class="bi bi-heart-pulse"></i> التاريخ الطبي</div>
+                        <div class="card-body-glass">
+                            <div class="info-row-flex"><span class="info-label-sm">الحساسية</span><span class="info-value-sm @(string.IsNullOrEmpty(patient.Allergies) ? "" : "text-danger")">@(patient.Allergies ?? "لا يوجد")</span></div>
+                            <div class="info-row-flex"><span class="info-label-sm">أمراض مزمنة</span><span class="info-value-sm">@(patient.ChronicDiseases ?? "لا يوجد")</span></div>
+                            <div class="info-row-flex"><span class="info-label-sm">الأدوية الحالية</span><span class="info-value-sm">@(patient.CurrentMedications ?? "لا يوجد")</span></div>
+                            <div class="info-row-flex"><span class="info-label-sm">التدخين</span><span class="info-value-sm">@(patient.SmokingStatus ?? "-")</span></div>
+                        </div>
+                    </div>
+                    <div class="info-card-glass">
+                        <div class="card-header-glass"><i class="bi bi-journal-text"></i> ملاحظات</div>
+                        <div class="card-body-glass">
+                            <p class="notes-text-new">@(patient.Notes ?? "لا توجد ملاحظات.")</p>
+                        </div>
+                    </div>
+                    <div class="info-card-glass full-width">
+                        <div class="card-header-glass"><i class="bi bi-activity"></i> آخر النشاطات</div>
+                        <div class="card-body-glass">
+                            <div class="timeline-container">
+                                <div class="timeline-node">
+                                    <div class="timeline-date">@DateTime.Now.ToString("dd MMM yyyy")</div>
+                                    <div class="timeline-title">فتح ملف المريض</div>
+                                    <div class="timeline-desc">تم فتح الملف من لوحة التحكم</div>
+                                </div>
+                                @if (patient.LastVisit.HasValue)
+                                {
+                                    <div class="timeline-node">
+                                        <div class="timeline-date">@patient.LastVisit.Value.ToString("dd MMM yyyy")</div>
+                                        <div class="timeline-title">آخر زيارة</div>
+                                        <div class="timeline-desc">زيارة علاجية</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🔷 Tab: Timeline -->
+            <div class="tab-panel" id="timeline">
+                <div class="info-card-glass">
+                    <div class="card-header-glass"><i class="bi bi-clock-history"></i> التاريخ الطبي الكامل</div>
+                    <div class="card-body-glass">
+                        <div class="timeline-container">
+                            @foreach (var visit in Model.Sessions ?? new List<SessionDto>())
+                            {
+                                <div class="timeline-node">
+                                    <div class="timeline-date">@visit.SessionDate.ToString("dd MMM yyyy")</div>
+                                    <div class="timeline-title">@visit.ProcedureName</div>
+                                    <div class="timeline-desc">@visit.Notes</div>
+                                </div>
+                            }
+                            @if ((Model.Sessions?.Count ?? 0) == 0)
+                            {
+                                <div class="placeholder-glass" style="border:none; box-shadow:none; padding:32px;">
+                                    <div class="placeholder-icon-glass"><i class="bi bi-clock-history"></i></div>
+                                    <h3>لا توجد نشاطات مسجلة</h3>
+                                    <p>ستظهر هنا جميع الزيارات والإجراءات والمدفوعات</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🔷 Tab: Dental Chart -->
+            <div class="tab-panel" id="teeth">
+                @if (Model.DentalChart != null && Model.DentalChart.Teeth.Any())
                 {
-                    <div class="dropdown d-inline-block">
-                        <button class="btn-dash btn-session dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-clipboard-pulse"></i> بدء سيشن جديد
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" asp-action="NewSession" asp-route-patientId="@patient.Id" asp-route-category="General">سيشن عام</a></li>
-                            <li><a class="dropdown-item" asp-action="NewSession" asp-route-patientId="@patient.Id" asp-route-category="Orthodontics">سيشن تقويم</a></li>
-                        </ul>
+                    @await Html.PartialAsync("_DentalChartReadOnly", Model.DentalChart)
+                }
+                else
+                {
+                    <div class="placeholder-glass">
+                        <div class="placeholder-icon-glass"><i class="bi bi-grid-3x3-gap"></i></div>
+                        <h3>لا يوجد رسم أسنان مسجل بعد</h3>
+                        <a asp-action="NewSession" asp-route-patientId="@patient.Id" class="btn-hero btn-hero-session" style="display:inline-flex;">
+                            <i class="bi bi-clipboard-pulse"></i> بدء سيشن لتسجيل الرسم
+                        </a>
+                    </div>
+                }
+            </div>
+
+            <!-- 🔷 Tab: Treatment Plans -->
+            <div class="tab-panel" id="plans">
+                <div class="placeholder-glass">
+                    <div class="placeholder-icon-glass"><i class="bi bi-clipboard-check"></i></div>
+                    <h3>خطط العلاج</h3>
+                    <p>الخطط العلاجية المستقبلية والمكتملة</p>
+                </div>
+            </div>
+
+            <!-- 🔷 Tab: X-Rays -->
+            <div class="tab-panel" id="xrays">
+                @if (Model.XRays.Any())
+                {
+                    <div class="xray-grid">
+                        @foreach (var xray in Model.XRays)
+                        {
+                            <div class="xray-card">
+                                <a href="@xray.ImageUrl" target="_blank">
+                                    <img src="@xray.ImageUrl" alt="@xray.FileName" onerror="this.src='/images/placeholder-xray.png'" />
+                                </a>
+                                <div class="xray-card-body">
+                                    <small>@xray.TakenDate.ToString("dd/MM/yyyy")</small>
+                                    <p class="mb-0">@xray.Description</p>
+                                </div>
+                            </div>
+                        }
                     </div>
                 }
                 else
                 {
-                    <a asp-action="NewSession" asp-route-patientId="@patient.Id" class="btn-dash btn-session">
-                        <i class="bi bi-clipboard-pulse"></i> بدء سيشن جديد
-                    </a>
+                    <div class="placeholder-glass">
+                        <div class="placeholder-icon-glass"><i class="bi bi-image"></i></div>
+                        <h3>لا توجد أشعة مرفوعة بعد</h3>
+                    </div>
                 }
-           
-        </div>
-    </div>
-
-    @* <partial name="_WeeklyCalendar" /> *@
-
-
-    <!-- 🔷 Stats Bar -->
-    <div class="stats-bar">
-        <div class="stat-item">
-            <div class="stat-icon-sm teal"><i class="bi bi-calendar-check"></i></div>
-            <div>
-                <span class="stat-num">@Model.VisitsCount</span>
-                <span class="stat-label-sm">الزيارات</span>
             </div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-icon-sm green"><i class="bi bi-cash-stack"></i></div>
-            <div>
-                <span class="stat-num">@Model.TotalPaid.ToString("N0")</span>
-                <span class="stat-label-sm">المدفوع (ج.م)</span>
-            </div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-icon-sm red"><i class="bi bi-credit-card"></i></div>
-            <div>
-                <span class="stat-num">@Model.TotalDue.ToString("N0")</span>
-                <span class="stat-label-sm">المتبقي</span>
-            </div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-icon-sm blue"><i class="bi bi-clock-history"></i></div>
-            <div>
-                <span class="stat-num">@Model.AppointmentsCount</span>
-                <span class="stat-label-sm">المواعيد القادمة</span>
-            </div>
-        </div>
-    </div>
 
-    <!-- 🔷 Tabs -->
-    <div class="tabs-nav">
-        <button class="tab-btn active" onclick="switchTab('overview', this)">
-            <i class="bi bi-person-lines-fill"></i> نظرة عامة
-        </button>
-        <button class="tab-btn" onclick="switchTab('timeline', this)">
-            <i class="bi bi-clock-history"></i> التاريخ الطبي
-        </button>
-        <button class="tab-btn" onclick="switchTab('teeth', this)">
-            <i class="bi bi-grid-3x3-gap"></i> Dental Chart
-        </button>
-        <button class="tab-btn" onclick="switchTab('plans', this)">
-            <i class="bi bi-clipboard-check"></i> خطط العلاج
-        </button>
-        <button class="tab-btn" onclick="switchTab('xrays', this)">
-            <i class="bi bi-image"></i> الأشعة
-        </button>
-        <button class="tab-btn" onclick="switchTab('prescriptions', this)">
-            <i class="bi bi-file-medical"></i> الروشتات
-        </button>
-        <button class="tab-btn" onclick="switchTab('payments', this)">
-            <i class="bi bi-cash-coin"></i> المدفوعات
-        </button>
-        <button class="tab-btn" onclick="switchTab('docs', this)">
-            <i class="bi bi-folder"></i> المستندات
-        </button>
-    </div>
-
-    <!-- 🔷 Tab: Overview -->
-    <div class="tab-content active" id="overview">
-        <div class="tab-grid">
-            <div class="info-card">
-                <div class="info-header"><i class="bi bi-person-vcard"></i> البيانات الشخصية</div>
-                <div class="info-body">
-                    <div class="info-row"><span class="info-label">الاسم</span><span class="info-value">@patient.FullNameAr</span></div>
-                    <div class="info-row"><span class="info-label">تاريخ الميلاد</span><span class="info-value">@(patient.DateOfBirth?.ToString("dd/MM/yyyy") ?? "-")</span></div>
-                    <div class="info-row"><span class="info-label">الرقم القومي</span><span class="info-value">@(patient.NationalId ?? "-")</span></div>
-                    <div class="info-row"><span class="info-label">فصيلة الدم</span><span class="info-value"><span class="blood-badge">@(patient.BloodGroup?.Name ?? "-")</span></span></div>
-                    <div class="info-row"><span class="info-label">المهنة</span><span class="info-value">@(patient.Occupation ?? "-")</span></div>
+            <!-- 🔷 Tab: Prescriptions -->
+            <div class="tab-panel" id="prescriptions">
+                <div class="placeholder-glass">
+                    <div class="placeholder-icon-glass"><i class="bi bi-file-medical"></i></div>
+                    <h3>الروشتات</h3>
+                    <p>جميع الروشتات والأدوية المكتوبة</p>
                 </div>
             </div>
-            <div class="info-card">
-                <div class="info-header"><i class="bi bi-telephone-plus"></i> بيانات التواصل</div>
-                <div class="info-body">
-                    <div class="info-row"><span class="info-label">الموبايل</span><span class="info-value" dir="ltr">@(patient.Mobile ?? "-")</span></div>
-                    <div class="info-row"><span class="info-label">التليفون</span><span class="info-value" dir="ltr">@(patient.Phone ?? "-")</span></div>
-                    <div class="info-row"><span class="info-label">البريد</span><span class="info-value">@(patient.Email ?? "-")</span></div>
-                    <div class="info-row"><span class="info-label">العنوان</span><span class="info-value">@(patient.Address ?? "-")</span></div>
-                </div>
-            </div>
-            <div class="info-card">
-                <div class="info-header"><i class="bi bi-heart-pulse"></i> التاريخ الطبي</div>
-                <div class="info-body">
-                    <div class="info-row"><span class="info-label">الحساسية</span><span class="info-value @(string.IsNullOrEmpty(patient.Allergies) ? "" : "text-danger")">@(patient.Allergies ?? "لا يوجد")</span></div>
-                    <div class="info-row"><span class="info-label">أمراض مزمنة</span><span class="info-value">@(patient.ChronicDiseases ?? "لا يوجد")</span></div>
-                    <div class="info-row"><span class="info-label">الأدوية الحالية</span><span class="info-value">@(patient.CurrentMedications ?? "لا يوجد")</span></div>
-                    <div class="info-row"><span class="info-label">التدخين</span><span class="info-value">@(patient.SmokingStatus ?? "-")</span></div>
-                </div>
-            </div>
-            <div class="info-card">
-                <div class="info-header"><i class="bi bi-journal-text"></i> ملاحظات</div>
-                <div class="info-body">
-                    <p class="notes-text">@(patient.Notes ?? "لا توجد ملاحظات.")</p>
-                </div>
-            </div>
-            <div class="info-card full-width">
-                <div class="info-header"><i class="bi bi-activity"></i> آخر النشاطات</div>
-                <div class="info-body">
-                    <div class="timeline">
-                        <div class="timeline-item">
-                            <div class="timeline-date">@DateTime.Now.ToString("dd MMM yyyy")</div>
-                            <div class="timeline-title">فتح ملف المريض</div>
-                            <div class="timeline-desc">تم فتح الملف من لوحة التحكم</div>
-                        </div>
-                        @if (patient.LastVisit.HasValue)
-                        {
-                            <div class="timeline-item">
-                                <div class="timeline-date">@patient.LastVisit.Value.ToString("dd MMM yyyy")</div>
-                                <div class="timeline-title">آخر زيارة</div>
-                                <div class="timeline-desc">زيارة علاجية</div>
-                            </div>
-                        }
+
+            <!-- 🔷 Tab: Payments -->
+            <div class="tab-panel" id="payments">
+                <div class="pmt-summary-grid-new">
+                    <div class="pmt-summary-card-new">
+                        <div class="pmt-label">إجمالي المطلوب</div>
+                        <div class="pmt-value" id="pmtSumTotal">—</div>
+                    </div>
+                    <div class="pmt-summary-card-new">
+                        <div class="pmt-label">إجمالي الخصم</div>
+                        <div class="pmt-value" id="pmtSumDiscount">—</div>
+                    </div>
+                    <div class="pmt-summary-card-new is-paid">
+                        <div class="pmt-label">إجمالي المدفوع</div>
+                        <div class="pmt-value" id="pmtSumPaid">—</div>
+                    </div>
+                    <div class="pmt-summary-card-new is-due">
+                        <div class="pmt-label">المتبقي</div>
+                        <div class="pmt-value" id="pmtSumRemaining">—</div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 🔷 Tab: Timeline -->
-    <div class="tab-content" id="timeline">
-        <div class="info-card">
-            <div class="info-header"><i class="bi bi-clock-history"></i> التاريخ الطبي الكامل</div>
-            <div class="info-body">
-                <div class="timeline">
-                    @foreach (var visit in Model.Sessions ?? new List<SessionDto>())
-                    {
-                        <div class="timeline-item">
-                            <div class="timeline-date">@visit.SessionDate.ToString("dd MMM yyyy")</div>
-                            <div class="timeline-title">@visit.ProcedureName</div>
-                            <div class="timeline-desc">@visit.Notes</div>
-                        </div>
-                    }
-                    @if ((Model.Sessions?.Count ?? 0) == 0)
-                    {
-                        <div class="placeholder-tab" style="border:none; box-shadow:none; padding:32px;">
-                            <div class="placeholder-icon"><i class="bi bi-clock-history"></i></div>
-                            <h3>لا توجد نشاطات مسجلة</h3>
-                            <p>ستظهر هنا جميع الزيارات والإجراءات والمدفوعات</p>
-                        </div>
-                    }
+                <div class="info-card-glass full-width">
+                    <div class="card-header-glass" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span><i class="bi bi-cash-stack"></i> سجل الدفعات</span>
+                        <button class="btn-hero btn-hero-session" style="display:inline-flex; padding:8px 16px; font-size:0.8rem;" onclick="openTabPaymentModal()">
+                            <i class="bi bi-plus-lg"></i> دفعة جديدة
+                        </button>
+                    </div>
+                    <div class="card-body-glass">
+                        <table class="pmt-table-new">
+                            <thead>
+                                <tr><th>التاريخ</th><th>الزيارة</th><th>المبلغ</th><th>الطريقة</th><th>رقم الإيصال</th><th>ملاحظات</th><th></th></tr>
+                            </thead>
+                            <tbody id="pmtPaymentsBody"></tbody>
+                        </table>
+                    </div>
                 </div>
+                <div class="info-card-glass full-width mb-3">
+                    <div class="card-header-glass"><i class="bi bi-clipboard2-data"></i> الزيارات</div>
+                    <div class="card-body-glass">
+                        <table class="pmt-table-new">
+                            <thead>
+                                <tr><th>التاريخ</th><th>النوع</th><th>الإجمالي</th><th>الخصم</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr>
+                            </thead>
+                            <tbody id="pmtVisitsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+              
             </div>
-        </div>
-    </div>
 
-    <!-- 🔷 Tab: Dental Chart -->
-    <div class="tab-content" id="teeth">
-        @if (Model.DentalChart != null && Model.DentalChart.Teeth.Any())
-        {
-            @await Html.PartialAsync("_DentalChartReadOnly", Model.DentalChart)
-        }
-        else
-        {
-            <div class="placeholder-tab">
-                <div class="placeholder-icon"><i class="bi bi-grid-3x3-gap"></i></div>
-                <h3>لا يوجد رسم أسنان مسجل بعد</h3>
-                <a asp-action="NewSession" asp-route-patientId="@patient.Id" class="btn-dash btn-session" style="display:inline-flex;">
-                    <i class="bi bi-clipboard-pulse"></i> بدء سيشن لتسجيل الرسم
-                </a>
-            </div>
-        }
-    </div>
-
-    <!-- 🔷 Tab: Treatment Plans -->
-    <div class="tab-content" id="plans">
-        <div class="placeholder-tab">
-            <div class="placeholder-icon"><i class="bi bi-clipboard-check"></i></div>
-            <h3>خطط العلاج</h3>
-            <p>الخطط العلاجية المستقبلية والمكتملة</p>
-        </div>
-    </div>
-
-    <!-- 🔷 Tab: X-Rays -->
-    @* <div class="tab-content" id="xrays">
-        <div class="placeholder-tab">
-            <div class="placeholder-icon"><i class="bi bi-image"></i></div>
-            <h3>الأشعة</h3>
-            <p>جميع الصور الأشعة مع إمكانية التكبير والمقارنة</p>
-        </div>
-    </div> *@
-    <div class="tab-content" id="xrays">
-        @if (Model.XRays.Any())
-        {
-            <div class="row">
-                @foreach (var xray in Model.XRays)
+            <!-- 🔷 Tab: Documents -->
+            <div class="tab-panel" id="docs">
+                @if (Model.Documents.Any())
                 {
-                    <div class="col-3 mb-3">
-                        <div class="patient-form-card">
-                            <a href="@xray.ImageUrl" target="_blank">
-                                <img src="@xray.ImageUrl" style="width:100%; height:160px; object-fit:cover;" alt="@xray.FileName" />
-                            </a>
-                            <div class="card-body-inner">
-                                <small>@xray.TakenDate.ToString("dd/MM/yyyy")</small>
-                                <p class="mb-0">@xray.Description</p>
-                            </div>
-                        </div>
+                    <div class="doc-table-container">
+                        <table class="pmt-table-new">
+                            <thead><tr><th>النوع</th><th>الملف</th><th>تاريخ الرفع</th><th>ملاحظات</th><th></th></tr></thead>
+                            <tbody>
+                                @foreach (var doc in Model.Documents)
+                                {
+                                    <tr>
+                                        <td>@doc.DocumentTypeName</td>
+                                        <td>@doc.FileName</td>
+                                        <td>@doc.UploadedDate.ToString("dd/MM/yyyy")</td>
+                                        <td>@doc.Description</td>
+                                        <td><a href="@doc.FilePath" target="_blank" class="btn-hero btn-hero-session" style="display:inline-flex;padding:6px 12px; font-size:0.8rem;"><i class="bi bi-download"></i></a></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="placeholder-glass">
+                        <div class="placeholder-icon-glass"><i class="bi bi-folder"></i></div>
+                        <h3>لا توجد مستندات مرفوعة بعد</h3>
                     </div>
                 }
             </div>
-        }
-        else
-        {
-            <div class="placeholder-tab">
-                <div class="placeholder-icon"><i class="bi bi-image"></i></div>
-                <h3>لا توجد أشعة مرفوعة بعد</h3>
-            </div>
-        }
-    </div>
 
-    <!-- 🔷 Tab: Prescriptions -->
-    <div class="tab-content" id="prescriptions">
-        <div class="placeholder-tab">
-            <div class="placeholder-icon"><i class="bi bi-file-medical"></i></div>
-            <h3>الروشتات</h3>
-            <p>جميع الروشتات والأدوية المكتوبة</p>
         </div>
     </div>
-
-    @* <!-- 🔷 Tab: Payments -->
-    <div class="tab-content" id="payments">
-        <div class="placeholder-tab">
-            <div class="placeholder-icon"><i class="bi bi-cash-coin"></i></div>
-            <h3>سجل المدفوعات</h3>
-            <p>جميع الدفعات والفواتير والأرصدة</p>
-        </div>
-    </div> *@
-
-    <!-- 🔷 Tab: Payments -->
-    <div class="tab-content" id="payments">
-        <div class="pmt-summary-grid">
-            <div class="pmt-summary-card">
-                <div class="pmt-label">إجمالي المطلوب</div>
-                <div class="pmt-value" id="pmtSumTotal">—</div>
-            </div>
-            <div class="pmt-summary-card">
-                <div class="pmt-label">إجمالي الخصم</div>
-                <div class="pmt-value" id="pmtSumDiscount">—</div>
-            </div>
-            <div class="pmt-summary-card is-paid">
-                <div class="pmt-label">إجمالي المدفوع</div>
-                <div class="pmt-value" id="pmtSumPaid">—</div>
-            </div>
-            <div class="pmt-summary-card is-due">
-                <div class="pmt-label">المتبقي</div>
-                <div class="pmt-value" id="pmtSumRemaining">—</div>
-            </div>
-        </div>
-
-        <div class="info-card full-width">
-            <div class="info-header"><i class="bi bi-clipboard2-data"></i> الزيارات</div>
-            <div class="info-body">
-                <table class="pmt-table">
-                    <thead>
-                        <tr><th>التاريخ</th><th>النوع</th><th>الإجمالي</th><th>الخصم</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr>
-                    </thead>
-                    <tbody id="pmtVisitsBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="info-card full-width">
-            <div class="info-header" style="display:flex; justify-content:space-between; align-items:center;">
-                <span><i class="bi bi-cash-stack"></i> سجل الدفعات</span>
-                <button class="btn-dash btn-session" style="display:inline-flex;" onclick="openTabPaymentModal()">
-                    <i class="bi bi-plus-lg"></i> دفعة جديدة
-                </button>
-            </div>
-            <div class="info-body">
-                <table class="pmt-table">
-                    <thead>
-                        <tr><th>التاريخ</th><th>الزيارة</th><th>المبلغ</th><th>الطريقة</th><th>رقم الإيصال</th><th>ملاحظات</th><th></th></tr>
-                    </thead>
-                    <tbody id="pmtPaymentsBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-
-
-    <!-- 🔷 Tab: Documents -->
-   @*  <div class="tab-content" id="docs">
-        <div class="placeholder-tab">
-            <div class="placeholder-icon"><i class="bi bi-folder"></i></div>
-            <h3>المستندات</h3>
-            <p>بطاقات التأمين، الموافقات، المستندات الشخصية</p>
-        </div>
-    </div> *@
-
-    <div class="tab-content" id="docs">
-        @if (Model.Documents.Any())
-        {
-            <table class="pmt-table">
-                <thead><tr><th>النوع</th><th>الملف</th><th>تاريخ الرفع</th><th>ملاحظات</th><th></th></tr></thead>
-                <tbody>
-                    @foreach (var doc in Model.Documents)
-                    {
-                        <tr>
-                            <td>@doc.DocumentTypeName</td>
-                            <td>@doc.FileName</td>
-                            <td>@doc.UploadedDate.ToString("dd/MM/yyyy")</td>
-                            <td>@doc.Description</td>
-                            <td><a href="@doc.FilePath" target="_blank" class="btn-dash btn-session" style="display:inline-flex;padding:6px 12px;"><i class="bi bi-download"></i></a></td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
-        else
-        {
-            <div class="placeholder-tab">
-                <div class="placeholder-icon"><i class="bi bi-folder"></i></div>
-                <h3>لا توجد مستندات مرفوعة بعد</h3>
-            </div>
-        }
-    </div>
-
 </div>
 
-
-<!-- 🔷 Add Payment Modal (Tab) -->
-<div class="custom-modal" id="tabPayModal">
-    <div class="modal-overlay" onclick="closeTabPaymentModal()"></div>
-    <div class="modal-box">
-        <div class="modal-head">
+<!-- 🔷 Add Payment Modal -->
+<div class="custom-modal-new" id="tabPayModal">
+    <div class="modal-overlay-new" onclick="closeTabPaymentModal()"></div>
+    <div class="modal-box-new">
+        <div class="modal-head-new">
             <h5><i class="bi bi-cash-coin me-2"></i> تسجيل دفعة جديدة</h5>
             <button type="button" class="btn-close btn-close-white" onclick="closeTabPaymentModal()"></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body-new">
             <div class="mb-3">
-                <label class="form-label-custom">الزيارة <span class="text-danger">*</span></label>
-                <select class="form-control-custom" id="tabPayVisitId"></select>
+                <label class="form-label-custom-new">الزيارة <span class="text-danger">*</span></label>
+                <select class="form-control-custom-new" id="tabPayVisitId"></select>
             </div>
             <div class="mb-3">
-                <label class="form-label-custom">المبلغ <span class="text-danger">*</span></label>
-                <input type="number" step="0.01" class="form-control-custom" id="tabPayAmount" />
+                <label class="form-label-custom-new">المبلغ <span class="text-danger">*</span></label>
+                <input type="number" step="0.01" class="form-control-custom-new" id="tabPayAmount" />
             </div>
             <div class="mb-3">
-                <label class="form-label-custom">طريقة الدفع</label>
-                <select class="form-control-custom" id="tabPayMethod">
+                <label class="form-label-custom-new">طريقة الدفع</label>
+                <select class="form-control-custom-new" id="tabPayMethod">
                     <option value="0">نقدي</option>
                     <option value="1">بطاقة ائتمان</option>
                     <option value="2">بطاقة خصم</option>
@@ -1135,49 +1252,48 @@
                 </select>
             </div>
             <div class="mb-3">
-                <label class="form-label-custom">ملاحظات</label>
-                <textarea class="form-control-custom" id="tabPayDesc" rows="2"></textarea>
+                <label class="form-label-custom-new">ملاحظات</label>
+                <textarea class="form-control-custom-new" id="tabPayDesc" rows="2"></textarea>
             </div>
         </div>
-        <div class="modal-foot">
-            <button type="button" class="btn-modal btn-modal-cancel" onclick="closeTabPaymentModal()">إلغاء</button>
-            <button type="button" class="btn-modal btn-modal-save" onclick="submitTabPayment()">حفظ الدفعة</button>
+        <div class="modal-foot-new">
+            <button type="button" class="btn-modal-new btn-modal-cancel-new" onclick="closeTabPaymentModal()">إلغاء</button>
+            <button type="button" class="btn-modal-new btn-modal-save-new" onclick="submitTabPayment()">حفظ الدفعة</button>
         </div>
     </div>
 </div>
 
-
-<!-- 🔷 Custom Appointment Modal -->
-<div class="custom-modal" id="apptModal">
-    <div class="modal-overlay" onclick="closeApptModal()"></div>
-    <div class="modal-box">
-        <div class="modal-head">
+<!-- 🔷 Appointment Modal -->
+<div class="custom-modal-new" id="apptModal">
+    <div class="modal-overlay-new" onclick="closeApptModal()"></div>
+    <div class="modal-box-new">
+        <div class="modal-head-new">
             <h5><i class="bi bi-calendar-plus me-2"></i> موعد جديد</h5>
             <button type="button" class="btn-close btn-close-white" onclick="closeApptModal()"></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body-new">
             <input type="hidden" id="apptPatientId" value="@patient.Id" />
             <div class="mb-3">
-                <label class="form-label-custom">المريض</label>
-                <input type="text" class="form-control-custom" value="@patient.FullNameAr" disabled />
+                <label class="form-label-custom-new">المريض</label>
+                <input type="text" class="form-control-custom-new" value="@patient.FullNameAr" disabled />
             </div>
             <div class="row g-3 mb-3">
                 <div class="col-6">
-                    <label class="form-label-custom">التاريخ <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control-custom" id="apptDate" />
+                    <label class="form-label-custom-new">التاريخ <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control-custom-new" id="apptDate" />
                 </div>
                 <div class="col-6">
-                    <label class="form-label-custom">الوقت <span class="text-danger">*</span></label>
-                    <input type="time" class="form-control-custom" id="apptTime" />
+                    <label class="form-label-custom-new">الوقت <span class="text-danger">*</span></label>
+                    <input type="time" class="form-control-custom-new" id="apptTime" />
                 </div>
             </div>
             <div class="mb-3">
-                <label class="form-label-custom">السبب / الملاحظات</label>
-                <textarea class="form-control-custom" id="apptReason" rows="2" placeholder="مثال: تركيب تاج، متابعة..."></textarea>
+                <label class="form-label-custom-new">السبب / الملاحظات</label>
+                <textarea class="form-control-custom-new" id="apptReason" rows="2" placeholder="مثال: تركيب تاج، متابعة..."></textarea>
             </div>
             <div class="mb-3">
-                <label class="form-label-custom">المدة</label>
-                <select class="form-control-custom" id="apptDuration">
+                <label class="form-label-custom-new">المدة</label>
+                <select class="form-control-custom-new" id="apptDuration">
                     <option value="15">15 دقيقة</option>
                     <option value="30" selected>30 دقيقة</option>
                     <option value="45">45 دقيقة</option>
@@ -1186,9 +1302,9 @@
                 </select>
             </div>
         </div>
-        <div class="modal-foot">
-            <button type="button" class="btn-modal btn-modal-cancel" onclick="closeApptModal()">إلغاء</button>
-            <button type="button" class="btn-modal btn-modal-save" onclick="saveAppt()">
+        <div class="modal-foot-new">
+            <button type="button" class="btn-modal-new btn-modal-cancel-new" onclick="closeApptModal()">إلغاء</button>
+            <button type="button" class="btn-modal-new btn-modal-save-new" onclick="saveAppt()">
                 <i class="bi bi-check-lg"></i> حفظ الموعد
             </button>
         </div>
@@ -1198,13 +1314,13 @@
 @section Scripts {
     <script>
         function switchTab(tabId, btn) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-pill').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(c => c.classList.remove('active'));
             btn.classList.add('active');
             document.getElementById(tabId).classList.add('active');
         }
 
-        // ── تاب المدفوعات: تحميل كشف الحساب ──
+        // ── Payments Tab Logic ──
         let pmtLoaded = false;
         let pmtVisits = [];
 
@@ -1235,12 +1351,12 @@
             document.getElementById('pmtVisitsBody').innerHTML = data.visits.length ? data.visits.map(v => `
                 <tr>
                     <td>${new Date(v.visitDate).toLocaleDateString('ar-EG')}</td>
-                    <td>${v.category === 2 ? 'تقويم' : 'عام'}</td>
+                    <td>${v.category === 1 ? 'تقويم' : 'عام'}</td>
                     <td>${money(v.totalAmount)}</td>
                     <td>${money(v.discount)}</td>
                     <td>${money(v.paidAmount)}</td>
                     <td>${money(v.remaining)}</td>
-                    <td>${v.isFullyPaid ? '<span class="pmt-badge-paid">مسدد</span>' : '<span class="pmt-badge-due">متبقي</span>'}</td>
+                    <td>${v.isFullyPaid ? '<span class="pmt-badge-paid-new">مسدد</span>' : '<span class="pmt-badge-due-new">متبقي</span>'}</td>
                 </tr>`).join('') : '<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:16px;">لا توجد زيارات</td></tr>';
 
             document.getElementById('pmtPaymentsBody').innerHTML = data.payments.length ? data.payments.map(p => `
@@ -1251,7 +1367,7 @@
                     <td>${p.methodText}</td>
                     <td style="direction:ltr; text-align:right;">${p.receiptNo || '—'}</td>
                     <td>${p.description || ''}</td>
-                    <td><button class="btn-pmt-void" onclick="voidTabPayment(${p.id})"><i class="bi bi-x-circle"></i> إلغاء</button></td>
+                    <td><button class="btn-pmt-void-new" onclick="voidTabPayment(${p.id})"><i class="bi bi-x-circle"></i> إلغاء</button></td>
                 </tr>`).join('') : '<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:16px;">لا توجد دفعات</td></tr>';
 
             const dueVisits = data.visits.filter(v => v.remaining > 0);
@@ -1321,12 +1437,9 @@
             }
         }
 
-        // تحميل بيانات المدفوعات أول ما الصفحة تفتح (البيانات خفيفة، مفيش داعي نستنى لحد ما يدوس على التاب)
         document.addEventListener('DOMContentLoaded', loadPaymentsTab);
 
-
-
-        // ── Modal ──
+        // ── Appointment Modal ──
         function openApptModal() {
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
@@ -1354,25 +1467,17 @@
 
             const appointmentDate = new Date(`${date}T${time}`);
 
-            const data = {
-                PatientId: patientId,
-                AppointmentDate: appointmentDate.toISOString(),
-                Duration: duration,
-                Reason: reason,
-                Status: 1
-            };
-
             try {
-                       const res = await fetch('/Appointments/Create', {  
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                PatientId: patientId,
-                AppointmentDate: appointmentDate.toISOString(),
-                DurationMinutes: duration,   
-                Reason: reason
-            })
-        });
+                const res = await fetch('/Appointments/Create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        PatientId: patientId,
+                        AppointmentDate: appointmentDate.toISOString(),
+                        DurationMinutes: duration,
+                        Reason: reason
+                    })
+                });
                 const result = await res.json();
                 if (result.success) {
                     closeApptModal();
@@ -1386,6 +1491,6 @@
             }
         }
 
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeApptModal(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeApptModal(); closeTabPaymentModal(); }});
     </script>
 }

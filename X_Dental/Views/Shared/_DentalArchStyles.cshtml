@@ -1,0 +1,2450 @@
+﻿@* ================================================================
+   Shared / _DentalArchStyles.cshtml
+
+   Dental Chart:
+   - Original curved arch design preserved
+   - Realistic anatomical tooth rendering
+   - FDI tooth type detection
+   - Upper / Lower orientation
+   - Status overlays
+   - Hover / Selected animations
+   - Safe to include more than once
+   ================================================================ *@
+
+<style>
+
+    :root {
+        --dc-sky-50: #eafbfc;
+        --dc-sky-100: #dcf5f7;
+        --dc-teal-900: #0a4d4f;
+        --dc-teal-700: #0d7377;
+        --dc-teal-600: #0f9b8e;
+        --dc-teal-500: #14b8a6;
+        --dc-teal-100: #c7f2ea;
+        --dc-coral-300: #f6c6bc;
+        --dc-coral-500: #f2b6a8;
+        --dc-ink-900: #0b2e30;
+        --dc-ink-600: #4b6b6c;
+        --dc-healthy: #ffffff;
+        --dc-healthy-line: #0f9b8e;
+        --dc-decayed: #fee2e2;
+        --dc-decayed-line: #ef4444;
+        --dc-treated: #dbeafe;
+        --dc-treated-line: #3b82f6;
+        --dc-missing-line: #cbd5e1;
+        --dc-extracted: #1e293b;
+        --dc-extracted-line: #1e293b;
+        --dc-impacted: #e0e7ff;
+        --dc-impacted-line: #6366f1;
+        --dc-crown: #f3e8ff;
+        --dc-crown-line: #a855f7;
+        --dc-bridge: #cffafe;
+        --dc-bridge-line: #06b6d4;
+        --dc-implant: #fce7f3;
+        --dc-implant-line: #ec4899;
+        --dc-fractured: #ffedd5;
+        --dc-fractured-line: #f97316;
+        --dc-rootcanal: #fef3c7;
+        --dc-rootcanal-line: #f59e0b;
+        --dc-filling: #ccfbf1;
+        --dc-filling-line: #14b8a6;
+    }
+
+
+    /* ============================================================
+           MAIN SHELL
+           ============================================================ */
+
+    .dental-chart-shell {
+        padding: 10px;
+    }
+
+
+    /* ============================================================
+           TOOLBAR
+           ============================================================ */
+
+    .chart-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+
+    .legend-bar {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: .82rem;
+        font-weight: 700;
+        color: var(--dc-ink-600);
+    }
+
+
+    .dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px var(--dc-sky-100);
+    }
+
+
+        .dot.healthy {
+            background: var(--dc-healthy);
+            box-shadow: 0 0 0 1px var(--dc-healthy-line);
+        }
+
+
+        .dot.decayed {
+            background: var(--dc-decayed-line);
+        }
+
+
+        .dot.treated {
+            background: var(--dc-treated-line);
+        }
+
+
+        .dot.missing {
+            background: var(--dc-missing-line);
+        }
+
+
+        .dot.extracted {
+            background: var(--dc-extracted-line);
+        }
+
+
+        .dot.rootcanal {
+            background: var(--dc-rootcanal-line);
+        }
+
+
+        .dot.crown {
+            background: var(--dc-crown-line);
+        }
+
+
+        .dot.implant {
+            background: var(--dc-implant-line);
+        }
+
+
+    /* ============================================================
+           SAVE BUTTON
+           ============================================================ */
+
+    .btn-save-chart {
+        background: linear-gradient( 135deg, var(--dc-teal-600), var(--dc-teal-700) );
+        color: #fff;
+        border: none;
+        text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: .85rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 6px 18px rgba(13,115,119,.3);
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+
+        .btn-save-chart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(13,115,119,.38);
+            color: #fff;
+        }
+
+
+    /* ============================================================
+           CANVAS / STAGE
+           ============================================================ */
+
+    .chart-canvas {
+        position: relative;
+        width: 100%;
+        max-width: 640px;
+        margin: 0 auto;
+        aspect-ratio: 1 / 1.02;
+        background: radial-gradient( circle at 10% 8%, var(--dc-teal-100) 0%, transparent 40% ), radial-gradient( circle at 92% 92%, var(--dc-coral-300) 0%, transparent 32% ), var(--dc-sky-50);
+        border-radius: 26px;
+        border: 1px solid rgba(255,255,255,.7);
+        box-shadow: 0 16px 40px rgba(10,77,79,.1);
+        padding: 0;
+        overflow: hidden;
+    }
+
+
+    /* ============================================================
+           BACKGROUND ARCHES
+           ============================================================ */
+
+    .bg-arcs {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+
+        .bg-arcs path {
+            opacity: 0;
+            transition: opacity .8s ease;
+        }
+
+
+            .bg-arcs path.show {
+                opacity: 1;
+            }
+
+
+    /* ============================================================
+           ARCH LABELS
+           ============================================================ */
+
+    .arch-label {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: .72rem;
+        font-weight: 800;
+        color: var(--dc-teal-700);
+        letter-spacing: .5px;
+        background: rgba(255,255,255,.75);
+        padding: 3px 14px;
+        border-radius: 20px;
+        z-index: 3;
+        white-space: nowrap;
+        text-transform: none;
+    }
+
+
+        .arch-label.upper {
+            top: 3%;
+        }
+
+
+        .arch-label.lower {
+            bottom: 3%;
+        }
+
+
+    /* ============================================================
+           CENTER MARK
+           ============================================================ */
+
+    .arch-center-mark {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%,-50%);
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: radial-gradient( circle, rgba(255,255,255,.9), rgba(255,255,255,.35) );
+        box-shadow: 0 0 0 8px rgba(15,155,142,.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: dcBreathe 3.2s ease-in-out infinite;
+        z-index: 1;
+    }
+
+
+        .arch-center-mark svg {
+            width: 24px;
+            height: 24px;
+            color: var(--dc-teal-600);
+        }
+
+
+    @@keyframes dcBreathe {
+
+        0%,
+        100% {
+            box-shadow: 0 0 0 8px rgba(15,155,142,.06);
+        }
+
+        50% {
+            box-shadow: 0 0 0 14px rgba(15,155,142,.12);
+        }
+    }
+
+
+    /* ============================================================
+           TEETH ROW
+           ============================================================ */
+
+    .teeth-row {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        pointer-events: none;
+    }
+
+
+    /* ============================================================
+           TOOTH CONTAINER
+
+           Important:
+           This preserves the original arch positioning.
+           Only the visual tooth itself is replaced.
+           ============================================================ */
+
+    .tooth-box {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 52px !important;
+        height: 82px !important;
+        cursor: pointer;
+        transform: translate(-50%,-50%) rotate(var(--rot,0deg));
+        perspective: 900px;
+        pointer-events: auto;
+        z-index: 2;
+    }
+
+
+    /* ============================================================
+           TOOTH INNER
+           ============================================================ */
+
+    .tooth-inner {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0 !important;
+        transform-origin: center center;
+        transform: scale(0);
+        opacity: 0;
+        transition: filter .2s ease;
+    }
+
+
+        .tooth-inner.arc-placed {
+            animation: dcArcPop .55s cubic-bezier(.2,1.4,.4,1) forwards;
+            animation-delay: var(--d,0s);
+        }
+
+
+    @@keyframes dcArcPop {
+
+        from {
+            transform: scale(0);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+
+    /* ============================================================
+           REALISTIC TOOTH
+           ============================================================ */
+
+    .realistic-tooth {
+        width: 52px;
+        height: 64px;
+        display: block;
+        overflow: visible;
+        cursor: pointer;
+        filter: drop-shadow( 0 7px 5px rgba(40,35,25,.14) ) drop-shadow( 0 14px 13px rgba(40,35,25,.10) );
+        transform: translateZ(0) rotateX(2deg);
+        transition: transform .22s cubic-bezier(.2,1.3,.3,1), filter .22s ease;
+        transform-origin: center center;
+    }
+
+
+    /* ============================================================
+           HOVER
+           ============================================================ */
+
+    .tooth-box:hover {
+        z-index: 8;
+    }
+
+
+        .tooth-box:hover .realistic-tooth {
+            transform: translateY(-3px) scale(1.10) rotateX(3deg);
+            filter: drop-shadow( 0 10px 7px rgba(40,35,25,.18) ) drop-shadow( 0 18px 18px rgba(40,35,25,.13) );
+        }
+
+
+    /* ============================================================
+           SELECTED
+           ============================================================ */
+
+    .tooth-box.selected {
+        z-index: 9;
+    }
+
+
+        .tooth-box.selected .realistic-tooth {
+            transform: translateY(-4px) scale(1.15) rotateX(4deg);
+            filter: drop-shadow( 0 0 3px rgba(20,184,166,.65) ) drop-shadow( 0 0 10px rgba(20,184,166,.40) ) drop-shadow( 0 15px 18px rgba(40,35,25,.18) );
+        }
+
+
+    /* ============================================================
+           UPPER / LOWER LIGHTING
+           ============================================================ */
+
+    .teeth-row.upper .realistic-tooth {
+        transform-origin: center 75%;
+    }
+
+
+    .teeth-row.lower .realistic-tooth {
+        transform-origin: center 25%;
+    }
+
+
+    /* ============================================================
+           TOOTH NUMBER
+           ============================================================ */
+
+    .tooth-num {
+        position: relative;
+        z-index: 20;
+        margin-top: -2px;
+        width: 21px !important;
+        height: 21px !important;
+        border-radius: 50%;
+        background: var(--dc-teal-600);
+        color: #fff;
+        font-size: .60rem !important;
+        font-weight: 800;
+        font-family: 'JetBrains Mono', monospace;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 5px rgba(10,77,79,.22), 0 0 0 1px rgba(255,255,255,.8);
+        transition: transform .2s ease, background .2s ease;
+        flex-shrink: 0;
+    }
+
+
+    .tooth-box:hover .tooth-num {
+        transform: scale(1.12);
+    }
+
+
+    .tooth-box.selected .tooth-num {
+        background: var(--dc-teal-700);
+        transform: scale(1.15);
+    }
+
+
+    /* ============================================================
+           SVG ENAMEL
+           ============================================================ */
+
+    .realistic-tooth .enamel {
+        fill: url(#rtEnamel);
+        stroke: url(#rtEdge);
+        stroke-width: 1.15;
+        vector-effect: non-scaling-stroke;
+    }
+
+
+    .realistic-tooth .enamel-shadow {
+        fill: url(#rtShadow);
+        opacity: .42;
+        pointer-events: none;
+    }
+
+
+    .realistic-tooth .enamel-highlight {
+        fill: url(#rtHighlight);
+        opacity: .82;
+        pointer-events: none;
+        mix-blend-mode: screen;
+    }
+
+
+    .realistic-tooth .light-reflection {
+        fill: url(#rtReflection);
+        opacity: .78;
+        pointer-events: none;
+    }
+
+
+    .realistic-tooth .surface-line {
+        fill: none;
+        stroke: rgba(124,105,77,.20);
+        stroke-width: .8;
+        stroke-linecap: round;
+        pointer-events: none;
+    }
+
+
+    .realistic-tooth .cusp {
+        fill: url(#rtCusp);
+        opacity: .78;
+        pointer-events: none;
+    }
+
+
+    .realistic-tooth .fissure {
+        fill: none;
+        stroke: rgba(100,80,55,.28);
+        stroke-width: 1;
+        stroke-linecap: round;
+        pointer-events: none;
+    }
+
+
+    /* ============================================================
+           STATUS COLORS
+           ============================================================ */
+
+    .tooth-box.decayed
+    .realistic-tooth
+    .status-overlay {
+        fill: rgba(239,68,68,.30);
+        stroke: #ef4444;
+        stroke-width: 1.3;
+    }
+
+
+    .tooth-box.treated
+    .realistic-tooth
+    .status-overlay {
+        fill: rgba(59,130,246,.24);
+        stroke: #3b82f6;
+        stroke-width: 1.3;
+    }
+
+
+    .tooth-box.crown
+    .realistic-tooth
+    .status-overlay {
+        fill: rgba(168,85,247,.23);
+        stroke: #a855f7;
+        stroke-width: 1.5;
+    }
+
+
+    .tooth-box.bridge
+    .realistic-tooth
+    .status-overlay {
+        fill: rgba(6,182,212,.22);
+        stroke: #06b6d4;
+        stroke-width: 1.5;
+    }
+
+
+    .tooth-box.implant
+    .realistic-tooth
+    .status-overlay {
+        fill: rgba(236,72,153,.22);
+        stroke: #ec4899;
+        stroke-width: 1.5;
+    }
+
+
+    .tooth-box.fractured
+    .realistic-tooth
+    .status-overlay {
+        fill: rgba(249,115,22,.22);
+        stroke: #f97316;
+        stroke-width: 1.5;
+    }
+
+
+    .tooth-box.rootcanal
+    .realistic-tooth
+    .status-overlay {
+        fill: rgba(245,158,11,.20);
+        stroke: #f59e0b;
+        stroke-width: 1.4;
+    }
+
+
+    .tooth-box.filling
+    .realistic-tooth
+    .status-overlay {
+        fill: rgba(20,184,166,.20);
+        stroke: #14b8a6;
+        stroke-width: 1.4;
+    }
+
+
+    /* ============================================================
+           MISSING
+           ============================================================ */
+
+    .tooth-box.missing .realistic-tooth {
+        opacity: .28;
+        filter: grayscale(.5) drop-shadow( 0 4px 4px rgba(40,35,25,.08) );
+    }
+
+
+    .tooth-box.missing .tooth-num {
+        background: #94a3b8;
+    }
+
+
+    /* ============================================================
+           EXTRACTED
+           ============================================================ */
+
+    .tooth-box.extracted .realistic-tooth {
+        opacity: .42;
+        filter: grayscale(.7) drop-shadow( 0 4px 4px rgba(40,35,25,.08) );
+    }
+
+
+    .tooth-box.extracted .tooth-num {
+        background: var(--dc-extracted-line);
+    }
+
+
+    /* ============================================================
+           MODAL
+           ============================================================ */
+
+    .tooth-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(10,40,42,.45);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        pointer-events: none;
+    }
+
+
+        .tooth-modal.dc-show {
+            display: flex;
+            pointer-events: auto;
+            animation: dcFadeIn .25s ease;
+        }
+
+
+    @@keyframes dcFadeIn {
+
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+
+    .modal-glass {
+        width: 100%;
+        margin: 16px;
+        background: #fff;
+        border-radius: 22px;
+        overflow: hidden;
+        box-shadow: 0 30px 70px rgba(0,0,0,.3);
+        transform: translateY(24px) scale(.96);
+        opacity: 0;
+        animation: dcModalIn .35s cubic-bezier(.2,1.2,.3,1) forwards;
+    }
+
+
+    @@keyframes dcModalIn {
+
+        to {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+    }
+
+
+    .tooth-modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 22px;
+        margin-bottom: 0;
+        color: #fff;
+        background: linear-gradient( 135deg, var(--dc-teal-600), var(--dc-teal-700) );
+    }
+
+
+        .tooth-modal-head h5 {
+            margin: 0;
+            font-weight: 800;
+            font-size: 1rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+
+    .btn-close-modal {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        border: none;
+        background: rgba(255,255,255,.2);
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+
+    .tooth-modal-body {
+        padding: 20px 22px;
+        margin-bottom: 0;
+    }
+
+
+    .tooth-modal-foot {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 14px 22px;
+        border-top: 1px solid var(--dc-sky-100);
+    }
+
+
+    .form-group label {
+        display: block;
+        font-size: .8rem;
+        font-weight: 800;
+        color: var(--dc-ink-600);
+        margin-bottom: 6px;
+    }
+
+
+    .form-glass {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid var(--dc-sky-100);
+        border-radius: 10px;
+        background: var(--dc-sky-50);
+        font-size: .9rem;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s;
+    }
+
+
+        .form-glass:focus {
+            border-color: var(--dc-teal-500);
+            box-shadow: 0 0 0 3px rgba(15,155,142,.15);
+        }
+
+
+    .surface-picker {
+        display: flex;
+        gap: 8px;
+    }
+
+
+    .surf-check {
+        flex: 1;
+        text-align: center;
+        padding: 9px 0;
+        border-radius: 10px;
+        border: 2px solid var(--dc-sky-100);
+        background: #fff;
+        font-weight: 800;
+        color: var(--dc-ink-600);
+        cursor: pointer;
+        transition: .2s;
+    }
+
+
+        .surf-check:has(input:checked) {
+            background: linear-gradient( 135deg, var(--dc-teal-600), var(--dc-teal-700) );
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(15,155,142,.3);
+        }
+
+
+        .surf-check input {
+            display: none;
+        }
+
+
+    .btn-glass {
+        padding: 9px 18px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: .85rem;
+        border: none;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+
+    .btn-cancel {
+        background: var(--dc-sky-100);
+        color: var(--dc-ink-600);
+    }
+
+
+    .btn-save {
+        background: linear-gradient( 135deg, var(--dc-teal-600), var(--dc-teal-700) );
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(15,155,142,.3);
+    }
+
+
+        .btn-save:hover {
+            transform: translateY(-1px);
+        }
+
+
+    /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+
+    @@media (max-width: 768px) {
+
+        .tooth-box {
+            width: 43px !important;
+            height: 70px !important;
+        }
+
+
+        .realistic-tooth {
+            width: 43px;
+            height: 55px;
+        }
+
+
+        .tooth-num {
+            width: 18px !important;
+            height: 18px !important;
+            font-size: .55rem !important;
+        }
+    }
+</style>
+
+
+<script>
+
+    /* ============================================================
+       DENTAL ARCH ENGINE
+
+       Guarded so it can safely be included multiple times.
+       ============================================================ */
+
+    if (!window.__dcArchEngine) {
+
+        window.__dcArchEngine = true;
+
+
+        /* ============================================================
+           ARCH POINT
+           ============================================================ */
+
+        window.__dcArchPoint =
+            function (
+                cx,
+                cy,
+                rx,
+                ry,
+                angleDeg
+            ) {
+
+                var rad =
+                    angleDeg *
+                    Math.PI /
+                    180;
+
+                return {
+                    x:
+                        cx +
+                        rx *
+                        Math.cos(rad),
+
+                    y:
+                        cy +
+                        ry *
+                        Math.sin(rad)
+                };
+            };
+
+
+        /* ============================================================
+           ARCH SVG PATH
+           ============================================================ */
+
+        window.__dcArchPathD =
+            function (
+                cx,
+                cy,
+                rx,
+                ry,
+                centerAngle,
+                spread
+            ) {
+
+                var startA =
+                    (
+                        centerAngle +
+                        spread / 2 +
+                        14
+                    ) *
+                    Math.PI /
+                    180;
+
+
+                var endA =
+                    (
+                        centerAngle -
+                        spread / 2 -
+                        14
+                    ) *
+                    Math.PI /
+                    180;
+
+
+                var rxO =
+                    rx + 40;
+
+                var ryO =
+                    ry + 40;
+
+                var rxI =
+                    rx - 34;
+
+                var ryI =
+                    ry - 34;
+
+
+                var p =
+                    function (
+                        RX,
+                        RY,
+                        a
+                    ) {
+
+                        return {
+                            x:
+                                cx +
+                                RX *
+                                Math.cos(a),
+
+                            y:
+                                cy +
+                                RY *
+                                Math.sin(a)
+                        };
+                    };
+
+
+                var o1 =
+                    p(
+                        rxO,
+                        ryO,
+                        startA
+                    );
+
+
+                var o2 =
+                    p(
+                        rxO,
+                        ryO,
+                        endA
+                    );
+
+
+                var i1 =
+                    p(
+                        rxI,
+                        ryI,
+                        endA
+                    );
+
+
+                var i2 =
+                    p(
+                        rxI,
+                        ryI,
+                        startA
+                    );
+
+
+                return (
+                    'M ' +
+                    o1.x +
+                    ' ' +
+                    o1.y +
+
+                    ' A ' +
+                    rxO +
+                    ' ' +
+                    ryO +
+                    ' 0 0 1 ' +
+                    o2.x +
+                    ' ' +
+                    o2.y +
+
+                    ' L ' +
+                    i1.x +
+                    ' ' +
+                    i1.y +
+
+                    ' A ' +
+                    rxI +
+                    ' ' +
+                    ryI +
+                    ' 0 0 0 ' +
+                    i2.x +
+                    ' ' +
+                    i2.y +
+
+                    ' Z'
+                );
+            };
+
+
+        /* ============================================================
+           INIT DENTAL ARCH
+           ============================================================ */
+
+        window.initDentalArch =
+            function (canvas) {
+
+                if (!canvas) {
+                    return;
+                }
+
+
+                var VB_W = 620;
+                var VB_H = 632;
+
+                var cx = 310;
+
+                var spread = 132;
+
+
+                var upperCfg = {
+
+                    cy: 220,
+
+                    rx: 250,
+
+                    ry: 150,
+
+                    centerAngle: 270
+                };
+
+
+                var lowerCfg = {
+
+                    cy: 412,
+
+                    rx: 250,
+
+                    ry: 150,
+
+                    centerAngle: 90
+                };
+
+
+                /* ====================================================
+                   LAYOUT ROW
+                   ==================================================== */
+
+                function layoutRow(
+                    row,
+                    cfg
+                ) {
+
+                    if (!row) {
+                        return;
+                    }
+
+
+                    var items =
+                        Array.prototype.filter.call(
+                            row.children,
+                            function (el) {
+
+                                return el.classList.contains(
+                                    'tooth-box'
+                                );
+                            }
+                        );
+
+
+                    var N =
+                        items.length;
+
+
+                    if (N < 2) {
+                        return;
+                    }
+
+
+                    var startA =
+                        cfg.centerAngle +
+                        spread / 2;
+
+
+                    var endA =
+                        cfg.centerAngle -
+                        spread / 2;
+
+
+                    items.forEach(
+                        function (
+                            el,
+                            idx
+                        ) {
+
+                            var t =
+                                idx /
+                                (N - 1);
+
+
+                            var angle =
+                                startA +
+                                (
+                                    endA -
+                                    startA
+                                ) *
+                                t;
+
+
+                            var pt =
+                                window.__dcArchPoint(
+                                    cx,
+                                    cfg.cy,
+                                    cfg.rx,
+                                    cfg.ry,
+                                    angle
+                                );
+
+
+                            el.style.left =
+                                (
+                                    pt.x /
+                                    VB_W *
+                                    100
+                                ) +
+                                '%';
+
+
+                            el.style.top =
+                                (
+                                    pt.y /
+                                    VB_H *
+                                    100
+                                ) +
+                                '%';
+
+
+                            var localRot =
+                                (
+                                    angle -
+                                    cfg.centerAngle
+                                ) *
+                                .55;
+
+
+                            el.style.setProperty(
+                                '--rot',
+                                localRot +
+                                'deg'
+                            );
+
+
+                            var inner =
+                                el.querySelector(
+                                    '.tooth-inner'
+                                );
+
+
+                            if (inner) {
+
+                                inner.style.setProperty(
+                                    '--d',
+                                    (
+                                        idx *
+                                        .045
+                                    ).toFixed(3) +
+                                    's'
+                                );
+
+
+                                inner.classList.add(
+                                    'arc-placed'
+                                );
+                            }
+
+                        }
+                    );
+                }
+
+
+                layoutRow(
+                    canvas.querySelector(
+                        '.teeth-row.upper'
+                    ),
+                    upperCfg
+                );
+
+
+                layoutRow(
+                    canvas.querySelector(
+                        '.teeth-row.lower'
+                    ),
+                    lowerCfg
+                );
+
+
+                /* ====================================================
+                   ARCH PATHS
+                   ==================================================== */
+
+                var upperPath =
+                    canvas.querySelector(
+                        '#upperArchPath'
+                    );
+
+
+                var lowerPath =
+                    canvas.querySelector(
+                        '#lowerArchPath'
+                    );
+
+
+                if (upperPath) {
+
+                    upperPath.setAttribute(
+                        'd',
+                        window.__dcArchPathD(
+                            cx,
+                            upperCfg.cy,
+                            upperCfg.rx,
+                            upperCfg.ry,
+                            upperCfg.centerAngle,
+                            spread
+                        )
+                    );
+                }
+
+
+                if (lowerPath) {
+
+                    lowerPath.setAttribute(
+                        'd',
+                        window.__dcArchPathD(
+                            cx,
+                            lowerCfg.cy,
+                            lowerCfg.rx,
+                            lowerCfg.ry,
+                            lowerCfg.centerAngle,
+                            spread
+                        )
+                    );
+                }
+
+
+                requestAnimationFrame(
+                    function () {
+
+                        setTimeout(
+                            function () {
+
+                                if (upperPath) {
+                                    upperPath.classList.add(
+                                        'show'
+                                    );
+                                }
+
+
+                                if (lowerPath) {
+                                    lowerPath.classList.add(
+                                        'show'
+                                    );
+                                }
+
+                            },
+                            60
+                        );
+
+                    }
+                );
+            };
+
+    }
+
+
+    /* ================================================================
+       REALISTIC TOOTH ENGINE
+       ================================================================ */
+
+    (function () {
+
+        if (window.__realisticDentalTeeth) {
+            return;
+        }
+
+
+        window.__realisticDentalTeeth = true;
+
+
+        /* ============================================================
+           SVG DEFINITIONS
+           ============================================================ */
+
+        function createDefs() {
+
+            return `
+
+            <defs>
+
+                <linearGradient
+                    id="rtEnamel"
+                    x1="10%"
+                    y1="5%"
+                    x2="88%"
+                    y2="95%">
+
+                    <stop
+                        offset="0%"
+                        stop-color="#ffffff"/>
+
+                    <stop
+                        offset="18%"
+                        stop-color="#fffef9"/>
+
+                    <stop
+                        offset="45%"
+                        stop-color="#f8f2df"/>
+
+                    <stop
+                        offset="70%"
+                        stop-color="#e9dfc6"/>
+
+                    <stop
+                        offset="88%"
+                        stop-color="#d8c9aa"/>
+
+                    <stop
+                        offset="100%"
+                        stop-color="#c9b996"/>
+
+                </linearGradient>
+
+
+                <linearGradient
+                    id="rtEdge"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%">
+
+                    <stop
+                        offset="0%"
+                        stop-color="#fffef8"/>
+
+                    <stop
+                        offset="45%"
+                        stop-color="#d8c9aa"/>
+
+                    <stop
+                        offset="100%"
+                        stop-color="#a99776"/>
+
+                </linearGradient>
+
+
+                <linearGradient
+                    id="rtShadow"
+                    x1="50%"
+                    y1="0%"
+                    x2="50%"
+                    y2="100%">
+
+                    <stop
+                        offset="0%"
+                        stop-color="#ffffff"
+                        stop-opacity="0"/>
+
+                    <stop
+                        offset="48%"
+                        stop-color="#b39b72"
+                        stop-opacity=".12"/>
+
+                    <stop
+                        offset="100%"
+                        stop-color="#806b48"
+                        stop-opacity=".62"/>
+
+                </linearGradient>
+
+
+                <linearGradient
+                    id="rtHighlight"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%">
+
+                    <stop
+                        offset="0%"
+                        stop-color="#ffffff"
+                        stop-opacity=".95"/>
+
+                    <stop
+                        offset="28%"
+                        stop-color="#ffffff"
+                        stop-opacity=".72"/>
+
+                    <stop
+                        offset="55%"
+                        stop-color="#ffffff"
+                        stop-opacity=".18"/>
+
+                    <stop
+                        offset="100%"
+                        stop-color="#ffffff"
+                        stop-opacity="0"/>
+
+                </linearGradient>
+
+
+                <linearGradient
+                    id="rtReflection"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%">
+
+                    <stop
+                        offset="0%"
+                        stop-color="#ffffff"
+                        stop-opacity=".95"/>
+
+                    <stop
+                        offset="20%"
+                        stop-color="#ffffff"
+                        stop-opacity=".55"/>
+
+                    <stop
+                        offset="45%"
+                        stop-color="#ffffff"
+                        stop-opacity=".08"/>
+
+                    <stop
+                        offset="100%"
+                        stop-color="#ffffff"
+                        stop-opacity="0"/>
+
+                </linearGradient>
+
+
+                <radialGradient
+                    id="rtCusp"
+                    cx="35%"
+                    cy="25%"
+                    r="75%">
+
+                    <stop
+                        offset="0%"
+                        stop-color="#ffffff"
+                        stop-opacity=".95"/>
+
+                    <stop
+                        offset="45%"
+                        stop-color="#eee5d2"
+                        stop-opacity=".85"/>
+
+                    <stop
+                        offset="100%"
+                        stop-color="#a99670"
+                        stop-opacity=".45"/>
+
+                </radialGradient>
+
+            </defs>
+
+            `;
+        }
+
+
+        /* ============================================================
+           TOOTH TYPE
+           ============================================================ */
+
+        function getToothType(number) {
+
+            number =
+                parseInt(
+                    number,
+                    10
+                );
+
+
+            if (isNaN(number)) {
+                return "molar";
+            }
+
+
+            var tooth =
+                number % 10;
+
+
+            if (
+                tooth === 1 ||
+                tooth === 2
+            ) {
+
+                return "incisor";
+            }
+
+
+            if (tooth === 3) {
+                return "canine";
+            }
+
+
+            if (
+                tooth === 4 ||
+                tooth === 5
+            ) {
+
+                return "premolar";
+            }
+
+
+            return "molar";
+        }
+
+
+        /* ============================================================
+           LOWER TOOTH
+           ============================================================ */
+
+        function isLowerTooth(number) {
+
+            number =
+                parseInt(
+                    number,
+                    10
+                );
+
+
+            if (isNaN(number)) {
+                return false;
+            }
+
+
+            return (
+                number >= 31 &&
+                number <= 48
+            );
+        }
+
+
+        /* ============================================================
+           INCISOR
+           ============================================================ */
+
+        function incisorSvg(lower) {
+
+            var transform =
+                lower
+                    ? "rotate(180 50 58)"
+                    : "";
+
+
+            return `
+
+            <svg
+                class="realistic-tooth tooth-incisor"
+                viewBox="0 0 100 120"
+                xmlns="http://www.w3.org/2000/svg">
+
+                ${createDefs()}
+
+                <g transform="${transform}">
+
+                    <path
+                        class="enamel"
+                        d="
+                            M28 18
+                            C21 26 18 42 20 61
+                            C21 78 24 97 32 108
+                            C37 115 63 115 68 108
+                            C76 97 79 78 80 61
+                            C82 42 79 26 72 18
+                            C64 10 36 10 28 18
+                            Z"/>
+
+
+                    <path
+                        class="enamel-shadow"
+                        d="
+                            M23 54
+                            C24 77 28 99 36 108
+                            C43 113 57 113 64 108
+                            C72 98 76 77 77 54
+                            C66 63 34 63 23 54
+                            Z"/>
+
+
+                    <path
+                        class="enamel-highlight"
+                        d="
+                            M29 20
+                            C23 30 22 46 24 59
+                            C27 45 33 31 43 22
+                            C39 17 34 17 29 20
+                            Z"/>
+
+
+                    <path
+                        class="light-reflection"
+                        d="
+                            M32 21
+                            C27 33 27 46 29 57
+                            C31 46 36 33 44 24
+                            C40 20 36 19 32 21
+                            Z"/>
+
+
+                    <path
+                        class="surface-line"
+                        d="
+                            M31 61
+                            C42 66 58 66 69 61"/>
+
+
+                    <path
+                        class="surface-line"
+                        d="
+                            M34 93
+                            C43 98 57 98 66 93"/>
+
+
+                    <ellipse
+                        cx="50"
+                        cy="109"
+                        rx="18"
+                        ry="4"
+                        fill="#9b8868"
+                        opacity=".16"/>
+
+                </g>
+
+
+                <path
+                    class="status-overlay"
+                    d="
+                        M28 18
+                        C21 26 18 42 20 61
+                        C21 78 24 97 32 108
+                        C37 115 63 115 68 108
+                        C76 97 79 78 80 61
+                        C82 42 79 26 72 18
+                        C64 10 36 10 28 18 Z"
+                    opacity="0"/>
+
+            </svg>
+
+            `;
+        }
+
+
+        /* ============================================================
+           CANINE
+           ============================================================ */
+
+        function canineSvg(lower) {
+
+            var transform =
+                lower
+                    ? "rotate(180 50 60)"
+                    : "";
+
+
+            return `
+
+            <svg
+                class="realistic-tooth tooth-canine"
+                viewBox="0 0 100 125"
+                xmlns="http://www.w3.org/2000/svg">
+
+                ${createDefs()}
+
+                <g transform="${transform}">
+
+                    <path
+                        class="enamel"
+                        d="
+                            M50 9
+                            C43 15 37 20 29 25
+                            C21 31 18 44 20 62
+                            C21 80 26 101 34 112
+                            C39 118 61 118 66 112
+                            C74 101 79 80 80 62
+                            C82 44 79 31 71 25
+                            C63 20 57 15 50 9
+                            Z"/>
+
+
+                    <path
+                        class="enamel-shadow"
+                        d="
+                            M21 62
+                            C23 83 28 103 36 112
+                            C43 117 57 117 64 112
+                            C72 103 77 83 79 62
+                            C67 70 33 70 21 62
+                            Z"/>
+
+
+                    <path
+                        class="enamel-highlight"
+                        d="
+                            M48 12
+                            C40 21 32 29 28 42
+                            C34 34 42 27 50 23
+                            C55 20 58 17 61 14
+                            C56 11 52 10 48 12
+                            Z"/>
+
+
+                    <path
+                        class="light-reflection"
+                        d="
+                            M33 30
+                            C27 39 27 52 29 64
+                            C31 52 37 39 45 29
+                            C41 27 37 28 33 30
+                            Z"/>
+
+
+                    <path
+                        class="cusp"
+                        d="
+                            M50 12
+                            L43 29
+                            L50 23
+                            L57 29
+                            Z"/>
+
+
+                    <path
+                        class="surface-line"
+                        d="
+                            M29 64
+                            C41 71 59 71 71 64"/>
+
+
+                    <ellipse
+                        cx="50"
+                        cy="113"
+                        rx="18"
+                        ry="4"
+                        fill="#9b8868"
+                        opacity=".18"/>
+
+                </g>
+
+
+                <path
+                    class="status-overlay"
+                    d="
+                        M50 9
+                        C43 15 37 20 29 25
+                        C21 31 18 44 20 62
+                        C21 80 26 101 34 112
+                        C39 118 61 118 66 112
+                        C74 101 79 80 80 62
+                        C82 44 79 31 71 25
+                        C63 20 57 15 50 9 Z"
+                    opacity="0"/>
+
+            </svg>
+
+            `;
+        }
+
+
+        /* ============================================================
+           PREMOLAR
+           ============================================================ */
+
+        function premolarSvg(lower) {
+
+            var transform =
+                lower
+                    ? "rotate(180 50 60)"
+                    : "";
+
+
+            return `
+
+            <svg
+                class="realistic-tooth tooth-premolar"
+                viewBox="0 0 100 120"
+                xmlns="http://www.w3.org/2000/svg">
+
+                ${createDefs()}
+
+                <g transform="${transform}">
+
+                    <path
+                        class="enamel"
+                        d="
+                            M29 19
+                            C21 26 17 38 19 52
+                            C20 67 23 89 31 104
+                            C37 115 63 115 69 104
+                            C77 89 80 67 81 52
+                            C83 38 79 26 71 19
+                            C63 12 37 12 29 19
+                            Z"/>
+
+
+                    <path
+                        class="enamel-shadow"
+                        d="
+                            M20 53
+                            C22 72 26 93 34 104
+                            C40 112 60 112 66 104
+                            C74 93 78 72 80 53
+                            C69 64 31 64 20 53
+                            Z"/>
+
+
+                    <path
+                        class="cusp"
+                        d="
+                            M29 28
+                            C35 18 43 16 50 22
+                            L50 47
+                            C42 43 35 37 29 28
+                            Z"/>
+
+
+                    <path
+                        class="cusp"
+                        d="
+                            M50 22
+                            C57 16 65 18 71 28
+                            C65 37 58 43 50 47
+                            Z"/>
+
+
+                    <path
+                        class="fissure"
+                        d="
+                            M50 44
+                            C43 49 37 52 30 53
+                            M50 44
+                            C57 49 63 52 70 53"/>
+
+
+                    <path
+                        class="enamel-highlight"
+                        d="
+                            M28 23
+                            C22 31 22 43 25 51
+                            C28 42 34 32 43 25
+                            C38 21 33 20 28 23
+                            Z"/>
+
+
+                    <path
+                        class="light-reflection"
+                        d="
+                            M27 28
+                            C23 37 24 47 27 55
+                            C30 45 35 36 42 29
+                            C37 26 32 26 27 28
+                            Z"/>
+
+
+                    <path
+                        class="surface-line"
+                        d="
+                            M31 72
+                            C42 77 58 77 69 72"/>
+
+
+                    <ellipse
+                        cx="50"
+                        cy="108"
+                        rx="20"
+                        ry="4"
+                        fill="#8f7d5c"
+                        opacity=".18"/>
+
+                </g>
+
+
+                <path
+                    class="status-overlay"
+                    d="
+                        M29 19
+                        C21 26 17 38 19 52
+                        C20 67 23 89 31 104
+                        C37 115 63 115 69 104
+                        C77 89 80 67 81 52
+                        C83 38 79 26 71 19
+                        C63 12 37 12 29 19 Z"
+                    opacity="0"/>
+
+            </svg>
+
+            `;
+        }
+
+
+        /* ============================================================
+           MOLAR
+           ============================================================ */
+
+        function molarSvg(lower) {
+
+            var transform =
+                lower
+                    ? "rotate(180 50 60)"
+                    : "";
+
+
+            return `
+
+            <svg
+                class="realistic-tooth tooth-molar"
+                viewBox="0 0 100 125"
+                xmlns="http://www.w3.org/2000/svg">
+
+                ${createDefs()}
+
+                <g transform="${transform}">
+
+                    <path
+                        class="enamel"
+                        d="
+                            M25 20
+                            C16 27 13 40 16 55
+                            C18 70 21 91 28 106
+                            C32 115 42 118 50 110
+                            C58 118 68 115 72 106
+                            C79 91 82 70 84 55
+                            C87 40 84 27 75 20
+                            C65 12 35 12 25 20
+                            Z"/>
+
+
+                    <ellipse
+                        cx="50"
+                        cy="49"
+                        rx="28"
+                        ry="19"
+                        fill="rgba(125,105,72,.18)"/>
+
+
+                    <ellipse
+                        class="cusp"
+                        cx="35"
+                        cy="38"
+                        rx="12"
+                        ry="10"/>
+
+
+                    <ellipse
+                        class="cusp"
+                        cx="65"
+                        cy="38"
+                        rx="12"
+                        ry="10"/>
+
+
+                    <ellipse
+                        class="cusp"
+                        cx="35"
+                        cy="60"
+                        rx="11"
+                        ry="9"/>
+
+
+                    <ellipse
+                        class="cusp"
+                        cx="65"
+                        cy="60"
+                        rx="11"
+                        ry="9"/>
+
+
+                    <path
+                        class="fissure"
+                        d="
+                            M35 38
+                            C42 44 44 48 50 50
+                            C56 48 58 44 65 38"/>
+
+
+                    <path
+                        class="fissure"
+                        d="
+                            M35 60
+                            C43 55 45 53 50 50
+                            C55 53 57 55 65 60"/>
+
+
+                    <path
+                        class="fissure"
+                        d="
+                            M50 50
+                            L50 67"/>
+
+
+                    <path
+                        class="enamel-highlight"
+                        d="
+                            M25 22
+                            C18 30 18 43 21 53
+                            C25 43 32 32 43 24
+                            C37 20 31 19 25 22
+                            Z"/>
+
+
+                    <path
+                        class="light-reflection"
+                        d="
+                            M23 27
+                            C19 36 20 45 23 54
+                            C27 43 33 34 41 27
+                            C35 24 29 24 23 27
+                            Z"/>
+
+
+                    <path
+                        class="enamel-shadow"
+                        d="
+                            M17 59
+                            C20 80 24 96 30 106
+                            C35 114 42 115 50 108
+                            C58 115 65 114 70 106
+                            C76 96 80 80 83 59
+                            C72 70 28 70 17 59
+                            Z"/>
+
+
+                    <path
+                        class="surface-line"
+                        d="
+                            M38 79
+                            C39 91 37 101 34 108"/>
+
+
+                    <path
+                        class="surface-line"
+                        d="
+                            M62 79
+                            C61 91 63 101 66 108"/>
+
+
+                    <ellipse
+                        cx="50"
+                        cy="110"
+                        rx="22"
+                        ry="5"
+                        fill="#806b48"
+                        opacity=".19"/>
+
+                </g>
+
+
+                <path
+                    class="status-overlay"
+                    d="
+                        M25 20
+                        C16 27 13 40 16 55
+                        C18 70 21 91 28 106
+                        C32 115 42 118 50 110
+                        C58 118 68 115 72 106
+                        C79 91 82 70 84 55
+                        C87 40 84 27 75 20
+                        C65 12 35 12 25 20 Z"
+                    opacity="0"/>
+
+            </svg>
+
+            `;
+        }
+
+
+        /* ============================================================
+           RENDER ONE TOOTH
+           ============================================================ */
+
+        function renderTooth(toothBox) {
+
+            if (!toothBox) {
+                return;
+            }
+
+
+            var numberElement =
+                toothBox.querySelector(
+                    ".tooth-num"
+                );
+
+
+            if (!numberElement) {
+                return;
+            }
+
+
+            var number =
+                parseInt(
+                    numberElement.textContent.trim(),
+                    10
+                );
+
+
+            if (isNaN(number)) {
+                return;
+            }
+
+
+            var oldBody =
+                toothBox.querySelector(
+                    ".tooth-body"
+                );
+
+
+            if (!oldBody) {
+                return;
+            }
+
+
+            /* Prevent duplicate rendering */
+
+            if (
+                oldBody.dataset.realisticRendered ===
+                "true"
+            ) {
+
+                return;
+            }
+
+
+            oldBody.dataset.realisticRendered =
+                "true";
+
+
+            var type =
+                getToothType(
+                    number
+                );
+
+
+            var lower =
+                isLowerTooth(
+                    number
+                );
+
+
+            var svg = "";
+
+
+            switch (type) {
+
+                case "incisor":
+
+                    svg =
+                        incisorSvg(
+                            lower
+                        );
+
+                    break;
+
+
+                case "canine":
+
+                    svg =
+                        canineSvg(
+                            lower
+                        );
+
+                    break;
+
+
+                case "premolar":
+
+                    svg =
+                        premolarSvg(
+                            lower
+                        );
+
+                    break;
+
+
+                case "molar":
+
+                default:
+
+                    svg =
+                        molarSvg(
+                            lower
+                        );
+
+                    break;
+            }
+
+
+            /* Replace old rectangle */
+
+            oldBody.innerHTML =
+                svg;
+
+
+            /* ========================================================
+               STATUS OVERLAY
+               ======================================================== */
+
+            var overlay =
+                oldBody.querySelector(
+                    ".status-overlay"
+                );
+
+
+            if (overlay) {
+
+                var statusClasses = [
+
+                    "decayed",
+
+                    "treated",
+
+                    "crown",
+
+                    "bridge",
+
+                    "implant",
+
+                    "fractured",
+
+                    "rootcanal",
+
+                    "filling"
+
+                ];
+
+
+                var hasStatus =
+                    statusClasses.some(
+                        function (cls) {
+
+                            return toothBox.classList.contains(
+                                cls
+                            );
+                        }
+                    );
+
+
+                overlay.setAttribute(
+                    "opacity",
+                    hasStatus
+                        ? "1"
+                        : "0"
+                );
+            }
+
+
+            /* ========================================================
+               EXTRACTED MARK
+               ======================================================== */
+
+            if (
+                toothBox.classList.contains(
+                    "extracted"
+                )
+            ) {
+
+                var extractedSvg =
+                    oldBody.querySelector(
+                        ".realistic-tooth"
+                    );
+
+
+                if (extractedSvg) {
+
+                    extractedSvg.insertAdjacentHTML(
+                        "beforeend",
+                        `
+
+                        <path
+                            d="M22 28 L78 100"
+                            stroke="#dc2626"
+                            stroke-width="3"
+                            stroke-linecap="round"
+                            opacity=".72"/>
+
+                        <path
+                            d="M78 28 L22 100"
+                            stroke="#dc2626"
+                            stroke-width="3"
+                            stroke-linecap="round"
+                            opacity=".72"/>
+
+                        `
+                    );
+                }
+            }
+        }
+
+
+        /* ============================================================
+           RENDER ALL TEETH
+           ============================================================ */
+
+        function renderAllTeeth(root) {
+
+            root =
+                root ||
+                document;
+
+
+            var teeth =
+                root.querySelectorAll(
+                    ".tooth-box"
+                );
+
+
+            teeth.forEach(
+                renderTooth
+            );
+        }
+
+
+        /* ============================================================
+           INITIALIZATION
+           ============================================================ */
+
+        function initRealisticTeeth() {
+
+            renderAllTeeth(
+                document
+            );
+        }
+
+
+        if (
+            document.readyState ===
+            "loading"
+        ) {
+
+            document.addEventListener(
+                "DOMContentLoaded",
+                initRealisticTeeth
+            );
+
+        } else {
+
+            initRealisticTeeth();
+
+        }
+
+
+        /* ============================================================
+           GLOBAL FUNCTION
+           ============================================================ */
+
+        window.initRealisticDentalTeeth =
+            initRealisticTeeth;
+
+
+        /* ============================================================
+           AJAX / DYNAMIC CONTENT SUPPORT
+           ============================================================ */
+
+        if (
+            window.MutationObserver
+        ) {
+
+            var observer =
+                new MutationObserver(
+                    function (mutations) {
+
+                        var shouldRender =
+                            false;
+
+
+                        mutations.forEach(
+                            function (mutation) {
+
+                                if (
+                                    mutation.addedNodes &&
+                                    mutation.addedNodes.length
+                                ) {
+
+                                    shouldRender =
+                                        true;
+                                }
+
+                            }
+                        );
+
+
+                        if (
+                            shouldRender
+                        ) {
+
+                            window.requestAnimationFrame(
+                                function () {
+
+                                    renderAllTeeth(
+                                        document
+                                    );
+
+                                }
+                            );
+                        }
+
+                    }
+                );
+
+
+            observer.observe(
+                document.body,
+                {
+                    childList: true,
+                    subtree: true
+                }
+            );
+        }
+
+    })();
+
+</script>

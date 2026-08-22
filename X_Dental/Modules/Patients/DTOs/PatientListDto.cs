@@ -35,7 +35,7 @@
 
                 var badges = "";
                 if (HasGeneralVisits)
-                    badges += "<span class=\"badge bg-info-subtle text-info fw-bold px-2 py-1 rounded-3 me-1\"><i class=\"bi bi-tooth\"></i> عام</span>";
+                    badges += "<span class=\"badge bg-info-subtle text-info fw-bold px-2 py-1 rounded-3 me-1\"><i class=\"bi bi-app-indicator\"></i> عام</span>";
                 if (HasOrthodonticsVisits)
                     badges += "<span class=\"badge bg-warning-subtle text-warning fw-bold px-2 py-1 rounded-3\"><i class=\"bi bi-braces\"></i> تقويم</span>";
 

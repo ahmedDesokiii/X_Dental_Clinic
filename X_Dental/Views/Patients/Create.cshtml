@@ -1,23 +1,950 @@
 ﻿@using Dental.Modules.Patients.DTOs
 @model Dental.Modules.Patients.DTOs.CreatePatientDto
-
 @{
     ViewData["Title"] = "إضافة مريض جديد";
     var genderList = ViewBag.Genders as SelectList ?? new SelectList(new List<SelectListItem>());
     var bloodGroupList = ViewBag.BloodGroups as SelectList ?? new SelectList(new List<SelectListItem>());
 }
-
 @section Styles {
-    <link rel="stylesheet" href="~/css/patients-theme.css" />
+    <style>
+
+
+        /* =========================================================
+                   DASHBOARD STYLE ANIMATION SYSTEM
+                   ========================================================= */
+
+        :root {
+            --anim-ease: cubic-bezier(.2,.8,.3,1);
+            --anim-duration: .7s;
+        }
+
+        /* =========================
+                   Page Entrance
+                   ========================= */
+
+        .patients-page {
+            opacity: 0;
+            animation: pageEnter .65s var(--anim-ease) forwards;
+        }
+
+        @@keyframes pageEnter {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+
+        /* =========================
+                   Hero Animation
+                   ========================= */
+
+        .patients-hero {
+            position: relative;
+            isolation: isolate;
+            opacity: 0;
+            transform: translateY(25px);
+            animation: heroEnter .75s var(--anim-ease) forwards;
+        }
+
+        @@keyframes heroEnter {
+            from {
+                opacity: 0;
+                transform: translateY(25px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Hero decorative glow */
+
+        .patients-hero::before {
+            content: '';
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.08);
+            top: -120px;
+            left: -70px;
+            z-index: -1;
+            animation: heroGlow 7s ease-in-out infinite;
+        }
+
+        @@keyframes heroGlow {
+            0%, 100% {
+                transform: translate(0,0) scale(1);
+            }
+
+            50% {
+                transform: translate(35px,25px) scale(1.15);
+            }
+        }
+
+        /* Hero icon floating */
+
+        .patients-hero .hero-icon {
+            animation: heroIconFloat 4s ease-in-out infinite;
+        }
+
+        @@keyframes heroIconFloat {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-6px) rotate(3deg);
+            }
+        }
+
+        /* Add button entrance */
+
+        .btn-add-patient {
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: heroButtonEnter .65s var(--anim-ease) .25s forwards;
+        }
+
+        @@keyframes heroButtonEnter {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+
+        /* =========================
+                   Reveal System
+                   ========================= */
+
+        .reveal-patient {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity .7s var(--anim-ease), transform .7s var(--anim-ease);
+        }
+
+            .reveal-patient.is-visible {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+
+        /* =========================
+                   Stats Cards
+                   ========================= */
+
+        .stat-card {
+            opacity: 0;
+            transform: translateY(25px) scale(.98);
+            animation: statRise .65s var(--anim-ease) forwards;
+        }
+
+            .stat-card:nth-child(1) {
+                animation-delay: .12s;
+            }
+
+            .stat-card:nth-child(2) {
+                animation-delay: .20s;
+            }
+
+            .stat-card:nth-child(3) {
+                animation-delay: .28s;
+            }
+
+            .stat-card:nth-child(4) {
+                animation-delay: .36s;
+            }
+
+        @@keyframes statRise {
+            from {
+                opacity: 0;
+                transform: translateY(25px) scale(.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+
+        /* =========================
+                   Stat Icon Animation
+                   ========================= */
+
+        .stat-card:hover .stat-icon {
+            transform: scale(1.08) rotate(-4deg);
+        }
+
+        .stat-icon {
+            transition: transform .3s var(--anim-ease), box-shadow .3s ease;
+        }
+
+
+        /* =========================
+                   Filter Bar
+                   ========================= */
+
+        .patients-card {
+            opacity: 0;
+            transform: translateY(35px);
+            animation: patientCardEnter .75s var(--anim-ease) .42s forwards;
+        }
+
+        @@keyframes patientCardEnter {
+            from {
+                opacity: 0;
+                transform: translateY(35px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .filter-bar {
+            position: relative;
+        }
+
+
+        /* =========================
+                   Category Pills
+                   ========================= */
+
+        .pill-toggle .pill-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+            .pill-toggle .pill-btn::after {
+                content: '';
+                position: absolute;
+                width: 0;
+                height: 0;
+                border-radius: 50%;
+                background: rgba(255,255,255,.25);
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                transition: width .35s ease, height .35s ease;
+            }
+
+            .pill-toggle .pill-btn:active::after {
+                width: 180px;
+                height: 180px;
+            }
+
+
+        /* =========================
+                   Table Header
+                   ========================= */
+
+        #tablePatients thead {
+            opacity: 0;
+            transform: translateY(10px);
+            animation: tableHeaderEnter .5s ease .8s forwards;
+        }
+
+        @@keyframes tableHeaderEnter {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
+        /* =========================
+                   Table Rows
+                   ========================= */
+
+        #tablePatients tbody tr {
+            opacity: 0;
+            transform: translateY(10px);
+            animation: patientRowEnter .45s var(--anim-ease) forwards;
+        }
+
+        @@keyframes patientRowEnter {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
+        /* =========================
+                   Patient Avatar
+                   ========================= */
+
+        .patient-avatar {
+            transition: transform .3s var(--anim-ease), box-shadow .3s ease;
+        }
+
+        #tablePatients tbody tr:hover .patient-avatar {
+            transform: scale(1.08) rotate(-3deg);
+            box-shadow: 0 6px 15px rgba(13,148,136,.25);
+        }
+
+
+        /* =========================
+                   Session Button
+                   ========================= */
+
+        .btn-row-session {
+            position: relative;
+            overflow: hidden;
+        }
+
+            .btn-row-session::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -120%;
+                width: 70%;
+                height: 100%;
+                background: linear-gradient( 90deg, transparent, rgba(255,255,255,.3), transparent );
+                transform: skewX(-20deg);
+                transition: left .6s ease;
+            }
+
+            .btn-row-session:hover::before {
+                left: 130%;
+            }
+
+
+        /* =========================
+                   Action Buttons
+                   ========================= */
+
+        .action-icon-btn {
+            transition: transform .25s var(--anim-ease), background .2s ease, color .2s ease;
+        }
+
+            .action-icon-btn:hover {
+                transform: translateY(-2px) scale(1.05);
+            }
+
+
+        /* =========================
+                   Loading Animation
+                   ========================= */
+
+        .table-loading-overlay {
+            transition: opacity .25s ease, backdrop-filter .25s ease;
+        }
+
+        .loading-pulse {
+            animation: loadingFloat 1.5s ease-in-out infinite;
+        }
+
+        @@keyframes loadingFloat {
+            0%, 100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+
+        /* =========================
+                   Footer
+                   ========================= */
+
+        .table-footer-bar {
+            opacity: 0;
+            animation: footerEnter .5s ease 1s forwards;
+        }
+
+        @@keyframes footerEnter {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+
+        /* =========================
+                   Reduced Motion
+                   ========================= */
+
+        @@media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+                scroll-behavior: auto !important;
+            }
+
+            .patients-page,
+            .patients-hero,
+            .stat-card,
+            .patients-card,
+            #tablePatients thead,
+            #tablePatients tbody tr {
+                opacity: 1 !important;
+                transform: none !important;
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+        :root {
+            --sc-teal-900: #0a4d4f;
+            --sc-teal-700: #0d7377;
+            --sc-teal-600: #0f9b8e;
+            --sc-teal-500: #14b8a6;
+            --sc-teal-100: #c7f2ea;
+            --sc-sky-50: #eafbfc;
+            --sc-sky-100: #dcf5f7;
+            --sc-coral-300: #f6c6bc;
+            --sc-ink-900: #0b2e30;
+            --sc-ink-600: #4b6b6c;
+            --sc-radius-lg: 18px;
+            --sc-radius-md: 12px;
+        }
+
+        body {
+            background: radial-gradient(circle at 6% 4%, var(--sc-teal-100) 0%, transparent 38%), radial-gradient(circle at 97% 92%, var(--sc-coral-300) 0%, transparent 26%), var(--sc-sky-50);
+        }
+
+        /* ── Hero ── */
+        .create-hero {
+            background: linear-gradient(135deg, var(--sc-teal-700), var(--sc-teal-500));
+            border-radius: var(--sc-radius-lg);
+            padding: 22px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 14px 34px rgba(13, 115, 119, .28);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .create-hero::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 92% -20%, rgba(255,255,255,.32), transparent 55%);
+                pointer-events: none;
+            }
+
+            .create-hero .hero-title {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .create-hero .hero-icon {
+                width: 52px;
+                height: 52px;
+                background: rgba(255,255,255,.18);
+                color: #fff;
+                border-radius: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.4rem;
+                flex-shrink: 0;
+                backdrop-filter: blur(6px);
+            }
+
+            .create-hero h1 {
+                font-size: 1.25rem;
+                font-weight: 800;
+                margin: 0;
+                color: #fff;
+            }
+
+            .create-hero p {
+                font-size: 0.85rem;
+                margin: 2px 0 0;
+                color: rgba(255,255,255,.9);
+                font-weight: 600;
+            }
+
+            .create-hero .hero-actions {
+                display: flex;
+                gap: 10px;
+                position: relative;
+                z-index: 1;
+                flex-wrap: wrap;
+            }
+
+        .btn-hero {
+            border: none;
+            padding: 11px 22px;
+            border-radius: 12px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: transform .2s ease, box-shadow .2s ease;
+            cursor: pointer;
+            font-size: 0.88rem;
+        }
+
+        .btn-hero-light {
+            background: #fff;
+            color: var(--sc-teal-700);
+        }
+
+            .btn-hero-light:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 18px rgba(10,40,42,.24);
+                color: var(--sc-teal-700);
+            }
+
+        .btn-hero-ghost {
+            background: rgba(255,255,255,.14);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,.4);
+        }
+
+            .btn-hero-ghost:hover {
+                background: rgba(255,255,255,.24);
+                color: #fff;
+                transform: translateY(-2px);
+            }
+
+        /* ── Layout: sticky profile panel + single flowing document card ──
+                   (deliberately NOT a grid of separate equal cards) */
+        .create-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        @@media (max-width: 992px) {
+            .create-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── Profile panel (left, sticky) ── */
+        .profile-panel {
+            position: sticky;
+            top: 20px;
+            background: rgba(255,255,255,.8);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,.6);
+            border-radius: var(--sc-radius-lg);
+            padding: 26px 22px;
+            box-shadow: 0 20px 50px rgba(10,77,79,.08);
+            text-align: center;
+        }
+
+        .avatar-preview {
+            width: 76px;
+            height: 76px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, var(--sc-teal-500), var(--sc-teal-700));
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin: 0 auto 14px;
+            box-shadow: 0 10px 24px rgba(13,115,119,.28);
+            transition: transform .2s ease;
+        }
+
+        #namePreview {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--sc-ink-900);
+            min-height: 1.3em;
+        }
+
+        .code-chip {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            background: var(--sc-sky-100);
+            color: var(--sc-teal-700);
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .profile-summary {
+            margin-top: 22px;
+            padding-top: 18px;
+            border-top: 1px dashed var(--sc-sky-100);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            text-align: right;
+        }
+
+        .summary-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+        }
+
+            .summary-row span.label {
+                color: var(--sc-ink-600);
+                font-weight: 600;
+            }
+
+            .summary-row span.value {
+                font-weight: 800;
+                color: var(--sc-ink-900);
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+
+        /* ── Document card (right) ── */
+        .form-doc {
+            background: rgba(255,255,255,.82);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,.6);
+            border-radius: var(--sc-radius-lg);
+            box-shadow: 0 20px 50px rgba(10,77,79,.08);
+            overflow: hidden;
+        }
+
+        .form-section {
+            padding: 8px 10px;
+            opacity: 0;
+            transform: translateY(8px);
+            animation: sectionFadeIn .45s ease forwards;
+        }
+
+            .form-section:not(:last-child) {
+                border-bottom: 1px solid var(--sc-sky-100);
+            }
+
+            .form-section:nth-of-type(1) {
+                animation-delay: .03s;
+            }
+
+            .form-section:nth-of-type(2) {
+                animation-delay: .08s;
+            }
+
+            .form-section:nth-of-type(3) {
+                animation-delay: .13s;
+            }
+
+            .form-section:nth-of-type(4) {
+                animation-delay: .18s;
+            }
+
+        @@keyframes sectionFadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+            .section-head .section-icon {
+                width: 34px;
+                height: 34px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: var(--sc-sky-100);
+                color: var(--sc-teal-700);
+                font-size: 1rem;
+                flex-shrink: 0;
+            }
+
+            .section-head h2 {
+                font-size: 0.95rem;
+                font-weight: 800;
+                color: var(--sc-ink-900);
+                margin: 0;
+            }
+
+            .section-head p {
+                font-size: 0.76rem;
+                color: var(--sc-ink-600);
+                margin: 1px 0 0;
+                font-weight: 600;
+            }
+
+        .fields-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px 16px;
+        }
+
+        @@media (max-width: 640px) {
+            .fields-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .fields-grid .span-2 {
+            grid-column: 1 / -1;
+        }
+
+        .sc-field label {
+            display: block;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: var(--sc-ink-600);
+            margin-bottom: 6px;
+        }
+
+            .sc-field label .required {
+                color: #dc2626;
+            }
+
+        .sc-field .form-control,
+        .sc-field .form-select {
+            width: 100%;
+            border: 1.5px solid var(--sc-sky-100);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.9rem;
+            background: #fff;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+            .sc-field .form-control:focus,
+            .sc-field .form-select:focus {
+                border-color: var(--sc-teal-500);
+                box-shadow: 0 0 0 3px rgba(15,155,142,.12);
+                outline: none;
+            }
+
+        .sc-field textarea.form-control {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .sc-field .text-danger {
+            font-size: 0.76rem;
+            margin-top: 4px;
+            display: block;
+        }
+
+        /* ── Patient type — selectable tiles (replaces the old vertical
+                   radio chip list entirely) ── */
+        .type-tiles {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        @@media (max-width: 640px) {
+            .type-tiles {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .type-tile {
+            position: relative;
+            border: 2px solid var(--sc-sky-100);
+            border-radius: 14px;
+            padding: 16px 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .22s ease;
+            background: #fff;
+        }
+
+            .type-tile input {
+                display: none;
+            }
+
+            .type-tile .tile-icon {
+                width: 42px;
+                height: 42px;
+                margin: 0 auto 10px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.15rem;
+                background: var(--sc-sky-100);
+                color: var(--sc-teal-700);
+                transition: all .22s ease;
+            }
+
+            .type-tile .tile-title {
+                font-weight: 800;
+                font-size: 0.88rem;
+                color: var(--sc-ink-900);
+            }
+
+            .type-tile .tile-desc {
+                font-size: 0.72rem;
+                color: var(--sc-ink-600);
+                margin-top: 3px;
+                line-height: 1.4;
+            }
+
+            .type-tile .tile-check {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                background: var(--sc-teal-600);
+                color: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: .68rem;
+                opacity: 0;
+                transform: scale(.5);
+                transition: all .2s ease;
+            }
+
+            .type-tile:hover {
+                border-color: var(--sc-teal-100);
+                transform: translateY(-2px);
+            }
+
+            .type-tile.selected {
+                border-color: var(--sc-teal-600);
+                background: linear-gradient(160deg, #fff, var(--sc-sky-50));
+                box-shadow: 0 8px 20px rgba(15,155,142,.18);
+                transform: translateY(-2px);
+            }
+
+                .type-tile.selected .tile-icon {
+                    background: linear-gradient(135deg, var(--sc-teal-500), var(--sc-teal-700));
+                    color: #fff;
+                }
+
+                .type-tile.selected .tile-check {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+
+        /* ── Gender — segmented control (replaces the two bordered boxes) ── */
+        .segmented {
+            position: relative;
+            display: flex;
+            background: var(--sc-sky-100);
+            border-radius: 999px;
+            padding: 4px;
+        }
+
+            .segmented .seg-thumb {
+                position: absolute;
+                top: 4px;
+                bottom: 4px;
+                width: calc(50% - 4px);
+                background: linear-gradient(135deg, var(--sc-teal-600), var(--sc-teal-700));
+                border-radius: 999px;
+                box-shadow: 0 4px 10px rgba(13,148,136,.28);
+                transition: transform .28s cubic-bezier(.3,1.2,.4,1);
+                z-index: 0;
+            }
+
+            .segmented.pos-1 .seg-thumb {
+                transform: translateX(0);
+            }
+
+            .segmented.pos-2 .seg-thumb {
+                transform: translateX(-100%);
+            }
+
+            .segmented label {
+                position: relative;
+                z-index: 1;
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                padding: 9px 0;
+                font-size: 0.85rem;
+                font-weight: 700;
+                color: var(--sc-ink-600);
+                cursor: pointer;
+                transition: color .2s ease;
+                border-radius: 999px;
+            }
+
+                .segmented label input {
+                    display: none;
+                }
+
+                .segmented label.active {
+                    color: #fff;
+                }
+
+        /* ── Save row ── */
+        .form-save-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 18px 28px;
+            background: var(--sc-sky-50);
+        }
+    </style>
 }
-
-<section class="container-fluid mt-4" dir="rtl">
+<section class="" dir="rtl">
     <div class="row">
-        <div class="col-md-1"></div>
-        <div class="col-md-10">
-
-            <!-- 🔷 Hero Header -->
-            <div class="erp-hero">
+        <div class="col-md-12">
+            <div class="create-hero">
                 <div class="hero-title">
                     <div class="hero-icon"><i class="bi bi-person-plus-fill"></i></div>
                     <div>
@@ -39,182 +966,213 @@
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                <div class="row g-3">
+                <div class="row">
 
-                    <!-- Patient Identity -->
-                    <div class="col-12 col-lg-3">
-                        <div class="erp-card">
-                            <div class="erp-card-header tone-identity">
-                                <i class="bi bi-person-fill"></i> هوية المريض
+
+                    <!-- Sticky profile preview -->
+                    <div class=" col-3">
+                        <div class="avatar-preview" id="avatarPreview">؟</div>
+                        <div id="namePreview" class="text-center fs-5">مريض جديد</div>
+                        <div class="profile-summary" hidden>
+                            <div class="summary-row">
+                                <span class="label">نوع الملف</span>
+                                <span class="value" id="summaryType"><i class="bi bi-app-indicator"></i> عام</span>
                             </div>
-                            <div class="erp-card-body">
-                                <div class="identity-preview">
-                                    <div class="avatar-preview" id="avatarPreview">؟</div>
-                                    <div>
-                                        <div class="fw-bold" id="namePreview" style="min-height:1.2em;">مريض جديد</div>
-                                        <span class="code-chip"><i class="bi bi-magic"></i> كود تلقائي عند الحفظ</span>
-                                    </div>
+                            <div class="summary-row">
+                                <span class="label">النوع</span>
+                                <span class="value" id="summaryGender"><i class="bi bi-dash-circle"></i> غير محدد</span>
+                            </div>
+                        </div>
+                       @*  <span class="code-chip"><i class="bi bi-magic"></i> كود تلقائي عند الحفظ</span> *@
+                        <div class="form-section">
+                            @* <div class="section-head">
+                                <div class="section-icon"><i class="bi bi-person-fill"></i></div>
+                                <div>
+                                    <h2>المعلومات الأساسية</h2>
+                                    <p>اسم المريض كما سيظهر في الملف</p>
                                 </div>
-
-                                <div class="erp-field">
-                                    <label>الاسم الكامل <span class="required">*</span></label>
-                                    <input asp-for="FullNameAr" id="fullNameInput" class="form-control" placeholder="ادخل اسم المريض" autocomplete="off" />
+                            </div> *@
+                            <div class="fields-grid px-1">
+                                <div class="text-end sc-field span-2 mx-0">
+                                    <label>الاسم الكامل <span class="required">*</span></label> 
+                                    <input asp-for="FullNameAr" id="fullNameInput" class="form-control text-center" placeholder="ادخل اسم المريض" autocomplete="off" />
+                                </div>
                                     <span asp-validation-for="FullNameAr" class="text-danger"></span>
-                                </div>
-
-                                <div class="erp-field">
+                                <div class="sc-field span-2 " hidden>
                                     <label>الاسم بالإنجليزية</label>
-                                    <input asp-for="FullNameEn" class="form-control" placeholder="Optional" autocomplete="off" />
+                                    <input asp-for="FullNameEn" class="form-control" placeholder="Optional" autocomplete="off" dir="ltr" />
+                                </div>
+                                <div class="text-end sc-field span-2 mx-0">
+                                    <label>الموبايل <span class="required">*</span></label>
+                                    <input asp-for="Mobile" class="form-control text-center" placeholder="01xxxxxxxxx" dir="ltr" />
+                                </div>
+                                    <span asp-validation-for="Mobile" class="text-danger"></span>
+                                <div class="text-end sc-field span-2 mx-0">
+                                    <label>تاريخ الميلاد</label>
+                                    <input asp-for="DateOfBirth" type="date" class="form-control text-center" />
+                                </div>
+                                <div class="text-end sc-field span-2 mx-0">
+                                    <label>فصيلة الدم</label>
+                                    <select asp-for="BloodGroupId" asp-items="@bloodGroupList" class="form-select text-center">
+                                        <option value="">-- اختر --</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
+                       
                     </div>
+                    <!-- Single flowing document with clear sections -->
+                    <div class="form-doc col-6">
 
-                    <!-- Personal Information -->
-                    <div class="col-12 col-lg-3">
-                        <div class="erp-card">
-                            <div class="erp-card-header tone-personal">
-                                <i class="bi bi-card-checklist"></i> البيانات الشخصية
-                            </div>
-                            <div class="erp-card-body">
-
-                                <div class="erp-field">
-                                    <label>نوع الملف <span class="required">*</span></label>
-                                    <div class="type-chip-group">
-                                        <label class="type-chip general">
-                                            <input type="radio" name="PatientType" value="1" checked />
-                                            <i class="bi bi-tooth"></i> عام
-                                        </label>
-                                        <label class="type-chip ortho">
-                                            <input type="radio" name="PatientType" value="2" />
-                                            <i class="bi bi-braces"></i> تقويم
-                                        </label>
-                                        <label class="type-chip both">
-                                            <input type="radio" name="PatientType" value="3" />
-                                            <i class="bi bi-heart-pulse"></i> كلاهما
-                                        </label>
-                                    </div>
+                        <div class="form-section">
+                            <div class="section-head">
+                                <div class="section-icon"><i class="bi bi-card-checklist"></i></div>
+                                <div>
+                                    <h2>نوع الملف </h2>
+                                    <p>حدد نوع العلاج المطلوب وبيانات المريض الأساسية</p>
                                 </div>
+                            </div>
 
-                                <div class="erp-field">
+                            <div class="sc-field span-2" style="margin-bottom:16px;">
+                                <label>نوع الملف <span class="required">*</span></label>
+                                <div class="type-tiles" id="typeTiles">
+                                    <label class="type-tile selected" data-type="general">
+                                        <input type="radio" name="PatientType" value="1" checked />
+                                        <span class="tile-check"><i class="bi bi-check-lg"></i></span>
+                                        <div class="tile-icon"><i class="bi bi-app-indicator"></i></div>
+                                        <div class="tile-title">عام</div>
+                                        <div class="tile-desc">علاج الأسنان العام والوقائي</div>
+                                    </label>
+                                    <label class="type-tile" data-type="ortho">
+                                        <input type="radio" name="PatientType" value="2" />
+                                        <span class="tile-check"><i class="bi bi-check-lg"></i></span>
+                                        <div class="tile-icon"><i class="bi bi-braces"></i></div>
+                                        <div class="tile-title">تقويم</div>
+                                        <div class="tile-desc">متابعة دورية لتقويم الأسنان</div>
+                                    </label>
+                                    <label class="type-tile" data-type="both">
+                                        <input type="radio" name="PatientType" value="3" />
+                                        <span class="tile-check"><i class="bi bi-check-lg"></i></span>
+                                        <div class="tile-icon"><i class="bi bi-heart-pulse"></i></div>
+                                        <div class="tile-title">كلا الملفين</div>
+                                        <div class="tile-desc">علاج عام ومتابعة تقويم معًا</div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="fields-grid">
+                                <div class="sc-field span-2">
                                     <label>النوع</label>
-                                    <div class="gender-chip-group" id="genderChipGroup">
-                                        <label class="gender-chip male">
+                                    <div class="segmented pos-1" id="genderSegmented">
+                                        <div class="seg-thumb"></div>
+                                        <label data-gender="male">
                                             <input type="radio" name="GenderId" value="1" />
                                             <i class="bi bi-gender-male"></i> ذكر
                                         </label>
-                                        <label class="gender-chip female">
+                                        <label data-gender="female">
                                             <input type="radio" name="GenderId" value="2" />
                                             <i class="bi bi-gender-female"></i> أنثى
                                         </label>
                                     </div>
-                                </div>
-                                <div class="erp-field">
-                                    <label>تاريخ الميلاد</label>
-                                    <input asp-for="DateOfBirth" type="date" class="form-control" />
-                                </div>
-                                <div class="erp-field">
-                                    <label>فصيلة الدم</label>
-                                    <select asp-for="BloodGroupId" asp-items="@bloodGroupList" class="form-select">
-                                        <option value="">-- اختر --</option>
-                                    </select>
-                                </div>
-                                <div class="erp-field">
-                                    <label>الرقم القومي</label>
-                                    <input asp-for="NationalId" class="form-control" placeholder="14 رقم" maxlength="14" />
-                                </div>
+                                    <div class="sc-field span-2 mt-3">
+                                        <label>العنوان</label>
+                                        <input asp-for="Address" class="form-control" placeholder="ادخل العنوان" />
+                                    </div>
+                                </div>                                
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Contact Information -->
-                    <div class="col-12 col-lg-3">
-                        <div class="erp-card">
-                            <div class="erp-card-header tone-contact">
-                                <i class="bi bi-telephone-fill"></i> بيانات التواصل
-                            </div>
-                            <div class="erp-card-body">
-                                <div class="erp-field">
-                                    <label>الموبايل <span class="required">*</span></label>
-                                    <input asp-for="Mobile" class="form-control" placeholder="01xxxxxxxxx" dir="ltr" />
-                                    <span asp-validation-for="Mobile" class="text-danger"></span>
+                        <div class="form-section" hidden>
+                            <div class="section-head">
+                                <div class="section-icon"><i class="bi bi-telephone-fill"></i></div>
+                                <div>
+                                    <h2>بيانات التواصل</h2>
+                                    <p>وسائل التواصل مع المريض</p>
                                 </div>
-                                <div class="erp-field">
+                            </div>
+                            <div class="fields-grid">
+                                <div class="sc-field">
+                                    <label>الرقم القومي</label>
+                                    <input asp-for="NationalId" class="form-control" placeholder="14 رقم" maxlength="14" dir="ltr" />
+                                </div>
+
+                                <div class="sc-field">
                                     <label>تليفون</label>
                                     <input asp-for="Phone" class="form-control" placeholder="اختياري" dir="ltr" />
                                 </div>
-                                <div class="erp-field">
+                                <div class="sc-field">
                                     <label>البريد الإلكتروني</label>
                                     <input asp-for="Email" class="form-control" placeholder="patient@email.com" dir="ltr" />
                                 </div>
-                                <div class="erp-field">
-                                    <label>العنوان</label>
-                                    <input asp-for="Address" class="form-control" placeholder="ادخل العنوان" />
-                                </div>
                             </div>
                         </div>
+
+                        <div class="form-save-row" hidden>
+                            <a asp-action="Index" class="btn-hero" style="background:var(--sc-sky-100);color:var(--sc-ink-600);">
+                                <i class="bi bi-x-lg"></i> إلغاء
+                            </a>
+                            <button type="submit" class="btn-hero" style="background:linear-gradient(135deg,var(--sc-teal-600),var(--sc-teal-700));color:#fff;">
+                                <i class="bi bi-check-lg"></i> حفظ المريض
+                            </button>
+                        </div>
+
                     </div>
-
-                    @* <!-- Notes -->
-                    <div class="col-12 col-lg-3">
-                        <div class="erp-card">
-                            <div class="erp-card-header tone-notes">
-                                <i class="bi bi-journal-text"></i> ملاحظات
-                            </div>
-                            <div class="erp-card-body">
-                                <div class="erp-field d-flex flex-column flex-fill">
-                                    <label>ملاحظات إضافية</label>
-                                    <textarea asp-for="Notes" class="form-control erp-textarea" placeholder="أي ملاحظات أو تعليمات خاصة بالمريض..."></textarea>
+                    <div class="col-3">
+                        <div class="form-section">
+                            <div class="section-head">
+                                <div class="section-icon"><i class="bi bi-heart-pulse-fill"></i></div>
+                                <div>
+                                    <h2>التاريخ الطبي</h2>
+                                    <p>معلومات مهمة قبل بدء أي علاج</p>
                                 </div>
                             </div>
-                        </div>
-                    </div> *@
-
-                    <!-- Medical History Card جديد -->
-                    <div class="col-12 col-lg-3">
-                        <div class="erp-card">
-                            <div class="erp-card-header tone-medical">
-                                <i class="bi bi-heart-pulse-fill"></i> التاريخ الطبي
-                            </div>
-                            <div class="erp-card-body">
-                                <div class="erp-field">
+                            <div class="fields-grid">
+                                <div class="sc-field span-2">
                                     <label>الحساسية</label>
                                     <input name="MedicalInfo.Allergies" class="form-control" placeholder="مثال: بنسلين، ليدوكايين..." />
                                 </div>
-                                <div class="erp-field">
+                                <div class="sc-field span-2">
                                     <label>أمراض مزمنة</label>
                                     <input name="MedicalInfo.ChronicDiseases" class="form-control" placeholder="سكري، ضغط..." />
                                 </div>
-                                <div class="erp-field">
+                                <div class="sc-field span-2">
                                     <label>الأدوية الحالية</label>
-                                    <input name="MedicalInfo.CurrentMedications" class="form-control" />
+                                    <input name="MedicalInfo.CurrentMedications" class="form-control" placeholder="الأدوية المستخدمة لدي المريض ..." />
                                 </div>
-                                <div class="erp-field">
+                                <div class="sc-field span-2">
+                                    <label>حالة التدخين</label>
+                                    <select asp-for="SmokingStatus" class="form-select">
+                                        <option value="">-- اختر --</option>
+                                        <option value="NonSmoker">لا يدخن</option>
+                                        <option value="FormerSmoker">مدخن سابق</option>
+                                        <option value="LightSmoker">مدخن خفيف</option>
+                                        <option value="HeavySmoker">مدخن شره</option>
+                                    </select>
+                                </div>
+                                <div class="sc-field span-2">
                                     <label>ملاحظات طبية عاجلة</label>
-                                    <textarea name="MedicalInfo.EmergencyNotes" class="form-control erp-textarea" style="min-height:60px;" placeholder="أي تحذيرات للدكتور..."></textarea>
+                                    <textarea name="MedicalInfo.EmergencyNotes" class="form-control" placeholder="أي تحذيرات للدكتور..."></textarea>
                                 </div>
                             </div>
                         </div>
                     </div>
-
                 </div>
+                @* <div class="create-layout">
+                </div> *@
             </form>
 
         </div>
-        <div class="col-md-1"></div>
     </div>
 </section>
-
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
-        // ✅ Live avatar + name preview while typing
+        // Live avatar + name preview while typing
         const nameInput = document.getElementById('fullNameInput');
         const namePreview = document.getElementById('namePreview');
         const avatarPreview = document.getElementById('avatarPreview');
-
         nameInput.addEventListener('input', function () {
             const name = this.value.trim();
             namePreview.textContent = name || 'مريض جديد';
@@ -222,63 +1180,35 @@
             avatarPreview.textContent = initials || '؟';
         });
 
-        // ✅ Gender chip visual toggle
-        document.querySelectorAll('#genderChipGroup input[type=radio]').forEach(function (radio) {
+        // Patient type tiles
+        const typeLabels = {
+            general: { icon: 'bi-app-indicator', text: 'عام' },
+            ortho: { icon: 'bi-braces', text: 'تقويم' },
+            both: { icon: 'bi-heart-pulse', text: 'كلا الملفين' }
+        };
+        document.querySelectorAll('#typeTiles input[type=radio]').forEach(function (radio) {
             radio.addEventListener('change', function () {
-                document.querySelectorAll('.gender-chip').forEach(c => c.classList.remove('checked'));
-                this.closest('.gender-chip').classList.add('checked');
+                document.querySelectorAll('.type-tile').forEach(t => t.classList.remove('selected'));
+                const tile = this.closest('.type-tile');
+                tile.classList.add('selected');
+                const info = typeLabels[tile.dataset.type];
+                document.getElementById('summaryType').innerHTML = `<i class="bi ${info.icon}"></i> ${info.text}`;
+            });
+        });
+
+        // Gender segmented control
+        const genderSegmented = document.getElementById('genderSegmented');
+        const genderLabels = { male: { icon: 'bi-gender-male', text: 'ذكر' }, female: { icon: 'bi-gender-female', text: 'أنثى' } };
+        genderSegmented.querySelectorAll('input[type=radio]').forEach(function (radio, idx) {
+            radio.addEventListener('change', function () {
+                genderSegmented.querySelectorAll('label[data-gender]').forEach(l => l.classList.remove('active'));
+                const lbl = this.closest('label');
+                lbl.classList.add('active');
+                genderSegmented.classList.toggle('pos-1', idx === 0);
+                genderSegmented.classList.toggle('pos-2', idx === 1);
+                const info = genderLabels[lbl.dataset.gender];
+                document.getElementById('summaryGender').innerHTML = `<i class="bi ${info.icon}"></i> ${info.text}`;
             });
         });
     </script>
-
-    <style>
-        .type-chip-group {
-            display: flex;
-            gap: 8px;
-            flex-direction: column;
-        }
-
-        .type-chip {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px;
-            border-radius: 12px;
-            border: 2px solid #e2e8f0;
-            background: #fff;
-            cursor: pointer;
-            font-weight: 700;
-            color: #475569;
-            transition: all 0.25s;
-        }
-
-            .type-chip input {
-                display: none;
-            }
-
-            .type-chip.general:has(input:checked) {
-                background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-                border-color: #3b82f6;
-                color: #1e40af;
-                box-shadow: 0 4px 12px rgba(59,130,246,0.2);
-            }
-
-            .type-chip.ortho:has(input:checked) {
-                background: linear-gradient(135deg, #fef3c7, #fde68a);
-                border-color: #f59e0b;
-                color: #92400e;
-                box-shadow: 0 4px 12px rgba(245,158,11,0.2);
-            }
-
-            .type-chip.both:has(input:checked) {
-                background: linear-gradient(135deg, #ede9fe, #ddd6fe);
-                border-color: #8b5cf6;
-                color: #5b21b6;
-                box-shadow: 0 4px 12px rgba(139,92,246,0.2);
-            }
-
-        .tone-medical {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-        }
-    </style>
 }

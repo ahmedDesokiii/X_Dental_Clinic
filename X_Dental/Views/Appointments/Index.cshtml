@@ -4,50 +4,263 @@
 }
 
 <style>
-    /* ── إعادة استخدام نفس هوية التصميم الموجودة بالفعل في صفحة تفاصيل المريض ── */
-    .weekly-calendar-shell {
-        background: rgba(255,255,255,0.8);
+    :root {
+        --sc-teal-900: #0a4d4f;
+        --sc-teal-700: #0d7377;
+        --sc-teal-600: #0f9b8e;
+        --sc-teal-500: #14b8a6;
+        --sc-teal-100: #c7f2ea;
+        --sc-sky-50: #eafbfc;
+        --sc-sky-100: #dcf5f7;
+        --sc-coral-300: #f6c6bc;
+        --sc-ink-900: #0b2e30;
+        --sc-ink-600: #4b6b6c;
+        --brand: #0d9488;
+        --brand-dark: #0f766e;
+        --brand-light: #f0fdfa;
+        --radius-lg: 18px;
+        --radius-md: 12px;
+        --shadow-soft: 0 1px 3px rgba(15, 23, 42, 0.06);
+        --shadow-hover: 0 10px 26px rgba(10, 77, 79, 0.12);
+        --shadow-card: 0 20px 50px rgba(10, 77, 79, .08);
+    }
+
+    body {
+        background: radial-gradient(circle at 6% 4%, var(--sc-teal-100) 0%, transparent 38%), radial-gradient(circle at 97% 92%, var(--sc-coral-300) 0%, transparent 26%), var(--sc-sky-50);
+    }
+
+    /* ── Hero ── */
+    .calendar-hero {
+        background: linear-gradient(135deg, var(--sc-teal-700), var(--sc-teal-500));
+        border-radius: var(--radius-lg);
+        padding: 22px 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 14px 34px rgba(13, 115, 119, .28);
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 16px;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .calendar-hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 92% -20%, rgba(255,255,255,.32), transparent 55%);
+            pointer-events: none;
+        }
+
+        .calendar-hero .hero-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .calendar-hero .hero-icon {
+            width: 52px;
+            height: 52px;
+            background: rgba(255,255,255,.18);
+            color: #fff;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,.15);
+        }
+
+        .calendar-hero h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin: 0;
+            color: #fff;
+        }
+
+        .calendar-hero p {
+            font-size: 0.85rem;
+            margin: 4px 0 0;
+            color: rgba(255,255,255,.9);
+            font-weight: 600;
+        }
+
+    .btn-hero-new {
+        background: #fff;
+        color: var(--sc-teal-700);
+        border: none;
+        padding: 11px 22px;
+        border-radius: 12px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        box-shadow: 0 8px 20px rgba(10, 40, 42, .18);
+        transition: all .2s ease;
+        font-size: 0.9rem;
+        position: relative;
+        z-index: 1;
+        cursor: pointer;
+    }
+
+        .btn-hero-new:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 26px rgba(10, 40, 42, .24);
+            color: var(--sc-teal-700);
+        }
+
+    /* ── Stats Bar ── */
+    .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card-glass {
+        background: rgba(255,255,255,.78);
+        backdrop-filter: blur(14px);
+        border-radius: 16px;
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border: 1px solid rgba(255,255,255,.6);
+        box-shadow: var(--shadow-soft);
+        transition: all .25s ease;
+    }
+
+        .stat-card-glass:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+        }
+
+    .stat-icon-box {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        flex-shrink: 0;
+    }
+
+        .stat-icon-box.teal {
+            background: #f0fdfa;
+            color: #0f766e;
+        }
+
+        .stat-icon-box.blue {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .stat-icon-box.green {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .stat-icon-box.orange {
+            background: #fffbeb;
+            color: #b45309;
+        }
+
+    .stat-value-lg {
+        display: block;
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: var(--sc-ink-900);
+        line-height: 1.1;
+    }
+
+    .stat-label-lg {
+        font-size: 0.78rem;
+        color: var(--sc-ink-600);
+        font-weight: 600;
+    }
+
+    /* ── Calendar Shell ── */
+    .calendar-shell {
+        background: rgba(255,255,255,.82);
         backdrop-filter: blur(16px);
-        border-radius: 20px;
-        border: 1px solid rgba(226,232,240,0.6);
-        padding: 20px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,.6);
+        padding: 24px;
     }
 
     .calendar-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 12px;
     }
 
     .cal-title {
         font-size: 1.1rem;
         font-weight: 800;
-        color: #0f172a;
+        color: var(--sc-ink-900);
         margin: 0;
     }
 
+    .cal-nav-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
     .cal-nav {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        border: 1px solid #e2e8f0;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        border: 1.5px solid var(--sc-sky-100);
         background: #fff;
-        color: #475569;
+        color: var(--sc-ink-600);
         cursor: pointer;
-        transition: all .2s;
+        transition: all .2s ease;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 1.1rem;
     }
 
         .cal-nav:hover {
-            background: #0d9488;
+            background: var(--brand);
             color: #fff;
-            border-color: #0d9488;
+            border-color: var(--brand);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(13,148,136,0.25);
         }
 
+    .cal-today-btn {
+        padding: 8px 16px;
+        border-radius: 10px;
+        border: 1.5px solid var(--sc-sky-100);
+        background: #fff;
+        color: var(--sc-ink-600);
+        font-weight: 700;
+        font-size: 0.82rem;
+        cursor: pointer;
+        transition: all .2s ease;
+    }
+
+        .cal-today-btn:hover {
+            background: var(--brand-light);
+            border-color: var(--sc-teal-500);
+            color: var(--brand-dark);
+        }
+
+    /* ── Week Grid ── */
     .week-grid {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
@@ -55,37 +268,117 @@
     }
 
     .day-column {
-        background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+        background: rgba(255,255,255,.6);
         border-radius: 16px;
-        border: 1px solid rgba(226,232,240,0.6);
-        min-height: 300px;
+        border: 1px solid rgba(226,232,240,0.5);
+        min-height: 320px;
         overflow: hidden;
+        transition: all 0.3s ease;
+        animation: dayFadeIn 0.5s ease forwards;
+        opacity: 0;
     }
 
-        .day-column.is-today {
-            border-color: rgba(13,148,136,0.5);
-            box-shadow: 0 0 0 2px rgba(13,148,136,0.15);
+        .day-column:hover {
+            box-shadow: 0 8px 24px rgba(10, 77, 79, 0.08);
+            border-color: var(--sc-teal-500);
+            transform: translateY(-2px);
         }
 
+        .day-column.is-today {
+            border-color: var(--sc-teal-500);
+            box-shadow: 0 0 0 3px rgba(13,148,136,0.15), 0 8px 24px rgba(13,148,136,0.1);
+            background: rgba(255,255,255,.9);
+        }
+
+    @@keyframes dayFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .day-column:nth-child(1) {
+        animation-delay: .02s;
+    }
+
+    .day-column:nth-child(2) {
+        animation-delay: .04s;
+    }
+
+    .day-column:nth-child(3) {
+        animation-delay: .06s;
+    }
+
+    .day-column:nth-child(4) {
+        animation-delay: .08s;
+    }
+
+    .day-column:nth-child(5) {
+        animation-delay: .10s;
+    }
+
+    .day-column:nth-child(6) {
+        animation-delay: .12s;
+    }
+
+    .day-column:nth-child(7) {
+        animation-delay: .14s;
+    }
+
     .day-header {
-        padding: 12px;
+        padding: 14px 10px;
         text-align: center;
-        border-bottom: 1px solid #f1f5f9;
-        background: linear-gradient(135deg, rgba(13,148,136,0.05), transparent);
+        border-bottom: 1px solid var(--sc-sky-100);
+        background: linear-gradient(135deg, var(--sc-sky-50), transparent);
+        position: relative;
     }
 
     .day-name {
         font-size: .75rem;
-        font-weight: 700;
-        color: #64748b;
+        font-weight: 800;
+        color: var(--sc-ink-600);
         text-transform: uppercase;
         letter-spacing: 1px;
     }
 
     .day-number {
-        font-size: 1.4rem;
+        font-size: 1.5rem;
         font-weight: 800;
-        color: #0f172a;
+        color: var(--sc-ink-900);
+        margin-top: 4px;
+    }
+
+    .day-column.is-today .day-number {
+        color: var(--sc-teal-600);
+    }
+
+    .today-indicator {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--sc-teal-500);
+        box-shadow: 0 0 0 3px rgba(13,148,136,0.2);
+        animation: pulseToday 2s infinite;
+    }
+
+    @@keyframes pulseToday {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        50% {
+            transform: scale(1.3);
+            opacity: 0.7;
+        }
     }
 
     .day-slots {
@@ -96,55 +389,68 @@
         min-height: 60px;
     }
 
+    /* ── Patient Slots ── */
     .patient-slot {
         background: #fff;
         border-radius: 12px;
         padding: 12px;
         border: 1px solid rgba(226,232,240,0.8);
         cursor: pointer;
-        transition: all .2s;
-        border-inline-start: 4px solid #0d9488;
+        transition: all .25s ease;
+        border-inline-start: 4px solid var(--sc-teal-500);
+        animation: slotSlideIn 0.4s ease forwards;
+        opacity: 0;
+        transform: translateX(10px);
     }
 
         .patient-slot:hover {
-            transform: translateX(-4px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            transform: translateX(-4px) translateY(-2px);
+            box-shadow: 0 8px 20px rgba(10, 77, 79, 0.12);
+            border-color: var(--sc-teal-500);
         }
+
+    @@keyframes slotSlideIn {
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
 
     .slot-time {
         font-size: .75rem;
-        font-weight: 700;
-        color: #0d9488;
-        background: rgba(13,148,136,0.08);
-        padding: 2px 8px;
-        border-radius: 6px;
+        font-weight: 800;
+        color: var(--sc-teal-600);
+        background: var(--brand-light);
+        padding: 3px 10px;
+        border-radius: 8px;
         display: inline-block;
         margin-bottom: 6px;
     }
 
     .slot-name {
-        font-weight: 700;
-        color: #1e293b;
+        font-weight: 800;
+        color: var(--sc-ink-900);
         font-size: .9rem;
         margin-bottom: 4px;
     }
 
     .slot-phone {
         font-size: .8rem;
-        color: #64748b;
+        color: var(--sc-ink-600);
         display: flex;
         gap: 4px;
-        font-family: monospace;
+        font-family: 'Segoe UI', monospace;
         direction: ltr;
         justify-content: flex-end;
+        align-items: center;
     }
 
     .slot-status {
         margin-top: 6px;
-        font-size: .7rem;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 6px;
+        font-size: .72rem;
+        font-weight: 800;
+        padding: 3px 10px;
+        border-radius: 8px;
         display: inline-block;
     }
 
@@ -177,6 +483,7 @@
         background: #fee2e2;
         color: #b91c1c;
         text-decoration: line-through;
+        opacity: 0.7;
     }
 
     .status-noshow {
@@ -187,16 +494,63 @@
     .empty-day {
         text-align: center;
         color: #94a3b8;
-        padding: 20px 0;
+        padding: 24px 0;
         font-size: .85rem;
+        font-weight: 600;
     }
 
-    /* ── Modal (نفس أسلوب صفحة تفاصيل المريض) ── */
+        .empty-day i {
+            display: block;
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            color: var(--sc-sky-100);
+        }
+
+    /* ── Loading Skeleton ── */
+    .skeleton-day {
+        background: rgba(255,255,255,.6);
+        border-radius: 16px;
+        border: 1px solid rgba(226,232,240,0.5);
+        min-height: 320px;
+        overflow: hidden;
+        animation: skeletonPulse 1.5s infinite;
+    }
+
+    @@keyframes skeletonPulse {
+        0%, 100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.6;
+        }
+    }
+
+    .skeleton-header {
+        height: 60px;
+        background: linear-gradient(135deg, var(--sc-sky-50), transparent);
+        border-bottom: 1px solid var(--sc-sky-100);
+    }
+
+    .skeleton-slots {
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .skeleton-slot {
+        height: 80px;
+        background: var(--sc-sky-50);
+        border-radius: 12px;
+    }
+
+    /* ── Modals ── */
     .custom-modal {
+        display: none;
         position: fixed;
         inset: 0;
-        z-index: 1050;
-        display: none;
+        z-index: 9999;
         align-items: center;
         justify-content: center;
     }
@@ -208,71 +562,94 @@
     .modal-overlay {
         position: absolute;
         inset: 0;
-        background: rgba(15,23,42,0.5);
+        background: rgba(15,23,42,0.45);
+        backdrop-filter: blur(4px);
     }
 
     .modal-box {
         position: relative;
-        background: #fff;
-        border-radius: 16px;
-        width: 100%;
+        z-index: 1;
+        width: 90%;
         max-width: 480px;
-        margin: 16px;
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+        animation: modalSlide 0.25s ease;
         overflow: hidden;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+
+    @@keyframes modalSlide {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.98);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
     }
 
     .modal-head {
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        padding: 16px 20px;
-        background: linear-gradient(135deg, #14b8a6, #0d9488);
+        align-items: center;
+        padding: 18px 24px;
+        background: linear-gradient(135deg, var(--sc-teal-600), var(--sc-teal-700));
         color: #fff;
     }
 
         .modal-head h5 {
             margin: 0;
-            font-size: 1rem;
-            font-weight: 700;
+            font-weight: 800;
+            font-size: 1.1rem;
         }
 
     .modal-body {
-        padding: 20px;
+        padding: 24px;
     }
 
     .modal-foot {
+        padding: 0 24px 24px;
         display: flex;
-        gap: 10px;
         justify-content: flex-end;
-        padding: 14px 20px;
-        border-top: 1px solid #f1f5f9;
+        gap: 10px;
         flex-wrap: wrap;
     }
 
     .form-label-custom {
         display: block;
-        font-size: .78rem;
+        font-size: 0.82rem;
         font-weight: 700;
-        color: #374151;
+        color: #475569;
         margin-bottom: 6px;
     }
 
     .form-control-custom {
         width: 100%;
-        border: 1px solid #d8dee3;
+        padding: 10px 14px;
+        border: 1.5px solid var(--sc-sky-100);
         border-radius: 10px;
-        padding: 10px 12px;
-        font-size: .9rem;
+        font-size: 0.95rem;
+        color: var(--sc-ink-900);
+        background: #fff;
+        transition: all 0.2s;
+        outline: none;
     }
 
+        .form-control-custom:focus {
+            border-color: var(--sc-teal-500);
+            box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
+        }
+
     .btn-modal {
-        border: none;
-        padding: 9px 18px;
+        padding: 10px 22px;
         border-radius: 10px;
         font-weight: 700;
+        font-size: 0.9rem;
+        border: none;
         cursor: pointer;
-        font-size: .85rem;
+        transition: all 0.2s;
     }
 
     .btn-modal-cancel {
@@ -280,47 +657,195 @@
         color: #475569;
     }
 
+        .btn-modal-cancel:hover {
+            background: #e2e8f0;
+        }
+
     .btn-modal-save {
-        background: #0d9488;
+        background: linear-gradient(135deg, var(--sc-teal-600), var(--sc-teal-700));
         color: #fff;
     }
+
+        .btn-modal-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(13,148,136,0.3);
+        }
 
     .btn-modal-danger {
         background: #fee2e2;
         color: #b91c1c;
     }
 
+        .btn-modal-danger:hover {
+            background: #fecaca;
+        }
+
     .btn-modal-info {
         background: #dbeafe;
         color: #1e40af;
     }
+
+        .btn-modal-info:hover {
+            background: #bfdbfe;
+        }
+
+    /* ── Search Results Dropdown ── */
+    .search-results-box {
+        border: 1.5px solid var(--sc-sky-100);
+        border-radius: 12px;
+        margin-top: 6px;
+        max-height: 180px;
+        overflow-y: auto;
+        display: none;
+        background: #fff;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        animation: dropdownFade 0.2s ease;
+    }
+
+    @@keyframes dropdownFade {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .search-result-item {
+        padding: 10px 14px;
+        cursor: pointer;
+        border-bottom: 1px solid var(--sc-sky-100);
+        transition: all 0.15s ease;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--sc-ink-900);
+    }
+
+        .search-result-item:hover {
+            background: var(--brand-light);
+            color: var(--brand-dark);
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+    /* ── Responsive ── */
+    @@media (max-width: 1200px) {
+        .week-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .stats-bar {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .week-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .stats-bar {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .calendar-hero {
+            flex-direction: column;
+            text-align: center;
+        }
+
+            .calendar-hero .hero-content {
+                flex-direction: column;
+            }
+
+        .calendar-header {
+            justify-content: center;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .week-grid {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
-<div class="erp-hero">
-    <div class="hero-title">
+<!-- 🔷 Hero -->
+<div class="calendar-hero">
+    <div class="hero-content">
         <div class="hero-icon"><i class="bi bi-calendar2-week-fill"></i></div>
         <div>
             <h1>جدول المواعيد</h1>
             <p>عرض وحجز وإدارة مواعيد المرضى أسبوعيًا</p>
         </div>
     </div>
-    <div class="hero-actions">
-        <button class="btn-hero btn-hero-light" onclick="openCreateModal()">
-            <i class="bi bi-plus-lg"></i> موعد جديد
-        </button>
+    <button class="btn-hero-new" onclick="openCreateModal()">
+        <i class="bi bi-plus-lg"></i> موعد جديد
+    </button>
+</div>
+
+<!-- 🔷 Stats -->
+<div class="stats-bar" id="statsBar">
+    <div class="stat-card-glass">
+        <div class="stat-icon-box teal"><i class="bi bi-calendar-check"></i></div>
+        <div>
+            <span class="stat-value-lg" id="statTotalWeek">0</span>
+            <span class="stat-label-lg d-block">مواعيد الأسبوع</span>
+        </div>
+    </div>
+    <div class="stat-card-glass">
+        <div class="stat-icon-box green"><i class="bi bi-check-circle"></i></div>
+        <div>
+            <span class="stat-value-lg" id="statConfirmed">0</span>
+            <span class="stat-label-lg d-block">مؤكدة</span>
+        </div>
+    </div>
+    <div class="stat-card-glass">
+        <div class="stat-icon-box orange"><i class="bi bi-clock"></i></div>
+        <div>
+            <span class="stat-value-lg" id="statPending">0</span>
+            <span class="stat-label-lg d-block">قيد الانتظار</span>
+        </div>
+    </div>
+    <div class="stat-card-glass">
+        <div class="stat-icon-box blue"><i class="bi bi-calendar-day"></i></div>
+        <div>
+            <span class="stat-value-lg" id="statToday">0</span>
+            <span class="stat-label-lg d-block">مواعيد اليوم</span>
+        </div>
     </div>
 </div>
 
-<div class="weekly-calendar-shell">
+<!-- 🔷 Calendar -->
+<div class="calendar-shell">
     <div class="calendar-header">
-        <button class="cal-nav" onclick="shiftWeek(-1)"><i class="bi bi-chevron-right"></i></button>
+        <div class="cal-nav-group">
+            <button class="cal-nav" onclick="shiftWeek(-1)" title="الأسبوع السابق"><i class="bi bi-chevron-right"></i></button>
+            <button class="cal-today-btn" onclick="goToToday()">اليوم</button>
+            <button class="cal-nav" onclick="shiftWeek(1)" title="الأسبوع القادم"><i class="bi bi-chevron-left"></i></button>
+        </div>
         <h3 class="cal-title" id="weekRange">جاري التحميل...</h3>
-        <button class="cal-nav" onclick="shiftWeek(1)"><i class="bi bi-chevron-left"></i></button>
     </div>
-    <div class="week-grid" id="weekGrid"></div>
+    <div class="week-grid" id="weekGrid">
+        <!-- Loading Skeleton -->
+        @for (int i = 0; i < 7; i++)
+        {
+            <div class="skeleton-day">
+                <div class="skeleton-header"></div>
+                <div class="skeleton-slots">
+                    <div class="skeleton-slot"></div>
+                    <div class="skeleton-slot"></div>
+                </div>
+            </div>
+        }
+    </div>
 </div>
 
-<!-- 🔷 Create Appointment Modal -->
+<!-- 🔷 Create Modal -->
 <div class="custom-modal" id="apptModal">
     <div class="modal-overlay" onclick="closeCreateModal()"></div>
     <div class="modal-box">
@@ -333,7 +858,7 @@
                 <label class="form-label-custom">المريض <span class="text-danger">*</span></label>
                 <input type="text" class="form-control-custom" id="apptPatientSearch" placeholder="اكتب اسم المريض أو رقم الموبايل..." autocomplete="off" />
                 <input type="hidden" id="apptPatientId" />
-                <div id="apptPatientResults" style="border:1px solid #e2e8f0; border-radius:10px; margin-top:6px; max-height:160px; overflow-y:auto; display:none;"></div>
+                <div class="search-results-box" id="apptPatientResults"></div>
             </div>
             <div class="row g-3 mb-3">
                 <div class="col-6">
@@ -372,7 +897,7 @@
     </div>
 </div>
 
-<!-- 🔷 Appointment Details / Actions Modal -->
+<!-- 🔷 Details Modal -->
 <div class="custom-modal" id="detailsModal">
     <div class="modal-overlay" onclick="closeDetailsModal()"></div>
     <div class="modal-box">
@@ -380,12 +905,8 @@
             <h5><i class="bi bi-calendar-check me-2"></i> تفاصيل الموعد</h5>
             <button type="button" class="btn-close btn-close-white" onclick="closeDetailsModal()"></button>
         </div>
-        <div class="modal-body" id="detailsBody">
-            <!-- يتم تعبئته ديناميكيًا -->
-        </div>
-        <div class="modal-foot" id="detailsActions">
-            <!-- الأزرار حسب حالة الموعد -->
-        </div>
+        <div class="modal-body" id="detailsBody"></div>
+        <div class="modal-foot" id="detailsActions"></div>
     </div>
 </div>
 
@@ -396,7 +917,7 @@
 
         function getStartOfWeek(date) {
             const d = new Date(date);
-            const day = d.getDay(); // 0 = Sunday
+            const day = d.getDay();
             d.setDate(d.getDate() - day);
             d.setHours(0, 0, 0, 0);
             return d;
@@ -404,6 +925,11 @@
 
         function formatDateOnly(date) {
             return date.toISOString().split('T')[0];
+        }
+
+        function goToToday() {
+            currentWeekStart = getStartOfWeek(new Date());
+            loadWeek();
         }
 
         function shiftWeek(dir) {
@@ -431,6 +957,37 @@
             }
 
             renderWeek(start, events);
+            updateStats(events);
+        }
+
+        function updateStats(events) {
+            const today = formatDateOnly(new Date());
+            const totalWeek = events.length;
+            const confirmed = events.filter(e => e.status === 2).length;
+            const pending = events.filter(e => e.status === 1).length;
+            const todayCount = events.filter(e => formatDateOnly(new Date(e.start)) === today).length;
+
+            animateCount(document.getElementById('statTotalWeek'), totalWeek);
+            animateCount(document.getElementById('statConfirmed'), confirmed);
+            animateCount(document.getElementById('statPending'), pending);
+            animateCount(document.getElementById('statToday'), todayCount);
+        }
+
+        function animateCount(el, target) {
+            const start = parseInt(el.textContent) || 0;
+            const diff = target - start;
+            if (diff === 0) return;
+            const duration = 600;
+            const startTime = performance.now();
+
+            function step(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeProgress = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+                el.textContent = Math.floor(start + (diff * easeProgress));
+                if (progress < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
         }
 
         function renderWeek(weekStart, events) {
@@ -447,15 +1004,19 @@
 
                 const col = document.createElement('div');
                 col.className = 'day-column' + (dayKey === today ? ' is-today' : '');
+
+                const isToday = dayKey === today;
+
                 col.innerHTML = `
                     <div class="day-header">
+                        ${isToday ? '<div class="today-indicator"></div>' : ''}
                         <div class="day-name">${dayNames[day.getDay()]}</div>
                         <div class="day-number">${day.getDate()}</div>
                     </div>
                     <div class="day-slots">
-                        ${dayEvents.length === 0 ? '<div class="empty-day">لا توجد مواعيد</div>' : ''}
-                        ${dayEvents.map(e => `
-                            <div class="patient-slot" onclick="openDetailsModal(${e.id})">
+                        ${dayEvents.length === 0 ? '<div class="empty-day"><i class="bi bi-calendar-x"></i>لا توجد مواعيد</div>' : ''}
+                        ${dayEvents.map((e, idx) => `
+                            <div class="patient-slot" style="animation-delay: ${idx * 0.05}s" onclick="openDetailsModal(${e.id})">
                                 <div class="slot-time">${new Date(e.start).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</div>
                                 <div class="slot-name">${e.patientName}</div>
                                 <div class="slot-phone"><i class="bi bi-telephone-fill"></i> ${e.patientMobile}</div>
@@ -467,7 +1028,7 @@
             }
         }
 
-        // ── إنشاء موعد جديد ──
+        // ── Create Modal ──
         function openCreateModal() {
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
@@ -478,12 +1039,15 @@
             document.getElementById('apptReason').value = '';
             document.getElementById('apptConflictWarning').style.display = 'none';
             document.getElementById('apptModal').classList.add('show');
-        }
-        function closeCreateModal() {
-            document.getElementById('apptModal').classList.remove('show');
+            document.body.style.overflow = 'hidden';
         }
 
-        // ── بحث سريع عن المريض (يعتمد على Endpoint البحث الموجود بالفعل في PatientsController لو متاح) ──
+        function closeCreateModal() {
+            document.getElementById('apptModal').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // ── Patient Search ──
         let patientSearchTimeout;
         document.addEventListener('DOMContentLoaded', () => {
             const searchInput = document.getElementById('apptPatientSearch');
@@ -503,9 +1067,8 @@
 
         async function searchPatients(keyword) {
             try {
-                // يستخدم الـ Endpoint الموجود بالفعل: PatientsController.Search(string term)
                 const res = await fetch(`/Patients/Search?term=${encodeURIComponent(keyword)}`);
-                const list = await res.json(); // الـ Action ده بيرجّع Array مباشرة، مش {success, data}
+                const list = await res.json();
                 const box = document.getElementById('apptPatientResults');
                 if (!list.length) {
                     box.style.display = 'none';
@@ -514,9 +1077,7 @@
                 box.innerHTML = '';
                 list.forEach(function (p) {
                     const item = document.createElement('div');
-                    item.style.padding = '8px 12px';
-                    item.style.cursor = 'pointer';
-                    item.style.borderBottom = '1px solid #f1f5f9';
+                    item.className = 'search-result-item';
                     item.dataset.id = p.id;
                     item.dataset.name = p.fullNameAr || '';
                     item.textContent = (p.fullNameAr || '') + ' — ' + (p.phone || '');
@@ -530,6 +1091,7 @@
                 console.error('Patient search failed', err);
             }
         }
+
         function selectPatient(id, name) {
             document.getElementById('apptPatientId').value = id;
             document.getElementById('apptPatientSearch').value = name;
@@ -580,7 +1142,7 @@
             }
         }
 
-        // ── تفاصيل الموعد + الإجراءات حسب الحالة ──
+        // ── Details Modal ──
         async function openDetailsModal(id) {
             selectedAppointmentId = id;
             const res = await fetch(`/Appointments/GetById?id=${id}`);
@@ -592,31 +1154,34 @@
             const a = result.data;
 
             document.getElementById('detailsBody').innerHTML = `
-                <div class="mb-2"><strong>${a.patientName}</strong> <span class="slot-status ${a.statusColorClass}">${a.statusText}</span></div>
-                <div class="mb-2" style="color:#64748b; font-size:.85rem;"><i class="bi bi-telephone"></i> ${a.patientMobile}</div>
-                <div class="mb-2" style="color:#64748b; font-size:.85rem;"><i class="bi bi-clock"></i> ${new Date(a.start).toLocaleString('ar-EG')} — ${a.durationMinutes} دقيقة</div>
-                ${a.reason ? `<div class="mb-2"><strong>السبب:</strong> ${a.reason}</div>` : ''}
-                ${a.notes ? `<div class="mb-2"><strong>ملاحظات:</strong> ${a.notes}</div>` : ''}
+                <div class="mb-2"><strong style="font-size:1.1rem; color:var(--sc-ink-900);">${a.patientName}</strong> <span class="slot-status ${a.statusColorClass}">${a.statusText}</span></div>
+                <div class="mb-2" style="color:var(--sc-ink-600); font-size:.85rem;"><i class="bi bi-telephone"></i> ${a.patientMobile}</div>
+                <div class="mb-2" style="color:var(--sc-ink-600); font-size:.85rem;"><i class="bi bi-clock"></i> ${new Date(a.start).toLocaleString('ar-EG')} — ${a.durationMinutes} دقيقة</div>
+                ${a.reason ? `<div class="mb-2" style="color:var(--sc-ink-900);"><strong>السبب:</strong> ${a.reason}</div>` : ''}
+                ${a.notes ? `<div class="mb-2" style="color:var(--sc-ink-600);"><strong>ملاحظات:</strong> ${a.notes}</div>` : ''}
             `;
 
             const actions = [];
-            if (a.status === 1) { // Scheduled
+            if (a.status === 1) {
                 actions.push(`<button class="btn-modal btn-modal-info" onclick="doAction('Confirm')">تأكيد</button>`);
             }
-            if (a.status === 1 || a.status === 2) { // Scheduled/Confirmed
+            if (a.status === 1 || a.status === 2) {
                 actions.push(`<button class="btn-modal btn-modal-save" onclick="doAction('CheckIn')">تسجيل حضور</button>`);
                 actions.push(`<button class="btn-modal btn-modal-danger" onclick="doAction('Cancel')">إلغاء</button>`);
             }
-            if (a.status === 3 || a.status === 4) { // CheckedIn/InProgress
+            if (a.status === 3 || a.status === 4) {
                 actions.push(`<button class="btn-modal btn-modal-save" onclick="convertToVisit()">بدء الزيارة</button>`);
             }
             actions.push(`<button class="btn-modal btn-modal-cancel" onclick="closeDetailsModal()">إغلاق</button>`);
 
             document.getElementById('detailsActions').innerHTML = actions.join('');
             document.getElementById('detailsModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
         }
+
         function closeDetailsModal() {
             document.getElementById('detailsModal').classList.remove('show');
+            document.body.style.overflow = '';
         }
 
         async function doAction(action) {
@@ -637,11 +1202,9 @@
 
         async function convertToVisit() {
             try {
-                // 1 = General, 2 = Orthodontics — عدّل الافتراضي حسب سير العمل عندك
                 const res = await fetch(`/Appointments/ConvertToVisit?id=${selectedAppointmentId}&category=1`, { method: 'POST' });
                 const result = await res.json();
                 if (result.success) {
-                    // يوجّه لصفحة الكشف (Session) في ClinicalController مباشرة
                     window.location.href = `/Clinical/Session?patientId=${result.patientId}&visitId=${result.visitId}`;
                 } else {
                     Swal.fire({ title: 'تعذر التنفيذ', text: result.message, icon: 'error' });
@@ -650,5 +1213,13 @@
                 Swal.fire({ title: 'خطأ', text: 'مشكلة في الاتصال بالسيرفر', icon: 'error' });
             }
         }
+
+        // ── Keyboard Shortcuts ──
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                closeCreateModal();
+                closeDetailsModal();
+            }
+        });
     </script>
 }

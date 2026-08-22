@@ -5,177 +5,353 @@
 }
 
 <style>
-    .patient-dashboard {
-        padding: 12px;
-        background: #f1f5f9;
-        min-height: 100vh;
+    :root {
+        --sc-teal-900: #0a4d4f;
+        --sc-teal-700: #0d7377;
+        --sc-teal-600: #0f9b8e;
+        --sc-teal-500: #14b8a6;
+        --sc-teal-100: #c7f2ea;
+        --sc-sky-50: #eafbfc;
+        --sc-sky-100: #dcf5f7;
+        --sc-coral-300: #f6c6bc;
+        --sc-ink-900: #0b2e30;
+        --sc-ink-600: #4b6b6c;
+        --brand: #0d9488;
+        --brand-dark: #0f766e;
+        --brand-light: #f0fdfa;
+        --radius-lg: 18px;
+        --radius-md: 12px;
+        --shadow-soft: 0 1px 3px rgba(15, 23, 42, 0.06);
+        --shadow-hover: 0 10px 26px rgba(10, 77, 79, 0.12);
+        --shadow-card: 0 20px 50px rgba(10, 77, 79, .08);
     }
 
-    /* ── Header ── */
-    .stmt-hero {
+    body {
+        background: radial-gradient(circle at 6% 4%, var(--sc-teal-100) 0%, transparent 38%), radial-gradient(circle at 97% 92%, var(--sc-coral-300) 0%, transparent 26%), var(--sc-sky-50);
+    }
+
+    /* ── Hero ── */
+    .statement-hero {
+        background: linear-gradient(135deg, var(--sc-teal-700), var(--sc-teal-500));
+        border-radius: var(--radius-lg);
+        padding: 24px 28px;
         display: flex;
+        align-items: center;
         justify-content: space-between;
-        align-items: center;
-        background: #fff;
-        border-radius: 16px;
-        padding: 20px 28px;
-        margin-bottom: 16px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    }
-
-        .stmt-hero .hero-icon {
-            width: 52px;
-            height: 52px;
-            background: #f0fdfa;
-            color: #0d9488;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            flex-shrink: 0;
-        }
-
-    .stmt-hero-title {
-        display: flex;
-        align-items: center;
+        box-shadow: 0 14px 34px rgba(13, 115, 119, .28);
+        margin-bottom: 20px;
+        flex-wrap: wrap;
         gap: 16px;
-    }
-
-    .stmt-hero h2 {
-        margin: 0;
-        font-weight: 800;
-        font-size: 1.25rem;
-        color: #1e293b;
-    }
-
-    .stmt-hero .sub {
-        color: #64748b;
-        font-size: .85rem;
-        font-weight: 600;
-        margin-top: 4px;
-    }
-
-    /* ── Summary Cards ── */
-    .summary-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 12px;
-        margin-bottom: 20px;
-    }
-
-    .summary-card {
-        background: #fff;
-        border-radius: 14px;
-        padding: 18px 20px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-        text-align: center;
-        transition: all .25s ease;
-    }
-
-        .summary-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-            border-color: #cbd5e1;
-        }
-
-        .summary-card .label {
-            font-size: .78rem;
-            color: #64748b;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .summary-card .value {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: #0f172a;
-        }
-
-        .summary-card.remaining .value {
-            color: #b91c1c;
-        }
-
-        .summary-card.paid .value {
-            color: #047857;
-        }
-
-    /* ── Sections (مطابقة لـ info-card) ── */
-    .section-shell {
-        background: #fff;
-        border-radius: 14px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-        padding: 0;
-        margin-bottom: 20px;
+        position: relative;
         overflow: hidden;
     }
 
-        .section-shell .section-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 18px;
-            background: #f8fafc;
-            border-bottom: 1px solid #f1f5f9;
+        .statement-hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 92% -20%, rgba(255,255,255,.32), transparent 55%);
+            pointer-events: none;
         }
 
-        .section-shell h5 {
+        .statement-hero .hero-content {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .statement-hero .hero-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: rgba(255,255,255,.18);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            flex-shrink: 0;
+            backdrop-filter: blur(6px);
+            border: 2px solid rgba(255,255,255,.2);
+        }
+
+        .statement-hero h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin: 0;
+            color: #fff;
+        }
+
+        .statement-hero .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+    .hero-meta-tag {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,.15);
+        color: #fff;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,.1);
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 10px;
+        position: relative;
+        z-index: 1;
+        flex-wrap: wrap;
+    }
+
+    .btn-hero {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.88rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .btn-hero-back {
+        background: rgba(255,255,255,.9);
+        color: var(--sc-teal-700);
+        box-shadow: 0 4px 12px rgba(10, 40, 42, .15);
+    }
+
+        .btn-hero-back:hover {
+            background: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(10, 40, 42, .22);
+            color: var(--sc-teal-700);
+        }
+
+    .btn-hero-print {
+        background: rgba(255,255,255,.15);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,.25);
+        backdrop-filter: blur(4px);
+    }
+
+        .btn-hero-print:hover {
+            background: rgba(255,255,255,.25);
+            transform: translateY(-2px);
+        }
+
+    /* ── Stats ── */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card-glass {
+        background: rgba(255,255,255,.78);
+        backdrop-filter: blur(14px);
+        border-radius: 16px;
+        padding: 20px;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,.6);
+        box-shadow: var(--shadow-soft);
+        transition: all .25s ease;
+        animation: cardPopIn 0.5s ease forwards;
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+        .stat-card-glass:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-card-glass:nth-child(1) {
+            animation-delay: .05s;
+        }
+
+        .stat-card-glass:nth-child(2) {
+            animation-delay: .1s;
+        }
+
+        .stat-card-glass:nth-child(3) {
+            animation-delay: .15s;
+        }
+
+        .stat-card-glass:nth-child(4) {
+            animation-delay: .2s;
+        }
+
+    @@keyframes cardPopIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .stat-card-glass .stat-label {
+        font-size: .78rem;
+        color: var(--sc-ink-600);
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .stat-card-glass .stat-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--sc-ink-900);
+    }
+
+    .stat-card-glass.paid .stat-value {
+        color: #047857;
+    }
+
+    .stat-card-glass.due .stat-value {
+        color: #b91c1c;
+    }
+
+    /* ── Section Shells ── */
+    .section-shell {
+        background: rgba(255,255,255,.82);
+        backdrop-filter: blur(16px);
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(255,255,255,.6);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        margin-bottom: 20px;
+        animation: sectionFadeIn 0.5s ease forwards;
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+        .section-shell:nth-of-type(1) {
+            animation-delay: .25s;
+        }
+
+        .section-shell:nth-of-type(2) {
+            animation-delay: .35s;
+        }
+
+    @@keyframes sectionFadeIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        background: var(--sc-sky-50);
+        border-bottom: 1px solid var(--sc-sky-100);
+    }
+
+        .section-head h5 {
             font-weight: 800;
             font-size: 0.95rem;
-            color: #1e293b;
+            color: var(--sc-ink-900);
             margin: 0;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-            .section-shell h5 i {
-                color: #14b8a6;
+            .section-head h5 i {
+                color: var(--sc-teal-600);
                 font-size: 1.1rem;
             }
 
-        .section-shell .section-body {
-            padding: 16px 18px;
-        }
-
-    table.stmt-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: .87rem;
+    .section-body {
+        padding: 0;
     }
 
-        table.stmt-table th {
+    /* ── Tables ── */
+    .stmt-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: .88rem;
+        margin: 0;
+    }
+
+        .stmt-table thead th {
+            background: var(--sc-sky-50);
+            color: var(--sc-ink-600);
+            font-weight: 800;
+            padding: 14px 16px;
+            border: none;
+            border-bottom: 2px solid var(--sc-sky-100);
             text-align: right;
-            color: #64748b;
-            font-weight: 700;
-            padding: 8px;
-            border-bottom: 2px solid #f1f5f9;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
         }
 
-        table.stmt-table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #f8fafc;
+        .stmt-table tbody tr {
+            transition: background-color .2s ease;
+            animation: rowFadeIn 0.4s ease forwards;
+            opacity: 0;
         }
+
+            .stmt-table tbody tr:hover {
+                background-color: var(--brand-light) !important;
+            }
+
+    @@keyframes rowFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(6px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .stmt-table tbody td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--sc-sky-100);
+        color: var(--sc-ink-900);
+        font-weight: 600;
+    }
+
+    .stmt-table tbody tr:last-child td {
+        border-bottom: none;
+    }
 
     .badge-paid {
         background: #d1fae5;
         color: #047857;
-        padding: 2px 10px;
-        border-radius: 6px;
-        font-size: .72rem;
-        font-weight: 700;
+        padding: 3px 12px;
+        border-radius: 8px;
+        font-size: .75rem;
+        font-weight: 800;
     }
 
     .badge-due {
         background: #fee2e2;
         color: #b91c1c;
-        padding: 2px 10px;
-        border-radius: 6px;
-        font-size: .72rem;
-        font-weight: 700;
+        padding: 3px 12px;
+        border-radius: 8px;
+        font-size: .75rem;
+        font-weight: 800;
     }
 
     .btn-void {
@@ -183,37 +359,60 @@
         border: none;
         color: #b91c1c;
         cursor: pointer;
-        font-size: .78rem;
+        font-size: .8rem;
         font-weight: 700;
+        transition: all .2s;
+        padding: 4px 8px;
+        border-radius: 6px;
     }
+
+        .btn-void:hover {
+            background: #fee2e2;
+            transform: scale(1.05);
+        }
 
     .btn-add-payment {
         display: flex;
         align-items: center;
         gap: 8px;
-        background: linear-gradient(135deg, #14b8a6, #0d9488);
+        background: linear-gradient(135deg, var(--sc-teal-600), var(--sc-teal-700));
         color: #fff;
         border: none;
-        padding: 9px 18px;
-        border-radius: 10px;
-        font-weight: 700;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 800;
         font-size: 0.85rem;
         cursor: pointer;
-        box-shadow: 0 4px 12px rgba(13,148,136,0.2);
+        box-shadow: 0 4px 12px rgba(13,148,136,0.25);
         transition: all .2s ease;
     }
 
         .btn-add-payment:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(13,148,136,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(13,148,136,0.35);
         }
 
-    /* ── Modal (مطابق لـ custom-modal بتاع Details) ── */
+    /* ── Empty State ── */
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+
+        .empty-state i {
+            display: block;
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            color: var(--sc-sky-100);
+        }
+
+    /* ── Modal ── */
     .custom-modal {
+        display: none;
         position: fixed;
         inset: 0;
         z-index: 9999;
-        display: none;
         align-items: center;
         justify-content: center;
     }
@@ -233,7 +432,7 @@
         position: relative;
         z-index: 1;
         width: 90%;
-        max-width: 440px;
+        max-width: 480px;
         background: #fff;
         border-radius: 20px;
         box-shadow: 0 25px 60px rgba(0,0,0,0.2);
@@ -258,7 +457,7 @@
         justify-content: space-between;
         align-items: center;
         padding: 18px 24px;
-        background: linear-gradient(135deg, #14b8a6, #0d9488);
+        background: linear-gradient(135deg, var(--sc-teal-600), var(--sc-teal-700));
         color: #fff;
     }
 
@@ -285,24 +484,22 @@
         font-weight: 700;
         color: #475569;
         margin-bottom: 6px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
 
     .form-control-custom {
         width: 100%;
         padding: 10px 14px;
-        border: 1.5px solid #e2e8f0;
+        border: 1.5px solid var(--sc-sky-100);
         border-radius: 10px;
         font-size: 0.95rem;
-        color: #1e293b;
+        color: var(--sc-ink-900);
         background: #fff;
         transition: all 0.2s;
         outline: none;
     }
 
         .form-control-custom:focus {
-            border-color: #14b8a6;
+            border-color: var(--sc-teal-500);
             box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
         }
 
@@ -326,7 +523,7 @@
         }
 
     .btn-modal-save {
-        background: linear-gradient(135deg, #14b8a6, #0d9488);
+        background: linear-gradient(135deg, var(--sc-teal-600), var(--sc-teal-700));
         color: #fff;
     }
 
@@ -335,44 +532,185 @@
             box-shadow: 0 6px 16px rgba(13,148,136,0.3);
         }
 
+    /* ── Loading Overlay ── */
+    .loading-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(255,255,255,0.85);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        backdrop-filter: blur(4px);
+        border-radius: var(--radius-lg);
+    }
+
+    .loading-pulse {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--brand-dark);
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+        .loading-pulse i {
+            animation: spin 0.9s linear infinite;
+            font-size: 1.3rem;
+        }
+
+    @@keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* ── Responsive ── */
     @@media (max-width: 1100px) {
-        .summary-grid {
+        .stats-grid {
             grid-template-columns: repeat(2, 1fr);
         }
     }
 
     @@media (max-width: 768px) {
-        .stmt-hero {
+        .statement-hero {
             flex-direction: column;
             text-align: center;
-            gap: 12px;
+            padding: 20px;
         }
 
-        .summary-grid {
+            .statement-hero .hero-content {
+                flex-direction: column;
+            }
+
+        .hero-actions {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .section-head {
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .stmt-table {
+            font-size: 0.8rem;
+        }
+
+            .stmt-table thead th, .stmt-table tbody td {
+                padding: 10px 8px;
+            }
+    }
+
+    @@media (max-width: 480px) {
+        .stats-grid {
             grid-template-columns: 1fr;
+        }
+    }
+
+    @@media print {
+        .statement-hero, .btn-hero, .btn-add-payment, .btn-void, .custom-modal {
+            display: none !important;
+        }
+
+        body {
+            background: #fff;
+        }
+
+        .section-shell {
+            box-shadow: none;
+            border: 1px solid #ddd;
         }
     }
 </style>
 
-<div class="container-fluid patient-dashboard" dir="rtl">
+<div class="container-fluid" dir="rtl" style="padding: 12px; position: relative;">
 
-    <div class="stmt-hero">
-        <div class="stmt-hero-title">
-            <div class="hero-icon"><i class="bi bi-receipt-cutoff"></i></div>
-            <div>
-                <h2 id="stmtPatientName">جاري التحميل...</h2>
-                <div class="sub" id="stmtPatientMeta"></div>
-            </div>
+    <!-- 🔷 Loading Overlay -->
+    <div class="loading-overlay" id="pageLoading">
+        <div class="loading-pulse">
+            <i class="bi bi-arrow-repeat"></i> جاري تحميل كشف الحساب...
         </div>
     </div>
 
-    <div class="summary-grid">
-        <div class="summary-card"><div class="label">إجمالي المطلوب</div><div class="value" id="sumTotal">—</div></div>
-        <div class="summary-card"><div class="label">إجمالي الخصم</div><div class="value" id="sumDiscount">—</div></div>
-        <div class="summary-card paid"><div class="label">إجمالي المدفوع</div><div class="value" id="sumPaid">—</div></div>
-        <div class="summary-card remaining"><div class="label">المتبقي</div><div class="value" id="sumRemaining">—</div></div>
+    <!-- 🔷 Hero -->
+    <div class="statement-hero">
+        <div class="hero-content">
+            <div class="hero-avatar"><i class="bi bi-receipt-cutoff"></i></div>
+            <div>
+                <h1 id="stmtPatientName">جاري التحميل...</h1>
+                <div class="hero-meta">
+                    <span class="hero-meta-tag" id="stmtPatientCode"><i class="bi bi-hash"></i> —</span>
+                    <span class="hero-meta-tag" id="stmtPatientMobile"><i class="bi bi-telephone"></i> —</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-actions">
+            <a href="/Payments" class="btn-hero btn-hero-back">
+                <i class="bi bi-arrow-right"></i> رجوع
+            </a>
+            <button type="button" class="btn-hero btn-hero-print" onclick="window.print()">
+                <i class="bi bi-printer"></i> طباعة
+            </button>
+        </div>
     </div>
 
+    <!-- 🔷 Stats -->
+    <div class="stats-grid">
+        <div class="stat-card-glass">
+            <div class="stat-label">إجمالي المطلوب</div>
+            <div class="stat-value" id="sumTotal">—</div>
+        </div>
+        <div class="stat-card-glass">
+            <div class="stat-label">إجمالي الخصم</div>
+            <div class="stat-value" id="sumDiscount">—</div>
+        </div>
+        <div class="stat-card-glass paid">
+            <div class="stat-label">إجمالي المدفوع</div>
+            <div class="stat-value" id="sumPaid">—</div>
+        </div>
+        <div class="stat-card-glass due">
+            <div class="stat-label">المتبقي</div>
+            <div class="stat-value" id="sumRemaining">—</div>
+        </div>
+    </div>
+    <!-- 🔷 Payments Section -->
+    <div class="section-shell">
+        <div class="section-head">
+            <h5><i class="bi bi-cash-stack"></i> سجل الدفعات</h5>
+            <button class="btn-add-payment" onclick="openAddPaymentModal()">
+                <i class="bi bi-plus-lg"></i> دفعة جديدة
+            </button>
+        </div>
+        <div class="section-body">
+            <table class="stmt-table">
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>الزيارة</th>
+                        <th>المبلغ</th>
+                        <th>الطريقة</th>
+                        <th>رقم الإيصال</th>
+                        <th>ملاحظات</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="paymentsBody">
+                    <tr><td colspan="7" class="empty-state"><i class="bi bi-hourglass-split"></i>جاري التحميل...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- 🔷 Visits Section -->
     <div class="section-shell">
         <div class="section-head">
             <h5><i class="bi bi-clipboard2-data"></i> الزيارات</h5>
@@ -380,27 +718,24 @@
         <div class="section-body">
             <table class="stmt-table">
                 <thead>
-                    <tr><th>التاريخ</th><th>النوع</th><th>الإجمالي</th><th>الخصم</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>النوع</th>
+                        <th>الإجمالي</th>
+                        <th>الخصم</th>
+                        <th>المدفوع</th>
+                        <th>المتبقي</th>
+                        <th>الحالة</th>
+                    </tr>
                 </thead>
-                <tbody id="visitsBody"></tbody>
+                <tbody id="visitsBody">
+                    <tr><td colspan="7" class="empty-state"><i class="bi bi-hourglass-split"></i>جاري التحميل...</td></tr>
+                </tbody>
             </table>
         </div>
     </div>
 
-    <div class="section-shell">
-        <div class="section-head">
-            <h5><i class="bi bi-cash-stack"></i> سجل الدفعات</h5>
-            <button class="btn-add-payment" onclick="openAddPaymentModal()"><i class="bi bi-plus-lg"></i> دفعة جديدة</button>
-        </div>
-        <div class="section-body">
-            <table class="stmt-table">
-                <thead>
-                    <tr><th>التاريخ</th><th>الزيارة</th><th>المبلغ</th><th>الطريقة</th><th>رقم الإيصال</th><th>ملاحظات</th><th></th></tr>
-                </thead>
-                <tbody id="paymentsBody"></tbody>
-            </table>
-        </div>
-    </div>
+
 
     <!-- 🔷 Add Payment Modal -->
     <div class="custom-modal" id="payModal">
@@ -417,7 +752,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label-custom">المبلغ <span class="text-danger">*</span></label>
-                    <input type="number" step="0.01" class="form-control-custom" id="payAmount" />
+                    <input type="number" step="0.01" class="form-control-custom" id="payAmount" placeholder="0.00" />
                 </div>
                 <div class="mb-3">
                     <label class="form-label-custom">طريقة الدفع</label>
@@ -432,7 +767,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label-custom">ملاحظات</label>
-                    <textarea class="form-control-custom" id="payDesc" rows="2"></textarea>
+                    <textarea class="form-control-custom" id="payDesc" rows="2" placeholder="ملاحظات إضافية..."></textarea>
                 </div>
             </div>
             <div class="modal-foot">
@@ -452,33 +787,59 @@
         document.addEventListener('DOMContentLoaded', loadStatement);
 
         async function loadStatement() {
-            const res = await fetch(`/Payments/GetStatement?patientId=${patientId}`);
-            const result = await res.json();
-            if (!result.success) {
-                Swal.fire({ title: 'خطأ', text: result.message, icon: 'error' });
-                return;
+            try {
+                const res = await fetch(`/Payments/GetStatement?patientId=${patientId}`);
+                const result = await res.json();
+
+                document.getElementById('pageLoading').style.display = 'none';
+
+                if (!result.success) {
+                    Swal.fire({ title: 'خطأ', text: result.message, icon: 'error' });
+                    return;
+                }
+                renderStatement(result.data);
+            } catch (err) {
+                document.getElementById('pageLoading').style.display = 'none';
+                console.error('Failed to load statement', err);
+                Swal.fire({ title: 'خطأ', text: 'فشل تحميل البيانات من الخادم', icon: 'error' });
             }
-            renderStatement(result.data);
         }
 
         function money(v) {
             return Number(v).toLocaleString('ar-EG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
+        function animateCount(el, target) {
+            const start = 0;
+            const duration = 800;
+            const startTime = performance.now();
+
+            function step(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                el.textContent = money(start + (target * easeProgress));
+                if (progress < 1) requestAnimationFrame(step);
+                else el.textContent = money(target);
+            }
+            requestAnimationFrame(step);
+        }
+
         function renderStatement(data) {
             currentVisits = data.visits;
 
             document.getElementById('stmtPatientName').textContent = data.patientName;
-            document.getElementById('stmtPatientMeta').textContent = `${data.patientCode} — ${data.patientMobile}`;
+            document.getElementById('stmtPatientCode').innerHTML = `<i class="bi bi-hash"></i> ${data.patientCode}`;
+            document.getElementById('stmtPatientMobile').innerHTML = `<i class="bi bi-telephone"></i> ${data.patientMobile || '—'}`;
 
-            document.getElementById('sumTotal').textContent = money(data.totalAmount);
-            document.getElementById('sumDiscount').textContent = money(data.totalDiscount);
-            document.getElementById('sumPaid').textContent = money(data.totalPaid);
-            document.getElementById('sumRemaining').textContent = money(data.totalRemaining);
+            animateCount(document.getElementById('sumTotal'), data.totalAmount);
+            animateCount(document.getElementById('sumDiscount'), data.totalDiscount);
+            animateCount(document.getElementById('sumPaid'), data.totalPaid);
+            animateCount(document.getElementById('sumRemaining'), data.totalRemaining);
 
             const visitsBody = document.getElementById('visitsBody');
-            visitsBody.innerHTML = data.visits.length ? data.visits.map(v => `
-                <tr>
+            visitsBody.innerHTML = data.visits.length ? data.visits.map((v, i) => `
+                <tr style="animation-delay: ${i * 0.04}s">
                     <td>${new Date(v.visitDate).toLocaleDateString('ar-EG')}</td>
                     <td>${v.category === 2 ? 'تقويم' : 'عام'}</td>
                     <td>${money(v.totalAmount)}</td>
@@ -486,21 +847,20 @@
                     <td>${money(v.paidAmount)}</td>
                     <td>${money(v.remaining)}</td>
                     <td>${v.isFullyPaid ? '<span class="badge-paid">مسدد</span>' : '<span class="badge-due">متبقي</span>'}</td>
-                </tr>`).join('') : '<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:16px;">لا توجد زيارات</td></tr>';
+                </tr>`).join('') : '<tr><td colspan="7" class="empty-state"><i class="bi bi-inbox"></i>لا توجد زيارات مسجلة</td></tr>';
 
             const paymentsBody = document.getElementById('paymentsBody');
-            paymentsBody.innerHTML = data.payments.length ? data.payments.map(p => `
-                <tr>
+            paymentsBody.innerHTML = data.payments.length ? data.payments.map((p, i) => `
+                <tr style="animation-delay: ${i * 0.04}s">
                     <td>${new Date(p.paymentDate).toLocaleDateString('ar-EG')}</td>
                     <td>${new Date(p.visitDate).toLocaleDateString('ar-EG')}</td>
-                    <td>${money(p.amount)}</td>
+                    <td style="font-weight:800; color:#047857;">${money(p.amount)}</td>
                     <td>${p.methodText}</td>
                     <td style="direction:ltr; text-align:right;">${p.receiptNo || '—'}</td>
                     <td>${p.description || ''}</td>
                     <td><button class="btn-void" onclick="voidPayment(${p.id})"><i class="bi bi-x-circle"></i> إلغاء</button></td>
-                </tr>`).join('') : '<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:16px;">لا توجد دفعات</td></tr>';
+                </tr>`).join('') : '<tr><td colspan="7" class="empty-state"><i class="bi bi-inbox"></i>لا توجد دفعات مسجلة</td></tr>';
 
-            // تجهيز الـ dropdown بتاع الزيارات في مودال الدفع (بس اللي لسه عليها متبقي)
             const dueVisits = data.visits.filter(v => v.remaining > 0);
             document.getElementById('payVisitId').innerHTML = dueVisits.length
                 ? dueVisits.map(v => `<option value="${v.visitId}">${new Date(v.visitDate).toLocaleDateString('ar-EG')} — متبقي ${money(v.remaining)}</option>`).join('')
@@ -511,9 +871,12 @@
             document.getElementById('payAmount').value = '';
             document.getElementById('payDesc').value = '';
             document.getElementById('payModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
         }
+
         function closeAddPaymentModal() {
             document.getElementById('payModal').classList.remove('show');
+            document.body.style.overflow = '';
         }
 
         async function submitPayment() {
@@ -554,18 +917,27 @@
                 showCancelButton: true,
                 confirmButtonText: 'أيوه، إلغاء',
                 cancelButtonText: 'رجوع',
-                confirmButtonColor: '#b91c1c'
+                confirmButtonColor: '#b91c1c',
+                reverseButtons: true
             });
             if (!confirm.isConfirmed) return;
 
-            const res = await fetch(`/Payments/VoidPayment?paymentId=${paymentId}`, { method: 'POST' });
-            const result = await res.json();
-            if (result.success) {
-                Swal.fire({ title: 'تم', text: result.message, icon: 'success', timer: 1500, showConfirmButton: false });
-                loadStatement();
-            } else {
-                Swal.fire({ title: 'تعذر التنفيذ', text: result.message, icon: 'error' });
+            try {
+                const res = await fetch(`/Payments/VoidPayment?paymentId=${paymentId}`, { method: 'POST' });
+                const result = await res.json();
+                if (result.success) {
+                    Swal.fire({ title: 'تم', text: result.message, icon: 'success', timer: 1500, showConfirmButton: false });
+                    loadStatement();
+                } else {
+                    Swal.fire({ title: 'تعذر التنفيذ', text: result.message, icon: 'error' });
+                }
+            } catch (err) {
+                Swal.fire({ title: 'خطأ', text: 'مشكلة في الاتصال بالسيرفر', icon: 'error' });
             }
         }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeAddPaymentModal();
+        });
     </script>
 }

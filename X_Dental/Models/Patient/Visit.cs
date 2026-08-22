@@ -29,9 +29,8 @@ namespace Dental.Models.Patient
         public decimal TotalAmount { get; set; }
         public decimal Discount { get; set; }
         public decimal PaidAmount { get; set; }
-
         [NotMapped]
-        public decimal Remaining => TotalAmount - Discount - PaidAmount;
+        public int Remaining => (int)(TotalAmount - Discount - PaidAmount);
 
         // Navigation
         public ICollection<VisitDiagnosis> Diagnoses { get; set; } = new List<VisitDiagnosis>();

@@ -1,249 +1,103 @@
 ﻿@model Dental.Modules.Patients.ViewModels.PatientIndexViewModel
+
 @{
     ViewData["Title"] = "قائمة المرضى";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 @section Styles {
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" />
+
+    <link rel="stylesheet"
+          href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css" />
+
+    <link rel="stylesheet"
+          href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" />
+
     <style>
+
+        /* ============================================================
+                   DENTAL DESIGN SYSTEM
+                   ============================================================ */
+
         :root {
+            --dental-900: #0a4d4f;
+            --dental-800: #0b6265;
+            --dental-700: #0d7377;
+            --dental-600: #0f9b8e;
+            --dental-500: #14b8a6;
+            --dental-400: #2dd4bf;
+            --dental-300: #5eead4;
+            --dental-200: #99f6e4;
+            --dental-100: #c7f2ea;
+            --sky-50: #eafbfc;
+            --sky-100: #dcf5f7;
+            --coral-300: #f6c6bc;
+            --ink-900: #0b2e30;
+            --ink-700: #315758;
+            --ink-600: #4b6b6c;
+            --ink-500: #668081;
             --brand: #0d9488;
             --brand-dark: #0f766e;
             --brand-light: #f0fdfa;
-            --radius-lg: 16px;
-            --radius-md: 12px;
-            --shadow-soft: 0 1px 3px rgba(15, 23, 42, 0.06);
-            --shadow-hover: 0 8px 20px rgba(15, 23, 42, 0.08);
+            --white-glass: rgba(255,255,255,.78);
+            --card-grad: linear-gradient( 145deg, rgba(255,255,255,.94), rgba(255,255,255,.68) );
+            --shadow-card: 0 20px 50px rgba(10,77,79,.08);
+            --shadow-hover: 0 22px 50px rgba(10,77,79,.15);
+            --radius-xl: 24px;
+            --radius-lg: 20px;
+            --radius-md: 14px;
+            --ease-dental: cubic-bezier(.2,.8,.3,1);
         }
+
+
+        /* ============================================================
+                   PAGE BACKGROUND
+                   ============================================================ */
 
         body {
-            background: #f1f5f9;
+            background: radial-gradient( circle at 4% 5%, var(--dental-100) 0%, transparent 34% ), radial-gradient( circle at 96% 90%, var(--coral-300) 0%, transparent 27% ), var(--sky-50);
         }
 
-        /* ── Header ── */
+
+        /* ============================================================
+                   MAIN PAGE
+                   ============================================================ */
+
+        .patients-page {
+            min-height: 100vh;
+            padding-bottom: 30px;
+        }
+
+
+        /* ============================================================
+                   HERO
+                   ============================================================ */
+
         .patients-hero {
-            background: #fff;
-            border-radius: var(--radius-lg);
-            padding: 20px 28px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: var(--shadow-soft);
-            margin-bottom: 16px;
-            border: 1px solid #e2e8f0;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-            .patients-hero .hero-title {
-                display: flex;
-                align-items: center;
-                gap: 16px;
-            }
-
-            .patients-hero .hero-icon {
-                width: 52px;
-                height: 52px;
-                background: var(--brand-light);
-                color: var(--brand);
-                border-radius: 14px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.4rem;
-                flex-shrink: 0;
-            }
-
-            .patients-hero h1 {
-                font-size: 1.25rem;
-                font-weight: 800;
-                margin: 0;
-                color: #1e293b;
-            }
-
-            .patients-hero p {
-                font-size: 0.85rem;
-                margin: 2px 0 0;
-                color: #64748b;
-                font-weight: 600;
-            }
-
-        .btn-add-patient {
-            background: linear-gradient(135deg, #14b8a6, #0d9488);
-            color: #fff;
-            border: none;
-            padding: 11px 22px;
-            border-radius: 10px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            box-shadow: 0 4px 12px rgba(13,148,136,0.25);
-            transition: all .2s ease;
-            font-size: 0.9rem;
-        }
-
-            .btn-add-patient:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 16px rgba(13,148,136,0.35);
-                color: #fff;
-            }
-
-        /* ── Stats ── */
-        .stat-card {
-            background: #fff;
-            border-radius: 14px;
-            padding: 18px 20px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            border: 1px solid #e2e8f0;
-            box-shadow: var(--shadow-soft);
-            transition: all .25s ease;
-            height: 100%;
-        }
-
-            .stat-card:hover {
-                transform: translateY(-2px);
-                box-shadow: var(--shadow-hover);
-                border-color: #cbd5e1;
-            }
-
-        .stat-icon {
-            width: 46px;
-            height: 46px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.15rem;
-            flex-shrink: 0;
-        }
-
-        .stat-total .stat-icon {
-            background: #f0fdfa;
-            color: #0f766e;
-        }
-
-        .stat-general .stat-icon {
-            background: #eff6ff;
-            color: #1d4ed8;
-        }
-
-        .stat-ortho .stat-icon {
-            background: #fffbeb;
-            color: #b45309;
-        }
-
-        .stat-both .stat-icon {
-            background: #f5f3ff;
-            color: #6d28d9;
-        }
-
-        .stat-value {
-            display: block;
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: #1e293b;
-            line-height: 1.1;
-        }
-
-        .stat-label {
-            font-size: 0.78rem;
-            color: #64748b;
-            font-weight: 600;
-        }
-
-        /* ── Card + Filters ── */
-        .patients-card {
-            background: #fff;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-soft);
+            position: relative;
             overflow: hidden;
-            border: 1px solid #e2e8f0;
-        }
-
-        .filter-bar {
+            isolation: isolate;
+            border-radius: var(--radius-xl);
+            background: linear-gradient( 135deg, #0a5d60 0%, #0d7377 38%, #119e91 72%, #0f9b8e 100% );
+            padding: 27px 30px;
+            color: #fff;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 20px;
-            border-bottom: 1px solid #f1f5f9;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .pill-toggle {
-            display: inline-flex;
-            background: #f1f5f9;
-            border-radius: 999px;
-            padding: 4px;
-            gap: 2px;
-        }
-
-            .pill-toggle .pill-btn {
-                border: none;
-                background: transparent;
-                padding: 8px 18px;
-                border-radius: 999px;
-                font-size: 0.85rem;
-                font-weight: 700;
-                color: #64748b;
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                transition: all .2s ease;
-                cursor: pointer;
-            }
-
-                .pill-toggle .pill-btn.active {
-                    background: linear-gradient(135deg, #14b8a6, #0d9488);
-                    color: #fff;
-                    box-shadow: 0 4px 10px rgba(13,148,136,0.25);
-                }
-
-                .pill-toggle .pill-btn:hover:not(.active) {
-                    color: var(--brand-dark);
-                    background: #e2e8f0;
-                }
-
-        /* ── Table ── */
-        #tablePatients thead th {
-            background: #f8fafc !important;
-            color: #475569 !important;
-            font-size: 0.78rem;
-            font-weight: 800;
-            border: none !important;
-            border-bottom: 2px solid #f1f5f9 !important;
-            padding: 14px 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-        }
-
-        #tablePatients tbody td {
-            padding: 12px 10px;
-            vertical-align: middle;
-            border-color: #f1f5f9;
-            font-size: 0.88rem;
-        }
-
-        #tablePatients tbody tr {
-            transition: background-color .2s ease, transform .15s ease;
+            gap: 20px;
+            box-shadow: 0 20px 45px rgba(13,115,119,.27);
+            margin-bottom: 22px;
             opacity: 0;
-            animation: rowFadeIn .4s ease forwards;
+            transform: translateY(25px);
+            animation: dentalHeroEnter .75s var(--ease-dental) forwards;
         }
 
-            #tablePatients tbody tr:hover {
-                background-color: var(--brand-light) !important;
-            }
 
-        @@keyframes rowFadeIn {
+        @@keyframes dentalHeroEnter {
+
             from {
                 opacity: 0;
-                transform: translateY(6px);
+                transform: translateY(25px);
             }
 
             to {
@@ -252,51 +106,612 @@
             }
         }
 
-        #tablePatients tbody tr:nth-child(1) {
-            animation-delay: .02s;
+
+        /* Hero light */
+
+        .patients-hero::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient( circle at 90% -20%, rgba(255,255,255,.34), transparent 46% );
+            pointer-events: none;
+            z-index: -1;
         }
 
-        #tablePatients tbody tr:nth-child(2) {
-            animation-delay: .05s;
+
+        /* ============================================================
+                   FLOATING DENTAL ELEMENTS
+                   ============================================================ */
+
+        .dental-floating-icons {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: -1;
         }
 
-        #tablePatients tbody tr:nth-child(3) {
-            animation-delay: .08s;
-        }
 
-        #tablePatients tbody tr:nth-child(4) {
-            animation-delay: .11s;
-        }
-
-        #tablePatients tbody tr:nth-child(5) {
-            animation-delay: .14s;
-        }
-
-        #tablePatients tbody tr:nth-child(6) {
-            animation-delay: .17s;
-        }
-
-        #tablePatients tbody tr:nth-child(7) {
-            animation-delay: .20s;
-        }
-
-        #tablePatients tbody tr:nth-child(8) {
-            animation-delay: .23s;
-        }
-
-        .patient-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #14b8a6, #0d9488);
-            color: #fff;
+        .dental-floating-icon {
+            position: absolute;
+            width: 68px;
+            height: 68px;
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8rem;
-            font-weight: 800;
+            background: rgba(255,255,255,.11);
+            border: 1px solid rgba(255,255,255,.18);
+            backdrop-filter: blur(6px);
+            color: rgba(255,255,255,.72);
+            font-size: 2rem;
+            animation: dentalFloat 7s ease-in-out infinite;
+        }
+
+
+            .dental-floating-icon:nth-child(1) {
+                top: 12px;
+                right: 27%;
+                animation-delay: 0s;
+            }
+
+
+            .dental-floating-icon:nth-child(2) {
+                bottom: -18px;
+                left: 8%;
+                width: 58px;
+                height: 58px;
+                font-size: 1.55rem;
+                animation-delay: 1.7s;
+            }
+
+
+            .dental-floating-icon:nth-child(3) {
+                top: -18px;
+                left: 35%;
+                width: 45px;
+                height: 45px;
+                border-radius: 14px;
+                font-size: 1.1rem;
+                animation-delay: 3.2s;
+            }
+
+
+        @@keyframes dentalFloat {
+
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-15px) rotate(7deg);
+            }
+        }
+
+
+        /* ============================================================
+                   HERO CONTENT
+                   ============================================================ */
+
+        .hero-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+            z-index: 2;
+        }
+
+
+        .hero-tooth {
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,.16);
+            border: 1px solid rgba(255,255,255,.2);
+            backdrop-filter: blur(8px);
+            font-size: 1.65rem;
+            animation: toothPulse 4s ease-in-out infinite;
             flex-shrink: 0;
         }
+
+
+        @@keyframes toothPulse {
+
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+                box-shadow: 0 0 0 rgba(255,255,255,0);
+            }
+
+            50% {
+                transform: translateY(-5px) rotate(-3deg);
+                box-shadow: 0 10px 25px rgba(255,255,255,.10);
+            }
+        }
+
+
+        .hero-text h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -.3px;
+        }
+
+
+        .hero-text p {
+            margin: 5px 0 0;
+            font-size: .85rem;
+            opacity: .9;
+            font-weight: 500;
+        }
+
+
+        /* ============================================================
+                   ADD PATIENT BUTTON
+                   ============================================================ */
+
+        .btn-add-patient {
+            position: relative;
+            z-index: 3;
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 11px 20px;
+            border-radius: 13px;
+            background: #fff;
+            color: var(--dental-700);
+            text-decoration: none;
+            font-size: .85rem;
+            font-weight: 800;
+            box-shadow: 0 9px 24px rgba(0,0,0,.13);
+            transition: transform .25s var(--ease-dental), box-shadow .25s ease;
+        }
+
+
+            .btn-add-patient:hover {
+                color: var(--dental-700);
+                transform: translateY(-3px);
+                box-shadow: 0 15px 30px rgba(0,0,0,.18);
+            }
+
+
+            .btn-add-patient i {
+                font-size: 1rem;
+                transition: transform .3s var(--ease-dental);
+            }
+
+
+            .btn-add-patient:hover i {
+                transform: rotate(8deg) scale(1.1);
+            }
+
+
+        /* ============================================================
+                   STATISTICS GRID
+                   ============================================================ */
+
+        .patients-stats {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+
+        .patient-stat {
+            position: relative;
+            overflow: hidden;
+            background: var(--card-grad);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,.6);
+            border-radius: var(--radius-lg);
+            padding: 19px 21px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: var(--shadow-card);
+            opacity: 0;
+            transform: translateY(25px) scale(.98);
+            animation: statRise .65s var(--ease-dental) forwards;
+            transition: transform .3s var(--ease-dental), box-shadow .3s ease;
+        }
+
+
+            .patient-stat:nth-child(1) {
+                animation-delay: .12s;
+            }
+
+            .patient-stat:nth-child(2) {
+                animation-delay: .20s;
+            }
+
+            .patient-stat:nth-child(3) {
+                animation-delay: .28s;
+            }
+
+            .patient-stat:nth-child(4) {
+                animation-delay: .36s;
+            }
+
+
+        @@keyframes statRise {
+
+            from {
+                opacity: 0;
+                transform: translateY(25px) scale(.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+
+        .patient-stat:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+
+        .patient-stat::after {
+            content: "";
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            right: -35px;
+            top: -45px;
+            background: rgba(20,184,166,.055);
+            transition: transform .4s ease;
+        }
+
+
+        .patient-stat:hover::after {
+            transform: scale(1.35);
+        }
+
+
+        /* ============================================================
+                   STAT ICONS
+                   ============================================================ */
+
+        .patient-stat-icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.45rem;
+            flex-shrink: 0;
+            transition: transform .3s var(--ease-dental);
+        }
+
+
+        .patient-stat:hover
+        .patient-stat-icon {
+            transform: scale(1.08) rotate(-4deg);
+        }
+
+
+        .stat-total
+        .patient-stat-icon {
+            background: #f0fdfa;
+            color: #0f766e;
+        }
+
+
+        .stat-general
+        .patient-stat-icon {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+
+        .stat-ortho
+        .patient-stat-icon {
+            background: #fffbeb;
+            color: #b45309;
+        }
+
+
+        .stat-both
+        .patient-stat-icon {
+            background: #f5f3ff;
+            color: #6d28d9;
+        }
+
+
+        .patient-stat-value {
+            display: block;
+            font-size: 1.65rem;
+            line-height: 1;
+            font-weight: 800;
+            color: var(--ink-900);
+        }
+
+
+        .patient-stat-label {
+            display: block;
+            margin-top: 5px;
+            font-size: .76rem;
+            color: var(--ink-600);
+            font-weight: 700;
+        }
+
+
+        /* ============================================================
+                   MAIN TABLE CARD
+                   ============================================================ */
+
+        .patients-card {
+            position: relative;
+            overflow: hidden;
+            background: var(--card-grad);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,.65);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-card);
+            opacity: 0;
+            transform: translateY(30px);
+            animation: cardEnter .75s var(--ease-dental) .42s forwards;
+        }
+
+
+        @@keyframes cardEnter {
+
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
+        /* ============================================================
+                   FILTER BAR
+                   ============================================================ */
+
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--sky-100);
+            flex-wrap: wrap;
+        }
+
+
+        /* ============================================================
+                   CATEGORY PILLS
+                   ============================================================ */
+
+        .pill-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 4px;
+            background: var(--sky-100);
+            border-radius: 999px;
+        }
+
+
+        .pill-btn {
+            position: relative;
+            overflow: hidden;
+            border: none;
+            background: transparent;
+            padding: 8px 16px;
+            border-radius: 999px;
+            color: var(--ink-600);
+            font-size: .8rem;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all .25s ease;
+        }
+
+
+            .pill-btn i {
+                transition: transform .25s var(--ease-dental);
+            }
+
+
+            .pill-btn:hover i {
+                transform: scale(1.1) rotate(-4deg);
+            }
+
+
+            .pill-btn.active {
+                background: linear-gradient( 135deg, var(--dental-600), var(--dental-700) );
+                color: #fff;
+                box-shadow: 0 5px 13px rgba(13,148,136,.25);
+            }
+
+
+            .pill-btn:hover:not(.active) {
+                background: #fff;
+                color: var(--brand-dark);
+            }
+
+
+        /* ============================================================
+                   DATATABLE SEARCH
+                   ============================================================ */
+
+        .filter-bar-end {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+
+        #tablePatients_filter {
+            margin: 0;
+        }
+
+
+            #tablePatients_filter label {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin: 0;
+                background: rgba(255,255,255,.9);
+                border: 1.5px solid var(--sky-100);
+                border-radius: 999px;
+                padding: 7px 15px;
+                transition: border-color .2s ease, box-shadow .2s ease;
+            }
+
+
+                #tablePatients_filter label:focus-within {
+                    border-color: var(--dental-400);
+                    box-shadow: 0 0 0 3px rgba(15,155,142,.12);
+                }
+
+
+                #tablePatients_filter label i {
+                    color: var(--dental-600);
+                    font-size: .9rem;
+                }
+
+
+            #tablePatients_filter input {
+                border: none !important;
+                outline: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+                width: 210px;
+                font-size: .82rem;
+                color: var(--ink-900);
+            }
+
+
+        /* ============================================================
+                   LENGTH
+                   ============================================================ */
+
+        #tablePatients_length {
+            margin: 0;
+        }
+
+
+            #tablePatients_length label {
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                margin: 0;
+                font-size: .76rem;
+                color: var(--ink-600);
+                font-weight: 700;
+                white-space: nowrap;
+            }
+
+
+            #tablePatients_length select {
+                border: 1.5px solid var(--sky-100);
+                border-radius: 10px;
+                background: #fff;
+                padding: 6px 9px;
+                outline: none;
+                font-size: .8rem;
+            }
+
+
+        /* ============================================================
+                   TABLE
+                   ============================================================ */
+
+        #tablePatients {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+
+            #tablePatients thead {
+                opacity: 0;
+                transform: translateY(10px);
+                animation: tableHeaderEnter .5s ease .8s forwards;
+            }
+
+
+        @@keyframes tableHeaderEnter {
+
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
+        #tablePatients thead th {
+            background: rgba(234,251,252,.72) !important;
+            color: var(--ink-600) !important;
+            border: none !important;
+            border-bottom: 2px solid var(--sky-100) !important;
+            padding: 14px 10px;
+            font-size: .75rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+
+        #tablePatients tbody td {
+            padding: 12px 10px;
+            vertical-align: middle;
+            border-color: var(--sky-100);
+            font-size: .84rem;
+        }
+
+
+        #tablePatients tbody tr {
+            opacity: 0;
+            transform: translateY(10px);
+            animation: patientRowEnter .45s var(--ease-dental) forwards;
+            transition: background-color .2s ease;
+        }
+
+
+        @@keyframes patientRowEnter {
+
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
+        #tablePatients tbody tr:hover {
+            background: var(--brand-light) !important;
+        }
+
+
+        /* ============================================================
+                   PATIENT AVATAR
+                   ============================================================ */
 
         .patient-name-cell {
             display: flex;
@@ -304,64 +719,174 @@
             gap: 10px;
         }
 
+
+        .patient-avatar {
+            width: 39px;
+            height: 39px;
+            border-radius: 12px;
+            background: linear-gradient( 135deg, var(--dental-500), var(--dental-700) );
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .78rem;
+            font-weight: 800;
+            box-shadow: 0 5px 12px rgba(13,148,136,.16);
+            transition: transform .3s var(--ease-dental), box-shadow .3s ease;
+        }
+
+
+        #tablePatients tbody tr:hover
+        .patient-avatar {
+            transform: scale(1.08) rotate(-3deg);
+            box-shadow: 0 8px 18px rgba(13,148,136,.25);
+        }
+
+
+        /* ============================================================
+                   SESSION BUTTON
+                   ============================================================ */
+
+        .btn-row-session {
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 12px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient( 135deg, var(--dental-600), var(--dental-700) );
+            color: #fff;
+            font-size: .74rem;
+            font-weight: 800;
+            text-decoration: none;
+            box-shadow: 0 5px 12px rgba(13,148,136,.22);
+            transition: transform .25s var(--ease-dental), box-shadow .25s ease;
+        }
+
+
+            .btn-row-session:hover {
+                color: #fff;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 18px rgba(13,148,136,.3);
+            }
+
+
+            .btn-row-session::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: -120%;
+                width: 70%;
+                height: 100%;
+                background: linear-gradient( 90deg, transparent, rgba(255,255,255,.35), transparent );
+                transform: skewX(-20deg);
+                transition: left .6s ease;
+            }
+
+
+            .btn-row-session:hover::before {
+                left: 130%;
+            }
+
+
+        /* ============================================================
+                   ACTION BUTTONS
+                   ============================================================ */
+
+        .row-actions-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            flex-wrap: nowrap;
+        }
+
+
         .action-icon-btn {
             width: 34px;
             height: 34px;
-            border-radius: 9px;
+            border: none;
+            border-radius: 10px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border: none;
             background: transparent;
-            color: #64748b;
-            transition: all .2s ease;
+            color: var(--ink-600);
+            transition: transform .25s var(--ease-dental), background .2s ease, color .2s ease;
         }
+
 
             .action-icon-btn:hover {
                 background: var(--brand-light);
                 color: var(--brand-dark);
-                transform: translateY(-1px);
+                transform: translateY(-2px) scale(1.05);
             }
+
 
             .action-icon-btn.danger:hover {
                 background: #fee2e2;
                 color: #dc2626;
             }
 
+
+        /* ============================================================
+                   LOADING
+                   ============================================================ */
+
         .table-loading-overlay {
             position: absolute;
             inset: 0;
-            background: rgba(255,255,255,0.75);
+            background: rgba(255,255,255,.72);
+            backdrop-filter: blur(3px);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 5;
-            backdrop-filter: blur(1px);
+            z-index: 10;
             opacity: 0;
             pointer-events: none;
-            transition: opacity .2s ease;
+            transition: opacity .25s ease;
         }
+
 
             .table-loading-overlay.show {
                 opacity: 1;
                 pointer-events: all;
             }
 
+
         .loading-pulse {
             display: flex;
             align-items: center;
             gap: 10px;
             color: var(--brand-dark);
-            font-weight: 700;
-            font-size: 0.9rem;
+            font-weight: 800;
+            font-size: .85rem;
+            animation: loadingFloat 1.5s ease-in-out infinite;
         }
 
+
             .loading-pulse i {
-                animation: spin 0.9s linear infinite;
-                font-size: 1.3rem;
+                font-size: 1.25rem;
+                animation: spin .9s linear infinite;
             }
 
+
+        @@keyframes loadingFloat {
+
+            0%, 100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+
         @@keyframes spin {
+
             from {
                 transform: rotate(0deg);
             }
@@ -371,323 +896,1615 @@
             }
         }
 
-        .dataTables_wrapper .dataTables_paginate .paginate_button {
-            padding: 5px 12px;
-            margin: 0 2px;
-            border-radius: 8px;
+
+        /* ============================================================
+                   FOOTER
+                   ============================================================ */
+
+        .table-footer-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 13px 20px 17px;
+            border-top: 1px solid var(--sky-100);
+            opacity: 0;
+            animation: footerEnter .5s ease 1s forwards;
         }
 
-            .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-                background: var(--brand) !important;
-                color: #fff !important;
-                border: 1px solid var(--brand) !important;
+
+        @@keyframes footerEnter {
+
+            from {
+                opacity: 0;
             }
 
-            .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-                background: var(--brand-light) !important;
-                border: 1px solid #99f6e4 !important;
+            to {
+                opacity: 1;
             }
-
-        #tablePatients_filter input {
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
-            padding: 6px 12px;
         }
 
-            #tablePatients_filter input:focus {
-                border-color: var(--brand);
-                box-shadow: 0 0 0 3px rgba(13,148,136,0.1);
-                outline: none;
+
+        #tablePatients_info {
+            margin: 0;
+            color: var(--ink-600);
+            font-size: .76rem;
+            font-weight: 600;
+        }
+
+
+        #tablePatients_paginate {
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+
+            #tablePatients_paginate .paginate_button {
+                padding: 5px 11px;
+                margin: 0 2px;
+                border: 1px solid transparent !important;
+                border-radius: 9px;
+                background: transparent !important;
+                color: var(--ink-600) !important;
+                transition: all .2s ease;
             }
+
+
+                #tablePatients_paginate
+                .paginate_button.current {
+                    background: var(--brand) !important;
+                    color: #fff !important;
+                    border-color: var(--brand) !important;
+                }
+
+
+                #tablePatients_paginate
+                .paginate_button:hover:not(.current):not(.disabled) {
+                    background: var(--brand-light) !important;
+                    border-color: var(--dental-200) !important;
+                }
+
+
+                #tablePatients_paginate
+                .paginate_button.disabled {
+                    opacity: .4;
+                }
+
+
+        /* ============================================================
+                   RESPONSIVE
+                   ============================================================ */
+
+        @@media (max-width: 1100px) {
+
+            .patients-stats {
+                grid-template-columns: repeat(2,1fr);
+            }
+        }
+
+
+        @@media (max-width: 760px) {
+
+            .patients-hero {
+                padding: 22px;
+                align-items: flex-start;
+            }
+
+
+            .hero-content {
+                width: 100%;
+            }
+
+
+            .btn-add-patient {
+                width: 100%;
+                justify-content: center;
+            }
+
+
+            .filter-bar {
+                align-items: stretch;
+            }
+
+
+            .pill-toggle {
+                width: 100%;
+                justify-content: center;
+            }
+
+
+            .filter-bar-end {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+
+        @@media (max-width: 640px) {
+
+            .patients-stats {
+                grid-template-columns: 1fr;
+            }
+
+
+            .patients-hero {
+                border-radius: 18px;
+            }
+
+
+            .hero-text h1 {
+                font-size: 1.15rem;
+            }
+
+
+            .hero-text p {
+                font-size: .76rem;
+            }
+
+
+            .hero-tooth {
+                width: 50px;
+                height: 50px;
+                font-size: 1.35rem;
+            }
+
+
+            #tablePatients_filter input {
+                width: 150px;
+            }
+
+
+            .table-footer-bar {
+                justify-content: center;
+            }
+        }
+
+
+        /* ============================================================
+                   REDUCED MOTION
+                   ============================================================ */
+
+        @@media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+        }
+
     </style>
 }
 
-<section class="container-fluid mt-4" dir="rtl">
+
+<section class="patients-page mt-0" dir="rtl">
+
     <div class="row">
-        <div class="col-md-1"></div>
-        <div class="col-md-10">
+
+        <div class="col-12">
+
+
+            <!-- ======================================================
+                 HERO
+                 ====================================================== -->
 
             <div class="patients-hero">
-                <div class="hero-title">
-                    <div class="hero-icon"><i class="bi bi-people-fill"></i></div>
-                    <div>
-                        <h1>قائمة المرضى</h1>
-                        <p>إدارة ملفات المرضى - عام وتقويم في مكان واحد</p>
+
+                <div class="dental-floating-icons">
+
+                    <div class="dental-floating-icon">
+                        <i class="bi bi-tooth"></i>
                     </div>
+
+                    <div class="dental-floating-icon">
+                        <i class="bi bi-heart-pulse-fill"></i>
+                    </div>
+
+                    <div class="dental-floating-icon">
+                        <i class="bi bi-clipboard2-pulse"></i>
+                    </div>
+
                 </div>
-                <a asp-action="Create" asp-controller="Patients" class="btn-add-patient">
-                    <i class="bi bi-person-plus-fill"></i> إضافة مريض جديد
+
+
+                <div class="hero-content">
+
+                    <div class="hero-tooth">
+                        <i class="bi bi-tooth-fill"></i>
+                    </div>
+
+                    <div class="hero-text">
+
+                        <h1>
+                            قائمة المرضى
+                        </h1>
+
+                        <p>
+                            إدارة ملفات المرضى والزيارات والعلاجات في مكان واحد
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <a asp-action="Create"
+                   asp-controller="Patients"
+                   class="btn-add-patient">
+
+                    <i class="bi bi-person-plus-fill"></i>
+
+                    إضافة مريض جديد
+
                 </a>
+
             </div>
 
-            <div class="row g-3 mb-3" id="statsRow">
-                <div class="col-6 col-md-3">
-                    <div class="stat-card stat-total">
-                        <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
-                        <div>
-                            <span class="stat-value" data-target="0" id="statTotal">0</span>
-                            <span class="stat-label d-block">إجمالي المرضى</span>
-                        </div>
+
+            <!-- ======================================================
+                 STATISTICS
+                 ====================================================== -->
+
+            <div class="patients-stats"
+                 id="statsRow">
+
+
+                <!-- Total -->
+
+                <div class="patient-stat">
+
+                    <div class="patient-stat-icon stat-total">
+
+                        <i class="bi bi-people-fill"></i>
+
                     </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="stat-card stat-general">
-                        <div class="stat-icon"><i class="bi bi-tooth"></i></div>
-                        <div>
-                            <span class="stat-value" data-target="0" id="statGeneral">0</span>
-                            <span class="stat-label d-block">علاج عام</span>
-                        </div>
+
+                    <div>
+
+                        <span class="patient-stat-value"
+                              data-target="0"
+                              id="statTotal">
+
+                            0
+
+                        </span>
+
+                        <span class="patient-stat-label">
+
+                            إجمالي المرضى
+
+                        </span>
+
                     </div>
+
                 </div>
-                <div class="col-6 col-md-3">
-                    <div class="stat-card stat-ortho">
-                        <div class="stat-icon"><i class="bi bi-braces"></i></div>
-                        <div>
-                            <span class="stat-value" data-target="0" id="statOrtho">0</span>
-                            <span class="stat-label d-block">تقويم أسنان</span>
-                        </div>
+
+
+                <!-- General -->
+
+                <div class="patient-stat">
+
+                    <div class="patient-stat-icon stat-general">
+
+                        <i class="bi bi-tooth"></i>
+
                     </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="stat-card stat-both">
-                        <div class="stat-icon"><i class="bi bi-heart-pulse-fill"></i></div>
-                        <div>
-                            <span class="stat-value" data-target="0" id="statBoth">0</span>
-                            <span class="stat-label d-block">الملفين معًا</span>
-                        </div>
+
+                    <div>
+
+                        <span class="patient-stat-value"
+                              data-target="0"
+                              id="statGeneral">
+
+                            0
+
+                        </span>
+
+                        <span class="patient-stat-label">
+
+                            ملفات العلاج العام
+
+                        </span>
+
                     </div>
+
                 </div>
+
+
+                <!-- Orthodontics -->
+
+                <div class="patient-stat">
+
+                    <div class="patient-stat-icon stat-ortho">
+
+                        <i class="bi bi-braces"></i>
+
+                    </div>
+
+                    <div>
+
+                        <span class="patient-stat-value"
+                              data-target="0"
+                              id="statOrtho">
+
+                            0
+
+                        </span>
+
+                        <span class="patient-stat-label">
+
+                            ملفات تقويم الأسنان
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Both -->
+
+                <div class="patient-stat">
+
+                    <div class="patient-stat-icon stat-both">
+
+                        <i class="bi bi-person-hearts"></i>
+
+                    </div>
+
+                    <div>
+
+                        <span class="patient-stat-value"
+                              data-target="0"
+                              id="statBoth">
+
+                            0
+
+                        </span>
+
+                        <span class="patient-stat-label">
+
+                            كلا الملفين
+
+                        </span>
+
+                    </div>
+
+                </div>
+
             </div>
+
+
+            <!-- ======================================================
+                 PATIENTS TABLE
+                 ====================================================== -->
 
             <div class="card patients-card p-0">
+
+
+                <!-- FILTER BAR -->
+
                 <div class="filter-bar">
-                    <div class="pill-toggle" id="categoryFilterGroup">
-                        <button type="button" class="pill-btn active" data-category="">
-                            <i class="bi bi-grid-fill"></i> الكل
+
+
+                    <div class="pill-toggle"
+                         id="categoryFilterGroup">
+
+
+                        <button type="button"
+                                class="pill-btn active"
+                                data-category="">
+
+                            <i class="bi bi-grid-fill"></i>
+
+                            الكل
+
                         </button>
-                        <button type="button" class="pill-btn" data-category="General">
-                            <i class="bi bi-tooth"></i> عام
+
+
+                        <button type="button"
+                                class="pill-btn"
+                                data-category="General">
+
+                            <i class="bi bi-tooth"></i>
+
+                            عام
+
                         </button>
-                        <button type="button" class="pill-btn" data-category="Orthodontics">
-                            <i class="bi bi-braces"></i> تقويم
+
+
+                        <button type="button"
+                                class="pill-btn"
+                                data-category="Orthodontics">
+
+                            <i class="bi bi-braces"></i>
+
+                            تقويم
+
                         </button>
+
+
                     </div>
+
+
+                    <div class="filter-bar-end"
+                         id="filterBarEnd">
+                    </div>
+
                 </div>
+
+
+                <!-- TABLE BODY -->
 
                 <div class="card-body p-0 position-relative">
-                    <div class="table-loading-overlay" id="tableLoadingOverlay">
+
+
+                    <!-- LOADING -->
+
+                    <div class="table-loading-overlay"
+                         id="tableLoadingOverlay">
+
                         <div class="loading-pulse">
-                            <i class="bi bi-arrow-repeat"></i> جاري تحميل البيانات...
+
+                            <i class="bi bi-arrow-repeat"></i>
+
+                            جاري تحميل بيانات المرضى...
+
                         </div>
+
                     </div>
 
+
+                    <!-- TABLE -->
+
                     <div class="table-responsive px-3 pb-3">
-                        <table class="table table-hover align-middle display nowrap" id="tablePatients" style="width:100%">
+
+                        <table class="table table-hover align-middle display nowrap"
+                               id="tablePatients"
+                               style="width:100%">
+
                             <thead>
+
                                 <tr class="text-center">
-                                    <th class="text-center">الكود</th>
-                                    <th class="text-center">الاسم</th>
-                                    <th class="text-center">الهاتف</th>
-                                    <th class="text-center">النوع</th>
-                                    <th class="text-center">العمر</th>
-                                    <th class="text-center">نوع الملف</th>
-                                    <th class="text-center">الحالة</th>
-                                    <th class="text-center">اجراءات</th>
+
+                                    <th class="text-center fs-6">
+                                        الكود
+                                    </th>
+
+                                    <th class="text-center fs-6">
+                                        المريض
+                                    </th>
+
+                                    <th class="text-center fs-6">
+                                        الهاتف
+                                    </th>
+
+                                    <th class="text-center fs-6">
+                                        النوع
+                                    </th>
+
+                                    <th class="text-center fs-6">
+                                        العمر
+                                    </th>
+
+                                    <th class="text-center fs-6">
+                                        نوع الملف
+                                    </th>
+
+                                    <th class="text-center fs-6">
+                                        الحالة
+                                    </th>
+
+                                    <th class="text-center fs-6">
+                                        الإجراءات
+                                    </th>
+
                                 </tr>
+
                             </thead>
-                            <tbody></tbody>
+
+                            <tbody>
+                            </tbody>
+
                         </table>
+
                     </div>
+
+
+                    <!-- FOOTER -->
+
+                    <div class="table-footer-bar"
+                         id="tableFooterBar">
+                    </div>
+
                 </div>
+
             </div>
 
         </div>
-        <div class="col-md-1"></div>
+
     </div>
+
 </section>
 
+
 @section Scripts {
+
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
+
     <script>
+
         $(document).ready(function () {
+
+
+        /* ========================================================
+        CATEGORY
+        ======================================================== */
+
         var currentCategoryFilter = '';
 
+
+        /* ========================================================
+        ANIMATED COUNTER
+        Same easing as Dashboard
+        ======================================================== */
+
         function animateCount(el, target) {
-        var startTime = null;
-        var duration = 900;
-        function step(ts) {
-        if (!startTime) startTime = ts;
-        var progress = Math.min((ts - startTime) / duration, 1);
-        el.text(Math.floor(progress * target));
-        if (progress < 1) requestAnimationFrame(step);
-        else el.text(target);
+
+        target = parseInt(target || 0);
+
+        const duration = 900;
+
+        const startTime =
+        performance.now();
+
+
+        function step(now) {
+
+        const progress =
+        Math.min(
+        (now - startTime) / duration,
+        1
+        );
+
+
+        const eased =
+        1 -
+        Math.pow(
+        1 - progress,
+        3
+        );
+
+
+        const value =
+        Math.floor(
+        target * eased
+        );
+
+
+        el.text(
+        value.toLocaleString('en-EG')
+        );
+
+
+        if (progress < 1) {
+
+        requestAnimationFrame(step);
+
         }
+        else {
+
+        el.text(
+        target.toLocaleString('en-EG')
+        );
+
+        }
+
+        }
+
+
         requestAnimationFrame(step);
         }
 
+
+        /* ========================================================
+        LOAD PATIENT STATS
+        ======================================================== */
+
         function loadStats() {
-        $.get('/Patients/GetPatientsStats', function (res) {
-        animateCount($('#statTotal'), res.total || 0);
-        animateCount($('#statGeneral'), res.general || 0);
-        animateCount($('#statOrtho'), res.ortho || 0);
-        animateCount($('#statBoth'), res.both || 0);
-        });
+
+        $.get(
+        '/Patients/GetPatientsStats',
+        function (res) {
+
+        animateCount(
+        $('#statTotal'),
+        res.total || 0
+        );
+
+
+        animateCount(
+        $('#statGeneral'),
+        res.general || 0
+        );
+
+
+        animateCount(
+        $('#statOrtho'),
+        res.ortho || 0
+        );
+
+
+        animateCount(
+        $('#statBoth'),
+        res.both || 0
+        );
+
         }
+        );
+
+        }
+
+
         loadStats();
 
-        var table = $('#tablePatients').DataTable({
+
+        /* ========================================================
+        DATATABLE
+        ======================================================== */
+
+        var table =
+        $('#tablePatients').DataTable({
+
         processing: true,
+
         serverSide: true,
+
         responsive: true,
+
         autoWidth: false,
+
         pageLength: 10,
-        lengthMenu: [10, 25, 50, 100, 200, 400, 1000],
-        ordering: true,
 
-        ajax: {
-        url: '/Patients/GetPatientsData',
-        type: 'POST',
-        contentType: 'application/json',
-        data: function (d) {
-        d.categoryFilter = currentCategoryFilter;
-        return JSON.stringify(d);
-        },
-        error: function (xhr, error, thrown) {
-        console.error('DataTables error:', error, thrown);
-        Swal.fire({ title: 'خطأ', text: 'فشل تحميل البيانات من الخادم', icon: 'error', confirmButtonColor: '#415E72' });
-        }
-        },
-
-        columns: [
-        {
-        data: 'patientCode', name: 'patientCode', className: 'text-center fs-6',
-        render: function (data) { return '<span class="badge bg-secondary" style="font-family: monospace;">' + (data || '-') + '</span>'; }
-        },
-        {
-        data: null, name: 'fullNameAr', className: 'fs-6',
-        render: function (data) {
-        var name = data.fullNameAr || '-';
-        var initials = name.split(' ').filter(Boolean).slice(0, 2).map(function (p) { return p[0]; }).join('');
-        return '<div class="patient-name-cell">' +
-        '<div class="patient-avatar">' + (initials || '?') + '</div>' +
-        '<span class="link-dark fw-semibold">' + name + '</span>' +
-        '</div>';
-        }
-        },
-        {
-        data: 'phone', name: 'phone', className: 'fs-6 text-center',
-        render: function (data) { return data ? '<span style="font-family: monospace; direction: ltr;">' + data + '</span>' : '-'; }
-        },
-        { data: 'genderBadge', name: 'genderName', className: 'text-center', searchable: false },
-        {
-        data: 'age', name: 'age', className: 'text-center fs-6',
-        render: function (data) { return data || '<span class="text-muted">-</span>'; }
-        },
-        { data: 'categoryBadge', name: 'category', className: 'text-center', orderable: false, searchable: false },
-        { data: 'statusBadge', name: 'isActive', className: 'text-center', searchable: false },
-        {
-        data: null, orderable: false, searchable: false, className: 'text-center',
-        render: function (data) {
-        return `
-        <a class="action-icon-btn" title="عرض التفاصيل" href="/Patients/Details/${data.id}">
-        <i class="bi bi-eye"></i>
-        </a>
-        <a class="action-icon-btn" title="تعديل" href="/Patients/Edit/${data.id}">
-        <i class="bi bi-pencil-square"></i>
-        </a>
-        <button type="button" class="action-icon-btn danger" title="حذف" onclick="deletePatient(${data.id})">
-        <i class="bi bi-trash3-fill"></i>
-        </button>`;
-        }
-        }
+        lengthMenu:
+        [
+        10,
+        25,
+        50,
+        100,
+        200,
+        400,
+        1000
         ],
 
-        layout: {
-        topStart: { search: { placeholder: 'ابحث بالاسم، الكود، أو الهاتف...' } },
-        topEnd: { pageLength: { menu: [10, 25, 50, 100, 200, 400, 1000] } },
-        bottomEnd: { paging: { buttons: 6 } }
+        ordering: true,
+
+
+        ajax: {
+
+        url:
+        '/Patients/GetPatientsData',
+
+        type:
+        'POST',
+
+        contentType:
+        'application/json',
+
+
+        data:
+        function (d) {
+
+        d.categoryFilter =
+        currentCategoryFilter;
+
+        return JSON.stringify(d);
+
         },
+
+
+        error:
+        function (
+        xhr,
+        error,
+        thrown
+        ) {
+
+        console.error(
+        'DataTables error:',
+        error,
+        thrown
+        );
+
+
+        Swal.fire({
+
+        title:
+        'خطأ',
+
+        text:
+        'فشل تحميل بيانات المرضى من الخادم',
+
+        icon:
+        'error',
+
+        confirmButtonColor:
+        '#0d9488'
+
+        });
+
+        }
+
+        },
+
+
+        /* =================================================
+        COLUMNS
+        ================================================= */
+
+        columns: [
+
+
+        /* ================= CODE ================= */
+
+        {
+
+        data:
+        'patientCode',
+
+        name:
+        'patientCode',
+
+        className:
+        'text-center fs-6',
+
+
+        render:
+        function (data) {
+
+        return `
+
+        <span
+        class="badge bg-secondary"
+        style="font-family:Candara;">
+
+        ${data || '-'}
+
+        </span>
+
+        `;
+
+        }
+
+        },
+
+
+        /* ================= NAME ================= */
+
+        {
+
+        data:
+        null,
+
+        name:
+        'fullNameAr',
+
+        className:
+        'fs-6',
+
+
+        render:
+        function (data) {
+
+        var name =
+        data.fullNameAr || '-';
+
+
+        var initials =
+        name
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(
+        function (p) {
+        return p[0];
+        }
+        )
+        .join('');
+
+
+        return `
+
+        <div class="patient-name-cell">
+
+        <div class="patient-avatar">
+
+        ${initials || '?'}
+
+        </div>
+
+        <span
+        class="link-dark fw-semibold">
+
+        ${name}
+
+        </span>
+
+        </div>
+
+        `;
+
+        }
+
+        },
+
+
+        /* ================= PHONE ================= */
+
+        {
+
+        data:
+        'phone',
+
+        name:
+        'phone',
+
+        className:
+        'fs-6 text-center',
+
+
+        render:
+        function (data) {
+
+        return data
+
+        ? `
+
+        <span
+        style="
+        font-family:Candara;
+        direction:ltr;
+        ">
+
+        ${data}
+
+        </span>
+
+        `
+
+        : '-';
+
+        }
+
+        },
+
+
+        /* ================= GENDER ================= */
+
+        {
+
+        data:
+        'genderBadge',
+
+        name:
+        'genderName',
+
+        className:
+        'text-center',
+
+        searchable:
+        false
+
+        },
+
+
+        /* ================= AGE ================= */
+
+        {
+
+        data:
+        'age',
+
+        name:
+        'age',
+
+        className:
+        'text-center fs-6',
+
+
+        render:
+        function (data) {
+
+        return data ||
+
+        '<span class="text-muted">-</span>';
+
+        }
+
+        },
+
+
+        /* ================= CATEGORY ================= */
+
+        {
+
+        data:
+        'categoryBadge',
+
+        name:
+        'category',
+
+        className:
+        'text-center',
+
+        orderable:
+        false,
+
+        searchable:
+        false
+
+        },
+
+
+        /* ================= STATUS ================= */
+
+        {
+
+        data:
+        'statusBadge',
+
+        name:
+        'isActive',
+
+        className:
+        'text-center',
+
+        searchable:
+        false
+
+        },
+
+
+        /* ================= ACTIONS ================= */
+
+        {
+
+        data:
+        null,
+
+        orderable:
+        false,
+
+        searchable:
+        false,
+
+        className:
+        'text-center',
+
+
+        render:
+        function (data) {
+
+        return `
+
+        <div
+        class="row-actions-cell">
+
+
+        <!-- New Session -->
+
+        <a
+
+        class="btn-row-session"
+
+        title="
+        بدء سيشن جديد مع هذا المريض
+        "
+
+        href="
+        /Patients/NewSession?patientId=${data.id}
+        ">
+
+        <i
+        class="bi bi-clipboard2-pulse">
+        </i>
+
+        بدء سيشن
+
+        </a>
+
+
+        <!-- Details -->
+
+        <a
+
+        class="
+        action-icon-btn
+        fs-5
+        "
+
+        title="عرض التفاصيل"
+
+        href="
+        /Patients/Details/${data.id}
+        ">
+
+        <i
+        class="bi bi-eye">
+        </i>
+
+        </a>
+
+
+        <!-- Edit -->
+
+        <a
+
+        class="
+        action-icon-btn
+        fs-5
+        "
+
+        title="تعديل"
+
+        href="
+        /Patients/Edit/${data.id}
+        ">
+
+        <i
+        class="bi bi-pencil-square">
+        </i>
+
+        </a>
+
+
+        <!-- Delete -->
+
+        <button
+
+        type="button"
+
+        class="
+        action-icon-btn
+        danger
+        fs-5
+        "
+
+        title="حذف"
+
+        onclick="
+        deletePatient(${data.id})
+        ">
+
+        <i
+        class="bi bi-trash3-fill">
+        </i>
+
+        </button>
+
+
+        </div>
+
+        `;
+
+        }
+
+        }
+
+        ],
+
+
+        /* =================================================
+        LANGUAGE
+        ================================================= */
 
         language: {
-        search: '<i class="bi bi-search"></i>',
-        searchPlaceholder: 'ابحث هنا... !',
-        lengthMenu: '_MENU_',
-        info: 'إظهار _START_ إلى _END_ من أصل _TOTAL_ سجل',
-        zeroRecords: 'لم يعثر على أي سجل',
-        paginate: { first: 'الأول', previous: 'السابق', next: 'التالي', last: 'الأخير' },
-        processing: ''
+
+        search:
+        '<i class="bi bi-search"></i>',
+
+        searchPlaceholder:
+        'ابحث بالاسم، الكود، أو الهاتف...',
+
+        lengthMenu:
+        '_MENU_',
+
+        info:
+        'إظهار _START_ إلى _END_ من أصل _TOTAL_ سجل',
+
+        zeroRecords:
+        'لم يعثر على أي مريض',
+
+        emptyTable:
+        'لا توجد بيانات مرضى',
+
+        paginate: {
+
+        first:
+        'الأول',
+
+        previous:
+        'السابق',
+
+        next:
+        'التالي',
+
+        last:
+        'الأخير'
+
         },
 
-        deferRender: true,
+        processing:
+        ''
 
-        drawCallback: function () {
-        $('#tablePatients tbody tr').each(function () {
-        $(this).css('animation', 'none');
-        void this.offsetWidth;
-        $(this).css('animation', '');
-        });
+        },
+
+
+        /* =================================================
+        PERFORMANCE
+        ================================================= */
+
+        deferRender:
+        true,
+
+
+        /* =================================================
+        DRAW
+        ================================================= */
+
+        drawCallback:
+        function () {
+
+        $('#tablePatients tbody tr')
+        .each(
+        function (index) {
+
+        const row =
+        this;
+
+
+        row.style.animation =
+        'none';
+
+
+        void row.offsetWidth;
+
+
+        row.style.animation =
+        'patientRowEnter .45s var(--ease-dental) forwards';
+
+
+        row.style.animationDelay =
+        Math.min(
+        index * .045,
+        .35
+        ) + 's';
+
         }
+        );
+
+        },
+
+
+        /* =================================================
+        INIT
+        ================================================= */
+
+        initComplete:
+        function () {
+
+        $('#tablePatients_filter')
+        .appendTo(
+        '#filterBarEnd'
+        );
+
+
+        $('#tablePatients_length')
+        .appendTo(
+        '#filterBarEnd'
+        );
+
+
+        $('#tablePatients_info')
+        .appendTo(
+        '#tableFooterBar'
+        );
+
+
+        $('#tablePatients_paginate')
+        .appendTo(
+        '#tableFooterBar'
+        );
+
+        }
+
         });
 
-        $('#tablePatients').on('processing.dt', function (e, settings, processing) {
-        $('#tableLoadingOverlay').toggleClass('show', processing);
-        });
 
-        $('.pill-btn').on('click', function () {
-        $('.pill-btn').removeClass('active');
-        $(this).addClass('active');
-        currentCategoryFilter = $(this).data('category');
+        /* ========================================================
+        PROCESSING
+        ======================================================== */
+
+        $('#tablePatients')
+        .on(
+        'processing.dt',
+        function (
+        e,
+        settings,
+        processing
+        ) {
+
+        $('#tableLoadingOverlay')
+        .toggleClass(
+        'show',
+        processing
+        );
+
+        }
+        );
+
+
+        /* ========================================================
+        CATEGORY FILTER
+        ======================================================== */
+
+        $('.pill-btn')
+        .on(
+        'click',
+        function () {
+
+
+        $('.pill-btn')
+        .removeClass(
+        'active'
+        );
+
+
+        $(this)
+        .addClass(
+        'active'
+        );
+
+
+        currentCategoryFilter =
+        $(this)
+        .data(
+        'category'
+        );
+
+
         table.ajax.reload();
+
+        }
+        );
+
+
         });
-        });
+
+
+        /* ============================================================
+        DELETE PATIENT
+        ============================================================ */
 
         function deletePatient(id) {
+
+
         Swal.fire({
-        title: 'هل أنت متأكد؟',
-        text: 'سيتم تعطيل المريض من النظام',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#415E72',
-        cancelButtonColor: '#64748b',
-        confirmButtonText: 'نعم، احذف!',
-        cancelButtonText: 'إلغاء',
-        reverseButtons: true
-        }).then((result) => {
-        if (result.isConfirmed) {
+
+        title:
+        'هل أنت متأكد؟',
+
+        text:
+        'سيتم تعطيل المريض من النظام',
+
+        icon:
+        'warning',
+
+        showCancelButton:
+        true,
+
+        confirmButtonColor:
+        '#0d9488',
+
+        cancelButtonColor:
+        '#64748b',
+
+        confirmButtonText:
+        'نعم، احذف!',
+
+        cancelButtonText:
+        'إلغاء',
+
+        reverseButtons:
+        true
+
+        })
+
+
+        .then(
+        function (result) {
+
+
+        if (!result.isConfirmed)
+        return;
+
+
         $.ajax({
-        url: '/Patients/Delete',
-        type: 'POST',
-        data: { id: id },
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        success: function (response) {
-        if (response.success) {
-        $('#tablePatients').DataTable().ajax.reload();
-        Swal.fire({ title: 'تم الحذف!', text: response.message || 'تم تعطيل المريض بنجاح.', icon: 'success', confirmButtonColor: '#415E72', confirmButtonText: 'حسناً', timer: 2000, timerProgressBar: true });
-        } else {
-        Swal.fire({ title: 'خطأ', text: response.message || 'حدث خطأ أثناء الحذف', icon: 'error', confirmButtonColor: '#415E72', confirmButtonText: 'حسناً' });
-        }
+
+        url:
+        '/Patients/Delete',
+
+        type:
+        'POST',
+
+        data:
+        {
+        id:
+        id
         },
-        error: function () {
-        Swal.fire({ title: 'خطأ', text: 'فشل الاتصال بالخادم', icon: 'error', confirmButtonColor: '#415E72', confirmButtonText: 'حسناً' });
-        }
+
+        headers:
+        {
+        RequestVerificationToken:
+        $('input[name="__RequestVerificationToken"]')
+        .val()
+        },
+
+
+        success:
+        function (response) {
+
+
+        if (response.success) {
+
+
+        $('#tablePatients')
+        .DataTable()
+        .ajax
+        .reload(
+        null,
+        false
+        );
+
+
+        Swal.fire({
+
+        title:
+        'تم الحذف!',
+
+        text:
+        response.message ||
+        'تم تعطيل المريض بنجاح.',
+
+        icon:
+        'success',
+
+        confirmButtonColor:
+        '#0d9488',
+
+        confirmButtonText:
+        'حسنًا',
+
+        timer:
+        2000,
+
+        timerProgressBar:
+        true
+
         });
+
+
+        /* Update statistics */
+
+        setTimeout(
+        function () {
+
+        $.get(
+        '/Patients/GetPatientsStats',
+        function (res) {
+
+        animatePatientStat(
+        '#statTotal',
+        res.total || 0
+        );
+
+        animatePatientStat(
+        '#statGeneral',
+        res.general || 0
+        );
+
+        animatePatientStat(
+        '#statOrtho',
+        res.ortho || 0
+        );
+
+        animatePatientStat(
+        '#statBoth',
+        res.both || 0
+        );
+
         }
+        );
+
+        },
+        250
+        );
+
+        }
+        else {
+
+
+        Swal.fire({
+
+        title:
+        'خطأ',
+
+        text:
+        response.message ||
+        'حدث خطأ أثناء الحذف',
+
+        icon:
+        'error',
+
+        confirmButtonColor:
+        '#0d9488',
+
+        confirmButtonText:
+        'حسنًا'
+
         });
+
         }
+
+        },
+
+
+        error:
+        function () {
+
+        Swal.fire({
+
+        title:
+        'خطأ',
+
+        text:
+        'فشل الاتصال بالخادم',
+
+        icon:
+        'error',
+
+        confirmButtonColor:
+        '#0d9488',
+
+        confirmButtonText:
+        'حسنًا'
+
+        });
+
+        }
+
+        });
+
+        }
+        );
+
+        }
+
+
+        /* ============================================================
+        STAT UPDATE AFTER DELETE
+        ============================================================ */
+
+        function animatePatientStat(
+        selector,
+        target
+        ) {
+
+        const el =
+        $(selector);
+
+
+        const startValue =
+        parseInt(
+        el.text().replace(/,/g, '')
+        ) || 0;
+
+
+        const duration =
+        600;
+
+        const startTime =
+        performance.now();
+
+
+        function step(now) {
+
+        const progress =
+        Math.min(
+        (now - startTime) /
+        duration,
+        1
+        );
+
+
+        const eased =
+        1 -
+        Math.pow(
+        1 - progress,
+        3
+        );
+
+
+        const value =
+        Math.round(
+        startValue +
+        (target - startValue) *
+        eased
+        );
+
+
+        el.text(
+        value.toLocaleString(
+        'en-EG'
+        )
+        );
+
+
+        if (progress < 1) {
+
+        requestAnimationFrame(step);
+
+        }
+
+        }
+
+
+        requestAnimationFrame(step);
+
+        }
+
+
     </script>
+
 
     @if (TempData[Helper.MsgType] != null)
     {
+
         <script>
+
             Swal.fire({
-            title: '@TempData[Helper.Title]',
-            text: '@Html.Raw(TempData[Helper.Msg])',
-            confirmButtonText: 'حسناً',
-            icon: '@(TempData[Helper.MsgType]?.ToString() == Helper.Success ? "success" : "error")',
-            confirmButtonColor: '#415E72'
+
+            title:
+            '@TempData[Helper.Title]',
+
+            text:
+            '@Html.Raw(TempData[Helper.Msg])',
+
+            confirmButtonText:
+            'حسنًا',
+
+            icon:
+            '@(
+            TempData[Helper.MsgType]?.ToString()
+            == Helper.Success
+            ? "success"
+            : "error"
+                    )',
+
+            confirmButtonColor:
+            '#0d9488'
+
             });
+
         </script>
+
     }
+
 }

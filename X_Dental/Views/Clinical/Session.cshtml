@@ -1,365 +1,354 @@
 ﻿@using Dental.Models.Patient
 @using Dental.Modules.Clinical.ViewModels
+@using Dental.Modules.Patients.Enums
 @model SessionViewModel
 @{
     ViewData["Title"] = $"سيشن — {Model.Patient.FullNameAr}";
     var initials = string.Join("", Model.Patient.FullNameAr.Split(' ').Take(2).Select(x => x[0]));
+
+    var sessionStatusClass = Model.Visit.Status switch
+    {
+        VisitStatus.Completed => "success",
+        VisitStatus.Cancelled => "danger",
+        _ => "warning"
+    };
+    var sessionStatusText = Model.Visit.Status switch
+    {
+        VisitStatus.Completed => "مكتمل",
+        VisitStatus.Cancelled => "ملغي",
+        _ => "قيد التنفيذ"
+    };
 }
 
-
-
 <style>
-
-    .pmt-summary-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 14px;
-        margin-bottom: 20px;
+    :root {
+        --sc-teal-900: #0a4d4f;
+        --sc-teal-700: #0d7377;
+        --sc-teal-600: #0f9b8e;
+        --sc-teal-500: #14b8a6;
+        --sc-teal-100: #c7f2ea;
+        --sc-sky-50: #eafbfc;
+        --sc-sky-100: #dcf5f7;
+        --sc-coral-300: #f6c6bc;
+        --sc-ink-900: #0b2e30;
+        --sc-ink-600: #4b6b6c;
+        --brand: #0d9488;
+        --brand-dark: #0f766e;
+        --brand-light: #f0fdfa;
+        --radius-lg: 18px;
+        --radius-md: 12px;
+        --shadow-soft: 0 1px 3px rgba(15, 23, 42, 0.06);
+        --shadow-hover: 0 10px 26px rgba(10, 77, 79, 0.12);
+        --shadow-card: 0 20px 50px rgba(10, 77, 79, .08);
     }
 
-    .pmt-summary-card {
-        background: #fff;
-        border-radius: 14px;
-        padding: 16px;
-        border: 1px solid #e2e8f0;
-        text-align: center;
+    body {
+        background: radial-gradient(circle at 6% 4%, var(--sc-teal-100) 0%, transparent 38%), radial-gradient(circle at 97% 92%, var(--sc-coral-300) 0%, transparent 26%), var(--sc-sky-50);
     }
 
-        .pmt-summary-card .pmt-label {
-            font-size: .75rem;
-            color: #64748b;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .pmt-summary-card .pmt-value {
-            font-size: 1.15rem;
-            font-weight: 800;
-            color: #0f172a;
-        }
-
-        .pmt-summary-card.is-paid .pmt-value {
-            color: #047857;
-        }
-
-        .pmt-summary-card.is-due .pmt-value {
-            color: #b91c1c;
-        }
-
-    table.pmt-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: .87rem;
-    }
-
-        table.pmt-table th {
-            text-align: right;
-            color: #64748b;
-            font-weight: 700;
-            padding: 8px;
-            border-bottom: 2px solid #f1f5f9;
-        }
-
-        table.pmt-table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #f8fafc;
-        }
-
-    .pmt-badge-paid {
-        background: #d1fae5;
-        color: #047857;
-        padding: 2px 10px;
-        border-radius: 6px;
-        font-size: .72rem;
-        font-weight: 700;
-    }
-
-    .pmt-badge-due {
-        background: #fee2e2;
-        color: #b91c1c;
-        padding: 2px 10px;
-        border-radius: 6px;
-        font-size: .72rem;
-        font-weight: 700;
-    }
-
-    .btn-pmt-void {
-        background: none;
-        border: none;
-        color: #b91c1c;
-        cursor: pointer;
-        font-size: .78rem;
-    }
-
-
-
-    /* ── Medical Soft Theme ── */
-    .patient-dashboard {
-        padding: 12px;
-        background: #f1f5f9;
-        min-height: 100vh;
-    }
-
-    /* Header */
-    .dash-header {
+    /* ── Hero ── */
+    .session-hero {
+        background: linear-gradient(135deg, var(--sc-teal-700), var(--sc-teal-500));
+        border-radius: var(--radius-lg);
+        padding: 24px 28px;
         display: flex;
+        align-items: center;
         justify-content: space-between;
-        align-items: center;
-        background: #fff;
-        border-radius: 16px;
-        padding: 20px 28px;
-        margin-bottom: 16px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    }
-
-    .patient-profile {
-        display: flex;
-        align-items: center;
-        gap: 18px;
-    }
-
-    .patient-avatar-lg {
-        width: 68px;
-        height: 68px;
-        border-radius: 18px;
-        background: linear-gradient(135deg, #14b8a6, #0d9488);
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        font-weight: 800;
-        box-shadow: 0 4px 12px rgba(13,148,136,0.2);
-    }
-
-    .patient-info h2 {
-        font-size: 1.35rem;
-        font-weight: 800;
-        color: #1e293b;
-        margin: 0 0 10px 0;
-    }
-
-    .patient-meta {
-        display: flex;
+        box-shadow: 0 14px 34px rgba(13, 115, 119, .28);
+        margin-bottom: 20px;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 16px;
+        position: relative;
+        overflow: hidden;
     }
 
-    .meta-tag {
+        .session-hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 92% -20%, rgba(255,255,255,.32), transparent 55%);
+            pointer-events: none;
+        }
+
+        .session-hero .hero-content {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .session-hero .hero-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            background: rgba(255,255,255,.18);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: 800;
+            flex-shrink: 0;
+            backdrop-filter: blur(6px);
+            border: 2px solid rgba(255,255,255,.2);
+        }
+
+        .session-hero h1 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin: 0;
+            color: #fff;
+        }
+
+        .session-hero .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+            align-items: center;
+        }
+
+    .hero-meta-tag {
         display: flex;
         align-items: center;
         gap: 6px;
-        background: #f8fafc;
-        color: #475569;
-        padding: 5px 12px;
+        background: rgba(255,255,255,.15);
+        color: #fff;
+        padding: 4px 12px;
         border-radius: 20px;
-        font-size: 0.82rem;
+        font-size: 0.78rem;
         font-weight: 600;
-        border: 1px solid #e2e8f0;
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,.1);
     }
 
-    .type-badge {
-        display: flex;
+    .session-status-badge {
+        display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 5px 12px;
+        padding: 5px 14px;
         border-radius: 20px;
-        font-size: 0.82rem;
-        font-weight: 700;
+        font-size: 0.8rem;
+        font-weight: 800;
+        border: 2px solid rgba(255,255,255,.3);
+        backdrop-filter: blur(6px);
     }
 
-        .type-badge.general {
-            background: #dbeafe;
-            color: #1e40af;
+        .session-status-badge.success {
+            background: rgba(16, 185, 129, 0.25);
+            color: #d1fae5;
         }
 
-        .type-badge.ortho {
-            background: #fef3c7;
-            color: #92400e;
+        .session-status-badge.warning {
+            background: rgba(245, 158, 11, 0.25);
+            color: #fef3c7;
         }
 
-        .type-badge.both {
-            background: #ede9fe;
-            color: #5b21b6;
+        .session-status-badge.danger {
+            background: rgba(239, 68, 68, 0.25);
+            color: #fee2e2;
         }
 
-    .header-actions {
+    .hero-actions {
         display: flex;
         gap: 10px;
+        position: relative;
+        z-index: 1;
+        flex-wrap: wrap;
     }
 
-    .btn-dash {
+    .btn-hero {
         display: flex;
         align-items: center;
         gap: 8px;
         padding: 10px 20px;
-        border-radius: 10px;
+        border-radius: 12px;
         font-weight: 700;
-        font-size: 0.9rem;
+        font-size: 0.88rem;
         border: none;
         cursor: pointer;
         transition: all 0.2s ease;
         text-decoration: none;
+        white-space: nowrap;
     }
 
-    .btn-edit {
-        background: #f1f5f9;
-        color: #334155;
-        border: 1px solid #e2e8f0;
+    .btn-hero-back {
+        background: rgba(255,255,255,.9);
+        color: var(--sc-teal-700);
+        box-shadow: 0 4px 12px rgba(10, 40, 42, .15);
     }
 
-        .btn-edit:hover {
-            background: #e2e8f0;
-            color: #0f172a;
+        .btn-hero-back:hover {
+            background: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(10, 40, 42, .22);
+            color: var(--sc-teal-700);
         }
 
-    .btn-appointment {
-        background: linear-gradient(135deg, #14b8a6, #0d9488);
+    .btn-hero-print {
+        background: rgba(255,255,255,.15);
         color: #fff;
-        box-shadow: 0 4px 12px rgba(13,148,136,0.2);
+        border: 1px solid rgba(255,255,255,.25);
+        backdrop-filter: blur(4px);
     }
 
-        .btn-appointment:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(13,148,136,0.3);
+        .btn-hero-print:hover {
+            background: rgba(255,255,255,.25);
+            transform: translateY(-2px);
         }
 
-    .btn-session {
-        background: linear-gradient(135deg, #6366f1, #4f46e5);
+    .btn-hero-end {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
         color: #fff;
-        box-shadow: 0 4px 12px rgba(99,102,241,0.2);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
     }
 
-        .btn-session:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(99,102,241,0.3);
+        .btn-hero-end:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+            color: #fff;
         }
 
-    /* Stats Bar */
-    .stats-bar {
+    /* ── Stats ── */
+    .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 12px;
+        gap: 14px;
         margin-bottom: 20px;
     }
 
-    .stat-item {
-        background: #fff;
-        border-radius: 14px;
+    .stat-card-glass {
+        background: rgba(255,255,255,.78);
+        backdrop-filter: blur(14px);
+        border-radius: 16px;
         padding: 18px 20px;
         display: flex;
         align-items: center;
         gap: 14px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-        transition: all 0.25s ease;
+        border: 1px solid rgba(255,255,255,.6);
+        box-shadow: var(--shadow-soft);
+        transition: all .25s ease;
     }
 
-        .stat-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-            border-color: #cbd5e1;
+        .stat-card-glass:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
         }
 
-    .stat-icon-sm {
-        width: 44px;
-        height: 44px;
+    .stat-icon-box {
+        width: 46px;
+        height: 46px;
         border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
+        font-size: 1.15rem;
         flex-shrink: 0;
     }
 
-        .stat-icon-sm.teal {
+        .stat-icon-box.teal {
             background: #f0fdfa;
             color: #0f766e;
         }
 
-        .stat-icon-sm.green {
-            background: #f0fdf4;
-            color: #166534;
-        }
-
-        .stat-icon-sm.red {
-            background: #fef2f2;
-            color: #dc2626;
-        }
-
-        .stat-icon-sm.blue {
+        .stat-icon-box.blue {
             background: #eff6ff;
             color: #1d4ed8;
         }
 
-    .stat-num {
+        .stat-icon-box.green {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .stat-icon-box.red {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+    .stat-value-lg {
         display: block;
-        font-size: 1.3rem;
+        font-size: 1.4rem;
         font-weight: 800;
-        color: #1e293b;
+        color: var(--sc-ink-900);
+        line-height: 1.1;
     }
 
-    .stat-label-sm {
+    .stat-label-lg {
         font-size: 0.78rem;
-        color: #64748b;
+        color: var(--sc-ink-600);
         font-weight: 600;
     }
 
-    /* Tabs */
-    .tabs-nav {
-        display: flex;
-        gap: 6px;
-        background: #fff;
-        padding: 8px;
-        border-radius: 14px;
+    /* ── Tabs ── */
+    .tabs-container {
+        background: rgba(255,255,255,.82);
+        backdrop-filter: blur(16px);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,.6);
         margin-bottom: 20px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-        overflow-x: auto;
     }
 
-    .tab-btn {
+    .tabs-pill-bar {
+        display: flex;
+        gap: 6px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--sc-sky-100);
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+
+    .tab-pill {
         display: flex;
         align-items: center;
         gap: 8px;
         padding: 10px 18px;
-        border-radius: 10px;
+        border-radius: 999px;
         border: none;
         background: transparent;
-        color: #64748b;
+        color: var(--sc-ink-600);
         font-weight: 700;
-        font-size: 0.88rem;
+        font-size: 0.85rem;
         cursor: pointer;
         white-space: nowrap;
         transition: all 0.2s ease;
     }
 
-        .tab-btn:hover {
-            background: #f8fafc;
-            color: #334155;
+        .tab-pill:hover {
+            background: #fff;
+            color: var(--brand-dark);
         }
 
-        .tab-btn.active {
-            background: linear-gradient(135deg, #14b8a6, #0d9488);
+        .tab-pill.active {
+            background: linear-gradient(135deg, var(--sc-teal-600), var(--sc-teal-700));
             color: #fff;
-            box-shadow: 0 4px 12px rgba(13,148,136,0.2);
+            box-shadow: 0 4px 10px rgba(13,148,136,0.28);
         }
 
-    /* Tab Content */
-    .tab-content {
-        display: none;
-        animation: fadeIn 0.3s ease;
+        .tab-pill i {
+            font-size: 0.95rem;
+        }
+
+    .tab-panels {
+        padding: 20px;
     }
 
-        .tab-content.active {
+    .tab-panel {
+        display: none;
+        animation: panelFadeIn 0.35s ease;
+    }
+
+        .tab-panel.active {
             display: block;
         }
 
-    @@keyframes fadeIn {
+    @@keyframes panelFadeIn {
         from {
             opacity: 0;
-            transform: translateY(8px);
+            transform: translateY(10px);
         }
 
         to {
@@ -368,112 +357,196 @@
         }
     }
 
-    /* Info Cards */
-    .tab-grid {
+    /* ── Overview: 3-Column Compact Grid ── */
+    .overview-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 16px;
+        margin-bottom: 16px;
     }
 
-    .info-card {
-        background: #fff;
-        border-radius: 14px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    .overview-card {
+        background: rgba(255,255,255,.9);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,.6);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         overflow: hidden;
-        transition: all 0.2s;
+        transition: all 0.25s ease;
+        animation: cardFadeIn 0.5s ease forwards;
+        opacity: 0;
     }
 
-        .info-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        .overview-card:hover {
+            box-shadow: 0 8px 24px rgba(10, 77, 79, 0.08);
+            transform: translateY(-2px);
         }
 
-        .info-card.full-width {
-            grid-column: 1 / -1;
+        .overview-card:nth-child(1) {
+            animation-delay: .04s;
         }
 
-    .info-header {
+        .overview-card:nth-child(2) {
+            animation-delay: .08s;
+        }
+
+        .overview-card:nth-child(3) {
+            animation-delay: .12s;
+        }
+
+    @@keyframes cardFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .overview-header {
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 14px 18px;
-        background: #f8fafc;
-        border-bottom: 1px solid #f1f5f9;
+        padding: 12px 16px;
+        background: var(--sc-sky-50);
+        border-bottom: 1px solid var(--sc-sky-100);
         font-weight: 800;
-        font-size: 0.95rem;
-        color: #1e293b;
+        font-size: 0.9rem;
+        color: var(--sc-ink-900);
     }
 
-        .info-header i {
-            color: #14b8a6;
-            font-size: 1.1rem;
+        .overview-header i {
+            color: var(--sc-teal-600);
+            font-size: 1rem;
         }
 
-    .info-body {
-        padding: 16px 18px;
+    .overview-body {
+        padding: 12px 16px;
     }
 
-    .info-row {
+    .overview-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 10px 0;
-        border-bottom: 1px solid #f1f5f9;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--sc-sky-100);
+        font-size: 0.88rem;
     }
 
-        .info-row:last-child {
+        .overview-row:last-child {
             border-bottom: none;
         }
 
-    .info-label {
-        font-size: 0.85rem;
-        color: #64748b;
+    .overview-label {
+        color: var(--sc-ink-600);
         font-weight: 600;
+        font-size: 0.82rem;
     }
 
-    .info-value {
-        font-size: 0.92rem;
-        color: #1e293b;
+    .overview-value {
+        color: var(--sc-ink-900);
         font-weight: 700;
+        font-size: 0.88rem;
+        text-align: left;
     }
 
-        .info-value.text-danger {
+        .overview-value.danger {
             color: #dc2626;
             font-weight: 800;
         }
 
-    .blood-badge {
+    .overview-badge {
         background: #fee2e2;
         color: #dc2626;
-        padding: 3px 10px;
+        padding: 2px 8px;
         border-radius: 6px;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         font-weight: 700;
     }
 
-    .notes-text {
-        color: #475569;
-        line-height: 1.7;
-        font-size: 0.92rem;
-        margin: 0;
+    /* ── Bottom Section: Notes + Timeline side by side ── */
+    .overview-bottom {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
     }
 
-    /* Placeholder */
-    .placeholder-tab {
-        background: #fff;
-        border-radius: 14px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    .overview-card.full-width {
+        grid-column: 1 / -1;
+    }
+
+    /* ── Timeline Compact ── */
+    .timeline-compact {
+        position: relative;
+        padding-right: 20px;
+    }
+
+        .timeline-compact::before {
+            content: '';
+            position: absolute;
+            right: 6px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--sc-sky-100);
+        }
+
+    .timeline-node {
+        position: relative;
+        padding-bottom: 14px;
+        padding-right: 16px;
+    }
+
+        .timeline-node::before {
+            content: '';
+            position: absolute;
+            right: -16px;
+            top: 4px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--sc-teal-500);
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px var(--sc-teal-500);
+        }
+
+    .timeline-date {
+        font-size: 0.72rem;
+        color: #94a3b8;
+        font-weight: 700;
+        margin-bottom: 2px;
+    }
+
+    .timeline-title {
+        font-weight: 800;
+        color: var(--sc-ink-900);
+        font-size: 0.88rem;
+    }
+
+    .timeline-desc {
+        color: var(--sc-ink-600);
+        font-size: 0.82rem;
+        margin-top: 2px;
+    }
+
+    /* ── Placeholder ── */
+    .placeholder-glass {
+        background: rgba(255,255,255,.9);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,.6);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         padding: 48px;
         text-align: center;
     }
 
-    .placeholder-icon {
+    .placeholder-icon-glass {
         width: 72px;
         height: 72px;
         border-radius: 20px;
-        background: #f0fdfa;
-        color: #14b8a6;
+        background: var(--brand-light);
+        color: var(--sc-teal-500);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -481,357 +554,314 @@
         margin: 0 auto 20px;
     }
 
-    .placeholder-tab h3 {
+    .placeholder-glass h3 {
         font-size: 1.2rem;
         font-weight: 800;
-        color: #1e293b;
+        color: var(--sc-ink-900);
         margin: 0 0 8px 0;
     }
 
-    .placeholder-tab p {
-        color: #64748b;
+    .placeholder-glass p {
+        color: var(--sc-ink-600);
         font-size: 0.92rem;
         margin: 0 0 24px 0;
     }
 
-    /* Timeline */
-    .timeline {
-        position: relative;
-        padding-left: 24px;
-    }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 8px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: #e2e8f0;
-        }
-
-    .timeline-item {
-        position: relative;
-        padding-bottom: 20px;
-        padding-left: 20px;
-    }
-
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: -20px;
-            top: 4px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #14b8a6;
-            border: 2px solid #fff;
-            box-shadow: 0 0 0 2px #14b8a6;
-        }
-
-    .timeline-date {
-        font-size: 0.75rem;
-        color: #94a3b8;
-        font-weight: 700;
-        margin-bottom: 4px;
-    }
-
-    .timeline-title {
-        font-weight: 800;
-        color: #1e293b;
-        font-size: 0.95rem;
-    }
-
-    .timeline-desc {
-        color: #64748b;
-        font-size: 0.85rem;
-        margin-top: 2px;
-    }
-
-    /* Modal Custom */
-    .custom-modal {
-        display: none;
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        align-items: center;
-        justify-content: center;
-    }
-
-        .custom-modal.show {
-            display: flex;
-        }
-
-    .modal-overlay {
-        position: absolute;
-        inset: 0;
-        background: rgba(15,23,42,0.45);
-        backdrop-filter: blur(4px);
-    }
-
-    .modal-box {
-        position: relative;
-        z-index: 1;
-        width: 90%;
-        max-width: 480px;
-        background: #fff;
-        border-radius: 20px;
-        box-shadow: 0 25px 60px rgba(0,0,0,0.2);
-        animation: modalSlide 0.25s ease;
-    }
-
-    @@keyframes modalSlide {
-        from {
-            opacity: 0;
-            transform: translateY(20px) scale(0.98);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-    }
-
-    .modal-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 18px 24px;
-        background: linear-gradient(135deg, #14b8a6, #0d9488);
-        color: #fff;
-        border-radius: 20px 20px 0 0;
-    }
-
-        .modal-head h5 {
-            margin: 0;
-            font-weight: 800;
-            font-size: 1.1rem;
-        }
-
-    .modal-body {
-        padding: 24px;
-    }
-
-    .modal-foot {
-        padding: 0 24px 24px;
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-    }
-
-    .form-label-custom {
-        display: block;
-        font-size: 0.82rem;
-        font-weight: 700;
-        color: #475569;
-        margin-bottom: 6px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .form-control-custom {
-        width: 100%;
-        padding: 10px 14px;
-        border: 1.5px solid #e2e8f0;
-        border-radius: 10px;
-        font-size: 0.95rem;
-        color: #1e293b;
-        background: #fff;
-        transition: all 0.2s;
-        outline: none;
-    }
-
-        .form-control-custom:focus {
-            border-color: #14b8a6;
-            box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
-        }
-
-        .form-control-custom:disabled {
-            background: #f8fafc;
-            color: #94a3b8;
-        }
-
-    .btn-modal {
-        padding: 10px 22px;
-        border-radius: 10px;
-        font-weight: 700;
-        font-size: 0.9rem;
-        border: none;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .btn-modal-cancel {
-        background: #f1f5f9;
-        color: #475569;
-    }
-
-        .btn-modal-cancel:hover {
-            background: #e2e8f0;
-        }
-
-    .btn-modal-save {
-        background: linear-gradient(135deg, #14b8a6, #0d9488);
-        color: #fff;
-    }
-
-        .btn-modal-save:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(13,148,136,0.3);
-        }
-
-    /* Responsive */
-    @@media (max-width: 1100px) {
-        .tab-grid {
+    /* ── Responsive ── */
+    @@media (max-width: 1200px) {
+        .overview-grid {
             grid-template-columns: repeat(2, 1fr);
         }
 
-        .stats-bar {
+        .overview-bottom {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-grid {
             grid-template-columns: repeat(2, 1fr);
         }
     }
 
     @@media (max-width: 768px) {
-        .dash-header {
+        .session-hero {
             flex-direction: column;
-            gap: 16px;
             text-align: center;
         }
 
-        .patient-profile {
-            flex-direction: column;
-        }
+            .session-hero .hero-content {
+                flex-direction: column;
+            }
 
-        .header-actions {
+        .hero-actions {
             width: 100%;
             justify-content: center;
         }
 
-        .tab-grid {
+        .overview-grid {
             grid-template-columns: 1fr;
         }
 
-        .tabs-nav {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .tabs-pill-bar {
             flex-wrap: wrap;
         }
     }
 </style>
 
-<div class="container-fluid patient-dashboard" dir="rtl">
+<div class="container-fluid" dir="rtl" style="padding: 12px;">
 
-    <!-- 🔷 Header -->
-    <div class="dash-header">
-        <div class="patient-profile">
-            <div class="patient-avatar-lg">@initials</div>
-            <div class="patient-info">
-                <h2>@Model.Patient.FullNameAr</h2>
-                <div class="patient-meta">
-                    <span class="type-badge @(Model.Patient.PatientType == PatientType.Orthodontics ? "ortho" : "general")">
-                        <i class="bi @(Model.Patient.PatientType == PatientType.Orthodontics ? "bi-braces" : "bi-tooth")"></i>
-                        @(Model.Patient.PatientType == PatientType.Orthodontics ? "تقويم" : "عام")
+    <!-- 🔷 Hero Header -->
+    <div class="session-hero">
+        <div class="hero-content">
+            <div class="hero-avatar">@initials</div>
+            <div>
+                <h1>@Model.Patient.FullNameAr</h1>
+                <div class="hero-meta">
+                    <span class="session-status-badge @sessionStatusClass">
+                        <i class="bi bi-circle-fill" style="font-size:0.5rem;"></i> @sessionStatusText
                     </span>
-                    <span class="meta-tag"><i class="bi bi-telephone"></i> @Model.Patient.Mobile</span>
-                    <span class="meta-tag"><i class="bi bi-droplet"></i> @(Model.Patient.BloodGroup?.Name ?? "-")</span>
-                    <span class="meta-tag text-danger"><i class="bi bi-exclamation-triangle"></i> @(Model.Patient.Allergies ?? "لا يوجد حساسية")</span>
+                    <span class="hero-meta-tag"><i class="bi bi-hash"></i> @Model.Patient.PatientCode</span>
+                    <span class="hero-meta-tag"><i class="bi bi-telephone"></i> @Model.Patient.Mobile</span>
+                    <span class="hero-meta-tag"><i class="bi bi-droplet"></i> @(Model.Patient.BloodGroup?.Name ?? "-")</span>
+                    <span class="hero-meta-tag"><i class="bi bi-calendar"></i> @Model.Visit.VisitDate.ToString("dd/MM/yyyy")</span>
                 </div>
             </div>
         </div>
-        <div class="header-actions">
-            <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.Patient.Id" class="btn-dash btn-edit">
+        <div class="hero-actions">
+            <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.Patient.Id" class="btn-hero btn-hero-back">
                 <i class="bi bi-arrow-right"></i> رجوع لملف المريض
             </a>
+            <button type="button" class="btn-hero btn-hero-print" onclick="window.print()">
+                <i class="bi bi-printer"></i> طباعة
+            </button>
+            @if (Model.Visit.Status != VisitStatus.Completed)
+            {
+                <button type="button" class="btn-hero btn-hero-end" onclick="endSession()">
+                    <i class="bi bi-check-circle"></i> إنهاء السيشن
+                </button>
+            }
         </div>
     </div>
 
-    <!-- 🔷 Stats Bar — ملخص السيشن المالي -->
-    <div class="stats-bar">
-        <div class="stat-item">
-            <div class="stat-icon-sm teal"><i class="bi bi-receipt"></i></div>
+    <!-- 🔷 Stats Bar -->
+    <div class="stats-grid">
+        <div class="stat-card-glass">
+            <div class="stat-icon-box teal"><i class="bi bi-receipt"></i></div>
             <div>
-                <span class="stat-num" id="sumTotal">@Model.Visit.TotalAmount.ToString("N0")</span>
-                <span class="stat-label-sm">الإجمالي</span>
+                <span class="stat-value-lg" id="sumTotal">@Model.Visit.TotalAmount.ToString("N0")</span>
+                <span class="stat-label-lg d-block">الإجمالي (ج.م)</span>
             </div>
         </div>
-        <div class="stat-item">
-            <div class="stat-icon-sm blue"><i class="bi bi-percent"></i></div>
+        <div class="stat-card-glass">
+            <div class="stat-icon-box blue"><i class="bi bi-percent"></i></div>
             <div>
-                <span class="stat-num" id="sumDiscount">@Model.Visit.Discount.ToString("N0")</span>
-                <span class="stat-label-sm">الخصم</span>
+                <span class="stat-value-lg" id="sumDiscount">@Model.Visit.Discount.ToString("N0")</span>
+                <span class="stat-label-lg d-block">الخصم</span>
             </div>
         </div>
-        <div class="stat-item">
-            <div class="stat-icon-sm green"><i class="bi bi-cash-stack"></i></div>
+        <div class="stat-card-glass">
+            <div class="stat-icon-box green"><i class="bi bi-cash-stack"></i></div>
             <div>
-                <span class="stat-num" id="sumPaid">@Model.Visit.PaidAmount.ToString("N0")</span>
-                <span class="stat-label-sm">المدفوع</span>
+                <span class="stat-value-lg" id="sumPaid">@Model.Visit.PaidAmount.ToString("N0")</span>
+                <span class="stat-label-lg d-block">المدفوع</span>
             </div>
         </div>
-        <div class="stat-item">
-            <div class="stat-icon-sm red"><i class="bi bi-credit-card"></i></div>
+        <div class="stat-card-glass">
+            <div class="stat-icon-box red"><i class="bi bi-credit-card"></i></div>
             <div>
-                <span class="stat-num" id="sumRemaining">@Model.Visit.Remaining.ToString("N0")</span>
-                <span class="stat-label-sm">المتبقي</span>
+                <span class="stat-value-lg" id="sumRemaining">@Model.Visit.Remaining.ToString("N0")</span>
+                <span class="stat-label-lg d-block">المتبقي</span>
             </div>
         </div>
     </div>
 
     <!-- 🔷 Tabs -->
-    <div class="tabs-nav">
-        <button class="tab-btn active" onclick="switchTab('overview', this)">
-            <i class="bi bi-clipboard-pulse"></i> نظرة عامة
-        </button>
-        <button class="tab-btn" onclick="switchTab('dentalchart', this)">
-            <i class="bi bi-grid-3x3-gap"></i> Dental Chart
-        </button>
-        <button class="tab-btn" onclick="switchTab('diagnosis', this)">
-            <i class="bi bi-activity"></i> التشخيص
-        </button>
-       @*  <button class="tab-btn" onclick="switchTab('procedures', this)">
-            <i class="bi bi-list-check"></i> الإجراءات
-        </button> *@
-        <button class="tab-btn" onclick="switchTab('xrays', this)">
-            <i class="bi bi-image"></i> الأشعة
-        </button>
-        <button class="tab-btn" onclick="switchTab('payments', this)">
-            <i class="bi bi-credit-card"></i> المدفوعات
-        </button>
-        <button class="tab-btn" onclick="switchTab('prescription', this)">
-            <i class="bi bi-file-medical"></i> الروشتة
-        </button>
-    </div>
+    <div class="tabs-container">
+        <div class="tabs-pill-bar">
+            <button class="tab-pill active" onclick="switchTab('overview', this)">
+                <i class="bi bi-clipboard-pulse"></i> نظرة عامة
+            </button>
+            <button class="tab-pill" onclick="switchTab('dentalchart', this)">
+                <i class="bi bi-grid-3x3-gap"></i> Dental Chart
+            </button>
+            <button class="tab-pill" onclick="switchTab('diagnosis', this)">
+                <i class="bi bi-activity"></i> التشخيص
+            </button>
+            <button class="tab-pill" onclick="switchTab('xrays', this)">
+                <i class="bi bi-image"></i> الأشعة
+            </button>
+            <button class="tab-pill" onclick="switchTab('payments', this)">
+                <i class="bi bi-credit-card"></i> المدفوعات
+            </button>
+            <button class="tab-pill" onclick="switchTab('prescription', this)">
+                <i class="bi bi-file-medical"></i> الروشتة
+            </button>
+        </div>
 
-    <!-- 🔷 Tab Contents -->
-    <div class="tab-content active" id="overview">
-        @await Html.PartialAsync("_SessionOverview", Model)
-    </div>
-    <div class="tab-content" id="dentalchart">
-        @await Html.PartialAsync("_DentalChartInteractive", Model)
-    </div>
-    <div class="tab-content" id="diagnosis">
-        @await Html.PartialAsync("_DynamicDiagnosis", Model)
-    </div>
-   @*  <div class="tab-content" id="procedures">
-        @await Html.PartialAsync("_DynamicProcedures", Model)
-    </div> *@
-    <div class="tab-content" id="xrays">
-        @await Html.PartialAsync("_SessionXRays", Model)
-    </div>
-    <div class="tab-content" id="payments">
-        @await Html.PartialAsync("_ProfessionalPayments", Model)
-    </div>
-    <div class="tab-content" id="prescription">
-        @await Html.PartialAsync("_SessionPrescription", Model)
-    </div>
+        <div class="tab-panels">
 
+            <!-- 🔷 Tab: Overview (3-Column Compact) -->
+            <div class="tab-panel active" id="overview">
+                <!-- Top Row: 3 Cards -->
+                <div class="overview-grid">
+                    <!-- Card 1: Personal -->
+                    <div class="overview-card">
+                        <div class="overview-header"><i class="bi bi-person-vcard"></i> البيانات الشخصية</div>
+                        <div class="overview-body">
+                            <div class="overview-row">
+                                <span class="overview-label">الاسم</span>
+                                <span class="overview-value">@Model.Patient.FullNameAr</span>
+                            </div>
+                            <div class="overview-row">
+                                <span class="overview-label">العمر</span>
+                                <span class="overview-value">@Model.Patient.Age سنة</span>
+                            </div>
+                            <div class="overview-row">
+                                <span class="overview-label">النوع</span>
+                                <span class="overview-value">@(Model.Patient.Gender?.NameAr ?? "-")</span>
+                            </div>
+                            <div class="overview-row">
+                                <span class="overview-label">فصيلة الدم</span>
+                                <span class="overview-value"><span class="overview-badge">@(Model.Patient.BloodGroup?.Name ?? "-")</span></span>
+                            </div>
+                            <div class="overview-row">
+                                <span class="overview-label">نوع الملف</span>
+                                <span class="overview-value">@(Model.Patient.PatientType == PatientType.Orthodontics ? "تقويم" : "عام")</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Contact -->
+                    <div class="overview-card">
+                        <div class="overview-header"><i class="bi bi-telephone-plus"></i> بيانات التواصل</div>
+                        <div class="overview-body">
+                            <div class="overview-row">
+                                <span class="overview-label">الموبايل</span>
+                                <span class="overview-value" dir="ltr">@Model.Patient.Mobile</span>
+                            </div>
+                            <div class="overview-row">
+                                <span class="overview-label">التليفون</span>
+                                <span class="overview-value" dir="ltr">@(Model.Patient.Phone ?? "-")</span>
+                            </div>
+                            <div class="overview-row">
+                                <span class="overview-label">البريد</span>
+                                <span class="overview-value">@(Model.Patient.Email ?? "-")</span>
+                            </div>
+                            <div class="overview-row">
+                                <span class="overview-label">العنوان</span>
+                                <span class="overview-value">@(Model.Patient.Address ?? "-")</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Medical -->
+                    <div class="overview-card">
+                        <div class="overview-header"><i class="bi bi-heart-pulse"></i> التاريخ الطبي</div>
+                        <div class="overview-body">
+                            <div class="overview-row">
+                                <span class="overview-label">الحساسية</span>
+                                <span class="overview-value @(string.IsNullOrEmpty(Model.Patient.Allergies) ? "" : "danger")">
+                                    @(Model.Patient.Allergies ?? "لا يوجد")
+                                </span>
+                            </div>
+                            <div class="overview-row">
+                                <span class="overview-label">أمراض مزمنة</span>
+                                <span class="overview-value">@(Model.Patient.ChronicDiseases ?? "لا يوجد")</span>
+                            </div>
+                            <div class="overview-row">
+                                <span class="overview-label">الأدوية</span>
+                                <span class="overview-value">@(Model.Patient.CurrentMedications ?? "لا يوجد")</span>
+                            </div>
+                            <div class="overview-row">
+                                <span class="overview-label">التدخين</span>
+                                <span class="overview-value">@(Model.Patient.SmokingStatus ?? "-")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Row: Notes + Timeline (side by side) -->
+                <div class="overview-bottom">
+                    <div class="overview-card">
+                        <div class="overview-header"><i class="bi bi-journal-text"></i> ملاحظات السيشن</div>
+                        <div class="overview-body">
+                            <p style="color: #475569; line-height: 1.6; font-size: 0.88rem; margin: 0;">
+                                @(Model.Visit.Notes ?? "لا توجد ملاحظات مسجلة لهذا السيشن.")
+                            </p>
+                        </div>
+                    </div>
+                    <div class="overview-body">
+                        <div class="timeline-compact">
+                            <div class="timeline-node">
+                                <div class="timeline-date">@Model.Visit.VisitDate.ToString("dd MMM yyyy HH:mm")</div>
+                                <div class="timeline-title">بدء السيشن</div>
+                                <div class="timeline-desc">تم فتح السيشن للمريض</div>
+                            </div>
+
+                            
+                            @if (Model.Visit.VisitDate != default)
+                            {
+                                <div class="timeline-node">
+                                    <div class="timeline-date">@Model.Visit.VisitDate.ToString("dd MMM yyyy HH:mm")</div>
+                                    <div class="timeline-title">تسجيل السيشن</div>
+                                    <div class="timeline-desc">تم إنشاء السيشن في النظام</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🔷 Other Tabs -->
+            <div class="tab-panel" id="dentalchart">
+                @await Html.PartialAsync("_DentalChartInteractive", Model)
+            </div>
+            <div class="tab-panel" id="diagnosis">
+                @await Html.PartialAsync("_DynamicDiagnosis", Model)
+            </div>
+            <div class="tab-panel" id="xrays">
+                @await Html.PartialAsync("_SessionXRays", Model)
+            </div>
+            <div class="tab-panel" id="payments">
+                @await Html.PartialAsync("_ProfessionalPayments", Model)
+            </div>
+            <div class="tab-panel" id="prescription">
+                @await Html.PartialAsync("_SessionPrescription", Model)
+            </div>
+
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     <script>
         function switchTab(tabId, btn) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-pill').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(c => c.classList.remove('active'));
             btn.classList.add('active');
             document.getElementById(tabId).classList.add('active');
+        }
+
+        function endSession() {
+            Swal.fire({
+                title: 'إنهاء السيشن؟',
+                text: 'هل تريد إنهاء وإغلاق هذا السيشن؟',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'نعم، إنهاء',
+                cancelButtonText: 'إلغاء',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // TODO: Submit to controller
+                    window.location.reload();
+                }
+            });
         }
     </script>
 }

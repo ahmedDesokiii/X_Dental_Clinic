@@ -11,43 +11,36 @@
         {
             return new List<string>()
             {
-                $"Permissions.{module}.قائمة الطلاب",
-                $"Permissions.{module}.اضافة طالب",
-                $"Permissions.{module}.تعديل طالب",
-                $"Permissions.{module}.حذف طالب",
-                $"Permissions.{module}.تفاصيل طالب",
-                $"Permissions.{module}.تقرير معلم",
-                $"Permissions.{module}.تقرير نفسي",
-                $"Permissions.{module}.تقرير اجتماعي",
-                $"Permissions.{module}.تقرير حضور",
+                $"Permissions.{module}.قائمة المرضي",
+                $"Permissions.{module}.اضافة مريض",
+                $"Permissions.{module}.تعديل مريض",
+                $"Permissions.{module}.حذف مريض",
+                $"Permissions.{module}.تفاصيل مريض",
             };
         }
         public static List<string> GenerateAllPermissions()
         {
             var allPermissions = new List<string>();
-            var Student_Permissions = new List<string>();
+            var Patient_Permissions = new List<string>();
 
-            Student_Permissions.AddRange(Generate_Students_PermissionsList(Modules.Students.ToString()));
+            Patient_Permissions.AddRange(Generate_Students_PermissionsList(Modules.Patients.ToString()));
             
-            allPermissions = Student_Permissions
+            allPermissions = Patient_Permissions
                 //.Concat(DW_CRM_Permissions)
                                            .ToList();
 
             return allPermissions;
         }
 
-        #region Students Modules
-        public static class Students
+        #region Patients Modules
+        public static class Patients
         {
-            public const string View_Students = "Permissions.Students.قائمة الطلاب";
-            public const string Add_Student = "Permissions.Students.اضافة طالب";
-            public const string Edit_Student = "Permissions.Students.تعديل طالب";
-            public const string Delete_Student = "Permissions.Students.حذف طالب";
-            public const string Details_Student = "Permissions.Students.تفاصيل طالب";
-            public const string RepTeacher_Student = "Permissions.Students.تقرير معلم";
-            public const string RepPsychology_Student = "Permissions.Students.تقرير نفسي";
-            public const string RepSocial_Student = "Permissions.Students.تقرير اجتماعي";
-            public const string RepAttendance_Student = "Permissions.Students.تقرير حضور";
+            public const string View_Patients = "Permissions.Patients.قائمة المرضي";
+            public const string Add_Patient = "Permissions.Patients.اضافة مريض";
+            public const string Edit_Patient = "Permissions.Patients.تعديل مريض";
+            public const string Delete_Patient = "Permissions.Patients.حذف مريض";
+            public const string Details_Patient = "Permissions.Patients.تفاصيل مريض";
+            
         }
         #endregion
 

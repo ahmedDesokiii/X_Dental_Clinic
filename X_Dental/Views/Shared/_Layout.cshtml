@@ -29,10 +29,8 @@
 
     <!-- Legacy CSS — TODO: Migrate and remove -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/clinic-design-system-v2.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/patients-theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/CreationStyle.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/executive-dashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Dental.styles.css" asp-append-version="true" />
 
     <!-- Icons -->
@@ -92,12 +90,12 @@
                         <span>قائمة المرضى</span>
                     </a>
 
-                    <a asp-controller="Appointments" asp-action="Index" class="sidebar-link" data-title="المواعيد">
+                    <a asp-controller="Appointments" asp-action="index" class="sidebar-link" data-title="المواعيد">
                         <i class="bi bi-calendar2-week-fill"></i>
                         <span>المواعيد</span>
                     </a>
 
-                    <a asp-controller="Payments" asp-action="Index" class="sidebar-link" data-title="المدفوعات والفواتير">
+                    <a asp-controller="Payments" asp-action="index" class="sidebar-link" data-title="الفواتير والمدفوعات">
                         <i class="bi bi-cash-coin"></i>
                         <span>الفواتير والمدفوعات</span>
                     </a>
@@ -227,17 +225,7 @@
     <script src="~/js/site.js"></script>
     <script src="~/js/login.js"></script>
     <script src="~/js/Users.js"></script>
-    <script src="~/js/InvoiceQuery.js"></script>
-    <script src="~/js/GL_Account.js"></script>
-    <script src="~/js/AddEntry.js"></script>
-    <script src="~/js/lookupModal.js"></script>
-    <script src="~/js/notifications.js"></script>
-    <script src="~/js/signature.js"></script>
-    <script src="~/js/testSig.js"></script>
-    <script src="~/js/global-toast.js"></script>
-    <script src="~/js/alert-adapter.js"></script>
-    <script src="~/js/global-actions.js"></script>
-    <script src="~/js/Employee.js"></script>
+    
 
     <script>
         $(document).ready(function () {
