@@ -13,552 +13,11 @@
         : string.Join("", Model.FullNameAr.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => p[0]));
 }
 @section Styles {
-
+    <link rel="stylesheet" href="~/css/patient-hero-shared.css" asp-append-version="true" />
 
 
     <style>
-    
-        /* =========================================================
-                   DASHBOARD STYLE ANIMATION SYSTEM
-                   ========================================================= */
-
-        :root {
-            --anim-ease: cubic-bezier(.2,.8,.3,1);
-            --anim-duration: .7s;
-        }
-
-        /* =========================
-                   Page Entrance
-                   ========================= */
-
-        .patients-page {
-            opacity: 0;
-            animation: pageEnter .65s var(--anim-ease) forwards;
-        }
-
-        @@keyframes pageEnter {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-
-        /* =========================
-                   Hero Animation
-                   ========================= */
-
-        .patients-hero {
-            position: relative;
-            isolation: isolate;
-            opacity: 0;
-            transform: translateY(25px);
-            animation: heroEnter .75s var(--anim-ease) forwards;
-        }
-
-        @@keyframes heroEnter {
-            from {
-                opacity: 0;
-                transform: translateY(25px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Hero decorative glow */
-
-        .patients-hero::before {
-            content: '';
-            position: absolute;
-            width: 220px;
-            height: 220px;
-            border-radius: 50%;
-            background: rgba(255,255,255,.08);
-            top: -120px;
-            left: -70px;
-            z-index: -1;
-            animation: heroGlow 7s ease-in-out infinite;
-        }
-
-        @@keyframes heroGlow {
-            0%, 100% {
-                transform: translate(0,0) scale(1);
-            }
-
-            50% {
-                transform: translate(35px,25px) scale(1.15);
-            }
-        }
-
-        /* Hero icon floating */
-
-        .patients-hero .hero-icon {
-            animation: heroIconFloat 4s ease-in-out infinite;
-        }
-
-        @@keyframes heroIconFloat {
-            0%, 100% {
-                transform: translateY(0) rotate(0deg);
-            }
-
-            50% {
-                transform: translateY(-6px) rotate(3deg);
-            }
-        }
-
-        /* Add button entrance */
-
-        .btn-add-patient {
-            opacity: 0;
-            transform: translateX(-20px);
-            animation: heroButtonEnter .65s var(--anim-ease) .25s forwards;
-        }
-
-        @@keyframes heroButtonEnter {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-
-        /* =========================
-                   Reveal System
-                   ========================= */
-
-        .reveal-patient {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: opacity .7s var(--anim-ease), transform .7s var(--anim-ease);
-        }
-
-            .reveal-patient.is-visible {
-                opacity: 1;
-                transform: translateY(0);
-            }
-
-
-        /* =========================
-                   Stats Cards
-                   ========================= */
-
-        .stat-card {
-            opacity: 0;
-            transform: translateY(25px) scale(.98);
-            animation: statRise .65s var(--anim-ease) forwards;
-        }
-
-            .stat-card:nth-child(1) {
-                animation-delay: .12s;
-            }
-
-            .stat-card:nth-child(2) {
-                animation-delay: .20s;
-            }
-
-            .stat-card:nth-child(3) {
-                animation-delay: .28s;
-            }
-
-            .stat-card:nth-child(4) {
-                animation-delay: .36s;
-            }
-
-        @@keyframes statRise {
-            from {
-                opacity: 0;
-                transform: translateY(25px) scale(.98);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-
-        /* =========================
-                   Stat Icon Animation
-                   ========================= */
-
-        .stat-card:hover .stat-icon {
-            transform: scale(1.08) rotate(-4deg);
-        }
-
-        .stat-icon {
-            transition: transform .3s var(--anim-ease), box-shadow .3s ease;
-        }
-
-
-        /* =========================
-                   Filter Bar
-                   ========================= */
-
-        .patients-card {
-            opacity: 0;
-            transform: translateY(35px);
-            animation: patientCardEnter .75s var(--anim-ease) .42s forwards;
-        }
-
-        @@keyframes patientCardEnter {
-            from {
-                opacity: 0;
-                transform: translateY(35px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .filter-bar {
-            position: relative;
-        }
-
-
-        /* =========================
-                   Category Pills
-                   ========================= */
-
-        .pill-toggle .pill-btn {
-            position: relative;
-            overflow: hidden;
-        }
-
-            .pill-toggle .pill-btn::after {
-                content: '';
-                position: absolute;
-                width: 0;
-                height: 0;
-                border-radius: 50%;
-                background: rgba(255,255,255,.25);
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%);
-                transition: width .35s ease, height .35s ease;
-            }
-
-            .pill-toggle .pill-btn:active::after {
-                width: 180px;
-                height: 180px;
-            }
-
-
-        /* =========================
-                   Table Header
-                   ========================= */
-
-        #tablePatients thead {
-            opacity: 0;
-            transform: translateY(10px);
-            animation: tableHeaderEnter .5s ease .8s forwards;
-        }
-
-        @@keyframes tableHeaderEnter {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-
-        /* =========================
-                   Table Rows
-                   ========================= */
-
-        #tablePatients tbody tr {
-            opacity: 0;
-            transform: translateY(10px);
-            animation: patientRowEnter .45s var(--anim-ease) forwards;
-        }
-
-        @@keyframes patientRowEnter {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-
-        /* =========================
-                   Patient Avatar
-                   ========================= */
-
-        .patient-avatar {
-            transition: transform .3s var(--anim-ease), box-shadow .3s ease;
-        }
-
-        #tablePatients tbody tr:hover .patient-avatar {
-            transform: scale(1.08) rotate(-3deg);
-            box-shadow: 0 6px 15px rgba(13,148,136,.25);
-        }
-
-
-        /* =========================
-                   Session Button
-                   ========================= */
-
-        .btn-row-session {
-            position: relative;
-            overflow: hidden;
-        }
-
-            .btn-row-session::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: -120%;
-                width: 70%;
-                height: 100%;
-                background: linear-gradient( 90deg, transparent, rgba(255,255,255,.3), transparent );
-                transform: skewX(-20deg);
-                transition: left .6s ease;
-            }
-
-            .btn-row-session:hover::before {
-                left: 130%;
-            }
-
-
-        /* =========================
-                   Action Buttons
-                   ========================= */
-
-        .action-icon-btn {
-            transition: transform .25s var(--anim-ease), background .2s ease, color .2s ease;
-        }
-
-            .action-icon-btn:hover {
-                transform: translateY(-2px) scale(1.05);
-            }
-
-
-        /* =========================
-                   Loading Animation
-                   ========================= */
-
-        .table-loading-overlay {
-            transition: opacity .25s ease, backdrop-filter .25s ease;
-        }
-
-        .loading-pulse {
-            animation: loadingFloat 1.5s ease-in-out infinite;
-        }
-
-        @@keyframes loadingFloat {
-            0%, 100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-5px);
-            }
-        }
-
-
-        /* =========================
-                   Footer
-                   ========================= */
-
-        .table-footer-bar {
-            opacity: 0;
-            animation: footerEnter .5s ease 1s forwards;
-        }
-
-        @@keyframes footerEnter {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-
-        /* =========================
-                   Reduced Motion
-                   ========================= */
-
-        @@media (prefers-reduced-motion: reduce) {
-
-            *,
-            *::before,
-            *::after {
-                animation-duration: .01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: .01ms !important;
-                scroll-behavior: auto !important;
-            }
-
-            .patients-page,
-            .patients-hero,
-            .stat-card,
-            .patients-card,
-            #tablePatients thead,
-            #tablePatients tbody tr {
-                opacity: 1 !important;
-                transform: none !important;
-            }
-        }
-
-
-
-
-
-        
-        
-        
-        
-        
-        
-        :root {
-            --sc-teal-900: #0a4d4f;
-            --sc-teal-700: #0d7377;
-            --sc-teal-600: #0f9b8e;
-            --sc-teal-500: #14b8a6;
-            --sc-teal-100: #c7f2ea;
-            --sc-sky-50: #eafbfc;
-            --sc-sky-100: #dcf5f7;
-            --sc-coral-300: #f6c6bc;
-            --sc-ink-900: #0b2e30;
-            --sc-ink-600: #4b6b6c;
-            --sc-radius-lg: 18px;
-            --sc-radius-md: 12px;
-        }
-
-        body {
-            background: radial-gradient(circle at 6% 4%, var(--sc-teal-100) 0%, transparent 38%), radial-gradient(circle at 97% 92%, var(--sc-coral-300) 0%, transparent 26%), var(--sc-sky-50);
-        }
-
-        /* ── Hero ── */
-        .create-hero {
-            background: linear-gradient(135deg, var(--sc-teal-700), var(--sc-teal-500));
-            border-radius: var(--sc-radius-lg);
-            padding: 22px 28px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 14px 34px rgba(13, 115, 119, .28);
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 16px;
-            position: relative;
-            overflow: hidden;
-        }
-
-            .create-hero::after {
-                content: '';
-                position: absolute;
-                inset: 0;
-                background: radial-gradient(circle at 92% -20%, rgba(255,255,255,.32), transparent 55%);
-                pointer-events: none;
-            }
-
-            .create-hero .hero-title {
-                display: flex;
-                align-items: center;
-                gap: 16px;
-                position: relative;
-                z-index: 1;
-            }
-
-            .create-hero .hero-icon {
-                width: 52px;
-                height: 52px;
-                background: rgba(255,255,255,.18);
-                color: #fff;
-                border-radius: 14px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.4rem;
-                flex-shrink: 0;
-                backdrop-filter: blur(6px);
-            }
-
-            .create-hero h1 {
-                font-size: 1.25rem;
-                font-weight: 800;
-                margin: 0;
-                color: #fff;
-            }
-
-            .create-hero p {
-                font-size: 0.85rem;
-                margin: 2px 0 0;
-                color: rgba(255,255,255,.9);
-                font-weight: 600;
-            }
-
-            .create-hero .hero-actions {
-                display: flex;
-                gap: 10px;
-                position: relative;
-                z-index: 1;
-                flex-wrap: wrap;
-            }
-
-        .btn-hero {
-            border: none;
-            padding: 11px 22px;
-            border-radius: 12px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            transition: transform .2s ease, box-shadow .2s ease;
-            cursor: pointer;
-            font-size: 0.88rem;
-        }
-
-        .btn-hero-light {
-            background: #fff;
-            color: var(--sc-teal-700);
-        }
-
-            .btn-hero-light:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 18px rgba(10,40,42,.24);
-                color: var(--sc-teal-700);
-            }
-
-        .btn-hero-ghost {
-            background: rgba(255,255,255,.14);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,.4);
-        }
-
-            .btn-hero-ghost:hover {
-                background: rgba(255,255,255,.24);
-                color: #fff;
-                transform: translateY(-2px);
-            }
-
-        /* ── Profile panel (right col-3) ── */
+        /* ── Profile panel (right col) ── */
         .profile-panel-inline {
             background: rgba(255,255,255,.8);
             backdrop-filter: blur(16px);
@@ -642,7 +101,7 @@
             border-radius: var(--sc-radius-lg);
             box-shadow: 0 20px 50px rgba(10,77,79,.08);
             overflow: hidden;
-            height: 100%;
+            
         }
 
         .form-section {
@@ -725,46 +184,66 @@
             grid-column: 1 / -1;
         }
 
-        .sc-field label {
-            display: block;
-            font-size: 0.76rem;
-            font-weight: 700;
-            color: var(--sc-ink-600);
-            margin-bottom: 6px;
+        /* ⭐ الليبل جنب الـ Input بدل ما يكون فوقه (زي كل حقول الفورم) */
+        .sc-field {
+            display: flex;
+            align-items: center;
+            
         }
 
-            .sc-field label .required {
-                color: #dc2626;
+            .sc-field label {
+                flex: 0 0 auto;
+                min-width: 92px;
+                font-size: 0.76rem;
+                font-weight: 700;
+                color: var(--sc-ink-600);
+                margin-bottom: 0;
+                text-align: right;
             }
 
-        .sc-field .form-control,
-        .sc-field .form-select {
-            width: 100%;
-            border: 1.5px solid var(--sc-sky-100);
-            border-radius: 10px;
-            padding: 10px 12px;
-            font-size: 0.9rem;
-            background: #fff;
-            transition: border-color .2s, box-shadow .2s;
-        }
+                .sc-field label .required {
+                    color: #dc2626;
+                }
 
-            .sc-field .form-control:focus,
-            .sc-field .form-select:focus {
-                border-color: var(--sc-teal-500);
-                box-shadow: 0 0 0 3px rgba(15,155,142,.12);
-                outline: none;
+            .sc-field .form-control,
+            .sc-field .form-select {
+                flex: 1 1 auto;
+                min-width: 0;
+                width: auto;
+                border: 1.5px solid var(--sc-sky-100);
+                border-radius: 10px;
+                padding: 10px 12px;
+                font-size: 0.9rem;
+                background: #fff;
+                transition: border-color .2s, box-shadow .2s;
             }
 
-        .sc-field textarea.form-control {
-            min-height: 90px;
-            resize: vertical;
-        }
+                .sc-field .form-control:focus,
+                .sc-field .form-select:focus {
+                    border-color: var(--sc-teal-500);
+                    box-shadow: 0 0 0 3px rgba(15,155,142,.12);
+                    outline: none;
+                }
 
-        .sc-field .text-danger {
-            font-size: 0.76rem;
-            margin-top: 4px;
-            display: block;
-        }
+            .sc-field textarea.form-control {
+                min-height: 90px;
+                resize: vertical;
+            }
+
+            /* الحقول اللي فيها textarea نخلي الـ label ملزّق فوق مش في النص رأسيًا */
+            .sc-field.align-start {
+                align-items: flex-start;
+            }
+
+                .sc-field.align-start label {
+                    margin-top: 10px;
+                }
+
+            .sc-field .text-danger {
+                font-size: 0.76rem;
+                margin-top: 4px;
+                display: block;
+            }
 
         .sc-checkbox {
             display: flex;
@@ -934,86 +413,122 @@
                 }
     </style>
 }
-<section class="" dir="rtl">
+<section class="patients-page-anim" dir="rtl">
     <div class="row">
-        <div class="col-md-12">
+        <form id="editForm" asp-action="Edit" method="post">
+            <div class="col-md-12">
 
-            <div class="create-hero">
-                <div class="hero-title">
-                    <div class="hero-icon"><i class="bi bi-pencil-square"></i></div>
-                    <div>
-                        <h1>تعديل بيانات المريض</h1>
-                        <p>تحديث بيانات المريض والتاريخ الطبي</p>
+                @{
+                    var editGenderIcon = Model.GenderId == 2 ? "bi-gender-female" : "bi-gender-male";
+                    var editGenderText = Model.GenderId == 2 ? "أنثى" : "ذكر";
+                    var editTypeIcon = Model.PatientType == PatientType.Orthodontics ? "bi-braces"
+                        : Model.PatientType == PatientType.Both ? "bi-heart-pulse" : "bi-app-indicator";
+                    var editTypeText = Model.PatientType == PatientType.Orthodontics ? "تقويم"
+                        : Model.PatientType == PatientType.Both ? "كلا الملفين" : "عام";
+                    var editBloodText = bloodGroupList.FirstOrDefault(i => i.Value == Model.BloodGroupId?.ToString())?.Text;
+                    var editPatientCode = ViewBag.PatientCode as string;
+                    int? editAge = null;
+                    if (Model.DateOfBirth.HasValue)
+                    {
+                        var today = DateOnly.FromDateTime(DateTime.Today);
+                        var dob = Model.DateOfBirth.Value;
+                        var a = today.Year - dob.Year;
+                        if (dob > today.AddYears(-a)) a--;
+                        editAge = a;
+                    }
+                }
+                <div class="patient-hero">
+                    <div class="hero-content">
+                        <div class="hero-avatar" id="avatarPreview">@initialInitials</div>
+                        <div>
+                            <h1 id="heroNamePreview">@initialName</h1>
+                            <div class="hero-meta">
+                                @if (!string.IsNullOrWhiteSpace(editPatientCode))
+                                {
+                                    <span class="hero-meta-tag"><i class="bi bi-hash"></i> @editPatientCode</span>
+                                }
+                                <span class="hero-meta-tag" id="heroMobileTag"><i class="bi bi-telephone"></i> @Model.Mobile</span>
+                                <span class="hero-meta-tag" id="heroGenderTag"><i class="bi @editGenderIcon"></i> @editGenderText</span>
+                                <span class="hero-meta-tag" id="heroAgeTag" style="@(editAge == null ? "display:none;" : "")">
+                                    <i class="bi bi-calendar"></i> @editAge سنة
+                                </span>
+                                <span class="hero-meta-tag" id="heroTypeTag"><i class="bi @editTypeIcon"></i> @editTypeText</span>
+                                <span class="hero-meta-tag hero-tag-optional @(string.IsNullOrWhiteSpace(editBloodText) ? "" : "has-value")" id="heroBloodTag">
+                                    <i class="bi bi-droplet"></i> @editBloodText
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-actions">
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn-hero btn-hero-ghost">
+                            <i class="bi bi-x-lg"></i> إلغاء
+                        </a>
+                        <button type="submit" form="editForm" class="btn-hero btn-hero-light">
+                            <i class="bi bi-check-lg"></i> حفظ التعديلات
+                        </button>
                     </div>
                 </div>
-                <div class="hero-actions">
-                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn-hero btn-hero-ghost">
-                        <i class="bi bi-x-lg"></i> إلغاء
-                    </a>
-                    <button type="submit" form="editForm" class="btn-hero btn-hero-light">
-                        <i class="bi bi-check-lg"></i> حفظ التعديلات
-                    </button>
-                </div>
-            </div>
 
-            <form id="editForm" asp-action="Edit" method="post">
+            
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="Id" />
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                 <div class="row g-3">
                     <!-- Identity + basic fields -->
-                    <div class="col-12 col-lg-3">
-                        
-                            <div class="avatar-preview" id="avatarPreview">@initialInitials</div>
-                            <div id="namePreview" class="text-center">@initialName</div>
-
-                        <div class="profile-summary" hidden>
-                            <div class="summary-row">
-                                <span class="label">نوع الملف</span>
-                                <span class="value" id="summaryType"><i class="bi bi-app-indicator"></i> عام</span>
-                            </div>
-                            <div class="summary-row">
-                                <span class="label">النوع</span>
-                                <span class="value" id="summaryGender"><i class="bi bi-dash-circle"></i> غير محدد</span>
-                            </div>
-                        </div>
-
-                            <div class="fields-grid">
-                                <div class="sc-field span-2">
-                                    <label>الاسم الكامل <span class="required">*</span></label>
-                                    <input asp-for="FullNameAr" id="fullNameInput" class="form-control text-center" placeholder="أدخل اسم المريض" autocomplete="off" />
+                    <div class="col-12 col-lg-4">
+                        <div class="form-section">
+                        <div class="section-head">
+                                <div class="section-icon"><i class="bi bi-person-fill"></i></div>
+                                <div>
+                                    <h2>المعلومات الأساسية</h2>
+                                    <p>اسم المريض كما سيظهر في الملف</p>
                                 </div>
-                                    <span asp-validation-for="FullNameAr" class="text-danger"></span>
-                                <div class="sc-field span-2"hidden>
-                                    <label>الاسم بالإنجليزية</label>
-                                    <input asp-for="FullNameEn" class="form-control" placeholder="Optional" autocomplete="off" dir="ltr" />
-                                </div>
-                                <div class="sc-field span-2">
-                                    <label>الموبايل <span class="required">*</span></label>
+                            </div>
+                        <div class="fields-grid">
+                            <div class="sc-field span-2">
+                                <label>الاسم الكامل <span class="required">*</span></label>
+                                <input asp-for="FullNameAr" id="fullNameInput" class="form-control text-center" placeholder="أدخل اسم المريض" autocomplete="off" />
+                            <span asp-validation-for="FullNameAr" class="text-danger"></span>
+                            </div>
+                            <div class="sc-field span-2" hidden>
+                                <label>الاسم بالإنجليزية</label>
+                                <input asp-for="FullNameEn" class="form-control" placeholder="Optional" autocomplete="off" dir="ltr" />
+                            </div>
+                            <div class="sc-field span-2">
+                                <label>الموبايل <span class="required">*</span></label>
                                 <input asp-for="Mobile" class="form-control text-center" placeholder="01xxxxxxxxx" dir="ltr" />
-                                </div>
-                                    <span asp-validation-for="Mobile" class="text-danger"></span>
-                                <div class="sc-field span-2">
-                                    <label>تاريخ الميلاد</label>
+                            <span asp-validation-for="Mobile" class="text-danger"></span>
+                            </div>
+                            <div class="sc-field span-2">
+                                <label>تاريخ الميلاد</label>
                                 <input asp-for="DateOfBirth" type="date" class="form-control text-center" />
-                                </div>
-                                <div class="sc-field span-2">
-                                    <label>فصيلة الدم</label>
-                                    <select asp-for="BloodGroupId" asp-items="@bloodGroupList" class="form-select text-center">
-                                        <option value="">-- اختر --</option>
-                                    </select>
-                                </div>
-                                <div class="sc-field span-2" hidden>
-                                    <label>الرقم القومي</label>
-                                    <input asp-for="NationalId" class="form-control" placeholder="14 رقم" maxlength="14" dir="ltr" />
-                                </div>
-                            
+                            </div>
+                            <div class="sc-field span-2">
+                                <label>فصيلة الدم</label>
+                                <select asp-for="BloodGroupId" asp-items="@bloodGroupList" class="form-select text-center">
+                                    <option value="">-- اختر --</option>
+                                </select>
+                            </div>
+                            <!-- ⭐ العنوان بقى هنا تحت فصيلة الدم -->
+                            <div class="sc-field span-2">
+                                <label>العنوان</label>                               
+                                <textarea asp-for="Address" class="form-control" placeholder="ادخل العنوان"></textarea>
+                            </div>
+                           
+
+
+                            <div class="sc-field span-2" hidden>
+                                <label>الرقم القومي</label>
+                                <input asp-for="NationalId" class="form-control" placeholder="14 رقم" maxlength="14" dir="ltr" />
+                            </div>
+
+                        </div>
                         </div>
                     </div>
 
-                    <!-- Patient type + gender + contact -->
-                    <div class="col-12 col-lg-6 form-doc pb-5">
+                    <!-- Patient type + gender -->
+                    <div class="col-12 col-lg-4 form-doc mt-4">
                         <div class="form-section">
                             <div class="section-head">
                                 <div class="section-icon"><i class="bi bi-card-checklist"></i></div>
@@ -1024,8 +539,7 @@
                             </div>
 
                             <div class="sc-field span-2" style="margin-bottom:16px;">
-                                <label>نوع الملف <span class="required">*</span></label>
-                                <div class="type-tiles" id="typeTiles">
+                                @* <div class="type-tiltes" id="typeTiles">
                                     <label class="type-tile @(Model.PatientType == PatientType.General ? "selected" : "")" data-type="general">
                                         <input type="radio" name="PatientType" value="1" @(Model.PatientType == PatientType.General ? "checked" : "") />
                                         <span class="tile-check"><i class="bi bi-check-lg"></i></span>
@@ -1047,12 +561,35 @@
                                         <div class="tile-title">كلا الملفين</div>
                                         <div class="tile-desc">علاج عام ومتابعة تقويم معًا</div>
                                     </label>
+                                </div> *@
+
+                                <div class="type-tiles" id="typeTiles">
+                                    <label class="type-tile selected" data-type="general">
+                                        <input type="radio" name="PatientType" value="1" checked />
+                                        <span class="tile-check"><i class="bi bi-check-lg"></i></span>
+                                        <div class="tile-icon"><i class="bi bi-app-indicator"></i></div>
+                                        <div class="tile-title">عام</div>
+                                        <div class="tile-desc">علاج الأسنان العام والوقائي</div>
+                                    </label>
+                                    <label class="type-tile" data-type="ortho">
+                                        <input type="radio" name="PatientType" value="2" />
+                                        <span class="tile-check"><i class="bi bi-check-lg"></i></span>
+                                        <div class="tile-icon"><i class="bi bi-braces"></i></div>
+                                        <div class="tile-title">تقويم</div>
+                                        <div class="tile-desc">متابعة دورية لتقويم الأسنان</div>
+                                    </label>
+                                    <label class="type-tile" data-type="both">
+                                        <input type="radio" name="PatientType" value="3" />
+                                        <span class="tile-check"><i class="bi bi-check-lg"></i></span>
+                                        <div class="tile-icon"><i class="bi bi-heart-pulse"></i></div>
+                                        <div class="tile-title">كلا الملفين</div>
+                                        <div class="tile-desc">علاج عام ومتابعة تقويم معًا</div>
+                                    </label>
                                 </div>
                             </div>
 
-                            <div class="fields-grid">
+                            <div class="fields-grid mt-3">
                                 <div class="sc-field span-2">
-                                    <label>النوع</label>
                                     <div class="segmented @(Model.GenderId == 2 ? "pos-2" : "pos-1")" id="genderSegmented">
                                         <div class="seg-thumb"></div>
                                         <label data-gender="male" class="@(Model.GenderId == 1 ? "active" : "")">
@@ -1064,10 +601,6 @@
                                             <i class="bi bi-gender-female"></i> أنثى
                                         </label>
                                     </div>
-                                </div>
-                                <div class="sc-field span-2 mt-3">
-                                    <label>العنوان</label>
-                                    <input asp-for="Address" class="form-control" placeholder="أدخل العنوان" />
                                 </div>
                             </div>
                         </div>
@@ -1098,56 +631,55 @@
                     </div>
 
                     <!-- Medical history -->
-                    <div class="col-12 col-lg-3">
-                        
-                            <div class="form-section">
-                                <div class="section-head">
-                                    <div class="section-icon"><i class="bi bi-heart-pulse-fill"></i></div>
-                                    <div>
-                                        <h2>التاريخ الطبي</h2>
-                                        <p>معلومات مهمة قبل بدء أي علاج</p>
-                                    </div>
-                                </div>
-                                <div class="fields-grid">
-                                    <div class="sc-field span-2">
-                                        <label>الحساسية</label>
-                                        <input asp-for="Allergies" class="form-control" placeholder="مثال: بنسلين، ليدوكايين..." />
-                                    </div>
-                                    <div class="sc-field span-2">
-                                        <label>أمراض مزمنة</label>
-                                        <input asp-for="ChronicDiseases" class="form-control" placeholder="سكري، ضغط..." />
-                                    </div>
-                                    <div class="sc-field span-2">
-                                        <label>الأدوية الحالية</label>
-                                        <input asp-for="CurrentMedications" class="form-control" />
-                                    </div>
-                                    <div class="sc-field span-2">
-                                        <label>حالة التدخين</label>
-                                        <select asp-for="SmokingStatus" class="form-select">
-                                            <option value="">-- اختر --</option>
-                                            <option value="NonSmoker">لا يدخن</option>
-                                            <option value="FormerSmoker">مدخن سابق</option>
-                                            <option value="LightSmoker">مدخن خفيف</option>
-                                            <option value="HeavySmoker">مدخن شره</option>
-                                        </select>
-                                    </div>
-                                    <div class="sc-field span-2"hidden>
-                                        <label class="sc-checkbox">
-                                            <input type="checkbox" asp-for="IsPregnant" />
-                                            <span>حامل</span>
-                                        </label>
-                                    </div>
-                                    <div class="sc-field span-2">
-                                        <label>ملاحظات طبية عاجلة</label>
-                                        <textarea asp-for="EmergencyNotes" class="form-control" placeholder="تحذيرات للدكتور..."></textarea>
-                                    </div>
+                    <div class="col-12 col-lg-4">
+                        <div class="form-section">
+                            <div class="section-head">
+                                <div class="section-icon"><i class="bi bi-heart-pulse-fill"></i></div>
+                                <div>
+                                    <h2>التاريخ الطبي</h2>
+                                    <p>معلومات مهمة قبل بدء أي علاج</p>
                                 </div>
                             </div>
-                        
+                            <div class="fields-grid">
+                                <div class="sc-field span-2">
+                                    <label>الحساسية</label>
+                                    <input asp-for="Allergies" class="form-control" placeholder="مثال: بنسلين، ليدوكايين..." />
+                                </div>
+                                <div class="sc-field span-2">
+                                    <label>أمراض مزمنة</label>
+                                    <input asp-for="ChronicDiseases" class="form-control" placeholder="سكري، ضغط..." />
+                                </div>
+                                <div class="sc-field span-2">
+                                    <label>الأدوية الحالية</label>
+                                    <input asp-for="CurrentMedications" class="form-control" />
+                                </div>
+                                <div class="sc-field span-2">
+                                    <label>حالة التدخين</label>
+                                    <select asp-for="SmokingStatus" class="form-select">
+                                        <option value="">-- اختر --</option>
+                                        <option value="NonSmoker">لا يدخن</option>
+                                        <option value="FormerSmoker">مدخن سابق</option>
+                                        <option value="LightSmoker">مدخن خفيف</option>
+                                        <option value="HeavySmoker">مدخن شره</option>
+                                    </select>
+                                </div>
+                                <div class="sc-field span-2" hidden>
+                                    <label class="sc-checkbox">
+                                        <input type="checkbox" asp-for="IsPregnant" />
+                                        <span>حامل</span>
+                                    </label>
+                                </div>
+                                <div class="sc-field span-2 align-start">
+                                    <label>ملاحظات طبية عاجلة</label>
+                                    <textarea asp-for="EmergencyNotes" class="form-control" placeholder="تحذيرات للدكتور..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <!-- General notes (full width) -->
-                    <div class="col-12"hidden>
+                    <div class="col-12" hidden>
                         <div class="form-doc">
                             <div class="form-section">
                                 <div class="section-head">
@@ -1165,11 +697,10 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
-            </form>
 
-        </div>
+            </div>
+        </form>
     </div>
 </section>
 @section Scripts {
@@ -1189,22 +720,86 @@
             avatarPreview.textContent = initials || '؟';
         });
 
+        // Blood group tag in hero (بيظهر بس على الشاشات الواسعة - CSS بيتحكم في ده)
+        const bloodGroupSelect = document.getElementById('BloodGroupId');
+        const heroBloodTag = document.getElementById('heroBloodTag');
+        if (bloodGroupSelect && heroBloodTag) {
+            bloodGroupSelect.addEventListener('change', function () {
+                const text = this.options[this.selectedIndex]?.text?.trim();
+                if (text && this.value) {
+                    heroBloodTag.classList.add('has-value');
+                    heroBloodTag.innerHTML = `<i class="bi bi-droplet"></i> ${text}`;
+                } else {
+                    heroBloodTag.classList.remove('has-value');
+                }
+            });
+        }
+
+        // Mobile tag in hero
+        const mobileInput = document.getElementById('Mobile');
+        const heroMobileTag = document.getElementById('heroMobileTag');
+        if (mobileInput && heroMobileTag) {
+            mobileInput.addEventListener('input', function () {
+                const val = this.value.trim();
+                if (val) {
+                    heroMobileTag.style.display = 'inline-flex';
+                    heroMobileTag.innerHTML = `<i class="bi bi-telephone"></i> ${val}`;
+                } else {
+                    heroMobileTag.style.display = 'none';
+                }
+            });
+        }
+
+        // Age tag in hero (يتحسب لايف لو غيّرت تاريخ الميلاد)
+        const dobInput = document.getElementById('DateOfBirth');
+        const heroAgeTag = document.getElementById('heroAgeTag');
+        if (dobInput && heroAgeTag) {
+            dobInput.addEventListener('change', function () {
+                if (!this.value) { heroAgeTag.style.display = 'none'; return; }
+                const dob = new Date(this.value);
+                const today = new Date();
+                let age = today.getFullYear() - dob.getFullYear();
+                const m = today.getMonth() - dob.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+                if (age >= 0 && age < 130) {
+                    heroAgeTag.style.display = 'inline-flex';
+                    heroAgeTag.innerHTML = `<i class="bi bi-calendar"></i> ${age} سنة`;
+                } else {
+                    heroAgeTag.style.display = 'none';
+                }
+            });
+        }
+
         // Patient type tiles
+        const typeLabels = {
+            general: { icon: 'bi-app-indicator', text: 'عام' },
+            ortho: { icon: 'bi-braces', text: 'تقويم' },
+            both: { icon: 'bi-heart-pulse', text: 'كلا الملفين' }
+        };
         document.querySelectorAll('#typeTiles input[type=radio]').forEach(function (radio) {
             radio.addEventListener('change', function () {
                 document.querySelectorAll('.type-tile').forEach(t => t.classList.remove('selected'));
-                this.closest('.type-tile').classList.add('selected');
+                const tile = this.closest('.type-tile');
+                tile.classList.add('selected');
+                const info = typeLabels[tile.dataset.type];
+                const heroTypeTag = document.getElementById('heroTypeTag');
+                if (info && heroTypeTag) heroTypeTag.innerHTML = `<i class="bi ${info.icon}"></i> ${info.text}`;
             });
         });
 
         // Gender segmented control
         const genderSegmented = document.getElementById('genderSegmented');
+        const genderLabels = { male: { icon: 'bi-gender-male', text: 'ذكر' }, female: { icon: 'bi-gender-female', text: 'أنثى' } };
         genderSegmented.querySelectorAll('input[type=radio]').forEach(function (radio, idx) {
             radio.addEventListener('change', function () {
                 genderSegmented.querySelectorAll('label[data-gender]').forEach(l => l.classList.remove('active'));
-                this.closest('label').classList.add('active');
+                const lbl = this.closest('label');
+                lbl.classList.add('active');
                 genderSegmented.classList.toggle('pos-1', idx === 0);
                 genderSegmented.classList.toggle('pos-2', idx === 1);
+                const info = genderLabels[lbl.dataset.gender];
+                const heroGenderTag = document.getElementById('heroGenderTag');
+                if (info && heroGenderTag) heroGenderTag.innerHTML = `<i class="bi ${info.icon}"></i> ${info.text}`;
             });
         });
     </script>

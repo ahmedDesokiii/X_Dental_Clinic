@@ -29,6 +29,8 @@
 
     <!-- Legacy CSS — TODO: Migrate and remove -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/patient-hero-shared.css" asp-append-version="true" />
+
     <link rel="stylesheet" href="~/css/CreationStyle.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/executive-dashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Dental.styles.css" asp-append-version="true" />
@@ -100,9 +102,9 @@
                         <span>الفواتير والمدفوعات</span>
                     </a>
 
-                    <a href="#" class="sidebar-link" data-title="العلاجات">
+                    <a asp-controller="Diagnosis" asp-action="Index" class="sidebar-link" data-title="التشخيصات">
                         <i class="bi bi-clipboard2-pulse-fill"></i>
-                        <span>العلاجات</span>
+                        <span>التشخيصات</span>
                     </a>
 
                     @if (User.IsInRole(Roles.Admin.ToString()))

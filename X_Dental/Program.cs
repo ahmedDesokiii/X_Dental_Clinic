@@ -1,6 +1,8 @@
 using Dental.Data;
 using Dental.Modules.Appointments.InterfacesAppointments;
 using Dental.Modules.Appointments.ServicesAppointments;
+using Dental.Modules.Diagnosis.InterfacesDiagnosis;
+using Dental.Modules.Diagnosis.ServicesDiagnosis;
 using Dental.Modules.Patients.InterfacesPatients;
 using Dental.Modules.Patients.ServicesPatients;
 using Dental.Modules.Payments.InterfacesPayments;
@@ -94,6 +96,7 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IDiagnosisService, DiagnosisService>();
 #endregion
 builder.Services.AddHttpClient();
 

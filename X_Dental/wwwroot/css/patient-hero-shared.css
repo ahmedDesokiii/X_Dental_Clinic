@@ -1,0 +1,323 @@
+/* ============================================================
+   📁 wwwroot/css/patient-hero-shared.css
+   ============================================================
+   ستايل موحّد لهيدر صفحات المريض (Create / Edit / Details)
+   بدل ما كل صفحة تكتب نفس الكود من جديد.
+
+   يشمل:
+   - متغيرات الألوان والمقاسات المشتركة
+   - خلفية الصفحة
+   - .patient-hero وكل مكوناته (الأفاتار، تاجات الميتا، الأزرار)
+   - نظام الأنيميشن الاحترافي الموحّد
+
+   طريقة الاستخدام: ضيف السطر ده في أول @section Styles
+   بتاع أي صفحة من الصفحات التلاتة (قبل أي ستايل خاص بالصفحة):
+
+       <link rel="stylesheet" href="~/css/patient-hero-shared.css" asp-append-version="true" />
+
+   ثم احذف من داخل الصفحة نفسها: كتلة :root، خلفية body،
+   وكل كلاسات .patient-hero / .hero-* / .btn-hero* والأنيميشن،
+   لأنها بقت هنا مركزيًا.
+   ============================================================ */
+
+:root {
+    --sc-teal-900: #0a4d4f;
+    --sc-teal-700: #0d7377;
+    --sc-teal-600: #0f9b8e;
+    --sc-teal-500: #14b8a6;
+    --sc-teal-100: #c7f2ea;
+    --sc-sky-50: #eafbfc;
+    --sc-sky-100: #dcf5f7;
+    --sc-coral-300: #f6c6bc;
+    --sc-ink-900: #0b2e30;
+    --sc-ink-600: #4b6b6c;
+
+    --brand: #0d9488;
+    --brand-dark: #0f766e;
+    --brand-light: #f0fdfa;
+
+    /* أسماء بديلة تستخدمها بعض الصفحات لنفس القيم — موجودة عشان
+       التوافق مع أي صفحة قديمة بتستخدم الاسم ده بدل ده */
+    --radius-lg: 18px;
+    --radius-md: 12px;
+    --sc-radius-lg: 18px;
+    --sc-radius-md: 12px;
+
+    --shadow-soft: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --shadow-hover: 0 10px 26px rgba(10, 77, 79, 0.12);
+    --shadow-card: 0 20px 50px rgba(10, 77, 79, .08);
+}
+
+body {
+    background: radial-gradient(circle at 6% 4%, var(--sc-teal-100) 0%, transparent 38%), radial-gradient(circle at 97% 92%, var(--sc-coral-300) 0%, transparent 26%), var(--sc-sky-50);
+}
+
+/* ══════════════════════════════════════════════════════
+   Hero
+   ══════════════════════════════════════════════════════ */
+.patient-hero {
+    background: linear-gradient(135deg, var(--sc-teal-700), var(--sc-teal-500));
+    border-radius: var(--radius-lg);
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 14px 34px rgba(13, 115, 119, .28);
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+    .patient-hero::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 92% -20%, rgba(255,255,255,.32), transparent 55%);
+        pointer-events: none;
+    }
+
+    .patient-hero .hero-content {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .patient-hero .hero-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        background: rgba(255,255,255,.18);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        font-weight: 800;
+        flex-shrink: 0;
+        backdrop-filter: blur(6px);
+        border: 2px solid rgba(255,255,255,.2);
+    }
+
+    .patient-hero h1 {
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin: 0;
+        color: #fff;
+    }
+
+    .patient-hero .hero-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+.hero-meta-tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,.1);
+    white-space: nowrap;
+}
+
+/* تاج فصيلة الدم: بيظهر بس لو في مساحة كفاية (شاشات واسعة) ومعاه قيمة فعلية */
+.hero-meta-tag.hero-tag-optional {
+    display: none !important;
+}
+
+@media (min-width: 1200px) {
+    .hero-meta-tag.hero-tag-optional.has-value {
+        display: flex !important;
+    }
+}
+
+.hero-actions {
+    display: flex;
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+    flex-wrap: wrap;
+}
+
+.btn-hero {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    border: none;
+    cursor: pointer;
+    transition: transform .2s ease, box-shadow .2s ease;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn-hero-light {
+    background: rgba(255,255,255,.9);
+    color: var(--sc-teal-700);
+    box-shadow: 0 4px 12px rgba(10, 40, 42, .15);
+}
+
+    .btn-hero-light:hover {
+        background: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(10, 40, 42, .22);
+        color: var(--sc-teal-700);
+    }
+
+.btn-hero-ghost {
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.25);
+    backdrop-filter: blur(4px);
+}
+
+    .btn-hero-ghost:hover {
+        background: rgba(255,255,255,.25);
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+.btn-hero-edit {
+    background: rgba(255,255,255,.9);
+    color: var(--sc-teal-700);
+    box-shadow: 0 4px 12px rgba(10, 40, 42, .15);
+}
+
+    .btn-hero-edit:hover {
+        background: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(10, 40, 42, .22);
+        color: var(--sc-teal-700);
+    }
+
+.btn-hero-appt {
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.25);
+    backdrop-filter: blur(4px);
+}
+
+    .btn-hero-appt:hover {
+        background: rgba(255,255,255,.25);
+        transform: translateY(-2px);
+    }
+
+.btn-hero-session {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+}
+
+    .btn-hero-session:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(99,102,241,0.4);
+        color: #fff;
+    }
+
+/* ══════════════════════════════════════════════════════
+   نظام أنيميشن احترافي موحّد (Create / Edit / Details)
+   ══════════════════════════════════════════════════════ */
+@keyframes heroEnterFx {
+    from { opacity: 0; transform: translateY(-18px) scale(.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes shimmerSweepFx {
+    0% { transform: translateX(-120%) skewX(-15deg); }
+    100% { transform: translateX(260%) skewX(-15deg); }
+}
+@keyframes avatarPopFx {
+    0% { opacity: 0; transform: scale(.55) rotate(-10deg); }
+    60% { opacity: 1; transform: scale(1.08) rotate(3deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+@keyframes floatSoftFx {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+@keyframes metaTagInFx {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeSlideUpFx {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes statRiseFx {
+    from { opacity: 0; transform: translateY(20px) scale(.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes pageEnterFx {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.patients-page-anim { animation: pageEnterFx .5s ease both; }
+
+.patient-hero {
+    animation: heroEnterFx .6s cubic-bezier(.2,.8,.2,1) both;
+}
+.patient-hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -60%;
+    width: 40%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,.28), transparent);
+    transform: skewX(-15deg);
+    animation: shimmerSweepFx 3.4s ease-in-out .7s infinite;
+    pointer-events: none;
+}
+.hero-avatar {
+    animation: avatarPopFx .55s cubic-bezier(.34,1.56,.64,1) .15s both,
+               floatSoftFx 3.6s ease-in-out 1s infinite;
+}
+.hero-meta-tag {
+    opacity: 0;
+    animation: metaTagInFx .4s ease forwards;
+}
+.hero-meta-tag:nth-child(1) { animation-delay: .22s; }
+.hero-meta-tag:nth-child(2) { animation-delay: .29s; }
+.hero-meta-tag:nth-child(3) { animation-delay: .36s; }
+.hero-meta-tag:nth-child(4) { animation-delay: .43s; }
+.hero-meta-tag:nth-child(5) { animation-delay: .50s; }
+.hero-meta-tag:nth-child(6) { animation-delay: .57s; }
+.hero-actions .btn-hero {
+    opacity: 0;
+    animation: fadeSlideUpFx .4s ease forwards;
+}
+.hero-actions .btn-hero:nth-child(1) { animation-delay: .28s; }
+.hero-actions .btn-hero:nth-child(2) { animation-delay: .36s; }
+.hero-actions .btn-hero:nth-child(3) { animation-delay: .44s; }
+.btn-hero:hover { transform: translateY(-2px) scale(1.02); }
+.btn-hero:active { transform: translateY(0) scale(.97); }
+
+/* الكروت اللي بتستخدم statRiseFx (شاشة التفاصيل) */
+.stat-card-glass {
+    opacity: 0;
+    animation: statRiseFx .55s cubic-bezier(.2,.8,.2,1) forwards;
+}
+.stat-card-glass:nth-child(1) { animation-delay: .15s; }
+.stat-card-glass:nth-child(2) { animation-delay: .22s; }
+.stat-card-glass:nth-child(3) { animation-delay: .29s; }
+.stat-card-glass:nth-child(4) { animation-delay: .36s; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+}

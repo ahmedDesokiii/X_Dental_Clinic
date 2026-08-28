@@ -1,0 +1,564 @@
+﻿@using Dental.Modules.Diagnosis.DTOs
+@using static Dental.Constants.EnumHelper
+@model List<DiagnosisListDto>
+@{
+    ViewData["Title"] = "إدارة التشخيصات";
+}
+@section Styles {
+    <style>
+        :root {
+            --sc-teal-700: #0d7377;
+            --sc-teal-600: #0f9b8e;
+            --sc-teal-500: #14b8a6;
+            --sc-sky-50: #eafbfc;
+            --sc-sky-100: #dcf5f7;
+            --sc-ink-900: #0b2e30;
+            --sc-ink-600: #4b6b6c;
+        }
+
+        body {
+            background: radial-gradient(circle at 6% 4%, var(--sc-sky-100) 0%, transparent 38%), var(--sc-sky-50);
+        }
+
+        .diag-hero {
+            background: linear-gradient(135deg, var(--sc-teal-700), var(--sc-teal-500));
+            border-radius: 18px;
+            padding: 22px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 14px 34px rgba(13,115,119,.28);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+            .diag-hero .hero-title {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .diag-hero .hero-icon {
+                width: 52px;
+                height: 52px;
+                background: rgba(255,255,255,.18);
+                color: #fff;
+                border-radius: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.4rem;
+                flex-shrink: 0;
+            }
+
+            .diag-hero h1 {
+                font-size: 1.25rem;
+                font-weight: 800;
+                margin: 0;
+                color: #fff;
+            }
+
+            .diag-hero p {
+                font-size: .85rem;
+                margin: 2px 0 0;
+                color: rgba(255,255,255,.9);
+                font-weight: 600;
+            }
+
+        .btn-hero-light {
+            background: #fff;
+            color: var(--sc-teal-700);
+            border: none;
+            padding: 11px 22px;
+            border-radius: 12px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+
+            .btn-hero-light:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 18px rgba(10,40,42,.24);
+            }
+
+        .diag-card {
+            background: rgba(255,255,255,.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,.6);
+            border-radius: 18px;
+            box-shadow: 0 20px 50px rgba(10,77,79,.08);
+            padding: 22px;
+        }
+
+        .diag-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .diag-search {
+            flex: 1;
+            max-width: 320px;
+            position: relative;
+        }
+
+            .diag-search input {
+                width: 100%;
+                padding: 10px 40px 10px 14px;
+                border-radius: 10px;
+                border: 1.5px solid var(--sc-sky-100);
+                font-size: .9rem;
+            }
+
+            .diag-search i {
+                position: absolute;
+                right: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--sc-ink-600);
+            }
+
+        table.diag-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            table.diag-table th {
+                text-align: right;
+                font-size: .78rem;
+                color: var(--sc-ink-600);
+                font-weight: 800;
+                padding: 10px 12px;
+                border-bottom: 2px solid var(--sc-sky-100);
+            }
+
+            table.diag-table td {
+                padding: 12px;
+                font-size: .87rem;
+                color: var(--sc-ink-900);
+                border-bottom: 1px solid var(--sc-sky-100);
+                vertical-align: middle;
+            }
+
+            table.diag-table tr:hover td {
+                background: var(--sc-sky-50);
+            }
+
+        .code-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .75rem;
+            background: var(--sc-sky-100);
+            color: var(--sc-teal-700);
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-weight: 700;
+        }
+
+        .cat-badge {
+            font-size: .75rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: #ede9fe;
+            color: #5b21b6;
+        }
+
+        .price-cell {
+            font-weight: 800;
+            color: var(--sc-teal-700);
+        }
+
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 6px;
+        }
+
+            .status-dot.active {
+                background: #16a34a;
+            }
+
+            .status-dot.inactive {
+                background: #dc2626;
+            }
+
+        .row-actions {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+        }
+
+        .icon-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            border: none;
+            background: transparent;
+            color: var(--sc-ink-600);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s;
+        }
+
+            .icon-btn:hover {
+                background: var(--sc-sky-100);
+                color: var(--sc-teal-700);
+            }
+
+            .icon-btn.danger:hover {
+                background: #fee2e2;
+                color: #dc2626;
+            }
+
+        /* Modal */
+        .diag-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,.4);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1050;
+        }
+
+            .diag-modal-overlay.show {
+                display: flex;
+            }
+
+        .diag-modal-box {
+            background: #fff;
+            border-radius: 20px;
+            padding: 28px;
+            width: 92%;
+            max-width: 520px;
+            box-shadow: 0 25px 50px rgba(0,0,0,.18);
+        }
+
+            .diag-modal-box h5 {
+                margin: 0 0 18px;
+                font-weight: 800;
+                color: var(--sc-ink-900);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+        .diag-form-group {
+            margin-bottom: 14px;
+        }
+
+            .diag-form-group label {
+                display: block;
+                font-size: .8rem;
+                font-weight: 700;
+                color: var(--sc-ink-600);
+                margin-bottom: 6px;
+            }
+
+            .diag-form-group .form-control, .diag-form-group .form-select {
+                width: 100%;
+                padding: 10px 12px;
+                border-radius: 10px;
+                border: 1.5px solid var(--sc-sky-100);
+                font-size: .9rem;
+            }
+
+        .diag-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .diag-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-cancel {
+            background: var(--sc-sky-100);
+            color: var(--sc-ink-600);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, var(--sc-teal-600), var(--sc-teal-700));
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--sc-ink-600);
+        }
+    </style>
+}
+
+<section dir="rtl">
+    @Html.AntiForgeryToken()
+    <div class="diag-hero">
+        <div class="hero-title">
+            <div class="hero-icon"><i class="bi bi-activity"></i></div>
+            <div>
+                <h1>إدارة التشخيصات</h1>
+                <p>قائمة التشخيصات، الأسعار، وربطها بالسن أثناء السيشن</p>
+            </div>
+        </div>
+        <button class="btn-hero-light" onclick="openDiagFormModal()">
+            <i class="bi bi-plus-lg"></i> تشخيص جديد
+        </button>
+    </div>
+
+    <div class="diag-card">
+        <div class="diag-toolbar">
+            <div class="diag-search">
+                <input type="text" id="diagSearchInput" placeholder="ابحث بالاسم أو الكود..." oninput="filterDiagTable()" />
+                <i class="bi bi-search"></i>
+            </div>
+            <span class="text-muted" style="font-size:.82rem;">@Model.Count تشخيص مسجل</span>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="empty-state">
+                <i class="bi bi-inboxes" style="font-size:2rem;"></i>
+                <p class="mt-2">لا توجد تشخيصات مسجلة بعد. ابدأ بإضافة أول تشخيص.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="diag-table" id="diagTable">
+                    <thead>
+                        <tr>
+                            <th>الكود</th>
+                            <th>اسم التشخيص</th>
+                            <th>التصنيف</th>
+                            <th>السعر</th>
+                            <th>الحالة</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var d in Model)
+                        {
+                            <tr data-search="@($"{d.Code} {d.NameAr} {d.NameEn}".ToLower())">
+                                <td><span class="code-badge">@d.Code</span></td>
+                                <td>
+                                    <div style="font-weight:700;">@d.NameAr</div>
+                                    @if (!string.IsNullOrWhiteSpace(d.NameEn))
+                                    {
+                                        <div style="font-size:.76rem;color:var(--sc-ink-600);">@d.NameEn</div>
+                                    }
+                                </td>
+                                <td><span class="cat-badge">@d.CategoryName</span></td>
+                                <td class="price-cell">@d.Price.ToString("N0") ج.م</td>
+                                <td>
+                                    <span class="status-dot @(d.IsActive ? "active" : "inactive")"></span>
+                                    @(d.IsActive ? "مفعّل" : "متوقف")
+                                </td>
+                                <td class="row-actions">
+                                    <button class="icon-btn" title="تعديل" onclick="editDiag(@d.Id)"><i class="fs-5 bi bi-pencil"></i></button>
+                                    <button class="icon-btn" title="@(d.IsActive ? "إيقاف" : "تفعيل")" onclick="toggleDiag(@d.Id)">
+                                        <i class="fs-5 bi @(d.IsActive ? "bi-toggle-on" : "bi-toggle-off")"></i>
+                                    </button>
+                                    <button class="icon-btn danger" title="حذف" onclick="deleteDiag(@d.Id)"><i class="bi bi-trash fs-5"></i></button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- Add / Edit Modal -->
+<div class="diag-modal-overlay" id="diagFormModalOverlay">
+    <div class="diag-modal-box">
+        <h5><i class="bi bi-activity"></i> <span id="diagModalTitle">تشخيص جديد</span></h5>
+        <form id="diagForm">
+            <input type="hidden" id="diagId" value="0" />
+            <div class="diag-form-row">
+                <div class="diag-form-group">
+                    <label>الكود <span style="color:#dc2626;">*</span></label>
+                    <input type="text" class="form-control" id="diagCode" placeholder="مثال: D01" />
+                </div>
+                <div class="diag-form-group">
+                    <label>التصنيف <span style="color:#dc2626;">*</span></label>
+                    <select class="form-select" id="diagCategory">
+                        @foreach (var cat in Enum.GetValues(typeof(DiagnosisCategory)).Cast<DiagnosisCategory>())
+                        {
+                            <option value="@((int)cat)">@cat</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="diag-form-group">
+                <label>اسم التشخيص (عربي) <span style="color:#dc2626;">*</span></label>
+                <input type="text" class="form-control" id="diagNameAr" placeholder="مثال: تسوس سطحي" />
+            </div>
+            <div class="diag-form-group">
+                <label>اسم التشخيص (إنجليزي)</label>
+                <input type="text" class="form-control" id="diagNameEn" placeholder="Optional" dir="ltr" />
+            </div>
+            <div class="diag-form-row">
+                <div class="diag-form-group">
+                    <label>السعر (ج.م) <span style="color:#dc2626;">*</span></label>
+                    <input type="number" min="0" step="0.01" class="form-control" id="diagPrice" placeholder="0" />
+                </div>
+                <div class="diag-form-group">
+                    <label>الحالة</label>
+                    <select class="form-select" id="diagIsActive">
+                        <option value="true">مفعّل</option>
+                        <option value="false">متوقف</option>
+                    </select>
+                </div>
+            </div>
+            <div class="diag-form-group">
+                <label>وصف مختصر</label>
+                <input type="text" class="form-control" id="diagDescription" placeholder="اختياري" />
+            </div>
+            <div class="diag-form-group">
+                <label>ملاحظات التشخيص</label>
+                <textarea class="form-control" id="diagNotes" rows="2" placeholder="اختياري"></textarea>
+            </div>
+        </form>
+        <div class="diag-modal-actions">
+            <button type="button" class="btn-cancel" onclick="closeDiagFormModal()">إلغاء</button>
+            <button type="button" class="btn-save" onclick="submitDiagForm()"><i class="bi bi-check-lg"></i> حفظ</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+        function openDiagFormModal() {
+            document.getElementById('diagModalTitle').textContent = 'تشخيص جديد';
+            document.getElementById('diagForm').reset();
+            document.getElementById('diagId').value = 0;
+            document.getElementById('diagIsActive').value = 'true';
+            document.getElementById('diagFormModalOverlay').classList.add('show');
+        }
+
+        function closeDiagFormModal() {
+            document.getElementById('diagFormModalOverlay').classList.remove('show');
+        }
+
+        async function editDiag(id) {
+            const res = await fetch(`/Diagnosis/GetById?id=${id}`);
+            const result = await res.json();
+            if (!result.success) {
+                Swal.fire({ title: 'خطأ', text: result.message, icon: 'error', confirmButtonColor: '#dc2626' });
+                return;
+            }
+            const d = result.data;
+            document.getElementById('diagModalTitle').textContent = 'تعديل التشخيص';
+            document.getElementById('diagId').value = d.id;
+            document.getElementById('diagCode').value = d.code;
+            document.getElementById('diagCategory').value = d.category;
+            document.getElementById('diagNameAr').value = d.nameAr;
+            document.getElementById('diagNameEn').value = d.nameEn || '';
+            document.getElementById('diagPrice').value = d.price;
+            document.getElementById('diagIsActive').value = d.isActive ? 'true' : 'false';
+            document.getElementById('diagDescription').value = d.description || '';
+            document.getElementById('diagNotes').value = d.notes || '';
+            document.getElementById('diagFormModalOverlay').classList.add('show');
+        }
+
+        async function submitDiagForm() {
+            const payload = {
+                Id: parseInt(document.getElementById('diagId').value) || 0,
+                Code: document.getElementById('diagCode').value.trim(),
+                NameAr: document.getElementById('diagNameAr').value.trim(),
+                NameEn: document.getElementById('diagNameEn').value.trim(),
+                Category: parseInt(document.getElementById('diagCategory').value),
+                Price: parseFloat(document.getElementById('diagPrice').value) || 0,
+                IsActive: document.getElementById('diagIsActive').value === 'true',
+                Description: document.getElementById('diagDescription').value.trim(),
+                Notes: document.getElementById('diagNotes').value.trim()
+            };
+
+            if (!payload.Code || !payload.NameAr) {
+                Swal.fire({ title: 'تنبيه', text: 'الكود واسم التشخيص مطلوبين', icon: 'warning', confirmButtonColor: '#0d9488' });
+                return;
+            }
+
+            const form = new URLSearchParams();
+            Object.keys(payload).forEach(k => form.append(k, payload[k]));
+            if (antiForgeryToken) form.append('__RequestVerificationToken', antiForgeryToken);
+
+            const res = await fetch('/Diagnosis/Save', { method: 'POST', body: form });
+            const result = await res.json();
+
+            if (result.success) {
+                Swal.fire({ title: 'تم', text: result.message, icon: 'success', timer: 1400, showConfirmButton: false })
+                    .then(() => location.reload());
+            } else {
+                Swal.fire({ title: 'خطأ', text: result.message || 'حدث خطأ أثناء الحفظ', icon: 'error', confirmButtonColor: '#dc2626' });
+            }
+        }
+
+        async function toggleDiag(id) {
+            const form = new URLSearchParams();
+            form.append('id', id);
+            if (antiForgeryToken) form.append('__RequestVerificationToken', antiForgeryToken);
+            const res = await fetch('/Diagnosis/ToggleActive', { method: 'POST', body: form });
+            const result = await res.json();
+            if (result.success) location.reload();
+            else Swal.fire({ title: 'خطأ', text: result.message, icon: 'error', confirmButtonColor: '#dc2626' });
+        }
+
+        async function deleteDiag(id) {
+            const confirmResult = await Swal.fire({
+                title: 'حذف التشخيص؟', text: 'هذا الإجراء قد لا يمكن التراجع عنه.', icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#dc2626', cancelButtonColor: '#64748b',
+                confirmButtonText: 'نعم، احذف', cancelButtonText: 'إلغاء'
+            });
+            if (!confirmResult.isConfirmed) return;
+
+            const form = new URLSearchParams();
+            form.append('id', id);
+            if (antiForgeryToken) form.append('__RequestVerificationToken', antiForgeryToken);
+            const res = await fetch('/Diagnosis/Delete', { method: 'POST', body: form });
+            const result = await res.json();
+            if (result.success) {
+                Swal.fire({ title: 'تم', text: result.message, icon: 'success', timer: 1400, showConfirmButton: false })
+                    .then(() => location.reload());
+            } else {
+                Swal.fire({ title: 'خطأ', text: result.message, icon: 'error', confirmButtonColor: '#dc2626' });
+            }
+        }
+
+        function filterDiagTable() {
+            const q = document.getElementById('diagSearchInput').value.trim().toLowerCase();
+            document.querySelectorAll('#diagTable tbody tr').forEach(row => {
+                row.style.display = row.dataset.search.includes(q) ? '' : 'none';
+            });
+        }
+    </script>
+}
