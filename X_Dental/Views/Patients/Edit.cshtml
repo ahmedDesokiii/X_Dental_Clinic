@@ -539,7 +539,7 @@
                             </div>
 
                             <div class="sc-field span-2" style="margin-bottom:16px;">
-                                @* <div class="type-tiltes" id="typeTiles">
+                                <div class="type-tiles" id="typeTiles">
                                     <label class="type-tile @(Model.PatientType == PatientType.General ? "selected" : "")" data-type="general">
                                         <input type="radio" name="PatientType" value="1" @(Model.PatientType == PatientType.General ? "checked" : "") />
                                         <span class="tile-check"><i class="bi bi-check-lg"></i></span>
@@ -561,46 +561,27 @@
                                         <div class="tile-title">كلا الملفين</div>
                                         <div class="tile-desc">علاج عام ومتابعة تقويم معًا</div>
                                     </label>
-                                </div> *@
-
-                                <div class="type-tiles" id="typeTiles">
-                                    <label class="type-tile selected" data-type="general">
-                                        <input type="radio" name="PatientType" value="1" checked />
-                                        <span class="tile-check"><i class="bi bi-check-lg"></i></span>
-                                        <div class="tile-icon"><i class="bi bi-app-indicator"></i></div>
-                                        <div class="tile-title">عام</div>
-                                        <div class="tile-desc">علاج الأسنان العام والوقائي</div>
-                                    </label>
-                                    <label class="type-tile" data-type="ortho">
-                                        <input type="radio" name="PatientType" value="2" />
-                                        <span class="tile-check"><i class="bi bi-check-lg"></i></span>
-                                        <div class="tile-icon"><i class="bi bi-braces"></i></div>
-                                        <div class="tile-title">تقويم</div>
-                                        <div class="tile-desc">متابعة دورية لتقويم الأسنان</div>
-                                    </label>
-                                    <label class="type-tile" data-type="both">
-                                        <input type="radio" name="PatientType" value="3" />
-                                        <span class="tile-check"><i class="bi bi-check-lg"></i></span>
-                                        <div class="tile-icon"><i class="bi bi-heart-pulse"></i></div>
-                                        <div class="tile-title">كلا الملفين</div>
-                                        <div class="tile-desc">علاج عام ومتابعة تقويم معًا</div>
-                                    </label>
                                 </div>
                             </div>
 
                             <div class="fields-grid mt-3">
-                                <div class="sc-field span-2">
-                                    <div class="segmented @(Model.GenderId == 2 ? "pos-2" : "pos-1")" id="genderSegmented">
-                                        <div class="seg-thumb"></div>
-                                        <label data-gender="male" class="@(Model.GenderId == 1 ? "active" : "")">
-                                            <input type="radio" name="GenderId" value="1" @(Model.GenderId == 1 ? "checked" : "") />
-                                            <i class="bi bi-gender-male"></i> ذكر
+                                @{
+                                    var genderItems = genderList.ToList();
+                                    var selectedGenderIndex = genderItems.FindIndex(g =>
+                                        Model.GenderId.HasValue && Model.GenderId.Value.ToString() == g.Value);
+                                }
+                                <div class="segmented @(selectedGenderIndex == 1 ? "pos-2" : "pos-1")" id="genderSegmented">
+                                    <div class="seg-thumb"></div>
+                                    @for (int i = 0; i < genderItems.Count; i++)
+                                    {
+                                        var g = genderItems[i];
+                                        var isMale = g.Text.Contains("ذكر");
+                                        var isSelected = Model.GenderId.HasValue && Model.GenderId.Value.ToString() == g.Value;
+                                        <label data-gender="@(isMale ? "male" : "female")" class="@(isSelected ? "active" : "")">
+                                            <input type="radio" name="GenderId" value="@g.Value" @(isSelected ? "checked" : "") />
+                                            <i class="bi bi-gender-@(isMale ? "male" : "female")"></i> @g.Text
                                         </label>
-                                        <label data-gender="female" class="@(Model.GenderId == 2 ? "active" : "")">
-                                            <input type="radio" name="GenderId" value="2" @(Model.GenderId == 2 ? "checked" : "") />
-                                            <i class="bi bi-gender-female"></i> أنثى
-                                        </label>
-                                    </div>
+                                    }
                                 </div>
                             </div>
                         </div>

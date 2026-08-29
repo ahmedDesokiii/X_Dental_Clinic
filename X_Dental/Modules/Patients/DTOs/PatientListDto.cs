@@ -1,4 +1,6 @@
-﻿namespace Dental.Modules.Patients.DTOs
+﻿using Dental.Models.Patient;
+
+namespace Dental.Modules.Patients.DTOs
 {
     public class PatientListDto
     {
@@ -14,6 +16,15 @@
         public bool HasGeneralVisits { get; set; }
         public bool HasOrthodonticsVisits { get; set; }
 
+        public PatientType PatientType { get; set; }
+
+        public string TypeBadge => PatientType switch
+        {
+            PatientType.Orthodontics => "<span class=\"badge bg-info-subtle text-info fw-bold px-2 py-1 rounded-3\"><i class=\"bi bi-braces\"></i> تقويم</span>",
+            PatientType.Both => "<span class=\"badge bg-warning-subtle text-warning fw-bold px-2 py-1 rounded-3\"><i class=\"bi bi-heart-pulse\"></i> كلا الملفين</span>",
+            _ => "<span class=\"badge bg-success-subtle text-success fw-bold px-2 py-1 rounded-3\"><i class=\"bi bi-app-indicator\"></i> عام</span>"
+        };
+
         public string GenderBadge => GenderName switch
         {
             "ذكر" => "<span class=\"badge bg-primary-subtle text-primary fw-bold px-2 py-1 rounded-3\"><i class=\"bi bi-gender-male\"></i> ذكر</span>",
@@ -26,21 +37,17 @@
             : "<span class=\"badge bg-danger-subtle text-danger fw-bold px-2 py-1 rounded-3\"><i class=\"bi bi-x-circle-fill\"></i> غير نشط</span>";
 
         // ✅ جديد - بادچ النوع (ممكن يبان الاتنين مع بعض لو المريض عنده الملفين)
-        public string CategoryBadge
+        public string CategoryBadge => PatientType switch
         {
-            get
-            {
-                if (!HasGeneralVisits && !HasOrthodonticsVisits)
-                    return "<span class=\"badge bg-light text-muted border fw-bold px-2 py-1 rounded-3\">لا يوجد زيارات</span>";
+            PatientType.Orthodontics =>
+                "<span class=\"badge bg-warning-subtle text-warning fw-bold px-2 py-1 rounded-3\"><i class=\"bi bi-braces\"></i> تقويم</span>",
 
-                var badges = "";
-                if (HasGeneralVisits)
-                    badges += "<span class=\"badge bg-info-subtle text-info fw-bold px-2 py-1 rounded-3 me-1\"><i class=\"bi bi-app-indicator\"></i> عام</span>";
-                if (HasOrthodonticsVisits)
-                    badges += "<span class=\"badge bg-warning-subtle text-warning fw-bold px-2 py-1 rounded-3\"><i class=\"bi bi-braces\"></i> تقويم</span>";
+            PatientType.Both =>
+                "<span class=\"badge bg-info-subtle text-info fw-bold px-2 py-1 rounded-3 me-1\"><i class=\"bi bi-app-indicator\"></i> عام</span>" +
+                "<span class=\"badge bg-warning-subtle text-warning fw-bold px-2 py-1 rounded-3\"><i class=\"bi bi-braces\"></i> تقويم</span>",
 
-                return badges;
-            }
-        }
+            _ =>
+                "<span class=\"badge bg-info-subtle text-info fw-bold px-2 py-1 rounded-3\"><i class=\"bi bi-app-indicator\"></i> عام</span>"
+        };
     }
 }

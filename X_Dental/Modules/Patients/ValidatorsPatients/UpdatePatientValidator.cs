@@ -28,9 +28,7 @@ namespace Dental.Modules.Patients.ValidatorsPatients
                 .Length(14).WithMessage("الرقم القومي يجب أن يكون 14 رقم.")
                 .When(x => !string.IsNullOrWhiteSpace(x.NationalId));
 
-            RuleFor(x => x.GenderId)
-                .GreaterThan(0).WithMessage("النوع مطلوب.");
-
+            
             RuleFor(x => x.Address)
                 .MaximumLength(500).WithMessage("العنوان لا يتجاوز 500 حرف.");
 

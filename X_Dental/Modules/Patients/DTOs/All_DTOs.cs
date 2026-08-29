@@ -95,7 +95,7 @@ namespace Dental.Modules.Patients.DTOs
     {
         public string FullNameAr { get; set; } = string.Empty;
         public string? FullNameEn { get; set; }
-        public int GenderId { get; set; }
+        public int? GenderId { get; set; }
         public DateOnly? DateOfBirth { get; set; }
         public string? NationalId { get; set; }
         public string Mobile { get; set; } = string.Empty;
@@ -124,7 +124,7 @@ namespace Dental.Modules.Patients.DTOs
         public string FullNameAr { get; set; } = string.Empty;
         public string? FullNameEn { get; set; }
 
-        public int GenderId { get; set; }
+        public int? GenderId { get; set; }
         public DateOnly? DateOfBirth { get; set; }
         public int? BloodGroupId { get; set; }
         public string? NationalId { get; set; }

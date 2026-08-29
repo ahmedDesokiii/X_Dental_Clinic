@@ -1,26 +1,74 @@
 @* ============================================================
    Views/Shared/_PaymentsCompact.cshtml
    عمود المدفوعات (col-3) — ملخص الحساب + قائمة مدفوعات مضغوطة
+   لو المريض "عام + تقويم" بيظهر فوقهم Breakdown لكل نوع + إجمالي كلي
    ============================================================ *@
 @model Dental.Modules.Clinical.ViewModels.SessionViewModel
 
 <div class="side-panel">
+
+    @if (Model.ShowCategoryBreakdown)
+    {
+        <div class="side-panel-head">
+            <i class="bi bi-collection"></i> إجمالي حساب المريض (كل الملفين)
+        </div>
+
+        @foreach (var cat in Model.CategoryBreakdown)
+        {
+            <div class="mini-card pay-summary category-summary">
+                <div class="category-summary-title">
+                    <i class="bi @cat.Icon"></i> @cat.CategoryName
+                </div>
+                <div class="pay-summary-row">
+                    <span>الإجمالي</span><b>@cat.TotalAmount.ToString("N0") م.ج</b>
+                </div>
+                <div class="pay-summary-row">
+                    <span>الخصم</span><b>@cat.Discount.ToString("N0") م.ج</b>
+                </div>
+                <div class="pay-summary-row paid">
+                    <span>المدفوع</span><b>@cat.PaidAmount.ToString("N0") م.ج</b>
+                </div>
+                <div class="pay-summary-row remaining">
+                    <span>المتبقي</span><b>@cat.Remaining.ToString("N0") م.ج</b>
+                </div>
+            </div>
+        }
+
+        <div class="mini-card pay-summary grand-total">
+            <div class="category-summary-title">
+                <i class="bi bi-calculator"></i> الإجمالي الكلي (عام + تقويم)
+            </div>
+            <div class="pay-summary-row">
+                <span>الإجمالي</span><b>@Model.CategoryBreakdown.Sum(c => c.TotalAmount).ToString("N0") م.ج</b>
+            </div>
+            <div class="pay-summary-row">
+                <span>الخصم</span><b>@Model.CategoryBreakdown.Sum(c => c.Discount).ToString("N0") م.ج</b>
+            </div>
+            <div class="pay-summary-row paid">
+                <span>المدفوع</span><b>@Model.CategoryBreakdown.Sum(c => c.PaidAmount).ToString("N0") م.ج</b>
+            </div>
+            <div class="pay-summary-row remaining">
+                <span>المتبقي</span><b>@Model.CategoryBreakdown.Sum(c => c.Remaining).ToString("N0") م.ج</b>
+            </div>
+        </div>
+    }
+
     <div class="side-panel-head">
-        <i class="bi bi-credit-card-2-front"></i> المدفوعات
+        <i class="bi bi-credit-card-2-front"></i> مدفوعات هذه الزيارة
     </div>
 
     <div class="mini-card pay-summary">
         <div class="pay-summary-row">
-            <span>الإجمالي</span><b>@Model.Visit.TotalAmount.ToString("N0") ج.م</b>
+            <span>الإجمالي</span><b>@Model.Visit.TotalAmount.ToString("N0") م.ج</b>
         </div>
         <div class="pay-summary-row">
-            <span>الخصم</span><b>@Model.Visit.Discount.ToString("N0") ج.م</b>
+            <span>الخصم</span><b>@Model.Visit.Discount.ToString("N0") م.ج</b>
         </div>
         <div class="pay-summary-row paid">
-            <span>المدفوع</span><b>@Model.Visit.PaidAmount.ToString("N0") ج.م</b>
+            <span>المدفوع</span><b>@Model.Visit.PaidAmount.ToString("N0") م.ج</b>
         </div>
         <div class="pay-summary-row remaining">
-            <span>المتبقي</span><b>@Model.Visit.Remaining.ToString("N0") ج.م</b>
+            <span>المتبقي</span><b>@Model.Visit.Remaining.ToString("N0") م.ج</b>
         </div>
         <button class="btn-add-payment-sm" onclick="openPaymentModal()">
             <i class="bi bi-plus-lg"></i> تسجيل دفعة
@@ -28,13 +76,15 @@
     </div>
 
     <div class="mini-card pay-list-card">
-        <div class="mini-card-title"><i class="bi bi-list-ul"></i> سجل المدفوعات (@Model.Visit.Payments.Count)</div>
+        <div class="mini-card-title">
+            <i class="bi bi-list-ul"></i> سجل المدفوعات (@Model.Visit.Payments.Count)
+        </div>
         <div class="pay-list">
             @foreach (var p in Model.Visit.Payments.OrderByDescending(x => x.PaymentDate))
             {
                 <div class="pay-item">
                     <div class="pay-item-top">
-                        <b>@p.Amount.ToString("N0") ج.م</b>
+                        <b>@p.Amount.ToString("N0") م.ج</b>
                         <span class="pay-method">@p.Method</span>
                     </div>
                     <div class="pay-item-desc">@p.Description</div>
@@ -67,7 +117,7 @@
             </select>
         </div>
         <div class="form-group">
-            <label>الوصف / السبب</label>
+            <label>السبب / الوصف</label>
             <textarea class="form-glass" id="payDesc" rows="2" placeholder="مثال: دفعة جزئية — تاج سن 16"></textarea>
         </div>
         <div class="modal-actions mt-3">
@@ -78,6 +128,26 @@
 </div>
 
 <style>
+    .category-summary-title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 800;
+        font-size: .82rem;
+        color: #0b2e30;
+        margin-bottom: 6px;
+    }
+
+    .category-summary {
+        border: 1px solid #f1f5f9;
+        margin-bottom: 10px;
+    }
+
+    .grand-total {
+        background: linear-gradient(160deg, #f0fdfa, #eafbfc);
+        border: 1px solid #99f6e4;
+    }
+
     .pay-summary-row {
         display: flex;
         justify-content: space-between;
@@ -85,10 +155,26 @@
         padding: 6px 0;
         color: #475569;
     }
-    .pay-summary-row b { color: #0f172a; }
-    .pay-summary-row.paid b { color: #16a34a; }
-    .pay-summary-row.remaining { border-top: 1px dashed #e2e8f0; margin-top: 4px; padding-top: 8px; }
-    .pay-summary-row.remaining b { color: #dc2626; font-size: .95rem; }
+
+        .pay-summary-row b {
+            color: #0f172a;
+        }
+
+        .pay-summary-row.paid b {
+            color: #16a34a;
+        }
+
+        .pay-summary-row.remaining {
+            border-top: 1px dashed #e2e8f0;
+            margin-top: 4px;
+            padding-top: 8px;
+        }
+
+            .pay-summary-row.remaining b {
+                color: #dc2626;
+                font-size: .95rem;
+            }
+
     .btn-add-payment-sm {
         width: 100%;
         margin-top: 10px;
@@ -105,15 +191,33 @@
         justify-content: center;
         gap: 6px;
     }
-    .pay-list-card { flex: 1; overflow-y: auto; }
-    .pay-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
+
+    .pay-list-card {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .pay-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 320px;
+        overflow-y: auto;
+    }
+
     .pay-item {
         border: 1px solid #f1f5f9;
         border-radius: 10px;
         padding: 8px 10px;
         background: #fafcfd;
     }
-    .pay-item-top { display: flex; justify-content: space-between; font-size: .82rem; }
+
+    .pay-item-top {
+        display: flex;
+        justify-content: space-between;
+        font-size: .82rem;
+    }
+
     .pay-method {
         font-size: .68rem;
         background: #f0fdfa;
@@ -122,15 +226,30 @@
         border-radius: 6px;
         font-weight: 700;
     }
-    .pay-item-desc { font-size: .74rem; color: #64748b; margin-top: 3px; }
-    .pay-item-date { font-size: .7rem; color: #94a3b8; margin-top: 3px; }
-    .pay-empty { text-align: center; color: #94a3b8; font-size: .8rem; padding: 12px; }
+
+    .pay-item-desc {
+        font-size: .74rem;
+        color: #64748b;
+        margin-top: 3px;
+    }
+
+    .pay-item-date {
+        font-size: .7rem;
+        color: #94a3b8;
+        margin-top: 3px;
+    }
+
+    .pay-empty {
+        text-align: center;
+        color: #94a3b8;
+        font-size: .8rem;
+        padding: 12px;
+    }
 </style>
 
 <script>
     function openPaymentModal() { document.getElementById('paymentModal').style.display = 'flex'; }
     function closePaymentModal() { document.getElementById('paymentModal').style.display = 'none'; }
-
     async function submitPayment() {
         const amount = parseFloat(document.getElementById('payAmount').value);
         if (!amount || amount <= 0) {

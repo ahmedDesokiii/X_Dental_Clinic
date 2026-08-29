@@ -164,7 +164,7 @@ namespace Dental.Modules.Patients.ServicesPatients
                     CurrentMedications = dto.CurrentMedications,
                     MedicalNotes = dto.MedicalNotes,
                     SmokingStatus = dto.SmokingStatus,
-                    IsPregnant = dto.IsPregnant,
+                    IsPregnant = (bool)dto.IsPregnant,
                     EmergencyNotes = dto.EmergencyNotes
                 };
             }
@@ -175,7 +175,7 @@ namespace Dental.Modules.Patients.ServicesPatients
                 patient.MedicalInfo.CurrentMedications = dto.CurrentMedications;
                 patient.MedicalInfo.MedicalNotes = dto.MedicalNotes;
                 patient.MedicalInfo.SmokingStatus = dto.SmokingStatus;
-                patient.MedicalInfo.IsPregnant = dto.IsPregnant;
+                patient.MedicalInfo.IsPregnant = (bool)dto.IsPregnant;
                 patient.MedicalInfo.EmergencyNotes = dto.EmergencyNotes;
             }
 

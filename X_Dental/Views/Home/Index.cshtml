@@ -432,14 +432,19 @@
     <!-- ===== Grass Graphs ===== -->
     <div class="charts-row1 reveal">
         <div class="chart-glass">
+            <h5><i class="bi bi-pie-chart-fill"></i> توزيع المرضى حسب نوع الملف</h5>
+            <div id="chartPatientsTypePie" style="height: 250px;"></div>
+        </div>
+
+        <div class="chart-glass">
             <h5><i class="bi bi-graph-up"></i> المواعيد القادمة 7 أيام</h5>
             <div id="chartAppointments" style="height: 250px;"></div>
         </div>
-        <div class="chart-glass">
-            <h5><i class="bi bi-pie-chart-fill"></i> توزيع الزيارات</h5>
-            <div id="chartVisitsPie" style="height: 250px;"></div>
-        </div>
+       
     </div>
+
+
+
 
     <div class="charts-row2 reveal">
         <div class="chart-glass">
@@ -449,6 +454,13 @@
         <div class="chart-glass">
             <h5><i class="bi bi-hospital"></i> أعلى الإجراءات تنفيذًا</h5>
             <div id="chartTopProcedures" style="height: 240px;"></div>
+        </div>
+    </div>
+
+    <div class="charts-row1 reveal" style="grid-template-columns: 1fr;">
+        <div class="chart-glass">
+            <h5><i class="bi bi-pie-chart-fill"></i> توزيع الزيارات</h5>
+            <div id="chartVisitsPie" style="height: 250px;"></div>
         </div>
     </div>
 
@@ -614,6 +626,33 @@
                 colors: ['#14b8a6', '#f59e0b']
                 }]
             });
+                        Highcharts.chart('chartPatientsTypePie', {
+            chart: { type: 'pie', backgroundColor: 'transparent' },
+            title: { text: null },
+            credits: { enabled: false },
+            plotOptions: {
+                pie: {
+                    innerSize: '55%',
+                    borderWidth: 0,
+                    dataLabels: { enabled: false },
+                    showInLegend: true,
+                }
+            },
+            legend: {
+                layout: 'horizontal',
+                align: 'center',
+                verticalAlign: 'bottom',
+                itemStyle: { fontWeight: '700', fontSize: '12px' }
+            },
+            series: [{
+                data: [
+                    ['عام', @Model.GeneralPatients],
+                    ['تقويم', @Model.OrthoPatients],
+                    ['كلا الملفين', @Model.BothPatients]
+                ],
+                colors: ['#14b8a6', '#f59e0b', '#6366f1']
+            }]
+        });
 
             // Bar: Earnings
             Highcharts.chart('chartRevenueBar', {

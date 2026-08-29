@@ -7,6 +7,10 @@ namespace Dental.ViewModels.Dashboards
 {
     public class DashboardViewModel
     {
+        public int GeneralPatients { get; set; }
+        public int OrthoPatients { get; set; }
+        public int BothPatients { get; set; }
+
         // ---- بطاقات الأرقام ----
         public int TotalPatients { get; set; }
         public int NewPatientsThisMonth { get; set; }

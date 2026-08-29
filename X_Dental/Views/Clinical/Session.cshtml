@@ -27,155 +27,301 @@
         VisitStatus.Cancelled => "ملغي",
         _ => "قيد التنفيذ"
     };
+
+    var typeIcon = Model.Patient.PatientType switch
+    {
+        Dental.Models.Patient.PatientType.Orthodontics => "bi-braces",
+        Dental.Models.Patient.PatientType.Both => "bi-heart-pulse",
+        _ => "bi-app-indicator"
+    };
+
+    var typeText = Model.Patient.PatientType switch
+    {
+        Dental.Models.Patient.PatientType.Orthodontics => "تقويم",
+        Dental.Models.Patient.PatientType.Both => "عام + تقويم",
+        _ => "عام"
+    };
+
+    var paidPercent = Model.Visit.TotalAmount > 0
+        ? Math.Min(100, (int)Math.Round((Model.Visit.PaidAmount / Model.Visit.TotalAmount) * 100))
+        : 100;
+
+    var progressColor = paidPercent >= 100 ? "#16a34a" : paidPercent >= 50 ? "#0d9488" : "#dc2626";
 }
 
 @*
     ============================================================
-    Clinical Session - Unified Layout
+    Clinical Session - Unified Layout (v2)
     ============================================================
-
-    التصميم الجديد بدون Tabs:
-
-    1. Patient Hero + KPIs
-    2. Overview | Dental Chart | Payments
+    1. Session Hero (هوية المريض + حالة السيشن + كل الأزرار + KPIs + شريط السداد)
+    2. Dental Chart | Payments  (عمود "نظرة عامة" اتشال)
     3. Clinical Session Records
-    4. Final Actions
 
-    الـ HTML الخاص بكل جزء موجود داخل Partial مستقل:
-
-    _SessionHeroAndKpi.cshtml
-    _SessionOverviewCompact.cshtml
-    _ClinicalChartColumn.cshtml
-    _PaymentsCompact.cshtml
-    _ClinicalRecordsTable.cshtml
-
+    الهيدر هنا مستقل بستايله الخاص جوه الملف ده (مش معتمد على
+    patient-hero-shared.css) عشان يضمن إنه يشتغل مهما كان الـ Layout.
     ============================================================
 *@
-
 
 <style>
 
     /* ============================================================
-               IMPORTANT
-               ============================================================
-
-               احتفظ هنا بأي CSS قديم موجود في Session.cshtml
-               إذا كانت الـ Partial Views الجديدة تعتمد عليه.
-
-               خصوصًا:
-
-               .session-hero
-               .hero-content
-               .hero-avatar
-               .stats-grid
-               .stat-card-glass
-
-               الـ HTML الخاص بهذه العناصر تم نقله إلى:
-
-               _SessionHeroAndKpi.cshtml
-
-               لذلك لا تحذف الـ CSS إذا كان مستخدمًا هناك.
-               ============================================================ */
-
-
-    /* ============================================================
-               PAGE CONTAINER
-               ============================================================ */
+           PAGE CONTAINER
+           ============================================================ */
 
     .clinical-session-page {
         width: 100%;
         min-height: 100vh;
-        padding: 12px;
+        padding: 16px;
+        background: radial-gradient(circle at 3% 0%, #e6fbf8 0%, transparent 40%), radial-gradient(circle at 100% 100%, #fef3ee 0%, transparent 35%), #f7fbfb;
     }
-
-
-    /* ============================================================
-               MAIN GRID
-               ============================================================ */
 
     .clinical-session-main-grid {
-        margin-top: 0;
+        margin-top: 16px;
     }
 
 
     /* ============================================================
-               FINAL ACTIONS
-               ============================================================ */
+           SESSION HERO (مستقل بالكامل)
+           ============================================================ */
 
-    .session-final-actions {
-        margin-top: 3px;
-        padding: 14px 18px;
-        border-radius: 16px;
-        background: var(--bs-body-bg, #fff);
-        border: 1px solid rgba(0, 0, 0, 0.08);
-        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+    .session-hero-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 22px;
+        background: linear-gradient(135deg, #0d7377, #119e91, #0f9b8e);
+        padding: 24px 28px;
+        color: #fff;
+        box-shadow: 0 18px 44px rgba(13,115,119,.28);
+        margin-bottom: 16px;
     }
 
-    .session-final-actions-inner {
+        .session-hero-card.status-success {
+            background: linear-gradient(135deg, #0d7377, #15803d, #16a34a);
+        }
+
+        .session-hero-card.status-danger {
+            background: linear-gradient(135deg, #7f1d1d, #b91c1c, #dc2626);
+        }
+
+    .session-hero-top {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
+        gap: 18px;
+    }
+
+    .session-hero-identity {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .session-hero-avatar {
+        width: 62px;
+        height: 62px;
+        border-radius: 18px;
+        background: rgba(255,255,255,.18);
+        border: 1px solid rgba(255,255,255,.3);
+        backdrop-filter: blur(6px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+
+    .session-hero-identity h1 {
+        font-size: 1.25rem;
+        font-weight: 800;
+        margin: 0 0 8px;
+    }
+
+    .session-hero-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .session-hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,.18);
+        border: 1px solid rgba(255,255,255,.25);
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-size: .78rem;
+        font-weight: 700;
+    }
+
+    .session-hero-actions {
+        display: flex;
+        gap: 10px;
         flex-wrap: wrap;
     }
 
-    .session-final-actions-left,
-    .session-final-actions-right {
-        display: flex;
+    .btn-session-hero {
+        border: none;
+        padding: 10px 18px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: .84rem;
+        display: inline-flex;
         align-items: center;
         gap: 8px;
-        flex-wrap: wrap;
+        cursor: pointer;
+        transition: transform .18s ease, box-shadow .18s ease;
+        white-space: nowrap;
+    }
+
+        .btn-session-hero:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-session-hero.primary {
+            background: #fff;
+            color: #0d7377;
+            box-shadow: 0 10px 24px rgba(0,0,0,.15);
+            font-size: .9rem;
+            padding: 11px 22px;
+        }
+
+        .btn-session-hero.glass {
+            background: rgba(255,255,255,.14);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,.32);
+        }
+
+        .btn-session-hero:disabled {
+            opacity: .7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+
+    /* ============================================================
+           KPI STRIP (جوه الهيرو)
+           ============================================================ */
+
+    .session-hero-kpis {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .kpi-glass {
+        background: rgba(255,255,255,.14);
+        border: 1px solid rgba(255,255,255,.25);
+        border-radius: 14px;
+        padding: 12px 14px;
+        opacity: 0;
+        transform: translateY(10px);
+        animation: kpiRise .5s ease forwards;
+    }
+
+        .kpi-glass:nth-child(1) {
+            animation-delay: .05s;
+        }
+
+        .kpi-glass:nth-child(2) {
+            animation-delay: .12s;
+        }
+
+        .kpi-glass:nth-child(3) {
+            animation-delay: .19s;
+        }
+
+        .kpi-glass:nth-child(4) {
+            animation-delay: .26s;
+        }
+
+    @@keyframes kpiRise {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .kpi-value {
+        font-size: 1.15rem;
+        font-weight: 800;
+        display: block;
+    }
+
+    .kpi-label {
+        font-size: .72rem;
+        opacity: .85;
+        font-weight: 600;
+        margin-top: 2px;
+    }
+
+    @@media (max-width: 767.98px) {
+        .session-hero-kpis {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
 
 
     /* ============================================================
-               RESPONSIVE
-               ============================================================ */
+           PAYMENT PROGRESS BAR
+           ============================================================ */
 
-    @@media (max-width: 991.98px) {
+    .payment-progress-wrap {
+        margin-top: 16px;
+        background: rgba(255,255,255,.14);
+        border: 1px solid rgba(255,255,255,.25);
+        border-radius: 14px;
+        padding: 12px 16px;
+    }
 
-        .clinical-session-page {
-            padding: 8px;
+    .payment-progress-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: .8rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 8px;
+    }
+
+    .payment-progress-track {
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.2);
+        overflow: hidden;
+    }
+
+    .payment-progress-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: #fff;
+        transition: width .6s cubic-bezier(.2,.8,.3,1);
+    }
+
+
+    /* ============================================================
+           RESPONSIVE — HERO
+           ============================================================ */
+
+    @@media (max-width: 767.98px) {
+        .session-hero-card {
+            padding: 18px;
         }
 
-        .clinical-session-main-grid {
-            row-gap: 12px;
-        }
-
-        .session-final-actions-inner {
+        .session-hero-top {
             flex-direction: column;
             align-items: stretch;
         }
 
-        .session-final-actions-left,
-        .session-final-actions-right {
+        .session-hero-actions {
             width: 100%;
         }
 
-        .session-final-actions .btn {
+        .btn-session-hero {
             flex: 1;
-        }
-    }
-
-
-    @@media (max-width: 575.98px) {
-
-        .clinical-session-page {
-            padding: 6px;
-        }
-
-        .session-final-actions {
-            padding: 12px;
-        }
-
-        .session-final-actions-left,
-        .session-final-actions-right {
-            flex-direction: column;
-            width: 100%;
-        }
-
-        .session-final-actions .btn {
-            width: 100%;
+            justify-content: center;
         }
     }
 
@@ -189,137 +335,101 @@
      data-session-status="@sessionStatusText">
 
 
-     
     @* ============================================================
-       4. FINAL ACTIONS
-
-       السيناريو:
-       SaveClinicalRecord (لو فيه أسنان مُضافة) ثم CompleteVisit.
-       الداتا بتيجي من window.clinicalToothRecords اللي بيظبطها
-       _ClinicalChartColumn.cshtml أول ما أي سن يتضاف/يتعدل/يتشال.
+       SESSION HERO — هوية المريض + KPIs + شريط السداد + كل الأزرار
        ============================================================ *@
 
-    <div class="session-final-actions">
+    <div class="session-hero-card status-@sessionStatusClass">
 
-        <div class="session-final-actions-inner">
+        <div class="session-hero-top">
 
-            <div class="session-final-actions-left">
-
-                <button type="button"
-                        id="btnFinishSession"
-                        class="btn btn-success btn-lg btn-final-save">
-
-                    <i class="bi bi-check2-circle me-1"></i>
-
-                    إنهاء وحفظ السيشن
-
-                </button>
-
+            <div class="session-hero-identity">
+                <div class="session-hero-avatar">@initials</div>
+                <div>
+                    <h1>@Model.Patient.FullNameAr</h1>
+                    <div class="session-hero-meta">
+                        <span class="session-hero-tag">
+                            <i class="bi bi-circle-fill" style="font-size:.5rem;"></i> @sessionStatusText
+                        </span>
+                        <span class="session-hero-tag"><i class="bi bi-hash"></i> @Model.Patient.PatientCode</span>
+                        <span class="session-hero-tag"><i class="bi bi-telephone"></i> @Model.Patient.Mobile</span>
+                        <span class="session-hero-tag"><i class="bi @typeIcon"></i> @typeText</span>
+                        <span class="session-hero-tag"><i class="bi bi-droplet"></i> @(Model.Patient.BloodGroup?.Name ?? "-")</span>
+                        <span class="session-hero-tag"><i class="bi bi-calendar"></i> @Model.Visit.VisitDate.ToString("dd/MM/yyyy")</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="session-final-actions-right">
-
-                <button type="button"
-                        id="btnBackToPatient"
-                        class="btn btn-outline-secondary btn-hero btn-hero-back-sm">
-
-                    <i class="bi bi-arrow-right me-1"></i>
-
-                    رجوع لملف المريض
-
+            <div class="session-hero-actions">
+                <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.Patient.Id" class="btn-session-hero glass">
+                    <i class="bi bi-arrow-right"></i> رجوع لملف المريض
+                </a>
+                <button type="button" id="btnPrintSession" class="btn-session-hero glass">
+                    <i class="bi bi-printer"></i> طباعة
                 </button>
-
-                <button type="button"
-                        id="btnPrintSession"
-                        class="btn btn-outline-primary btn-hero btn-hero-print-sm">
-
-                    <i class="bi bi-printer me-1"></i>
-
-                    طباعة
-
+                <button type="button" id="btnFinishSession" class="btn-session-hero primary">
+                    <i class="bi bi-check2-circle"></i> إنهاء وحفظ السيشن
                 </button>
-
             </div>
 
+        </div>
+
+        <div class="session-hero-kpis">
+            <div class="kpi-glass">
+                <span class="kpi-value">@Model.Visit.TotalAmount.ToString("N0")</span>
+                <span class="kpi-label">الإجمالي (م.ج)</span>
+            </div>
+            <div class="kpi-glass">
+                <span class="kpi-value">@Model.Visit.Discount.ToString("N0")</span>
+                <span class="kpi-label">الخصم</span>
+            </div>
+            <div class="kpi-glass">
+                <span class="kpi-value">@Model.Visit.PaidAmount.ToString("N0")</span>
+                <span class="kpi-label">المدفوع</span>
+            </div>
+            <div class="kpi-glass">
+                <span class="kpi-value">@Model.Visit.Remaining.ToString("N0")</span>
+                <span class="kpi-label">المتبقي</span>
+            </div>
+        </div>
+
+        <div class="payment-progress-wrap">
+            <div class="payment-progress-label">
+                <span>نسبة السداد</span>
+                <b>@paidPercent%</b>
+            </div>
+            <div class="payment-progress-track">
+                <div class="payment-progress-fill" style="width:@(paidPercent)%;"></div>
+            </div>
         </div>
 
     </div>
 
 
     @* ============================================================
-       1. PATIENT HERO + KPIs
-       ============================================================ *@
-
-@*     @await Html.PartialAsync(
-        "_SessionHeroAndKpi",
-        Model
-    )
- *@
-    @* ============================================================
-       2. MAIN SESSION AREA
-
-       col-3  : Overview
-       col-6  : Dental Chart
-       col-3  : Payments
+       MAIN SESSION AREA
+       col-8 : Dental Chart
+       col-4 : Payments
        ============================================================ *@
 
     <div class="row g-3 align-items-stretch clinical-session-main-grid">
 
-
-        @* ========================================================
-           LEFT / OVERVIEW
-           ======================================================== *@
-
-        <div class="col-12 col-lg-3">
-
-            @await Html.PartialAsync(
-                "_SessionOverviewCompact",
-                Model
-            )
-
+        <div class="col-12 col-lg-8">
+            @await Html.PartialAsync("_ClinicalChartColumn", Model)
         </div>
 
-
-        @* ========================================================
-           CENTER / DENTAL CHART
-           ======================================================== *@
-
-        <div class="col-12 col-lg-6">
-
-            @await Html.PartialAsync(
-                "_ClinicalChartColumn",
-                Model
-            )
-
-        </div>
-
-
-        @* ========================================================
-           RIGHT / PAYMENTS
-           ======================================================== *@
-
-        <div class="col-12 col-lg-3">
-
-            @await Html.PartialAsync(
-                "_PaymentsCompact",
-                Model
-            )
-
+        <div class="col-12 col-lg-4">
+            @await Html.PartialAsync("_PaymentsCompact", Model)
         </div>
 
     </div>
 
 
     @* ============================================================
-       3. CLINICAL SESSION RECORDS
-
-       كل سن يتم إضافته يظهر كسطر في الجدول.
+       CLINICAL SESSION RECORDS
        ============================================================ *@
 
-    @await Html.PartialAsync(
-        "_ClinicalRecordsTable",
-        Model
-    )
+    @await Html.PartialAsync("_ClinicalRecordsTable", Model)
 
 
 </div>
@@ -329,533 +439,167 @@
 
     <script>
 
-        /*
-        ============================================================
-        Clinical Session - Main Page Script
-        ============================================================
-        */
-
         (() => {
 
             "use strict";
 
+            const btnFinishSession = document.getElementById("btnFinishSession");
+            const btnPrintSession = document.getElementById("btnPrintSession");
 
-            /* ====================================================
-               ELEMENTS
-               ==================================================== */
-
-            const btnFinishSession =
-                document.getElementById("btnFinishSession");
-
-            const btnBackToPatient =
-                document.getElementById("btnBackToPatient");
-
-            const btnPrintSession =
-                document.getElementById("btnPrintSession");
-
-
-            /* ====================================================
-               PAGE DATA
-               ==================================================== */
-
-            const sessionPage =
-                document.querySelector(".clinical-session-page");
-
-            const patientId =
-                sessionPage?.dataset.patientId;
-
-            const visitId =
-                sessionPage?.dataset.visitId;
-
-
-            /* ====================================================
-               URLS
-               ==================================================== */
+            const sessionPage = document.querySelector(".clinical-session-page");
+            const patientId = sessionPage?.dataset.patientId;
+            const visitId = sessionPage?.dataset.visitId;
 
             const saveClinicalRecordUrl = '@Url.Action("SaveClinicalRecord", "Clinical")';
-
             const completeVisitUrl = '@Url.Action("CompleteVisit", "Clinical")';
 
-
-            /* ====================================================
-               HELPER
-               ==================================================== */
-
-            function showMessage(
-                message,
-                type = "error"
-            ) {
-
+            function showMessage(message, type = "error") {
                 if (typeof Swal !== "undefined") {
-
-                    Swal.fire({
-                        icon: type,
-                        text: message,
-                        confirmButtonText: "حسنًا"
-                    });
-
+                    Swal.fire({ icon: type, text: message, confirmButtonText: "حسنًا" });
                     return;
                 }
-
                 alert(message);
             }
 
-
-            /* ====================================================
-               GET TOOTH RECORDS
-               ====================================================
-
-               الـ Dental Chart الجديد يفترض أن يحتفظ بالبيانات
-               في window.clinicalToothRecords.
-
-               ولو لم تكن موجودة، نستخدم Array فارغة.
-
-               ==================================================== */
-
             function getToothRecords() {
-
-                if (
-                    window.clinicalToothRecords &&
-                    Array.isArray(window.clinicalToothRecords)
-                ) {
-
+                if (window.clinicalToothRecords && Array.isArray(window.clinicalToothRecords)) {
                     return window.clinicalToothRecords;
-
                 }
-
-
-                if (
-                    window.toothRecords &&
-                    Array.isArray(window.toothRecords)
-                ) {
-
+                if (window.toothRecords && Array.isArray(window.toothRecords)) {
                     return window.toothRecords;
-
                 }
-
-
                 return [];
-
             }
 
-
-            /* ====================================================
-               SAVE CLINICAL RECORD
-               ==================================================== */
-
             async function saveClinicalRecord() {
-
-                const toothRecords =
-                    getToothRecords();
-
-
-                /*
-                لا توجد أسنان:
-
-                حسب السيناريو الجديد لا نرسل SaveClinicalRecord
-                لأن الـ Controller الحالي يرجع:
-
-                "لا توجد أي بيانات لحفظها."
-
-                وفي هذه الحالة يمكن إغلاق السيشن مباشرة
-                بعد تأكيد المستخدم.
-                */
+                const toothRecords = getToothRecords();
 
                 if (!toothRecords.length) {
-
-                    const result =
-                        await confirmWithoutTeeth();
-
-                    if (!result) {
-                        return false;
-                    }
-
+                    const result = await confirmWithoutTeeth();
+                    if (!result) return false;
                     return true;
                 }
 
-
                 const request = {
-
                     patientId: Number(patientId),
-
                     visitId: Number(visitId),
-
                     toothRecords: toothRecords
-
                 };
 
+                const response = await fetch(saveClinicalRecordUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(request)
+                });
 
-                const response =
-                    await fetch(
-                        saveClinicalRecordUrl,
-                        {
-                            method: "POST",
+                if (!response.ok) throw new Error("حدث خطأ أثناء الاتصال بالسيرفر.");
 
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-
-                            body:
-                                JSON.stringify(request)
-                        }
-                    );
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        "حدث خطأ أثناء الاتصال بالسيرفر."
-                    );
-                }
-
-
-                const result =
-                    await response.json();
-
-
-                if (!result.success) {
-
-                    throw new Error(
-                        result.message ||
-                        "فشل حفظ بيانات السيشن."
-                    );
-                }
-
+                const result = await response.json();
+                if (!result.success) throw new Error(result.message || "فشل حفظ بيانات السيشن.");
 
                 return true;
             }
 
-
-            /* ====================================================
-               CONFIRM WITHOUT TEETH
-               ==================================================== */
-
             async function confirmWithoutTeeth() {
-
                 if (typeof Swal === "undefined") {
-
-                    return confirm(
-                        "لم يتم إضافة أي أسنان لهذه السيشن.\n\nهل تريد إنهاء السيشن بدون بيانات أسنان؟"
-                    );
+                    return confirm("لم يتم إضافة أي أسنان لهذه السيشن.\n\nهل تريد إنهاء السيشن بدون بيانات أسنان؟");
                 }
 
-
-                const result =
-                    await Swal.fire({
-
-                        icon: "question",
-
-                        title: "لا توجد بيانات أسنان",
-
-                        text:
-                            "لم يتم إضافة أي سن لهذه السيشن. هل تريد إنهاء السيشن بدون بيانات أسنان؟",
-
-                        showCancelButton: true,
-
-                        confirmButtonText:
-                            "نعم، إنهاء السيشن",
-
-                        cancelButtonText:
-                            "إلغاء",
-
-                        reverseButtons: true
-
-                    });
-
+                const result = await Swal.fire({
+                    icon: "question",
+                    title: "لا توجد بيانات أسنان",
+                    text: "لم يتم إضافة أي سن لهذه السيشن. هل تريد إنهاء السيشن بدون بيانات أسنان؟",
+                    showCancelButton: true,
+                    confirmButtonText: "نعم، إنهاء السيشن",
+                    cancelButtonText: "إلغاء",
+                    reverseButtons: true
+                });
 
                 return result.isConfirmed;
             }
 
-
-            /* ====================================================
-               COMPLETE VISIT
-               ==================================================== */
-
             async function completeVisit() {
+                const response = await fetch(completeVisitUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ visitId: Number(visitId) })
+                });
 
-                const response =
-                    await fetch(
-                        completeVisitUrl,
-                        {
-                            method: "POST",
+                if (!response.ok) throw new Error("حدث خطأ أثناء إنهاء الزيارة.");
 
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-
-                            body:
-                                JSON.stringify({
-                                    visitId:
-                                        Number(visitId)
-                                })
-                        }
-                    );
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        "حدث خطأ أثناء إنهاء الزيارة."
-                    );
-                }
-
-
-                const result =
-                    await response.json();
-
-
-                if (!result.success) {
-
-                    throw new Error(
-                        result.message ||
-                        "تعذر إنهاء الزيارة."
-                    );
-                }
-
+                const result = await response.json();
+                if (!result.success) throw new Error(result.message || "تعذر إنهاء الزيارة.");
 
                 return result;
             }
 
-
-            /* ====================================================
-               FINISH SESSION
-               ==================================================== */
-
             async function finishSession() {
-
                 if (!patientId || !visitId) {
-
-                    showMessage(
-                        "بيانات المريض أو الزيارة غير صالحة."
-                    );
-
+                    showMessage("بيانات المريض أو الزيارة غير صالحة.");
                     return;
                 }
 
-
                 try {
-
                     if (btnFinishSession) {
-
-                        btnFinishSession.disabled =
-                            true;
-
-                        btnFinishSession.dataset.originalText =
-                            btnFinishSession.innerHTML;
-
-                        btnFinishSession.innerHTML =
-
-                            '<span class="spinner-border spinner-border-sm me-1"></span>' +
-                            ' جاري الحفظ...';
+                        btnFinishSession.disabled = true;
+                        btnFinishSession.dataset.originalText = btnFinishSession.innerHTML;
+                        btnFinishSession.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> جاري الحفظ...';
                     }
 
-
-                    /*
-                    ==================================================
-                    STEP 1
-                    Save Clinical Record
-                    ==================================================
-                    */
-
-                    const saved =
-                        await saveClinicalRecord();
-
-
-                    if (!saved) {
-
-                        return;
-                    }
-
-
-                    /*
-                    ==================================================
-                    STEP 2
-                    Complete Visit
-
-                    لا يتم الوصول هنا إلا إذا نجح الحفظ.
-                    ==================================================
-                    */
+                    const saved = await saveClinicalRecord();
+                    if (!saved) return;
 
                     await completeVisit();
 
-
-                    /*
-                    ==================================================
-                    SUCCESS
-                    ==================================================
-                    */
-
                     if (typeof Swal !== "undefined") {
-
                         await Swal.fire({
-
                             icon: "success",
-
                             title: "تم بنجاح",
-
-                            text:
-                                "تم حفظ بيانات السيشن وإنهاء الزيارة.",
-
-                            confirmButtonText:
-                                "حسنًا"
-
+                            text: "تم حفظ بيانات السيشن وإنهاء الزيارة.",
+                            confirmButtonText: "حسنًا"
                         });
-
                     } else {
-
-                        alert(
-                            "تم حفظ بيانات السيشن وإنهاء الزيارة."
-                        );
-
+                        alert("تم حفظ بيانات السيشن وإنهاء الزيارة.");
                     }
 
+                    window.location.href = '@Url.Action("Details", "Patients")' + '?id=' + encodeURIComponent(patientId);
 
-                    /*
-                    بعد نجاح إنهاء السيشن:
-                    نرجع إلى ملف المريض.
-
-                    استخدمنا PatientId حتى لا نعتمد على
-                    URL ثابت.
-                    */
-
-                    window.location.href =
-                        '@Url.Action("Details", "Patients")' +
-                        '?id=' +
-                        encodeURIComponent(patientId);
-
-                }
-
-                catch (error) {
-
-                    console.error(
-                        "Finish Session Error:",
-                        error
-                    );
-
-
-                    showMessage(
-                        error.message ||
-                        "حدث خطأ أثناء حفظ وإنهاء السيشن.",
-                        "error"
-                    );
-
-                }
-
-                finally {
-
+                } catch (error) {
+                    console.error("Finish Session Error:", error);
+                    showMessage(error.message || "حدث خطأ أثناء حفظ وإنهاء السيشن.", "error");
+                } finally {
                     if (btnFinishSession) {
-
-                        btnFinishSession.disabled =
-                            false;
-
-                        if (
-                            btnFinishSession.dataset.originalText
-                        ) {
-
-                            btnFinishSession.innerHTML =
-                                btnFinishSession.dataset.originalText;
+                        btnFinishSession.disabled = false;
+                        if (btnFinishSession.dataset.originalText) {
+                            btnFinishSession.innerHTML = btnFinishSession.dataset.originalText;
                         }
                     }
                 }
             }
 
-
-            /* ====================================================
-               BACK TO PATIENT
-               ==================================================== */
-
-            function backToPatient() {
-
-                if (!patientId) {
-
-                    showMessage(
-                        "معرف المريض غير موجود."
-                    );
-
-                    return;
-                }
-
-
-                const url =
-                    '@Url.Action("Details", "Patients")' +
-                    '?id=' +
-                    encodeURIComponent(patientId);
-
-
-                window.location.href = url;
-            }
-
-
-            /* ====================================================
-               PRINT
-               ==================================================== */
-
             function printSession() {
-
                 window.print();
-
             }
 
-
-            /* ====================================================
-               EVENTS
-               ==================================================== */
-
-            if (btnFinishSession) {
-
-                btnFinishSession.addEventListener(
-                    "click",
-                    finishSession
-                );
-            }
-
-
-            if (btnBackToPatient) {
-
-                btnBackToPatient.addEventListener(
-                    "click",
-                    backToPatient
-                );
-            }
-
-
-            if (btnPrintSession) {
-
-                btnPrintSession.addEventListener(
-                    "click",
-                    printSession
-                );
-            }
-
+            if (btnFinishSession) btnFinishSession.addEventListener("click", finishSession);
+            if (btnPrintSession) btnPrintSession.addEventListener("click", printSession);
 
         })();
 
     </script>
 
-
     <style>
-
-        /* =========================================================
-                           PRINT
-                           ========================================================= */
-
         @@media print {
-
-            .session-final-actions {
+            .session-hero-card .session-hero-actions,
+            .payment-progress-wrap {
                 display: none !important;
             }
 
             .clinical-session-page {
                 padding: 0 !important;
-            }
-
-            body {
                 background: #fff !important;
             }
         }
-
     </style>
 
 }

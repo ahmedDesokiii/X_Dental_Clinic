@@ -26,10 +26,11 @@ namespace Dental.Controllers
             _env = env;
         }
 
+
+
         [HttpGet]
         public async Task<IActionResult> Session(int patientId, int visitId)
         {
-            
             var patient = await _context.Patients
                 .Include(p => p.Gender)
                 .Include(p => p.BloodGroup)
@@ -41,20 +42,14 @@ namespace Dental.Controllers
                 .Include(v => v.Procedures).ThenInclude(p => p.Procedure)
                 .Include(v => v.Payments)
                 .Include(v => v.TreatmentSessions)
-                .Include(v => v.Procedures)
-                .Include(v => v.Payments)
-                .Include(v => v.Procedures)
                 .Include(v => v.XRays)
                 .Include(v => v.Prescriptions)
                 .FirstOrDefaultAsync(v => v.Id == visitId);
 
             if (patient == null || visit == null) return NotFound();
 
-            // Master Data للـ dropdowns
-            ViewBag.DiagnosisList = await _context.DiagnosisCatalogs
-                .Where(d => d.IsActive).ToListAsync();
-            ViewBag.ProcedureList = await _context.ProcedureCatalogs
-                .Where(p => p.IsActive).ToListAsync();
+            ViewBag.DiagnosisList = await _context.DiagnosisCatalogs.Where(d => d.IsActive).ToListAsync();
+            ViewBag.ProcedureList = await _context.ProcedureCatalogs.Where(p => p.IsActive).ToListAsync();
             ViewBag.ToothList = Enumerable.Range(11, 8)
                 .Concat(Enumerable.Range(21, 8))
                 .Concat(Enumerable.Range(31, 8))
@@ -71,8 +66,91 @@ namespace Dental.Controllers
                     .ToListAsync()
             };
 
+            // 📁 لو المريض "عام + تقويم" — اجمع مدفوعات كل الزيارات مقسّمة حسب النوع
+            if (patient.PatientType == Models.Patient.PatientType.Both)
+            {
+                var categoryTotals = await _context.Visits
+                    .Where(v => v.PatientId == patientId && v.IsActive)
+                    .GroupBy(v => v.Category)
+                    .Select(g => new
+                    {
+                        Category = g.Key,
+                        TotalAmount = g.Sum(v => v.TotalAmount),
+                        Discount = g.Sum(v => v.Discount),
+                        PaidAmount = g.Sum(v => v.PaidAmount)
+                    })
+                    .ToListAsync();
+
+                model.CategoryBreakdown = categoryTotals.Select(c => new CategoryPaymentSummaryDto
+                {
+                    CategoryName = c.Category == VisitCategory.Orthodontics ? "تقويم" : "عام",
+                    Icon = c.Category == VisitCategory.Orthodontics ? "bi-braces" : "bi-app-indicator",
+                    TotalAmount = c.TotalAmount,
+                    Discount = c.Discount,
+                    PaidAmount = c.PaidAmount,
+                    Remaining = c.TotalAmount - c.Discount - c.PaidAmount
+                }).ToList();
+            }
+
             return View(model);
         }
+
+
+
+
+
+
+
+
+
+
+        //[HttpGet]
+        //public async Task<IActionResult> Session(int patientId, int visitId)
+        //{
+            
+        //    var patient = await _context.Patients
+        //        .Include(p => p.Gender)
+        //        .Include(p => p.BloodGroup)
+        //        .Include(p => p.MedicalInfo)
+        //        .FirstOrDefaultAsync(p => p.Id == patientId);
+
+        //    var visit = await _context.Visits
+        //        .Include(v => v.Diagnoses).ThenInclude(d => d.Diagnosis)
+        //        .Include(v => v.Procedures).ThenInclude(p => p.Procedure)
+        //        .Include(v => v.Payments)
+        //        .Include(v => v.TreatmentSessions)
+        //        .Include(v => v.Procedures)
+        //        .Include(v => v.Payments)
+        //        .Include(v => v.Procedures)
+        //        .Include(v => v.XRays)
+        //        .Include(v => v.Prescriptions)
+        //        .FirstOrDefaultAsync(v => v.Id == visitId);
+
+        //    if (patient == null || visit == null) return NotFound();
+
+        //    // Master Data للـ dropdowns
+        //    ViewBag.DiagnosisList = await _context.DiagnosisCatalogs
+        //        .Where(d => d.IsActive).ToListAsync();
+        //    ViewBag.ProcedureList = await _context.ProcedureCatalogs
+        //        .Where(p => p.IsActive).ToListAsync();
+        //    ViewBag.ToothList = Enumerable.Range(11, 8)
+        //        .Concat(Enumerable.Range(21, 8))
+        //        .Concat(Enumerable.Range(31, 8))
+        //        .Concat(Enumerable.Range(41, 8))
+        //        .ToList();
+
+        //    var model = new SessionViewModel
+        //    {
+        //        Patient = _mapper.Map<PatientDetailsDto>(patient),
+        //        Visit = _mapper.Map<VisitDto>(visit),
+        //        DentalHistory = await _context.DentalChartEntries
+        //            .Where(d => d.PatientId == patientId)
+        //            .OrderByDescending(d => d.Date)
+        //            .ToListAsync()
+        //    };
+
+        //    return View(model);
+        //}
 
 
 

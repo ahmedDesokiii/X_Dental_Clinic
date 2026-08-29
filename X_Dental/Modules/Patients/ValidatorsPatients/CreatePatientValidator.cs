@@ -25,6 +25,10 @@ namespace Dental.Modules.Patients.ValidatorsPatients
                 .MaximumLength(20)
                 .WithMessage("Mobile must not exceed 20 characters.");
 
+            RuleFor(x => x.Mobile)
+    .NotEmpty().WithMessage("رقم الموبايل مطلوب.")
+    .MaximumLength(20).WithMessage("رقم الموبايل لا يتجاوز 20 رقم.");
+
             RuleFor(x => x.Email)
                 .EmailAddress()
                 .WithMessage("Invalid email format.")
@@ -35,10 +39,6 @@ namespace Dental.Modules.Patients.ValidatorsPatients
                 .WithMessage("National ID must be exactly 14 characters.")
                 .When(x => !string.IsNullOrWhiteSpace(x.NationalId));
 
-            // ✅ Changed from Gender (enum) to GenderId (int)
-            RuleFor(x => x.GenderId)
-                .GreaterThan(0)
-                .WithMessage("Gender is required.");
 
             RuleFor(x => x.Address)
                 .MaximumLength(500)

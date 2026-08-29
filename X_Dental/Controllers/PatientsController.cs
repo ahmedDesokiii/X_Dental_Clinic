@@ -52,14 +52,11 @@ namespace Dental.Controllers
         {
             var total = await _context.Patients.CountAsync(p => p.IsActive);
             var general = await _context.Patients.CountAsync(p =>
-                p.IsActive && p.Visits.Any(v => v.Category == VisitCategory.General));
+                p.IsActive && (p.PatientType == Models.Patient.PatientType.General || p.PatientType == Models.Patient.PatientType.Both));
             var ortho = await _context.Patients.CountAsync(p =>
-                p.IsActive && p.Visits.Any(v => v.Category == VisitCategory.Orthodontics));
+                p.IsActive && (p.PatientType == Models.Patient.PatientType.Orthodontics || p.PatientType == Models.Patient.PatientType.Both));
             var both = await _context.Patients.CountAsync(p =>
-                p.IsActive
-                && p.Visits.Any(v => v.Category == VisitCategory.General)
-                && p.Visits.Any(v => v.Category == VisitCategory.Orthodontics));
-
+                p.IsActive && p.PatientType == Models.Patient.PatientType.Both);
             return Json(new { total, general, ortho, both });
         }
 
@@ -110,13 +107,9 @@ namespace Dental.Controllers
                     .AsQueryable();
 
                 if (categoryFilter == "General")
-                {
-                    query = query.Where(p => p.Visits.Any(v => v.Category == VisitCategory.General));
-                }
+                    query = query.Where(p => p.PatientType == Models.Patient.PatientType.General || p.PatientType == Models.Patient.PatientType.Both);
                 else if (categoryFilter == "Orthodontics")
-                {
-                    query = query.Where(p => p.Visits.Any(v => v.Category == VisitCategory.Orthodontics));
-                }
+                    query = query.Where(p => p.PatientType == Models.Patient.PatientType.Orthodontics || p.PatientType == Models.Patient.PatientType.Both);
 
                 if (!string.IsNullOrWhiteSpace(request.Search?.Value))
                 {
@@ -143,7 +136,7 @@ namespace Dental.Controllers
                     {
                         "patientCode" => isAsc ? query.OrderBy(p => p.PatientCode) : query.OrderByDescending(p => p.PatientCode),
                         "fullNameAr" => isAsc ? query.OrderBy(p => p.FullNameAr) : query.OrderByDescending(p => p.FullNameAr),
-                        "phone" => isAsc ? query.OrderBy(p => p.Phone) : query.OrderByDescending(p => p.Phone),
+                        "mobile" => isAsc ? query.OrderBy(p => p.Mobile) : query.OrderByDescending(p => p.Mobile),
                         "age" => isAsc ? query.OrderBy(p => p.DateOfBirth) : query.OrderByDescending(p => p.DateOfBirth),
                         "genderName" => isAsc
                             ? query.OrderBy(p => p.Gender != null ? p.Gender.NameAr : "")
@@ -164,12 +157,15 @@ namespace Dental.Controllers
                         Id = p.Id,
                         PatientCode = p.PatientCode,
                         FullNameAr = p.FullNameAr,
-                        Phone = p.Phone,
+                        Phone = p.Mobile,
                         Age = p.DateOfBirth.HasValue ? DateTime.Now.Year - p.DateOfBirth.Value.Year : null,
                         GenderName = p.Gender != null ? p.Gender.NameAr : null,
                         IsActive = p.IsActive,
                         HasGeneralVisits = p.Visits.Any(v => v.Category == VisitCategory.General),
-                        HasOrthodonticsVisits = p.Visits.Any(v => v.Category == VisitCategory.Orthodontics)
+                        HasOrthodonticsVisits = p.Visits.Any(v => v.Category == VisitCategory.Orthodontics),
+                        // في الـ .Select(p => new PatientListDto { ... }) ضيف:
+                        PatientType = p.PatientType
+
                     })
                     .ToListAsync();
 
@@ -343,6 +339,8 @@ namespace Dental.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreatePatientDto dto)
         {
+            _logger.LogWarning("DEBUG: GenderId={GenderId}, PatientType={PatientType}", dto.GenderId, dto.PatientType);
+
             if (!ModelState.IsValid)
             {
                 await LoadSelectListsAsync(dto.GenderId, dto.BloodGroupId);
@@ -384,7 +382,13 @@ namespace Dental.Controllers
                     VisitDate = DateTime.Now,
                     Status = VisitStatus.InProgress,
                     FollowUpType = FollowUpType.Normal,
-                    Category = VisitCategory.General // أو نحدده من PatientType
+                    Category = dto.PatientType switch
+                    {
+                        Models.Patient.PatientType.General => VisitCategory.General,
+                        Models.Patient.PatientType.Orthodontics => VisitCategory.Orthodontics,
+                        Models.Patient.PatientType.Both => VisitCategory.General, // أو أي منطق تاني لو "كلا الملفين" محتاجة تفتح Visit من كل نوع
+                        _ => VisitCategory.General
+                    }
                 };
 
                 await _context.Visits.AddAsync(visit);

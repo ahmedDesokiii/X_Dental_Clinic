@@ -71,6 +71,11 @@ namespace Dental.Controllers
                         v.IsActive &&
                         v.Category == VisitCategory.Orthodontics),
 
+
+                GeneralPatients = await _context.Patients.CountAsync(p => p.IsActive && p.PatientType == PatientType.General),
+                OrthoPatients = await _context.Patients.CountAsync(p => p.IsActive && p.PatientType == PatientType.Orthodontics),
+                BothPatients = await _context.Patients.CountAsync(p => p.IsActive && p.PatientType == PatientType.Both),
+
                 // =========================
                 // Recent Appointments
                 // =========================

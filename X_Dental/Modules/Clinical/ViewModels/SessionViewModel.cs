@@ -12,5 +12,19 @@ namespace Dental.Modules.Clinical.ViewModels
         public List<DentalChartEntry> DentalHistory { get; set; } = new();
         public List<DiagnosisCatalog> AvailableDiagnoses { get; set; } = new();
         public List<ProcedureCatalog> AvailableProcedures { get; set; } = new();
+
+        // 📁 تجميع المدفوعات حسب نوع الملف — يتملى بس لو المريض "عام + تقويم"
+        public List<CategoryPaymentSummaryDto> CategoryBreakdown { get; set; } = new();
+        public bool ShowCategoryBreakdown => Patient.PatientType == PatientType.Both;
+    }
+
+    public class CategoryPaymentSummaryDto
+    {
+        public string CategoryName { get; set; } = "";
+        public string Icon { get; set; } = "";
+        public decimal TotalAmount { get; set; }
+        public decimal Discount { get; set; }
+        public decimal PaidAmount { get; set; }
+        public decimal Remaining { get; set; }
     }
 }
