@@ -2,8 +2,191 @@
 @model Dental.Modules.Clinical.ViewModels.SessionViewModel
 @await Html.PartialAsync("_DentalArchStyles")
 
+<style>
+
+    .quadrant-badge {
+        position: absolute;
+        font-size: .72rem;
+        font-weight: 800;
+        color: #0d7377;
+        background: #f0fdfa;
+        border: 1px solid #ccf3ec;
+        border-radius: 8px;
+        padding: 3px 8px;
+        z-index: 5;
+    }
+
+        .quadrant-badge.ur {
+            top: 8px;
+            left: 8px;
+        }
+
+        .quadrant-badge.ul {
+            top: 8px;
+            right: 8px;
+        }
+
+        .quadrant-badge.lr {
+            bottom: 8px;
+            left: 8px;
+        }
+
+        .quadrant-badge.ll {
+            bottom: 8px;
+            right: 8px;
+        }
+    .quadrant-divider-v {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        border-left: 1px dashed rgba(13,115,119,.25);
+        z-index: 1;
+    }
+
+    .quadrant-divider-h {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 50%;
+        height: 0;
+        border-top: 1px dashed rgba(13,115,119,.25);
+        z-index: 1;
+    }
+
+
+    .legend-bar-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .diagnosis-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .diagnosis-row select {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+    .diagnosis-price-badge {
+        flex-shrink: 0;
+        background: linear-gradient(135deg, #0d9488, #0f766e);
+        color: #fff;
+        font-weight: 800;
+        font-size: .82rem;
+        padding: 8px 14px;
+        border-radius: 10px;
+        white-space: nowrap;
+        transition: transform .15s ease;
+    }
+
+        .diagnosis-price-badge.updated {
+            animation: priceBadgePulse .35s ease;
+        }
+
+    @@keyframes priceBadgePulse {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.08);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .pending-flag {
+        position: absolute;
+        top: -6px;
+        left: -6px;
+        background: #f59e0b;
+        color: #fff;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .6rem;
+        box-shadow: 0 2px 6px rgba(245,158,11,.4);
+        z-index: 30;
+    }
+
+    /* ---- رفع أشعة متعدد ---- */
+    .xray-upload-zone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 12px;
+        padding: 14px;
+        text-align: center;
+        cursor: pointer;
+        color: #94a3b8;
+        font-size: .82rem;
+        background: #fff;
+        transition: border-color .15s ease;
+    }
+
+        .xray-upload-zone:hover {
+            border-color: #0d9488;
+        }
+
+    .xray-files-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 10px;
+        max-height: 220px;
+        overflow-y: auto;
+    }
+
+    .xray-file-row {
+        display: grid;
+        grid-template-columns: 44px 1fr auto;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid #f1f5f9;
+        border-radius: 10px;
+        padding: 6px 8px;
+        background: #fafcfd;
+    }
+
+    .xray-thumb {
+        width: 44px;
+        height: 44px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .xray-note-input {
+        padding: 7px 10px !important;
+        font-size: .78rem !important;
+    }
+
+    .xray-remove-btn {
+        border: none;
+        background: #fee2e2;
+        color: #dc2626;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+</style>
+
 <div class="dental-chart-shell">
-    <div class="chart-toolbar">
+    <div class="chart-toolbar legend-bar-row">
         <div class="legend-bar">
             <span class="legend-item"><span class="dot healthy"></span> سليم</span>
             <span class="legend-item"><span class="dot decayed"></span> تسوس</span>
@@ -14,13 +197,16 @@
             <span class="legend-item"><span class="dot crown"></span> تاج</span>
             <span class="legend-item"><span class="dot implant"></span> زرعة</span>
         </div>
-        <button class="btn-save-chart" onclick="saveChart()">
-            <i class="bi bi-check-lg"></i> حفظ الرسمة
-        </button>
     </div>
 
     <div class="chart-canvas" id="chartCanvas">
         <svg class="bg-arcs" viewBox="0 0 620 632" preserveAspectRatio="xMidYMid meet">
+            <div class="quadrant-divider-v"></div>
+            <div class="quadrant-divider-h"></div>
+            <span class="quadrant-badge fs-5 ur">UR </span>
+            <span class="quadrant-badge fs-5 ul">UL </span>
+            <span class="quadrant-badge fs-5 lr">LR </span>
+            <span class="quadrant-badge fs-5 ll">LL </span>
             <defs>
                 <linearGradient id="gumUpperInt" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stop-color="#f8d3ca" />
@@ -35,8 +221,8 @@
             <path id="lowerArchPath" fill="url(#gumLowerInt)"></path>
         </svg>
 
-        <div class="arch-label upper">الفك العلوي</div>
-        <div class="arch-label lower">الفك السفلي</div>
+       @*  <div class="arch-label upper">الفك العلوي</div>
+        <div class="arch-label lower">الفك السفلي</div> *@
 
         <div class="arch-center-mark">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c-2.4 0-3.6 1.3-4.8 1.3-1.6 0-2.7-1-3.5-.4-.9.7-.7 2.4-.4 3.9.4 2.2 1.1 6.6 2 9.3.5 1.5 1 2.9 2.1 2.9 1.4 0 1.4-3 2.6-3s1.2 3 2.6 3c1.1 0 1.6-1.4 2.1-2.9.9-2.7 1.6-7.1 2-9.3.3-1.5.5-3.2-.4-3.9-.8-.6-1.9.4-3.5.4C15.6 4.3 14.4 3 12 3Z" /></svg>
@@ -48,7 +234,7 @@
             {
                 var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="selectTooth(@i, event)">
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
                         <span class="tooth-num">@i</span>
                         <div class="tooth-body">
@@ -59,13 +245,14 @@
                             <div class="surface center"></div>
                         </div>
                     </div>
+                    <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
                 </div>
             }
             @for (int i = 21; i <= 28; i++)
             {
                 var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="selectTooth(@i, event)">
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
                         <span class="tooth-num">@i</span>
                         <div class="tooth-body">
@@ -76,6 +263,7 @@
                             <div class="surface center"></div>
                         </div>
                     </div>
+                    <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
                 </div>
             }
         </div>
@@ -86,7 +274,7 @@
             {
                 var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="selectTooth(@i, event)">
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
                         <span class="tooth-num">@i</span>
                         <div class="tooth-body">
@@ -97,13 +285,14 @@
                             <div class="surface center"></div>
                         </div>
                     </div>
+                    <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
                 </div>
             }
             @for (int i = 31; i <= 38; i++)
             {
                 var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="selectTooth(@i, event)">
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
                         <span class="tooth-num">@i</span>
                         <div class="tooth-body">
@@ -114,6 +303,7 @@
                             <div class="surface center"></div>
                         </div>
                     </div>
+                    <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
                 </div>
             }
         </div>
@@ -122,7 +312,7 @@
     <!-- Tooth Detail Modal -->
     <div class="tooth-modal" id="toothModal">
         <div class="modal-overlay" onclick="closeToothModal()"></div>
-        <div class="modal-glass" style="max-width: 420px;">
+        <div class="modal-glass" style="max-width: 480px;">
             <div class="tooth-modal-head">
                 <h5><i class="bi bi-grid-3x3-gap"></i> تفاصيل السن <span id="selectedToothNum"></span></h5>
                 <button type="button" class="btn-close-modal" onclick="closeToothModal()"><i class="bi bi-x-lg"></i></button>
@@ -145,6 +335,7 @@
                         <option value="12">حشوة</option>
                     </select>
                 </div>
+
                 <div class="form-group mb-3">
                     <label>السطوح المتأثرة</label>
                     <div class="surface-picker">
@@ -155,18 +346,54 @@
                         <label class="surf-check"><input type="checkbox" value="O" /> O</label>
                     </div>
                 </div>
+
                 <div class="form-group mb-3">
                     <label>كود الإجراء</label>
                     <input type="text" class="form-glass" id="toothProcedure" placeholder="مثال: RCT, CRN, FLL" />
                 </div>
+
+                @* ============================================================
+                   التشخيص + السعر
+                   ============================================================ *@
+                <div class="form-group mb-3">
+                    <label>التشخيص</label>
+                    <div class="diagnosis-row">
+                        <select class="form-glass" id="toothDiagnosis" onchange="onDiagnosisChange()">
+                            <option value="">-- اختر التشخيص --</option>
+                            @if (ViewBag.DiagnosisList != null)
+                            {
+                                @foreach (var d in (List<Dental.Models.Clinic.DiagnosisCatalog>)ViewBag.DiagnosisList)
+                                {
+                                    <option value="@d.Id" data-price="@d.Price">@d.NameAr</option>
+                                }
+                            }
+                        </select>
+                        <span class="diagnosis-price-badge" id="diagnosisPriceBadge">0 م.ج</span>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label>ملاحظات الحالة</label>
+                    <textarea class="form-glass" id="diagnosisNotes" rows="2" placeholder="ملاحظات عن التشخيص/الحالة..."></textarea>
+                </div>
+
+                @* ============================================================
+                   الأشعة — رفع متعدد بملاحظة لكل صورة
+                   ============================================================ *@
                 <div class="form-group">
-                    <label>ملاحظات</label>
-                    <textarea class="form-glass" id="toothNotes" rows="2"></textarea>
+                    <label>أشعة السن (اختياري)</label>
+                    <div class="xray-upload-zone" onclick="document.getElementById('toothXrayFiles').click()">
+                        <input type="file" id="toothXrayFiles" accept="image/*" multiple hidden onchange="onToothXrayFilesChange(event)" />
+                        <i class="bi bi-cloud-arrow-up"></i> اضغط لرفع صورة أو أكتر
+                    </div>
+                    <div id="xrayFilesList" class="xray-files-list"></div>
                 </div>
             </div>
             <div class="tooth-modal-foot">
                 <button type="button" class="btn-glass btn-cancel" onclick="closeToothModal()">إلغاء</button>
-                <button type="button" class="btn-glass btn-save" onclick="applyToothChanges()">تطبيق</button>
+                <button type="button" class="btn-glass btn-save" onclick="applyToothChanges()">
+                    <i class="bi bi-check-lg"></i> إضافة السن للسيشن
+                </button>
             </div>
         </div>
     </div>
@@ -178,150 +405,173 @@
         if (window.initDentalArch) window.initDentalArch(canvas);
     })();
 
-    var STATUS_ID_TO_CLASS = {
+    // ============================================================
+    // حالة السيشن المؤقتة (قبل "إنهاء وحفظ السيشن")
+    // ============================================================
+    window.pendingToothRecords = window.pendingToothRecords || {};
+    let currentToothNumber = null;
+    let currentXrayFiles = []; // [{fileName, base64, notes}]
+
+    const STATUS_ID_TO_CLASS = {
         1: 'healthy', 2: 'decayed', 3: 'treated', 4: 'missing', 5: 'extracted',
         6: 'impacted', 7: 'crown', 8: 'bridge', 9: 'implant', 10: 'fractured',
         11: 'rootcanal', 12: 'filling'
     };
 
-    let selectedToothId = null;
-    let chartData = [];
-    
-        function selectTooth(num, evt) {
+    function onDiagnosisChange() {
+        const select = document.getElementById('toothDiagnosis');
+        const badge = document.getElementById('diagnosisPriceBadge');
+        const selectedOption = select.options[select.selectedIndex];
+        const price = selectedOption ? parseFloat(selectedOption.dataset.price || 0) : 0;
 
-        if (evt) {
-            evt.preventDefault();
-            evt.stopPropagation();
-        }
+        badge.textContent = price.toLocaleString('en-EG') + ' م.ج';
+        badge.classList.remove('updated');
+        void badge.offsetWidth;
+        badge.classList.add('updated');
+    }
 
-        selectedToothId = num;
+    function openToothModal(num, evt) {
+        if (evt) { evt.preventDefault(); evt.stopPropagation(); }
+        currentToothNumber = num;
+        document.getElementById('selectedToothNum').textContent = '#' + num;
 
-        // إزالة التحديد السابق
-        document.querySelectorAll('#chartCanvas .tooth-box').forEach(function (t) {
-            t.classList.remove('selected');
+        const existing = window.pendingToothRecords[num];
+
+        document.getElementById('toothStatus').value = existing ? existing.Status : 1;
+        document.getElementById('toothProcedure').value = existing ? (existing.ProcedureCode || '') : '';
+        document.getElementById('toothDiagnosis').value = existing ? (existing.DiagnosisCatalogId || '') : '';
+        document.getElementById('diagnosisNotes').value = existing ? (existing.DiagnosisNotes || '') : '';
+
+        document.querySelectorAll('.surf-check input').forEach(cb => {
+            cb.checked = existing ? (existing.Surfaces || []).some(s => s.Surface === cb.value) : false;
         });
 
-        // تحديد السن الحالي
-        const target = document.querySelector(
-            '#chartCanvas [data-tooth="' + num + '"]'
-        );
+        currentXrayFiles = existing && existing.XRays ? existing.XRays.map(x => ({ ...x })) : [];
+        renderXrayFilesList();
+        onDiagnosisChange();
 
-        if (target) {
-            target.classList.add('selected');
-        }
-
-        // رقم السن
-        const toothNumber = document.getElementById('selectedToothNum');
-
-        if (toothNumber) {
-            toothNumber.textContent = '#' + num;
-        }
+        document.querySelectorAll('#chartCanvas .tooth-box').forEach(t => t.classList.remove('selected'));
+        const target = document.querySelector('#chartCanvas [data-tooth="' + num + '"]');
+        if (target) target.classList.add('selected');
 
         const modal = document.getElementById('toothModal');
-
-        if (!modal) {
-            console.error('Dental modal #toothModal not found');
-            return false;
-        }
-
-        // =====================================================
-        // فتح المودال بالقوة - بدون الاعتماد على dc-show
-        // =====================================================
-
         modal.classList.add('dc-show');
-
         modal.style.setProperty('display', 'flex', 'important');
         modal.style.setProperty('visibility', 'visible', 'important');
         modal.style.setProperty('opacity', '1', 'important');
         modal.style.setProperty('pointer-events', 'auto', 'important');
-
-       
-
-       
-        return false;
     }
-         function closeToothModal() {
 
+    function closeToothModal() {
         const modal = document.getElementById('toothModal');
-
         if (modal) {
-
-            // إزالة class
             modal.classList.remove('dc-show');
-
-            // إغلاق المودال بالقوة
             modal.style.setProperty('display', 'none', 'important');
             modal.style.setProperty('visibility', 'hidden', 'important');
             modal.style.setProperty('opacity', '0', 'important');
             modal.style.setProperty('pointer-events', 'none', 'important');
-
-            // إزالة الـ blur تمامًا
-            modal.style.setProperty('backdrop-filter', 'none', 'important');
-            modal.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
         }
-
-        // إزالة تحديد السن
-        document.querySelectorAll('#chartCanvas .tooth-box').forEach(function (t) {
-            t.classList.remove('selected');
-        });
-
-        selectedToothId = null;
+        document.querySelectorAll('#chartCanvas .tooth-box').forEach(t => t.classList.remove('selected'));
+        currentToothNumber = null;
     }
 
-      const toothModal = document.getElementById('toothModal');
-
-    if (toothModal) {
-        toothModal.addEventListener('click', function (e) {
-
-            if (e.target === toothModal && !_modalLock) {
-                closeToothModal();
-            }
-
+    const toothModalEl = document.getElementById('toothModal');
+    if (toothModalEl) {
+        toothModalEl.addEventListener('click', function (e) {
+            if (e.target === toothModalEl) closeToothModal();
         });
     }
+
+    // ---- رفع أشعة متعدد ----
+    function onToothXrayFilesChange(e) {
+        const files = Array.from(e.target.files || []);
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                currentXrayFiles.push({ fileName: file.name, base64: ev.target.result, notes: '' });
+                renderXrayFilesList();
+            };
+            reader.readAsDataURL(file);
+        });
+        e.target.value = '';
+    }
+
+    function renderXrayFilesList() {
+        const wrap = document.getElementById('xrayFilesList');
+        wrap.innerHTML = '';
+        currentXrayFiles.forEach((xr, idx) => {
+            const row = document.createElement('div');
+            row.className = 'xray-file-row';
+            row.innerHTML = `
+                <img src="${xr.base64}" class="xray-thumb" />
+                <input type="text" class="form-glass xray-note-input" placeholder="ملاحظة على الصورة دي..." value="${xr.notes || ''}" />
+                <button type="button" class="xray-remove-btn"><i class="bi bi-x"></i></button>
+            `;
+            row.querySelector('.xray-note-input').addEventListener('input', function () {
+                currentXrayFiles[idx].notes = this.value;
+            });
+            row.querySelector('.xray-remove-btn').addEventListener('click', function () {
+                currentXrayFiles.splice(idx, 1);
+                renderXrayFilesList();
+            });
+            wrap.appendChild(row);
+        });
+    }
+
+    // ---- تطبيق (حفظ مؤقت بس) ----
     function applyToothChanges() {
+        if (!currentToothNumber) return;
+
         const statusId = parseInt(document.getElementById('toothStatus').value);
-        const surfaces = Array.from(document.querySelectorAll('.surf-check input:checked')).map(cb => cb.value);
-        const proc = document.getElementById('toothProcedure').value;
-        const notes = document.getElementById('toothNotes').value;
+        const surfaces = Array.from(document.querySelectorAll('.surf-check input:checked'))
+            .map(cb => ({ Surface: cb.value, Condition: 'Treated' }));
 
-        chartData.push({
-            Number: selectedToothId,
+        const diagSelect = document.getElementById('toothDiagnosis');
+        const diagOption = diagSelect.options[diagSelect.selectedIndex];
+        const diagId = diagSelect.value;
+        const diagPrice = diagOption ? parseFloat(diagOption.dataset.price || 0) : 0;
+        const diagName = diagOption ? diagOption.textContent : null;
+
+        window.pendingToothRecords[currentToothNumber] = {
+            ToothNumber: currentToothNumber,
             Status: statusId,
-            Surfaces: surfaces.map(s => ({ Surface: s, Condition: 'Treated' })),
-            ProcedureCode: proc,
-            Notes: notes
-        });
+            Surfaces: surfaces,
+            ProcedureCode: document.getElementById('toothProcedure').value,
+            Notes: document.getElementById('diagnosisNotes').value,
+            DiagnosisCatalogId: diagId ? parseInt(diagId) : null,
+            DiagnosisName: diagName,
+            DiagnosisPrice: diagId ? diagPrice : 0,
+            DiagnosisSurface: surfaces.map(s => s.Surface).join(','),
+            DiagnosisNotes: document.getElementById('diagnosisNotes').value,
+            XRays: currentXrayFiles.map(x => ({ FileName: x.fileName, Base64: x.base64, Notes: x.notes })),
+            PrescriptionItems: []
+        };
 
-        const toothEl = document.querySelector(`#chartCanvas [data-tooth="${selectedToothId}"]`);
+        const toothEl = document.querySelector(`#chartCanvas [data-tooth="${currentToothNumber}"]`);
         const newClass = STATUS_ID_TO_CLASS[statusId] || 'healthy';
         toothEl.className = toothEl.className
             .split(' ')
             .filter(c => !Object.values(STATUS_ID_TO_CLASS).includes(c))
             .join(' ');
         toothEl.classList.add(newClass);
+        if (window.updateToothStatusOverlay) window.updateToothStatusOverlay(toothEl);
 
+        const flag = toothEl.querySelector('.pending-flag');
+        if (flag) flag.style.display = 'flex';
+
+        if (window.renderRecordsTable) window.renderRecordsTable();
         closeToothModal();
     }
 
-    async function saveChart() {
-        if (chartData.length === 0) {
-            Swal.fire({ title: 'تنبيه', text: 'لم يتم إجراء تغييرات', icon: 'warning', confirmButtonColor: '#0d9488' });
-            return;
+    function removePendingTooth(num) {
+        delete window.pendingToothRecords[num];
+        const toothEl = document.querySelector(`#chartCanvas [data-tooth="${num}"]`);
+        if (toothEl) {
+            const flag = toothEl.querySelector('.pending-flag');
+            if (flag) flag.style.display = 'none';
         }
-        const payload = {
-            PatientId: @Model.Patient.Id,
-            VisitId: @Model.Visit.Id,
-            Teeth: chartData
-        };
-        const res = await fetch('/Clinical/SaveDentalChart', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        if (res.ok) {
-            Swal.fire({ title: 'تم', text: 'تم حفظ رسمة الأسنان', icon: 'success', timer: 1500, showConfirmButton: false });
-            chartData = [];
-        }
+        if (window.renderRecordsTable) window.renderRecordsTable();
     }
+    window.removePendingTooth = removePendingTooth;
+    window.openToothModal = openToothModal;
 </script>

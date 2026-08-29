@@ -17,13 +17,18 @@ namespace Dental.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment _env;
+        private readonly ILogger<ClinicalController> _logger;
 
-
-        public ClinicalController(ApplicationDbContext context, IMapper mapper, IWebHostEnvironment env)
+        public ClinicalController(
+            ApplicationDbContext context,
+            IMapper mapper,
+            IWebHostEnvironment env,
+            ILogger<ClinicalController> logger)   // ⬅ ضيف البراميتر ده
         {
             _context = context;
             _mapper = mapper;
             _env = env;
+            _logger = logger;                      // ⬅ وضيف السطر ده
         }
 
 
@@ -92,6 +97,9 @@ namespace Dental.Controllers
                 }).ToList();
             }
 
+
+            ViewBag.PreviousSessions = await GetPreviousSessionsAsync(patientId);
+
             return View(model);
         }
 
@@ -107,7 +115,7 @@ namespace Dental.Controllers
         //[HttpGet]
         //public async Task<IActionResult> Session(int patientId, int visitId)
         //{
-            
+
         //    var patient = await _context.Patients
         //        .Include(p => p.Gender)
         //        .Include(p => p.BloodGroup)
@@ -152,6 +160,53 @@ namespace Dental.Controllers
         //    return View(model);
         //}
 
+
+
+        private async Task<List<PreviousSessionRecordDto>> GetPreviousSessionsAsync(int patientId)
+        {
+            var entries = await _context.DentalChartEntries
+                .Where(e => e.PatientId == patientId)
+                .Include(e => e.Visit)
+                .OrderByDescending(e => e.Date)
+                .ToListAsync();
+
+            var visitIds = entries.Select(e => e.VisitId).Distinct().ToList();
+
+            var diagnoses = await _context.VisitDiagnoses
+                .Where(d => visitIds.Contains(d.VisitId))
+                .Include(d => d.Diagnosis)
+                .ToListAsync();
+
+            var statusLabels = new Dictionary<Dental.Models.Patient.ToothStatus, string>
+    {
+        { Dental.Models.Patient.ToothStatus.Healthy, "سليم" },
+        { Dental.Models.Patient.ToothStatus.Decayed, "تسوس" },
+        { Dental.Models.Patient.ToothStatus.Treated, "معالج" },
+        { Dental.Models.Patient.ToothStatus.Missing, "مفقود" },
+        { Dental.Models.Patient.ToothStatus.Extracted, "مخلوع" },
+        { Dental.Models.Patient.ToothStatus.RootCanal, "عصب" },
+        { Dental.Models.Patient.ToothStatus.Crown, "تاج" },
+        { Dental.Models.Patient.ToothStatus.Filling, "حشوة" }
+    };
+
+            return entries.Select(e =>
+            {
+                var diag = diagnoses.FirstOrDefault(d => d.VisitId == e.VisitId && d.ToothNumber == e.ToothNumber);
+                return new PreviousSessionRecordDto
+                {
+                    ToothNumber = e.ToothNumber,
+                    Date = e.Date,
+                    StatusText = statusLabels.TryGetValue(e.Status, out var lbl) ? lbl : e.Status.ToString(),
+                    DiagnosisName = diag?.Diagnosis?.NameAr,
+                    DiagnosisNotes = diag?.Notes,
+                    DiagnosisPrice = diag?.Diagnosis?.Price ?? 0,
+                    VisitTotalAmount = e.Visit?.TotalAmount ?? 0,
+                    VisitPaidAmount = e.Visit?.PaidAmount ?? 0,
+                    VisitDiscount = e.Visit?.Discount ?? 0,
+                    VisitRemaining = e.Visit?.Remaining ?? 0
+                };
+            }).ToList();
+        }
 
 
         [HttpPost]
@@ -214,19 +269,23 @@ namespace Dental.Controllers
                 }
 
                 // 3) الأشعة — لو المستخدم رفع صورة لهذه السنة
-                if (!string.IsNullOrWhiteSpace(tooth.XRayBase64) && !string.IsNullOrWhiteSpace(tooth.XRayFileName))
+                // 3) لو المستخدم رفع صور لهذه السنة — الأشعة (تدعم أكتر من صورة)
+                foreach (var xr in tooth.XRays)
                 {
+                    if (string.IsNullOrWhiteSpace(xr.Base64) || string.IsNullOrWhiteSpace(xr.FileName))
+                        continue;
+
                     try
                     {
                         var uploadsRoot = Path.Combine(_env.WebRootPath, "uploads", "xrays");
                         Directory.CreateDirectory(uploadsRoot);
 
-                        var safeName = $"{req.PatientId}_{tooth.ToothNumber}_{DateTime.Now:yyyyMMddHHmmssfff}_{Path.GetFileName(tooth.XRayFileName)}";
+                        var safeName = $"{req.PatientId}_{tooth.ToothNumber}_{DateTime.Now:yyyyMMddHHmmssfff}_{Path.GetFileName(xr.FileName)}";
                         var fullPath = Path.Combine(uploadsRoot, safeName);
 
-                        var base64Data = tooth.XRayBase64.Contains(",")
-                            ? tooth.XRayBase64.Substring(tooth.XRayBase64.IndexOf(",") + 1)
-                            : tooth.XRayBase64;
+                        var base64Data = xr.Base64.Contains(",")
+                            ? xr.Base64.Substring(xr.Base64.IndexOf(",") + 1)
+                            : xr.Base64;
 
                         await System.IO.File.WriteAllBytesAsync(fullPath, Convert.FromBase64String(base64Data));
 
@@ -234,16 +293,16 @@ namespace Dental.Controllers
                         {
                             PatientId = req.PatientId,
                             VisitId = req.VisitId,
-                            FileName = tooth.XRayFileName,
+                            FileName = xr.FileName,
                             FilePath = $"/uploads/xrays/{safeName}",
                             TakenDate = DateTime.Now,
-                            Notes = $"سن {tooth.ToothNumber} — {tooth.XRayType} — {tooth.XRayNotes}"
+                            Notes = $"سن {tooth.ToothNumber}" + (string.IsNullOrWhiteSpace(xr.Notes) ? "" : $" — {xr.Notes}")
                         };
                         _context.PatientXRays.Add(xray);
                     }
                     catch
                     {
-                        // لو فشل رفع الصورة منمنعش حفظ باقي بيانات السن
+                        // لو فشل رفع صورة واحدة منمنعش باقي بيانات السن
                     }
                 }
 
@@ -375,6 +434,159 @@ namespace Dental.Controllers
 
             await _context.SaveChangesAsync();
             return Json(new { success = true, data = payment, remaining = 0 });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> FinishSession([FromBody] FinishSessionRequest req)
+        {
+            if (req == null || req.PatientId <= 0 || req.VisitId <= 0)
+                return Json(new { success = false, message = "بيانات غير صالحة." });
+
+            var visit = await _context.Visits.FindAsync(req.VisitId);
+            if (visit == null)
+                return Json(new { success = false, message = "الزيارة غير موجودة." });
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // ================= 1) أسنان السيشن =================
+                foreach (var tooth in req.ToothRecords)
+                {
+                    if (tooth.ToothNumber < 11 || tooth.ToothNumber > 48)
+                        continue;
+
+                    _context.DentalChartEntries.Add(new DentalChartEntry
+                    {
+                        PatientId = req.PatientId,
+                        VisitId = req.VisitId,
+                        ToothNumber = tooth.ToothNumber,
+                        Status = tooth.Status,
+                        SurfacesJson = System.Text.Json.JsonSerializer.Serialize(tooth.Surfaces),
+                        ProcedureCode = tooth.ProcedureCode,
+                        Notes = tooth.Notes,
+                        Date = DateTime.Now
+                    });
+
+                    // التشخيص + ربط سعره بإجمالي الزيارة
+                    if (tooth.DiagnosisCatalogId.HasValue && tooth.DiagnosisCatalogId.Value > 0)
+                    {
+                        var diag = await _context.DiagnosisCatalogs
+                            .FirstOrDefaultAsync(d => d.Id == tooth.DiagnosisCatalogId.Value);
+
+                        if (diag != null)
+                        {
+                            _context.VisitDiagnoses.Add(new VisitDiagnosis
+                            {
+                                VisitId = req.VisitId,
+                                DiagnosisCatalogId = diag.Id,
+                                ToothNumber = tooth.ToothNumber,
+                                Surface = tooth.DiagnosisSurface,
+                                Notes = tooth.DiagnosisNotes,
+                                IsPrimary = tooth.DiagnosisIsPrimary
+                            });
+
+                            visit.TotalAmount += diag.Price; // ⭐ الربط بالمدفوعات
+                        }
+                    }
+
+                    // الأشعة (أكتر من صورة، بملاحظة مستقلة لكل واحدة)
+                    foreach (var xr in tooth.XRays)
+                    {
+                        if (string.IsNullOrWhiteSpace(xr.Base64) || string.IsNullOrWhiteSpace(xr.FileName))
+                            continue;
+
+                        try
+                        {
+                            var uploadsRoot = Path.Combine(_env.WebRootPath, "uploads", "xrays");
+                            Directory.CreateDirectory(uploadsRoot);
+
+                            var safeName = $"{req.PatientId}_{tooth.ToothNumber}_{DateTime.Now:yyyyMMddHHmmssfff}_{Path.GetFileName(xr.FileName)}";
+                            var fullPath = Path.Combine(uploadsRoot, safeName);
+
+                            var base64Data = xr.Base64.Contains(",")
+                                ? xr.Base64.Substring(xr.Base64.IndexOf(",") + 1)
+                                : xr.Base64;
+
+                            await System.IO.File.WriteAllBytesAsync(fullPath, Convert.FromBase64String(base64Data));
+
+                            _context.PatientXRays.Add(new PatientXRay
+                            {
+                                PatientId = req.PatientId,
+                                VisitId = req.VisitId,
+                                FileName = xr.FileName,
+                                FilePath = $"/uploads/xrays/{safeName}",
+                                TakenDate = DateTime.Now,
+                                Notes = $"سن {tooth.ToothNumber}" + (string.IsNullOrWhiteSpace(xr.Notes) ? "" : $" — {xr.Notes}")
+                            });
+                        }
+                        catch
+                        {
+                            // فشل رفع صورة واحدة ميوقفش باقي بيانات السن
+                        }
+                    }
+
+                    // الروشتة
+                    if (tooth.PrescriptionItems != null && tooth.PrescriptionItems.Any(i => !string.IsNullOrWhiteSpace(i.MedicationName)))
+                    {
+                        var prescription = new Prescription
+                        {
+                            VisitId = req.VisitId,
+                            PrescriptionDate = DateTime.Now,
+                            Diagnosis = $"سن {tooth.ToothNumber}",
+                            Notes = tooth.Notes,
+                            Status = PrescriptionStatus.Active,
+                            PrescribedBy = User?.Identity?.Name ?? "System"
+                        };
+
+                        foreach (var item in tooth.PrescriptionItems)
+                        {
+                            if (string.IsNullOrWhiteSpace(item.MedicationName)) continue;
+                            prescription.Items.Add(new PrescriptionItem
+                            {
+                                MedicationName = item.MedicationName,
+                                Dosage = item.Dosage,
+                                Frequency = item.Frequency,
+                                Duration = item.Duration,
+                                Instructions = item.Instructions
+                            });
+                        }
+
+                        _context.Prescriptions.Add(prescription);
+                    }
+                }
+
+                // ================= 2) مدفوعات السيشن =================
+                foreach (var pay in req.Payments)
+                {
+                    if (pay.Amount <= 0) continue;
+
+                    _context.VisitPayments.Add(new VisitPayment
+                    {
+                        VisitId = req.VisitId,
+                        Amount = pay.Amount,
+                        Method = pay.Method,
+                        Description = pay.Description,
+                        ReceiptNo = $"REC-{DateTime.Now:yyMMdd}-{new Random().Next(1000, 9999)}"
+                    });
+
+                    visit.PaidAmount += pay.Amount;
+                }
+
+                // ================= 3) إنهاء الزيارة =================
+                visit.Status = VisitStatus.Completed;
+                visit.EndDate = DateTime.Now;
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error finishing session");
+                return Json(new { success = false, message = "حدث خطأ أثناء حفظ وإنهاء السيشن." });
+            }
         }
 
         [HttpPost]

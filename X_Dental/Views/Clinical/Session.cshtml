@@ -413,15 +413,12 @@
        ============================================================ *@
 
     <div class="row g-3 align-items-stretch clinical-session-main-grid">
-
-        <div class="col-12 col-lg-8">
-            @await Html.PartialAsync("_ClinicalChartColumn", Model)
+        <div class="col-12 col-lg-5">
+            @await Html.PartialAsync("_DentalChartInteractive", Model)
         </div>
-
-        <div class="col-12 col-lg-4">
-            @await Html.PartialAsync("_PaymentsCompact", Model)
+        <div class="col-12 col-lg-7">
+            @await Html.PartialAsync("_PreviousSessionsTable", Model)
         </div>
-
     </div>
 
 
@@ -436,6 +433,25 @@
 
 
 @section Scripts {
+
+    <script>
+        (() => {
+            "use strict";
+            const btnFinishSession = document.getElementById("btnFinishSession");
+            const btnPrintSession = document.getElementById("btnPrintSession");
+
+            if (btnFinishSession) {
+                btnFinishSession.addEventListener("click", function () {
+                    if (window.saveAndEndSession) window.saveAndEndSession();
+                });
+            }
+            if (btnPrintSession) {
+                btnPrintSession.addEventListener("click", function () {
+                    window.print();
+                });
+            }
+        })();
+    </script>
 
     <script>
 
@@ -587,6 +603,20 @@
         })();
 
     </script>
+
+    <style>
+        @@media print {
+            .session-hero-card .session-hero-actions,
+            .payment-progress-wrap {
+                display: none !important;
+            }
+
+            .clinical-session-page {
+                padding: 0 !important;
+                background: #fff !important;
+            }
+        }
+    </style>
 
     <style>
         @@media print {

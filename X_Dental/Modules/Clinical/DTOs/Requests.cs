@@ -1,13 +1,15 @@
-﻿using Dental.Models.Clinic;
+﻿//==================================================
+// Modules / Clinical / DTOs
+//==================================================
+
+using Dental.Models.Clinic;
 using Dental.Models.Patient;
 using Dental.Modules.Patients.DTOs;
 
 namespace Dental.Modules.Clinical.DTOs
 {
-
     // ============================================================
-    // الطلب الموحّد: بيوصف كل حاجة حصلت "للسنة" (السن) الواحدة
-    // خالل السيشن قبل الحفظ النهائي
+    // طلب الحفظ (القديم — لسه مستخدم في أماكن تانية، سيبناه زي ما هو)
     // ============================================================
     public class SaveClinicalRecordRequest
     {
@@ -16,34 +18,52 @@ namespace Dental.Modules.Clinical.DTOs
         public List<ToothRecordRequest> ToothRecords { get; set; } = new();
     }
 
+    // ⭐ عدّلنا فيها: استبدلنا حقول الأشعة المفردة بقائمة تدعم أكتر من ملف
     public class ToothRecordRequest
     {
-        // ---- بيانات السن / الدينتال شارت ----
         public int ToothNumber { get; set; }
         public Dental.Models.Patient.ToothStatus Status { get; set; }
         public List<ToothSurfaceRequest> Surfaces { get; set; } = new();
         public string? ProcedureCode { get; set; }
         public string? Notes { get; set; }
 
-        // ---- التشخيص (اختياري) ----
         public int? DiagnosisCatalogId { get; set; }
-        public string? DiagnosisSurface { get; set; }   // M,D,B,L,O
+        public string? DiagnosisSurface { get; set; }
         public string? DiagnosisNotes { get; set; }
         public bool DiagnosisIsPrimary { get; set; } = true;
 
-        // ---- الأشعة (اختياري) ----
-        public string? XRayFileName { get; set; }
-        public string? XRayBase64 { get; set; }         // بيانات الصورة Base64
-        public string? XRayType { get; set; }
-        public string? XRayNotes { get; set; }
+        // كانت: XRayFileName / XRayBase64 / XRayType / XRayNotes (حقول مفردة)
+        public List<XRayItemRequest> XRays { get; set; } = new();
 
-        // ---- الروشتة الخاصة بالسن ده (اختياري) ----
         public List<PrescriptionItemRequest> PrescriptionItems { get; set; } = new();
     }
 
+    // ⭐ جديد
+    public class XRayItemRequest
+    {
+        public string FileName { get; set; } = string.Empty;
+        public string Base64 { get; set; } = string.Empty;
+        public string? Notes { get; set; }
+    }
 
+    // ⭐ جديد: طلب الحفظ النهائي الموحّد
+    public class FinishSessionRequest
+    {
+        public int PatientId { get; set; }
+        public int VisitId { get; set; }
+        public List<ToothRecordRequest> ToothRecords { get; set; } = new();
+        public List<PendingPaymentRequest> Payments { get; set; } = new();
+    }
 
-    // ── Diagnosis Request ──
+    // ⭐ جديد
+    public class PendingPaymentRequest
+    {
+        public decimal Amount { get; set; }
+        public PaymentMethod Method { get; set; }
+        public string? Description { get; set; }
+    }
+
+    // ── Diagnosis Request (قديم) ──
     public class AddDiagnosisRequest
     {
         public int VisitId { get; set; }
@@ -54,7 +74,7 @@ namespace Dental.Modules.Clinical.DTOs
         public bool IsPrimary { get; set; } = false;
     }
 
-    // ── Procedure Request ──
+    // ── Procedure Request (قديم) ──
     public class AddProcedureRequest
     {
         public int VisitId { get; set; }
@@ -66,7 +86,7 @@ namespace Dental.Modules.Clinical.DTOs
         public string? Notes { get; set; }
     }
 
-    // ── Payment Request ──
+    // ── Payment Request (قديم) ──
     public class AddPaymentRequest
     {
         public int VisitId { get; set; }
@@ -75,7 +95,7 @@ namespace Dental.Modules.Clinical.DTOs
         public string? Description { get; set; }
     }
 
-    // ── Dental Chart Request ──
+    // ── Dental Chart Request (قديم) ──
     public class SaveChartRequest
     {
         public int PatientId { get; set; }
@@ -122,5 +142,19 @@ namespace Dental.Modules.Clinical.DTOs
         public string? Frequency { get; set; }
         public string? Duration { get; set; }
         public string? Instructions { get; set; }
+    }
+
+    public class PreviousSessionRecordDto
+    {
+        public int ToothNumber { get; set; }
+        public DateTime Date { get; set; }
+        public string StatusText { get; set; } = "";
+        public string? DiagnosisName { get; set; }
+        public string? DiagnosisNotes { get; set; }
+        public decimal DiagnosisPrice { get; set; }
+        public decimal VisitTotalAmount { get; set; }
+        public decimal VisitPaidAmount { get; set; }
+        public decimal VisitDiscount { get; set; }
+        public decimal VisitRemaining { get; set; }
     }
 }

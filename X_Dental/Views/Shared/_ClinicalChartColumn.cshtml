@@ -145,46 +145,45 @@
             <div class="modal-columns">
                 <div class="modal-col">
                     <div class="modal-section pb-0 mb-2">
-                <div class="modal-section-title"><i class="bi bi-grid-3x3-gap"></i> حالة السن</div>
-                    <div class="modal-columns pb-0">
-                        <div class="form-group">
-                            <label>حالة السن</label>
-                            <select class="form-glass" id="toothStatus">
-                                <option value="1">سليم</option>
-                                <option value="2">تسوس</option>
-                                <option value="3">معالج</option>
-                                <option value="4">مفقود</option>
-                                <option value="5">مخلوع</option>
-                                <option value="6">مطمور</option>
-                                <option value="7">تاج</option>
-                                <option value="8">جسر</option>
-                                <option value="9">زرعة</option>
-                                <option value="10">مكسور</option>
-                                <option value="11">عصب</option>
-                                <option value="12">حشوة</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>كود الإجراء</label>
-                            <input type="text" class="form-glass" id="toothProcedure" placeholder="RCT, CRN, FLL" />
-                        </div>
-                        <div class="form-group">
-                            <label>السطوح المتأثرة</label>
-                            <div class="surface-picker">
-                                <label class="surf-check"><input type="checkbox" value="M" /> M</label>
-                                <label class="surf-check"><input type="checkbox" value="D" /> D</label>
-                                <label class="surf-check"><input type="checkbox" value="B" /> B</label>
-                                <label class="surf-check"><input type="checkbox" value="L" /> L</label>
-                                <label class="surf-check"><input type="checkbox" value="O" /> O</label>
+                        <div class="modal-section-title"><i class="bi bi-grid-3x3-gap"></i> حالة السن</div>
+                        <div class="modal-columns pb-0">
+                            <div class="form-group">
+                                <label>حالة السن</label>
+                                <select class="form-glass" id="toothStatus">
+                                    <option value="1">سليم</option>
+                                    <option value="2">تسوس</option>
+                                    <option value="3">معالج</option>
+                                    <option value="4">مفقود</option>
+                                    <option value="5">مخلوع</option>
+                                    <option value="6">مطمور</option>
+                                    <option value="7">تاج</option>
+                                    <option value="8">جسر</option>
+                                    <option value="9">زرعة</option>
+                                    <option value="10">مكسور</option>
+                                    <option value="11">عصب</option>
+                                    <option value="12">حشوة</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>كود الإجراء</label>
+                                <input type="text" class="form-glass" id="toothProcedure" placeholder="RCT, CRN, FLL" />
+                            </div>
+                            <div class="form-group">
+                                <label>السطوح المتأثرة</label>
+                                <div class="surface-picker">
+                                    <label class="surf-check"><input type="checkbox" value="M" /> M</label>
+                                    <label class="surf-check"><input type="checkbox" value="D" /> D</label>
+                                    <label class="surf-check"><input type="checkbox" value="B" /> B</label>
+                                    <label class="surf-check"><input type="checkbox" value="L" /> L</label>
+                                    <label class="surf-check"><input type="checkbox" value="O" /> O</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>ملاحظات عامة على السن</label>
+                                <textarea class="form-glass" id="toothNotes" rows="1"></textarea>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label>ملاحظات عامة على السن</label>
-                            <textarea class="form-glass" id="toothNotes" rows="1"></textarea>
-                        </div>
                     </div>
-                    
-                </div>
                     <div class="modal-section">
                         <div class="modal-section-title"><i class="bi bi-file-medical"></i> روشتة السن (اختياري)</div>
                         <div id="toothRxRows" class="rx-rows-scroll"></div>
@@ -192,27 +191,28 @@
                             <i class="bi bi-plus-lg"></i> إضافة دواء
                         </button>
                     </div>
-
                 </div>
-                <!-- العمود الأيمن: حالة السن + التشخيص -->
+
+                <!-- العمود الأيمن: التشخيص + الأشعة -->
                 <div class="modal-col">
                     <div class="modal-section">
                         <div class="modal-section-title"><i class="bi bi-activity"></i> التشخيص (اختياري)</div>
-                        <div class="modal-columns pb-0">
-                        <div class="form-group">
+                        <div class="form-group mb-2">
                             <label>نوع التشخيص</label>
-                            <select class="form-glass" id="diagCatalogId">
-                                <option value="">— بدون تشخيص —</option>
-                                @foreach (var cat in (List<Dental.Models.Clinic.DiagnosisCatalog>)ViewBag.DiagnosisList)
-                                {
-                                    <option value="@cat.Id">@cat.NameAr (@cat.Code)</option>
-                                }
-                            </select>
+                            <div class="diagnosis-row">
+                                <select class="form-glass" id="diagCatalogId" onchange="onDiagnosisChange()">
+                                    <option value="">— بدون تشخيص —</option>
+                                    @foreach (var cat in (List<Dental.Models.Clinic.DiagnosisCatalog>)ViewBag.DiagnosisList)
+                                    {
+                                        <option value="@cat.Id" data-price="@cat.Price">@cat.NameAr (@cat.Code)</option>
+                                    }
+                                </select>
+                                <span class="diagnosis-price-badge" id="diagnosisPriceBadge">0 م.ج</span>
+                            </div>
                         </div>
                         <div class="form-group mb-0">
                             <label>ملاحظات التشخيص</label>
                             <textarea class="form-glass" id="diagNotes" rows="1"></textarea>
-                        </div>
                         </div>
                     </div>
                     <div class="modal-section">
@@ -240,20 +240,6 @@
                         </div>
                     </div>
                 </div>
-
-            </div>
-            <div class="modal-columns">
-
-                <!-- العمود التاني: الأشعة + الروشتة -->
-                <div class="modal-col">
-
-                 </div>
-
-                    
-                <div class="modal-col">
-                    
-
-                </div>
             </div>
         </div>
 
@@ -278,6 +264,7 @@
         display: flex;
         flex-direction: column;
     }
+
     .chart-section-head {
         display: flex;
         justify-content: space-between;
@@ -286,15 +273,16 @@
         gap: 10px;
         margin-bottom: 10px;
     }
-    .chart-section-head h4 {
-        margin: 0;
-        font-weight: 800;
-        color: #0f172a;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 1.1rem;
-    }
+
+        .chart-section-head h4 {
+            margin: 0;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+        }
 
     /* بادجات الفك برة الرسمة تمامًا */
     .arch-label-external {
@@ -312,9 +300,15 @@
         width: fit-content;
         margin: 0 auto 8px;
     }
-    .arch-label-external.lower { margin: 8px auto 0; }
 
-    .chart-canvas-lg { min-height: 460px; flex: 1; }
+        .arch-label-external.lower {
+            margin: 8px auto 0;
+        }
+
+    .chart-canvas-lg {
+        min-height: 460px;
+        flex: 1;
+    }
 
     .chart-hint {
         margin: 10px 2px 0;
@@ -326,6 +320,7 @@
         text-align: center;
         justify-content: center;
     }
+
     .pending-flag {
         position: absolute;
         top: -6px;
@@ -343,20 +338,31 @@
     }
 
     /* ---- Modal: كبير ومقسّم عمودين ---- */
-    .modal-glass-xl { max-width: 920px; width: 94%; }
+    .modal-glass-xl {
+        max-width: 920px;
+        width: 94%;
+    }
+
     .modal-columns {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 18px;
         align-items: start;
     }
-    .modal-col { display: flex; flex-direction: column; gap: 14px; }
+
+    .modal-col {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
     .modal-section {
         border: 1px solid #eef2f6;
         border-radius: 14px;
         padding: 14px 16px;
         background: #fafcfd;
     }
+
     .modal-section-title {
         font-weight: 800;
         font-size: .9rem;
@@ -366,8 +372,17 @@
         gap: 8px;
         margin-bottom: 10px;
     }
-    .modal-section-title i { color: #0d9488; }
-    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .modal-section-title i {
+            color: #0d9488;
+        }
+
+    .form-row-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
     .upload-zone-sm {
         border: 2px dashed #cbd5e1;
         border-radius: 12px;
@@ -378,8 +393,17 @@
         font-size: .82rem;
         background: #fff;
     }
-    .upload-zone-sm:hover { border-color: #0d9488; }
-    .rx-rows-scroll { max-height: 160px; overflow-y: auto; padding-left: 4px; }
+
+        .upload-zone-sm:hover {
+            border-color: #0d9488;
+        }
+
+    .rx-rows-scroll {
+        max-height: 160px;
+        overflow-y: auto;
+        padding-left: 4px;
+    }
+
     .rx-row {
         display: grid;
         grid-template-columns: 1.3fr 1fr 1fr .8fr auto;
@@ -387,12 +411,14 @@
         margin-bottom: 8px;
         align-items: center;
     }
-    .rx-row input {
-        padding: 8px 10px;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        font-size: .8rem;
-    }
+
+        .rx-row input {
+            padding: 8px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: .8rem;
+        }
+
     .rx-remove {
         border: none;
         background: #fee2e2;
@@ -402,6 +428,7 @@
         border-radius: 8px;
         cursor: pointer;
     }
+
     .btn-add-rx-row {
         border: 1px dashed #0d9488;
         background: #f0fdfa;
@@ -413,254 +440,323 @@
         cursor: pointer;
     }
 
+    /* ---- Diagnosis + Price Badge ---- */
+    .diagnosis-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .diagnosis-row select {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+    .diagnosis-price-badge {
+        flex-shrink: 0;
+        background: linear-gradient(135deg, #0d9488, #0f766e);
+        color: #fff;
+        font-weight: 800;
+        font-size: .78rem;
+        padding: 8px 12px;
+        border-radius: 10px;
+        white-space: nowrap;
+        transition: transform .15s ease;
+    }
+
+        .diagnosis-price-badge.updated {
+            animation: priceBadgePulse .35s ease;
+        }
+
+    @@keyframes priceBadgePulse {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.08);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
     @@media (max-width: 992px) {
-        .modal-columns { grid-template-columns: 1fr; }
-        .form-row-2 { grid-template-columns: 1fr; }
-        .rx-row { grid-template-columns: 1fr 1fr; }
+        .modal-columns {
+            grid-template-columns: 1fr;
+        }
+
+        .form-row-2 {
+            grid-template-columns: 1fr;
+        }
+
+        .rx-row {
+            grid-template-columns: 1fr 1fr;
+        }
     }
 </style>
 
 <script>
-(function () {
-    var canvas = document.getElementById('chartCanvas');
-    if (window.initDentalArch) window.initDentalArch(canvas);
-})();
+    (function () {
+        var canvas = document.getElementById('chartCanvas');
+        if (window.initDentalArch) window.initDentalArch(canvas);
+    })();
 
-// ============================================================
-// حالة السيشن الحالية (بيانات مؤقتة قبل الحفظ النهائي)
-// ============================================================
-const pendingRecords = {};
-let currentToothNumber = null;
-let currentXrayBase64 = null;
-let currentXrayFileName = null;
+    // ============================================================
+    // حالة السيشن الحالية (بيانات مؤقتة قبل الحفظ النهائي)
+    // ============================================================
+    const pendingRecords = {};
+    let currentToothNumber = null;
+    let currentXrayBase64 = null;
+    let currentXrayFileName = null;
 
-const STATUS_ID_TO_CLASS = {
-    1: 'healthy', 2: 'decayed', 3: 'treated', 4: 'missing', 5: 'extracted',
-    6: 'impacted', 7: 'crown', 8: 'bridge', 9: 'implant', 10: 'fractured',
-    11: 'rootcanal', 12: 'filling'
-};
-const STATUS_ID_TO_LABEL = {
-    1: 'سليم', 2: 'تسوس', 3: 'معالج', 4: 'مفقود', 5: 'مخلوع', 6: 'مطمور',
-    7: 'تاج', 8: 'جسر', 9: 'زرعة', 10: 'مكسور', 11: 'عصب', 12: 'حشوة'
-};
-
-function openToothModal(num, evt) {
-    if (evt) { evt.preventDefault(); evt.stopPropagation(); }
-    currentToothNumber = num;
-    document.getElementById('selectedToothNum').textContent = '#' + num;
-
-    const existing = pendingRecords[num];
-    document.getElementById('toothStatus').value = existing ? existing.Status : 1;
-    document.getElementById('toothProcedure').value = existing ? (existing.ProcedureCode || '') : '';
-    document.getElementById('toothNotes').value = existing ? (existing.Notes || '') : '';
-    document.getElementById('diagCatalogId').value = existing ? (existing.DiagnosisCatalogId || '') : '';
-    document.getElementById('diagNotes').value = existing ? (existing.DiagnosisNotes || '') : '';
-    document.getElementById('toothXrayType').value = existing ? (existing.XRayType || 'Periapical') : 'Periapical';
-    document.getElementById('toothXrayNotes').value = existing ? (existing.XRayNotes || '') : '';
-
-    document.querySelectorAll('.surf-check input').forEach(cb => {
-        cb.checked = existing ? (existing.Surfaces || []).some(s => s.Surface === cb.value) : false;
-    });
-
-    currentXrayBase64 = existing ? existing.XRayBase64 || null : null;
-    currentXrayFileName = existing ? existing.XRayFileName || null : null;
-    document.getElementById('xrayPreview').style.display = currentXrayBase64 ? 'inline-block' : 'none';
-    document.getElementById('xrayPreview').src = currentXrayBase64 || '';
-    document.getElementById('xrayPlaceholder').style.display = currentXrayBase64 ? 'none' : 'block';
-
-    document.getElementById('toothRxRows').innerHTML = '';
-    if (existing && existing.PrescriptionItems && existing.PrescriptionItems.length) {
-        existing.PrescriptionItems.forEach(item => addRxRow(item));
-    }
-
-    document.querySelectorAll('#chartCanvas .tooth-box').forEach(t => t.classList.remove('selected'));
-    const target = document.querySelector('#chartCanvas [data-tooth="' + num + '"]');
-    if (target) target.classList.add('selected');
-
-    const modal = document.getElementById('toothModal');
-    modal.classList.add('dc-show');
-    modal.style.setProperty('display', 'flex', 'important');
-}
-
-function closeToothModal() {
-    const modal = document.getElementById('toothModal');
-    modal.classList.remove('dc-show');
-    modal.style.setProperty('display', 'none', 'important');
-    document.querySelectorAll('#chartCanvas .tooth-box').forEach(t => t.classList.remove('selected'));
-    currentToothNumber = null;
-}
-
-function onToothXrayChange(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    currentXrayFileName = file.name;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-        currentXrayBase64 = ev.target.result;
-        document.getElementById('xrayPreview').src = currentXrayBase64;
-        document.getElementById('xrayPreview').style.display = 'inline-block';
-        document.getElementById('xrayPlaceholder').style.display = 'none';
+    const STATUS_ID_TO_CLASS = {
+        1: 'healthy', 2: 'decayed', 3: 'treated', 4: 'missing', 5: 'extracted',
+        6: 'impacted', 7: 'crown', 8: 'bridge', 9: 'implant', 10: 'fractured',
+        11: 'rootcanal', 12: 'filling'
     };
-    reader.readAsDataURL(file);
-}
-
-function addRxRow(item) {
-    item = item || {};
-    const wrap = document.createElement('div');
-    wrap.className = 'rx-row';
-    wrap.innerHTML = `
-        <input type="text" placeholder="اسم الدواء" class="rx-name" value="${item.MedicationName || ''}" />
-        <input type="text" placeholder="الجرعة" class="rx-dosage" value="${item.Dosage || ''}" />
-        <input type="text" placeholder="عدد مرات" class="rx-freq" value="${item.Frequency || ''}" />
-        <input type="text" placeholder="المدة" class="rx-duration" value="${item.Duration || ''}" />
-        <button type="button" class="rx-remove" onclick="this.parentElement.remove()"><i class="bi bi-x"></i></button>
-    `;
-    document.getElementById('toothRxRows').appendChild(wrap);
-}
-
-function applyToothChanges() {
-    if (!currentToothNumber) return;
-    const statusId = parseInt(document.getElementById('toothStatus').value);
-    const surfaces = Array.from(document.querySelectorAll('.surf-check input:checked'))
-        .map(cb => ({ Surface: cb.value, Condition: 'Treated' }));
-    const diagId = document.getElementById('diagCatalogId').value;
-
-    const rxItems = Array.from(document.querySelectorAll('#toothRxRows .rx-row')).map(row => ({
-        MedicationName: row.querySelector('.rx-name').value,
-        Dosage: row.querySelector('.rx-dosage').value,
-        Frequency: row.querySelector('.rx-freq').value,
-        Duration: row.querySelector('.rx-duration').value
-    })).filter(i => i.MedicationName && i.MedicationName.trim() !== '');
-
-    pendingRecords[currentToothNumber] = {
-        ToothNumber: currentToothNumber,
-        Status: statusId,
-        Surfaces: surfaces,
-        ProcedureCode: document.getElementById('toothProcedure').value,
-        Notes: document.getElementById('toothNotes').value,
-        DiagnosisCatalogId: diagId ? parseInt(diagId) : null,
-        DiagnosisSurface: surfaces.map(s => s.Surface).join(','),
-        DiagnosisNotes: document.getElementById('diagNotes').value,
-        XRayFileName: currentXrayFileName,
-        XRayBase64: currentXrayBase64,
-        XRayType: document.getElementById('toothXrayType').value,
-        XRayNotes: document.getElementById('toothXrayNotes').value,
-        PrescriptionItems: rxItems
+    const STATUS_ID_TO_LABEL = {
+        1: 'سليم', 2: 'تسوس', 3: 'معالج', 4: 'مفقود', 5: 'مخلوع', 6: 'مطمور',
+        7: 'تاج', 8: 'جسر', 9: 'زرعة', 10: 'مكسور', 11: 'عصب', 12: 'حشوة'
     };
 
-    const toothEl = document.querySelector(`#chartCanvas [data-tooth="${currentToothNumber}"]`);
-    const newClass = STATUS_ID_TO_CLASS[statusId] || 'healthy';
-    toothEl.className = toothEl.className
-        .split(' ')
-        .filter(c => !Object.values(STATUS_ID_TO_CLASS).includes(c))
-        .join(' ');
-    toothEl.classList.add(newClass);
-    const flag = toothEl.querySelector('.pending-flag');
-    if (flag) flag.style.display = 'flex';
+    function onDiagnosisChange() {
+        const select = document.getElementById('diagCatalogId');
+        const badge = document.getElementById('diagnosisPriceBadge');
+        const selectedOption = select.options[select.selectedIndex];
+        const price = selectedOption ? parseFloat(selectedOption.dataset.price || 0) : 0;
 
-    renderRecordsTable();
-    closeToothModal();
-}
-
-function removePendingTooth(num) {
-    delete pendingRecords[num];
-    const toothEl = document.querySelector(`#chartCanvas [data-tooth="${num}"]`);
-    if (toothEl) {
-        const flag = toothEl.querySelector('.pending-flag');
-        if (flag) flag.style.display = 'none';
+        badge.textContent = price.toLocaleString('en-EG') + ' م.ج';
+        badge.classList.remove('updated');
+        void badge.offsetWidth; // إعادة تشغيل الأنيميشن
+        badge.classList.add('updated');
     }
-    renderRecordsTable();
-}
 
-function renderRecordsTable() {
-    const tbody = document.getElementById('recordsTableBody');
-    if (!tbody) return; // الجدول لسه ما اتحملش، هيتنادى تاني بعد DOMContentLoaded
+    function openToothModal(num, evt) {
+        if (evt) { evt.preventDefault(); evt.stopPropagation(); }
+        currentToothNumber = num;
+        document.getElementById('selectedToothNum').textContent = '#' + num;
 
-    const list = Object.values(pendingRecords).sort((a, b) => a.ToothNumber - b.ToothNumber);
-    tbody.querySelectorAll('.row-pending').forEach(r => r.remove());
+        const existing = pendingRecords[num];
+        document.getElementById('toothStatus').value = existing ? existing.Status : 1;
+        document.getElementById('toothProcedure').value = existing ? (existing.ProcedureCode || '') : '';
+        document.getElementById('toothNotes').value = existing ? (existing.Notes || '') : '';
+        document.getElementById('diagCatalogId').value = existing ? (existing.DiagnosisCatalogId || '') : '';
+        document.getElementById('diagNotes').value = existing ? (existing.DiagnosisNotes || '') : '';
+        document.getElementById('toothXrayType').value = existing ? (existing.XRayType || 'Periapical') : 'Periapical';
+        document.getElementById('toothXrayNotes').value = existing ? (existing.XRayNotes || '') : '';
 
-    list.forEach(r => {
-        const tr = document.createElement('tr');
-        tr.className = 'row-pending';
-        tr.innerHTML = `
-            <td><span class="tooth-chip">${r.ToothNumber}</span></td>
-            <td>${STATUS_ID_TO_LABEL[r.Status] || '-'}</td>
-            <td>${r.DiagnosisCatalogId ? 'محدد' : '-'}</td>
-            <td>${(r.Surfaces || []).map(s => s.Surface).join(', ') || '-'}</td>
-            <td>${r.ProcedureCode || '-'}</td>
-            <td>${r.XRayFileName ? '<i class="bi bi-image text-teal"></i> مرفقة' : '-'}</td>
-            <td>${r.PrescriptionItems && r.PrescriptionItems.length ? r.PrescriptionItems.length + ' دواء' : '-'}</td>
-            <td>${r.Notes || '-'}</td>
-            <td class="row-actions">
-                <span class="badge-pending">لم يُحفظ بعد</span>
-                <button onclick="openToothModal(${r.ToothNumber})" title="تعديل"><i class="bi bi-pencil"></i></button>
-                <button class="danger" onclick="removePendingTooth(${r.ToothNumber})" title="حذف"><i class="bi bi-trash"></i></button>
-            </td>
+        document.querySelectorAll('.surf-check input').forEach(cb => {
+            cb.checked = existing ? (existing.Surfaces || []).some(s => s.Surface === cb.value) : false;
+        });
+
+        currentXrayBase64 = existing ? existing.XRayBase64 || null : null;
+        currentXrayFileName = existing ? existing.XRayFileName || null : null;
+        document.getElementById('xrayPreview').style.display = currentXrayBase64 ? 'inline-block' : 'none';
+        document.getElementById('xrayPreview').src = currentXrayBase64 || '';
+        document.getElementById('xrayPlaceholder').style.display = currentXrayBase64 ? 'none' : 'block';
+
+        document.getElementById('toothRxRows').innerHTML = '';
+        if (existing && existing.PrescriptionItems && existing.PrescriptionItems.length) {
+            existing.PrescriptionItems.forEach(item => addRxRow(item));
+        }
+
+        onDiagnosisChange();
+
+        document.querySelectorAll('#chartCanvas .tooth-box').forEach(t => t.classList.remove('selected'));
+        const target = document.querySelector('#chartCanvas [data-tooth="' + num + '"]');
+        if (target) target.classList.add('selected');
+
+        const modal = document.getElementById('toothModal');
+        modal.classList.add('dc-show');
+        modal.style.setProperty('display', 'flex', 'important');
+    }
+
+    function closeToothModal() {
+        const modal = document.getElementById('toothModal');
+        modal.classList.remove('dc-show');
+        modal.style.setProperty('display', 'none', 'important');
+        document.querySelectorAll('#chartCanvas .tooth-box').forEach(t => t.classList.remove('selected'));
+        currentToothNumber = null;
+    }
+
+    function onToothXrayChange(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        currentXrayFileName = file.name;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            currentXrayBase64 = ev.target.result;
+            document.getElementById('xrayPreview').src = currentXrayBase64;
+            document.getElementById('xrayPreview').style.display = 'inline-block';
+            document.getElementById('xrayPlaceholder').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function addRxRow(item) {
+        item = item || {};
+        const wrap = document.createElement('div');
+        wrap.className = 'rx-row';
+        wrap.innerHTML = `
+            <input type="text" placeholder="اسم الدواء" class="rx-name" value="${item.MedicationName || ''}" />
+            <input type="text" placeholder="الجرعة" class="rx-dosage" value="${item.Dosage || ''}" />
+            <input type="text" placeholder="عدد مرات" class="rx-freq" value="${item.Frequency || ''}" />
+            <input type="text" placeholder="المدة" class="rx-duration" value="${item.Duration || ''}" />
+            <button type="button" class="rx-remove" onclick="this.parentElement.remove()"><i class="bi bi-x"></i></button>
         `;
-        tbody.appendChild(tr);
-    });
-
-    const total = list.length;
-    const countEl = document.getElementById('recordsCount');
-    const finalCountEl = document.getElementById('finalSaveCount');
-    const emptyEl = document.getElementById('emptyRecordsMsg');
-    if (countEl) countEl.textContent = total + ' سن مُضاف في هذا السيشن';
-    if (finalCountEl) finalCountEl.textContent = total;
-    if (emptyEl) emptyEl.style.display = (total === 0 && tbody.querySelectorAll('.row-saved').length === 0) ? 'block' : 'none';
-}
-
-// حفظ + إنهاء السيشن في زرار واحد
-async function saveAndEndSession() {
-    const list = Object.values(pendingRecords);
-
-    const confirmResult = await Swal.fire({
-        title: 'إنهاء وحفظ السيشن؟',
-        text: list.length > 0
-            ? `سيتم حفظ بيانات ${list.length} سن وإنهاء السيشن.`
-            : 'لا توجد بيانات أسنان مضافة، هل تريد إنهاء السيشن فقط؟',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#0d9488',
-        cancelButtonColor: '#64748b',
-        confirmButtonText: 'نعم، إنهاء وحفظ',
-        cancelButtonText: 'إلغاء',
-        reverseButtons: true
-    });
-    if (!confirmResult.isConfirmed) return;
-
-    Swal.fire({ title: 'جاري الحفظ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-    try {
-        if (list.length > 0) {
-            const payload = {
-                PatientId: @Model.Patient.Id,
-                VisitId: @Model.Visit.Id,
-                ToothRecords: list
-            };
-            const res = await fetch('/Clinical/SaveClinicalRecord', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            if (!data.success) {
-                Swal.fire({ title: 'خطأ', text: data.message || 'حدث خطأ أثناء حفظ بيانات الأسنان', icon: 'error', confirmButtonColor: '#dc2626' });
-                return;
-            }
-        }
-
-        const endRes = await fetch('/Clinical/CompleteVisit?visitId=@Model.Visit.Id', { method: 'POST' });
-        const endData = await endRes.json();
-        if (endData.success) {
-            Swal.fire({ title: 'تم', text: 'تم حفظ السيشن وإنهاؤه بنجاح', icon: 'success', timer: 1600, showConfirmButton: false })
-                .then(() => window.location.href = '/Patients/Details/@Model.Patient.Id');
-        } else {
-            Swal.fire({ title: 'خطأ', text: endData.message || 'حدث خطأ أثناء إنهاء السيشن', icon: 'error', confirmButtonColor: '#dc2626' });
-        }
-    } catch (err) {
-        Swal.fire({ title: 'خطأ', text: 'تعذر الاتصال بالسيرفر', icon: 'error', confirmButtonColor: '#dc2626' });
+        document.getElementById('toothRxRows').appendChild(wrap);
     }
-}
 
-document.addEventListener('DOMContentLoaded', renderRecordsTable);
+    function applyToothChanges() {
+        if (!currentToothNumber) return;
+        const statusId = parseInt(document.getElementById('toothStatus').value);
+        const surfaces = Array.from(document.querySelectorAll('.surf-check input:checked'))
+            .map(cb => ({ Surface: cb.value, Condition: 'Treated' }));
+        const diagSelect = document.getElementById('diagCatalogId');
+        const diagOption = diagSelect.options[diagSelect.selectedIndex];
+        const diagId = diagSelect.value;
+        const diagPrice = diagOption ? parseFloat(diagOption.dataset.price || 0) : 0;
+
+        const rxItems = Array.from(document.querySelectorAll('#toothRxRows .rx-row')).map(row => ({
+            MedicationName: row.querySelector('.rx-name').value,
+            Dosage: row.querySelector('.rx-dosage').value,
+            Frequency: row.querySelector('.rx-freq').value,
+            Duration: row.querySelector('.rx-duration').value
+        })).filter(i => i.MedicationName && i.MedicationName.trim() !== '');
+
+        pendingRecords[currentToothNumber] = {
+            ToothNumber: currentToothNumber,
+            Status: statusId,
+            Surfaces: surfaces,
+            ProcedureCode: document.getElementById('toothProcedure').value,
+            Notes: document.getElementById('toothNotes').value,
+            DiagnosisCatalogId: diagId ? parseInt(diagId) : null,
+            DiagnosisPrice: diagId ? diagPrice : 0,
+            DiagnosisSurface: surfaces.map(s => s.Surface).join(','),
+            DiagnosisNotes: document.getElementById('diagNotes').value,
+            XRayFileName: currentXrayFileName,
+            XRayBase64: currentXrayBase64,
+            XRayType: document.getElementById('toothXrayType').value,
+            XRayNotes: document.getElementById('toothXrayNotes').value,
+            PrescriptionItems: rxItems
+        };
+
+        const toothEl = document.querySelector(`#chartCanvas [data-tooth="${currentToothNumber}"]`);
+        const newClass = STATUS_ID_TO_CLASS[statusId] || 'healthy';
+        toothEl.className = toothEl.className
+            .split(' ')
+            .filter(c => !Object.values(STATUS_ID_TO_CLASS).includes(c))
+            .join(' ');
+        toothEl.classList.add(newClass);
+        if (window.updateToothStatusOverlay) window.updateToothStatusOverlay(toothEl);
+        const flag = toothEl.querySelector('.pending-flag');
+        if (flag) flag.style.display = 'flex';
+
+        renderRecordsTable();
+        closeToothModal();
+    }
+
+    function removePendingTooth(num) {
+        delete pendingRecords[num];
+        const toothEl = document.querySelector(`#chartCanvas [data-tooth="${num}"]`);
+        if (toothEl) {
+            const flag = toothEl.querySelector('.pending-flag');
+            if (flag) flag.style.display = 'none';
+        }
+        renderRecordsTable();
+    }
+
+    function renderRecordsTable() {
+        const tbody = document.getElementById('recordsTableBody');
+        if (!tbody) return; // الجدول لسه ما اتحملش، هيتنادى تاني بعد DOMContentLoaded
+
+        const list = Object.values(pendingRecords).sort((a, b) => a.ToothNumber - b.ToothNumber);
+        tbody.querySelectorAll('.row-pending').forEach(r => r.remove());
+
+        list.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.className = 'row-pending';
+            tr.innerHTML = `
+                <td><span class="tooth-chip">${r.ToothNumber}</span></td>
+                <td>${STATUS_ID_TO_LABEL[r.Status] || '-'}</td>
+                <td>${r.DiagnosisCatalogId ? 'محدد' : '-'}</td>
+                <td>${(r.Surfaces || []).map(s => s.Surface).join(', ') || '-'}</td>
+                <td>${r.ProcedureCode || '-'}</td>
+                <td>${r.XRayFileName ? '<i class="bi bi-image text-teal"></i> مرفقة' : '-'}</td>
+                <td>${r.PrescriptionItems && r.PrescriptionItems.length ? r.PrescriptionItems.length + ' دواء' : '-'}</td>
+                <td>${r.Notes || '-'}</td>
+                <td class="row-actions">
+                    <span class="badge-pending">لم يُحفظ بعد</span>
+                    <button onclick="openToothModal(${r.ToothNumber})" title="تعديل"><i class="bi bi-pencil"></i></button>
+                    <button class="danger" onclick="removePendingTooth(${r.ToothNumber})" title="حذف"><i class="bi bi-trash"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        const total = list.length;
+        const countEl = document.getElementById('recordsCount');
+        const finalCountEl = document.getElementById('finalSaveCount');
+        const emptyEl = document.getElementById('emptyRecordsMsg');
+        if (countEl) countEl.textContent = total + ' سن مُضاف في هذا السيشن';
+        if (finalCountEl) finalCountEl.textContent = total;
+        if (emptyEl) emptyEl.style.display = (total === 0 && tbody.querySelectorAll('.row-saved').length === 0) ? 'block' : 'none';
+    }
+
+    // حفظ + إنهاء السيشن في زرار واحد
+    async function saveAndEndSession() {
+        const list = Object.values(pendingRecords);
+
+        const confirmResult = await Swal.fire({
+            title: 'إنهاء وحفظ السيشن؟',
+            text: list.length > 0
+                ? `سيتم حفظ بيانات ${list.length} سن وإنهاء السيشن.`
+                : 'لا توجد بيانات أسنان مضافة، هل تريد إنهاء السيشن فقط؟',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0d9488',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'نعم، إنهاء وحفظ',
+            cancelButtonText: 'إلغاء',
+            reverseButtons: true
+        });
+        if (!confirmResult.isConfirmed) return;
+
+        Swal.fire({ title: 'جاري الحفظ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        try {
+            if (list.length > 0) {
+                const payload = {
+                    PatientId: @Model.Patient.Id,
+                    VisitId: @Model.Visit.Id,
+                    ToothRecords: list
+                };
+                const res = await fetch('/Clinical/SaveClinicalRecord', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    Swal.fire({ title: 'خطأ', text: data.message || 'حدث خطأ أثناء حفظ بيانات الأسنان', icon: 'error', confirmButtonColor: '#dc2626' });
+                    return;
+                }
+            }
+
+            const endRes = await fetch('/Clinical/CompleteVisit?visitId=@Model.Visit.Id', { method: 'POST' });
+            const endData = await endRes.json();
+            if (endData.success) {
+                Swal.fire({ title: 'تم', text: 'تم حفظ السيشن وإنهاؤه بنجاح', icon: 'success', timer: 1600, showConfirmButton: false })
+                    .then(() => window.location.href = '/Patients/Details/@Model.Patient.Id');
+            } else {
+                Swal.fire({ title: 'خطأ', text: endData.message || 'حدث خطأ أثناء إنهاء السيشن', icon: 'error', confirmButtonColor: '#dc2626' });
+            }
+        } catch (err) {
+            Swal.fire({ title: 'خطأ', text: 'تعذر الاتصال بالسيرفر', icon: 'error', confirmButtonColor: '#dc2626' });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', renderRecordsTable);
 </script>

@@ -1,0 +1,50 @@
+@model Dental.Modules.Clinical.ViewModels.SessionViewModel
+@{
+    var previousSessions = ViewBag.PreviousSessions as List<Dental.Modules.Clinical.DTOs.PreviousSessionRecordDto> ?? new();
+}
+
+<div class="records-section" style="margin-top:0;">
+    <div class="records-head">
+        <h4><i class="bi bi-clock-history"></i> سجل الجلسات السابقة</h4>
+        <span class="records-count">@previousSessions.Count سجل</span>
+    </div>
+    <div class="table-responsive" style="max-height:520px; overflow-y:auto;">
+        <table class="records-table">
+            <thead>
+                <tr>
+                    <th>السن</th>
+                    <th>التاريخ</th>
+                    <th>الحالة</th>
+                    <th>التشخيص</th>
+                    <th>ملاحظات التشخيص</th>
+                    <th>سعر التشخيص</th>
+                    <th>إجمالي الزيارة</th>
+                    <th>المدفوع</th>
+                    <th>الخصم</th>
+                    <th>المتبقي</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in previousSessions)
+                {
+                    <tr>
+                        <td><span class="tooth-chip">@r.ToothNumber</span></td>
+                        <td>@r.Date.ToString("dd/MM/yyyy")</td>
+                        <td>@r.StatusText</td>
+                        <td>@(r.DiagnosisName ?? "-")</td>
+                        <td>@(r.DiagnosisNotes ?? "-")</td>
+                        <td>@(r.DiagnosisPrice > 0 ? r.DiagnosisPrice.ToString("N0") + " م.ج" : "-")</td>
+                        <td>@r.VisitTotalAmount.ToString("N0") م.ج</td>
+                        <td>@r.VisitPaidAmount.ToString("N0") م.ج</td>
+                        <td>@r.VisitDiscount.ToString("N0") م.ج</td>
+                        <td>@r.VisitRemaining.ToString("N0") م.ج</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (!previousSessions.Any())
+        {
+            <div class="empty-records">لا يوجد سجل سابق لهذا المريض.</div>
+        }
+    </div>
+</div>

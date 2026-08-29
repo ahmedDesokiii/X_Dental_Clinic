@@ -1,7 +1,6 @@
 @* ============================================================
    Views/Shared/_PaymentsCompact.cshtml
-   عمود المدفوعات (col-3) — ملخص الحساب + قائمة مدفوعات مضغوطة
-   لو المريض "عام + تقويم" بيظهر فوقهم Breakdown لكل نوع + إجمالي كلي
+   عمود المدفوعات — ملخص الحساب + سجل المدفوعات القديمة + مدفوعات هذا السيشن (مؤقت)
    ============================================================ *@
 @model Dental.Modules.Clinical.ViewModels.SessionViewModel
 
@@ -59,16 +58,16 @@
 
     <div class="mini-card pay-summary">
         <div class="pay-summary-row">
-            <span>الإجمالي</span><b>@Model.Visit.TotalAmount.ToString("N0") م.ج</b>
+            <span>الإجمالي</span><b id="paySummaryTotal">@Model.Visit.TotalAmount.ToString("N0") م.ج</b>
         </div>
         <div class="pay-summary-row">
             <span>الخصم</span><b>@Model.Visit.Discount.ToString("N0") م.ج</b>
         </div>
         <div class="pay-summary-row paid">
-            <span>المدفوع</span><b>@Model.Visit.PaidAmount.ToString("N0") م.ج</b>
+            <span>المدفوع</span><b id="paySummaryPaid">@Model.Visit.PaidAmount.ToString("N0") م.ج</b>
         </div>
         <div class="pay-summary-row remaining">
-            <span>المتبقي</span><b>@Model.Visit.Remaining.ToString("N0") م.ج</b>
+            <span>المتبقي</span><b id="paySummaryRemaining">@Model.Visit.Remaining.ToString("N0") م.ج</b>
         </div>
         <button class="btn-add-payment-sm" onclick="openPaymentModal()">
             <i class="bi bi-plus-lg"></i> تسجيل دفعة
@@ -77,7 +76,7 @@
 
     <div class="mini-card pay-list-card">
         <div class="mini-card-title">
-            <i class="bi bi-list-ul"></i> سجل المدفوعات (@Model.Visit.Payments.Count)
+            <i class="bi bi-list-ul"></i> سجل المدفوعات السابق (@Model.Visit.Payments.Count)
         </div>
         <div class="pay-list">
             @foreach (var p in Model.Visit.Payments.OrderByDescending(x => x.PaymentDate))
@@ -99,30 +98,37 @@
     </div>
 </div>
 
-<!-- Payment Modal (نفس الـ Endpoint الحالي /Clinical/AddPayment) -->
+<!-- Payment Modal — فورم أبسط، حفظ مؤقت -->
 <div class="payment-modal" id="paymentModal" style="display:none;">
     <div class="modal-overlay" onclick="closePaymentModal()"></div>
-    <div class="modal-glass" style="max-width:420px;">
+    <div class="modal-glass payment-modal-glass">
         <h5><i class="bi bi-cash-stack"></i> تسجيل دفعة جديدة</h5>
-        <div class="form-group mb-2">
-            <label>المبلغ</label>
-            <input type="number" class="form-glass" id="payAmount" />
+
+        <div class="pay-amount-input-wrap">
+            <input type="number" class="pay-amount-input" id="payAmount" placeholder="0" />
+            <span class="pay-amount-suffix">م.ج</span>
         </div>
-        <div class="form-group mb-2">
-            <label>طريقة الدفع</label>
-            <select class="form-glass" id="payMethod">
-                <option value="Cash">نقدي</option>
-                <option value="CreditCard">فيزا</option>
-                <option value="BankTransfer">تحويل بنكي</option>
-            </select>
+
+        <div class="pay-method-tiles" id="payMethodTiles">
+            <label class="pay-method-tile selected" data-method="Cash">
+                <input type="radio" name="payMethod" value="Cash" checked />
+                <i class="bi bi-cash-coin"></i> نقدي
+            </label>
+            <label class="pay-method-tile" data-method="CreditCard">
+                <input type="radio" name="payMethod" value="CreditCard" />
+                <i class="bi bi-credit-card"></i> فيزا
+            </label>
+            <label class="pay-method-tile" data-method="BankTransfer">
+                <input type="radio" name="payMethod" value="BankTransfer" />
+                <i class="bi bi-bank"></i> تحويل
+            </label>
         </div>
-        <div class="form-group">
-            <label>السبب / الوصف</label>
-            <textarea class="form-glass" id="payDesc" rows="2" placeholder="مثال: دفعة جزئية — تاج سن 16"></textarea>
-        </div>
+
+        <textarea class="form-glass mt-2" id="payDesc" rows="2" placeholder="ملاحظة (اختياري)..."></textarea>
+
         <div class="modal-actions mt-3">
             <button class="btn-glass btn-cancel" onclick="closePaymentModal()">إلغاء</button>
-            <button class="btn-glass btn-save" onclick="submitPayment()">حفظ الدفعة</button>
+            <button class="btn-glass btn-save" onclick="submitPayment()">إضافة الدفعة</button>
         </div>
     </div>
 </div>
@@ -201,7 +207,7 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
-        max-height: 320px;
+        max-height: 260px;
         overflow-y: auto;
     }
 
@@ -245,28 +251,152 @@
         font-size: .8rem;
         padding: 12px;
     }
+
+    .pay-item.pay-item-pending {
+        background: #fffbeb;
+        border-color: #fde68a;
+    }
+
+    /* ---- Payment Modal الجديد ---- */
+    .payment-modal-glass {
+        max-width: 380px;
+    }
+
+    .pay-amount-input-wrap {
+        position: relative;
+        margin: 14px 0;
+    }
+
+    .pay-amount-input {
+        width: 100%;
+        text-align: center;
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0f172a;
+        border: none;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 10px 0;
+        outline: none;
+        transition: border-color .15s ease;
+    }
+
+        .pay-amount-input:focus {
+            border-color: #0d9488;
+        }
+
+    .pay-amount-suffix {
+        position: absolute;
+        left: 0;
+        bottom: 14px;
+        font-size: .8rem;
+        color: #94a3b8;
+        font-weight: 700;
+    }
+
+    .pay-method-tiles {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .pay-method-tile {
+        border: 2px solid #f1f5f9;
+        border-radius: 12px;
+        padding: 10px 6px;
+        text-align: center;
+        font-size: .78rem;
+        font-weight: 700;
+        color: #64748b;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        transition: all .15s ease;
+    }
+
+        .pay-method-tile input {
+            display: none;
+        }
+
+        .pay-method-tile i {
+            font-size: 1.1rem;
+        }
+
+        .pay-method-tile.selected {
+            border-color: #0d9488;
+            background: #f0fdfa;
+            color: #0d9488;
+        }
 </style>
 
 <script>
-    function openPaymentModal() { document.getElementById('paymentModal').style.display = 'flex'; }
-    function closePaymentModal() { document.getElementById('paymentModal').style.display = 'none'; }
-    async function submitPayment() {
+    // ============================================================
+    // مدفوعات مؤقتة (لحد "إنهاء وحفظ السيشن")
+    // ============================================================
+    window.pendingPayments = window.pendingPayments || [];
+
+    function openPaymentModal() {
+        document.getElementById('paymentModal').style.display = 'flex';
+    }
+
+    function closePaymentModal() {
+        document.getElementById('paymentModal').style.display = 'none';
+        document.getElementById('payAmount').value = '';
+        document.getElementById('payDesc').value = '';
+    }
+
+    document.querySelectorAll('#payMethodTiles .pay-method-tile').forEach(function (tile) {
+        tile.addEventListener('click', function () {
+            document.querySelectorAll('#payMethodTiles .pay-method-tile').forEach(t => t.classList.remove('selected'));
+            tile.classList.add('selected');
+            tile.querySelector('input').checked = true;
+        });
+    });
+
+    function submitPayment() {
         const amount = parseFloat(document.getElementById('payAmount').value);
         if (!amount || amount <= 0) {
             Swal.fire({ title: 'تنبيه', text: 'من فضلك أدخل مبلغ صحيح', icon: 'warning', confirmButtonColor: '#0d9488' });
             return;
         }
-        const data = {
-            VisitId: @Model.Visit.Id,
-            Amount: amount,
-            Method: document.getElementById('payMethod').value,
-            Description: document.getElementById('payDesc').value
-        };
-        const res = await fetch('/Clinical/AddPayment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        if (res.ok) location.reload();
+        const method = document.querySelector('#payMethodTiles input:checked').value;
+        const description = document.getElementById('payDesc').value;
+
+        window.pendingPayments.push({ Amount: amount, Method: method, Description: description });
+
+        renderPendingPaymentsSummary();
+        if (window.renderRecordsTable) window.renderRecordsTable();
+        closePaymentModal();
     }
+
+    function removePendingPayment(idx) {
+        window.pendingPayments.splice(idx, 1);
+        renderPendingPaymentsSummary();
+        if (window.renderRecordsTable) window.renderRecordsTable();
+    }
+    window.removePendingPayment = removePendingPayment;
+
+    function renderPendingPaymentsSummary() {
+        const baseTotal = @Model.Visit.TotalAmount.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        const basePaid = @Model.Visit.PaidAmount.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        const discount = @Model.Visit.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+        const pendingDiagnosisTotal = window.pendingToothRecords
+            ? Object.values(window.pendingToothRecords).reduce((sum, t) => sum + (t.DiagnosisPrice || 0), 0)
+            : 0;
+        const pendingPaidTotal = window.pendingPayments.reduce((sum, p) => sum + p.Amount, 0);
+
+        const newTotal = baseTotal + pendingDiagnosisTotal;
+        const newPaid = basePaid + pendingPaidTotal;
+        const newRemaining = newTotal - discount - newPaid;
+
+        const totalEl = document.getElementById('paySummaryTotal');
+        const paidEl = document.getElementById('paySummaryPaid');
+        const remainingEl = document.getElementById('paySummaryRemaining');
+        if (totalEl) totalEl.textContent = newTotal.toLocaleString('en-EG') + ' م.ج';
+        if (paidEl) paidEl.textContent = newPaid.toLocaleString('en-EG') + ' م.ج';
+        if (remainingEl) remainingEl.textContent = newRemaining.toLocaleString('en-EG') + ' م.ج';
+    }
+    window.renderPendingPaymentsSummary = renderPendingPaymentsSummary;
 </script>
