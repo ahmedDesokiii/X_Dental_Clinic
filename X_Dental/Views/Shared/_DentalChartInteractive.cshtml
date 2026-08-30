@@ -1,8 +1,10 @@
-﻿@* Shared / _DentalChartInteractive.cshtml *@
-@model Dental.Modules.Clinical.ViewModels.SessionViewModel
+﻿@model Dental.Modules.Clinical.ViewModels.SessionViewModel
 @await Html.PartialAsync("_DentalArchStyles")
 
 <style>
+    .chart-shell {
+        position: relative;
+    }
 
     .quadrant-badge {
         position: absolute;
@@ -35,6 +37,7 @@
             bottom: 8px;
             right: 8px;
         }
+
     .quadrant-divider-v {
         position: absolute;
         top: 0;
@@ -55,16 +58,25 @@
         z-index: 1;
     }
 
-
-    .legend-bar-row {
+    .pending-flag {
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: #fff;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 12px;
+        justify-content: center;
+        font-size: .55rem;
+        box-shadow: 0 3px 8px rgba(245,158,11,.4);
+        z-index: 30;
+        animation: badgePop 0.4s ease;
     }
 
+    /* Diagnosis row in modal */
     .diagnosis-row {
         display: flex;
         align-items: center;
@@ -86,6 +98,8 @@
         border-radius: 10px;
         white-space: nowrap;
         transition: transform .15s ease;
+        min-width: 80px;
+        text-align: center;
     }
 
         .diagnosis-price-badge.updated {
@@ -106,38 +120,23 @@
         }
     }
 
-    .pending-flag {
-        position: absolute;
-        top: -6px;
-        left: -6px;
-        background: #f59e0b;
-        color: #fff;
-        border-radius: 50%;
-        width: 18px;
-        height: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: .6rem;
-        box-shadow: 0 2px 6px rgba(245,158,11,.4);
-        z-index: 30;
-    }
-
-    /* ---- رفع أشعة متعدد ---- */
+    /* Xray upload */
     .xray-upload-zone {
         border: 2px dashed #cbd5e1;
-        border-radius: 12px;
-        padding: 14px;
+        border-radius: 14px;
+        padding: 16px;
         text-align: center;
         cursor: pointer;
         color: #94a3b8;
         font-size: .82rem;
         background: #fff;
-        transition: border-color .15s ease;
+        transition: all .2s ease;
     }
 
         .xray-upload-zone:hover {
             border-color: #0d9488;
+            background: #f0fdfa;
+            color: #0d9488;
         }
 
     .xray-files-list {
@@ -145,7 +144,7 @@
         flex-direction: column;
         gap: 8px;
         margin-top: 10px;
-        max-height: 220px;
+        max-height: 200px;
         overflow-y: auto;
     }
 
@@ -158,6 +157,7 @@
         border-radius: 10px;
         padding: 6px 8px;
         background: #fafcfd;
+        animation: fadeInUp 0.3s ease forwards;
     }
 
     .xray-thumb {
@@ -171,6 +171,8 @@
     .xray-note-input {
         padding: 7px 10px !important;
         font-size: .78rem !important;
+        border: 1px solid #f1f5f9 !important;
+        border-radius: 8px !important;
     }
 
     .xray-remove-btn {
@@ -182,47 +184,212 @@
         border-radius: 8px;
         cursor: pointer;
         flex-shrink: 0;
+        transition: all .2s;
     }
+
+        .xray-remove-btn:hover {
+            background: #fecaca;
+            transform: scale(1.1);
+        }
+
+    /* Modal - Glass v4 */
+    .tooth-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(10,40,42,0.45);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1500;
+        pointer-events: none;
+    }
+
+        .tooth-modal.dc-show {
+            display: flex;
+            pointer-events: auto;
+            animation: fadeInUp 0.25s ease;
+        }
+
+    .modal-glass-v4 {
+        width: 100%;
+        max-width: 480px;
+        margin: 16px;
+        background: #fff;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 30px 70px rgba(0,0,0,0.25);
+        transform: translateY(20px) scale(0.96);
+        opacity: 0;
+        animation: dcModalIn 0.4s cubic-bezier(0.2,1.2,0.3,1) forwards;
+    }
+
+    @@keyframes dcModalIn {
+        to {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+    }
+
+    .tooth-modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 22px;
+        background: linear-gradient(135deg, #0d9488, #0d7377);
+        color: #fff;
+    }
+
+        .tooth-modal-head h5 {
+            margin: 0;
+            font-weight: 800;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+    .btn-close-modal {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        border: none;
+        background: rgba(255,255,255,0.2);
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all .2s;
+    }
+
+        .btn-close-modal:hover {
+            background: rgba(255,255,255,0.35);
+            transform: rotate(90deg);
+        }
+
+    .tooth-modal-body {
+        padding: 20px 22px;
+    }
+
+    .tooth-modal-foot {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 14px 22px;
+        border-top: 1px solid #f0fdfa;
+        background: linear-gradient(180deg, #fafcfd, #fff);
+    }
+
+    .form-group-v4 label {
+        display: block;
+        font-size: .78rem;
+        font-weight: 800;
+        color: #475569;
+        margin-bottom: 6px;
+    }
+
+    .form-glass-v4 {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid #f1f5f9;
+        border-radius: 12px;
+        background: #f8fafc;
+        font-size: .9rem;
+        outline: none;
+        transition: all .2s;
+    }
+
+        .form-glass-v4:focus {
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13,148,136,0.1);
+        }
+
+    .surface-picker-v4 {
+        display: flex;
+        gap: 8px;
+    }
+
+    .surf-check-v4 {
+        flex: 1;
+        text-align: center;
+        padding: 10px 0;
+        border-radius: 10px;
+        border: 2px solid #f1f5f9;
+        background: #fff;
+        font-weight: 800;
+        color: #475569;
+        cursor: pointer;
+        transition: all .2s;
+        font-size: .85rem;
+    }
+
+        .surf-check-v4:has(input:checked) {
+            background: linear-gradient(135deg, #0d9488, #0d7377);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 14px rgba(13,115,119,0.25);
+        }
+
+        .surf-check-v4 input {
+            display: none;
+        }
+
+    .btn-glass-v4 {
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: .85rem;
+        border: none;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+    .btn-cancel-v4 {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+        .btn-cancel-v4:hover {
+            background: #e2e8f0;
+        }
+
+    .btn-save-v4 {
+        background: linear-gradient(135deg, #0d9488, #0d7377);
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(13,115,119,0.25);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+        .btn-save-v4:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(13,115,119,0.35);
+        }
 </style>
 
-<div class="dental-chart-shell">
-    <div class="chart-toolbar legend-bar-row">
-        <div class="legend-bar">
-            <span class="legend-item"><span class="dot healthy"></span> سليم</span>
-            <span class="legend-item"><span class="dot decayed"></span> تسوس</span>
-            <span class="legend-item"><span class="dot treated"></span> معالج</span>
-            <span class="legend-item"><span class="dot missing"></span> مفقود</span>
-            <span class="legend-item"><span class="dot extracted"></span> مخلوع</span>
-            <span class="legend-item"><span class="dot rootcanal"></span> عصب</span>
-            <span class="legend-item"><span class="dot crown"></span> تاج</span>
-            <span class="legend-item"><span class="dot implant"></span> زرعة</span>
-        </div>
-    </div>
-
+<div class="chart-shell">
     <div class="chart-canvas" id="chartCanvas">
         <svg class="bg-arcs" viewBox="0 0 620 632" preserveAspectRatio="xMidYMid meet">
             <div class="quadrant-divider-v"></div>
             <div class="quadrant-divider-h"></div>
-            <span class="quadrant-badge fs-5 ur">UR </span>
-            <span class="quadrant-badge fs-5 ul">UL </span>
-            <span class="quadrant-badge fs-5 lr">LR </span>
-            <span class="quadrant-badge fs-5 ll">LL </span>
+            <span class="quadrant-badge fs-5 ur">UR</span>
+            <span class="quadrant-badge fs-5 ul">UL</span>
+            <span class="quadrant-badge fs-5 lr">LR</span>
+            <span class="quadrant-badge fs-5 ll">LL</span>
             <defs>
                 <linearGradient id="gumUpperInt" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#f8d3ca" />
-                    <stop offset="100%" stop-color="#f2b6a8" />
+                    <stop offset="0%" stop-color="#f8d3ca" /><stop offset="100%" stop-color="#f2b6a8" />
                 </linearGradient>
                 <linearGradient id="gumLowerInt" x1="0" y1="1" x2="0" y2="0">
-                    <stop offset="0%" stop-color="#f8d3ca" />
-                    <stop offset="100%" stop-color="#f2b6a8" />
+                    <stop offset="0%" stop-color="#f8d3ca" /><stop offset="100%" stop-color="#f2b6a8" />
                 </linearGradient>
             </defs>
             <path id="upperArchPath" fill="url(#gumUpperInt)"></path>
             <path id="lowerArchPath" fill="url(#gumLowerInt)"></path>
         </svg>
-
-       @*  <div class="arch-label upper">الفك العلوي</div>
-        <div class="arch-label lower">الفك السفلي</div> *@
 
         <div class="arch-center-mark">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c-2.4 0-3.6 1.3-4.8 1.3-1.6 0-2.7-1-3.5-.4-.9.7-.7 2.4-.4 3.9.4 2.2 1.1 6.6 2 9.3.5 1.5 1 2.9 2.1 2.9 1.4 0 1.4-3 2.6-3s1.2 3 2.6 3c1.1 0 1.6-1.4 2.1-2.9.9-2.7 1.6-7.1 2-9.3.3-1.5.5-3.2-.4-3.9-.8-.6-1.9.4-3.5.4C15.6 4.3 14.4 3 12 3Z" /></svg>
@@ -237,13 +404,7 @@
                 <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
                         <span class="tooth-num">@i</span>
-                        <div class="tooth-body">
-                            <div class="surface top"></div>
-                            <div class="surface right"></div>
-                            <div class="surface bottom"></div>
-                            <div class="surface left"></div>
-                            <div class="surface center"></div>
-                        </div>
+                        <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                     <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
                 </div>
@@ -255,13 +416,7 @@
                 <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
                         <span class="tooth-num">@i</span>
-                        <div class="tooth-body">
-                            <div class="surface top"></div>
-                            <div class="surface right"></div>
-                            <div class="surface bottom"></div>
-                            <div class="surface left"></div>
-                            <div class="surface center"></div>
-                        </div>
+                        <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                     <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
                 </div>
@@ -277,13 +432,7 @@
                 <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
                         <span class="tooth-num">@i</span>
-                        <div class="tooth-body">
-                            <div class="surface top"></div>
-                            <div class="surface right"></div>
-                            <div class="surface bottom"></div>
-                            <div class="surface left"></div>
-                            <div class="surface center"></div>
-                        </div>
+                        <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                     <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
                 </div>
@@ -295,13 +444,7 @@
                 <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
                         <span class="tooth-num">@i</span>
-                        <div class="tooth-body">
-                            <div class="surface top"></div>
-                            <div class="surface right"></div>
-                            <div class="surface bottom"></div>
-                            <div class="surface left"></div>
-                            <div class="surface center"></div>
-                        </div>
+                        <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                     <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
                 </div>
@@ -312,15 +455,15 @@
     <!-- Tooth Detail Modal -->
     <div class="tooth-modal" id="toothModal">
         <div class="modal-overlay" onclick="closeToothModal()"></div>
-        <div class="modal-glass" style="max-width: 480px;">
+        <div class="modal-glass-v4">
             <div class="tooth-modal-head">
                 <h5><i class="bi bi-grid-3x3-gap"></i> تفاصيل السن <span id="selectedToothNum"></span></h5>
                 <button type="button" class="btn-close-modal" onclick="closeToothModal()"><i class="bi bi-x-lg"></i></button>
             </div>
             <div class="tooth-modal-body">
-                <div class="form-group mb-3">
+                <div class="form-group-v4 mb-3">
                     <label>حالة السن</label>
-                    <select class="form-glass" id="toothStatus">
+                    <select class="form-glass-v4" id="toothStatus">
                         <option value="1">سليم</option>
                         <option value="2">تسوس</option>
                         <option value="3">معالج</option>
@@ -336,29 +479,26 @@
                     </select>
                 </div>
 
-                <div class="form-group mb-3">
+                <div class="form-group-v4 mb-3">
                     <label>السطوح المتأثرة</label>
-                    <div class="surface-picker">
-                        <label class="surf-check"><input type="checkbox" value="M" /> M</label>
-                        <label class="surf-check"><input type="checkbox" value="D" /> D</label>
-                        <label class="surf-check"><input type="checkbox" value="B" /> B</label>
-                        <label class="surf-check"><input type="checkbox" value="L" /> L</label>
-                        <label class="surf-check"><input type="checkbox" value="O" /> O</label>
+                    <div class="surface-picker-v4">
+                        <label class="surf-check-v4"><input type="checkbox" value="M" /> M</label>
+                        <label class="surf-check-v4"><input type="checkbox" value="D" /> D</label>
+                        <label class="surf-check-v4"><input type="checkbox" value="B" /> B</label>
+                        <label class="surf-check-v4"><input type="checkbox" value="L" /> L</label>
+                        <label class="surf-check-v4"><input type="checkbox" value="O" /> O</label>
                     </div>
                 </div>
 
-                <div class="form-group mb-3">
+                <div class="form-group-v4 mb-3">
                     <label>كود الإجراء</label>
-                    <input type="text" class="form-glass" id="toothProcedure" placeholder="مثال: RCT, CRN, FLL" />
+                    <input type="text" class="form-glass-v4" id="toothProcedure" placeholder="مثال: RCT, CRN, FLL" />
                 </div>
 
-                @* ============================================================
-                   التشخيص + السعر
-                   ============================================================ *@
-                <div class="form-group mb-3">
+                <div class="form-group-v4 mb-3">
                     <label>التشخيص</label>
                     <div class="diagnosis-row">
-                        <select class="form-glass" id="toothDiagnosis" onchange="onDiagnosisChange()">
+                        <select class="form-glass-v4" id="toothDiagnosis" onchange="onDiagnosisChange()">
                             <option value="">-- اختر التشخيص --</option>
                             @if (ViewBag.DiagnosisList != null)
                             {
@@ -372,27 +512,25 @@
                     </div>
                 </div>
 
-                <div class="form-group mb-3">
+                <div class="form-group-v4 mb-3">
                     <label>ملاحظات الحالة</label>
-                    <textarea class="form-glass" id="diagnosisNotes" rows="2" placeholder="ملاحظات عن التشخيص/الحالة..."></textarea>
+                    <textarea class="form-glass-v4" id="diagnosisNotes" rows="2" placeholder="ملاحظات عن التشخيص/الحالة..."></textarea>
                 </div>
 
-                @* ============================================================
-                   الأشعة — رفع متعدد بملاحظة لكل صورة
-                   ============================================================ *@
-                <div class="form-group">
+                <div class="form-group-v4">
                     <label>أشعة السن (اختياري)</label>
                     <div class="xray-upload-zone" onclick="document.getElementById('toothXrayFiles').click()">
                         <input type="file" id="toothXrayFiles" accept="image/*" multiple hidden onchange="onToothXrayFilesChange(event)" />
-                        <i class="bi bi-cloud-arrow-up"></i> اضغط لرفع صورة أو أكتر
+                        <i class="bi bi-cloud-arrow-up" style="font-size:1.5rem;display:block;margin-bottom:6px;"></i>
+                        اضغط لرفع صورة أو أكثر
                     </div>
                     <div id="xrayFilesList" class="xray-files-list"></div>
                 </div>
             </div>
             <div class="tooth-modal-foot">
-                <button type="button" class="btn-glass btn-cancel" onclick="closeToothModal()">إلغاء</button>
-                <button type="button" class="btn-glass btn-save" onclick="applyToothChanges()">
-                    <i class="bi bi-check-lg"></i> إضافة السن للسيشن
+                <button type="button" class="btn-glass-v4 btn-cancel-v4" onclick="closeToothModal()">إلغاء</button>
+                <button type="button" class="btn-glass-v4 btn-save-v4" onclick="applyToothChanges()">
+                    <i class="bi bi-check-lg"></i> إضافة للسيشن
                 </button>
             </div>
         </div>
@@ -405,12 +543,9 @@
         if (window.initDentalArch) window.initDentalArch(canvas);
     })();
 
-    // ============================================================
-    // حالة السيشن المؤقتة (قبل "إنهاء وحفظ السيشن")
-    // ============================================================
     window.pendingToothRecords = window.pendingToothRecords || {};
     let currentToothNumber = null;
-    let currentXrayFiles = []; // [{fileName, base64, notes}]
+    let currentXrayFiles = [];
 
     const STATUS_ID_TO_CLASS = {
         1: 'healthy', 2: 'decayed', 3: 'treated', 4: 'missing', 5: 'extracted',
@@ -423,7 +558,6 @@
         const badge = document.getElementById('diagnosisPriceBadge');
         const selectedOption = select.options[select.selectedIndex];
         const price = selectedOption ? parseFloat(selectedOption.dataset.price || 0) : 0;
-
         badge.textContent = price.toLocaleString('en-EG') + ' م.ج';
         badge.classList.remove('updated');
         void badge.offsetWidth;
@@ -436,13 +570,12 @@
         document.getElementById('selectedToothNum').textContent = '#' + num;
 
         const existing = window.pendingToothRecords[num];
-
         document.getElementById('toothStatus').value = existing ? existing.Status : 1;
         document.getElementById('toothProcedure').value = existing ? (existing.ProcedureCode || '') : '';
         document.getElementById('toothDiagnosis').value = existing ? (existing.DiagnosisCatalogId || '') : '';
         document.getElementById('diagnosisNotes').value = existing ? (existing.DiagnosisNotes || '') : '';
 
-        document.querySelectorAll('.surf-check input').forEach(cb => {
+        document.querySelectorAll('.surf-check-v4 input').forEach(cb => {
             cb.checked = existing ? (existing.Surfaces || []).some(s => s.Surface === cb.value) : false;
         });
 
@@ -482,7 +615,6 @@
         });
     }
 
-    // ---- رفع أشعة متعدد ----
     function onToothXrayFilesChange(e) {
         const files = Array.from(e.target.files || []);
         files.forEach(file => {
@@ -504,7 +636,7 @@
             row.className = 'xray-file-row';
             row.innerHTML = `
                 <img src="${xr.base64}" class="xray-thumb" />
-                <input type="text" class="form-glass xray-note-input" placeholder="ملاحظة على الصورة دي..." value="${xr.notes || ''}" />
+                <input type="text" class="form-glass-v4 xray-note-input" placeholder="ملاحظة..." value="${xr.notes || ''}" />
                 <button type="button" class="xray-remove-btn"><i class="bi bi-x"></i></button>
             `;
             row.querySelector('.xray-note-input').addEventListener('input', function () {
@@ -518,12 +650,11 @@
         });
     }
 
-    // ---- تطبيق (حفظ مؤقت بس) ----
     function applyToothChanges() {
         if (!currentToothNumber) return;
 
         const statusId = parseInt(document.getElementById('toothStatus').value);
-        const surfaces = Array.from(document.querySelectorAll('.surf-check input:checked'))
+        const surfaces = Array.from(document.querySelectorAll('.surf-check-v4 input:checked'))
             .map(cb => ({ Surface: cb.value, Condition: 'Treated' }));
 
         const diagSelect = document.getElementById('toothDiagnosis');
@@ -549,10 +680,7 @@
 
         const toothEl = document.querySelector(`#chartCanvas [data-tooth="${currentToothNumber}"]`);
         const newClass = STATUS_ID_TO_CLASS[statusId] || 'healthy';
-        toothEl.className = toothEl.className
-            .split(' ')
-            .filter(c => !Object.values(STATUS_ID_TO_CLASS).includes(c))
-            .join(' ');
+        toothEl.className = toothEl.className.split(' ').filter(c => !Object.values(STATUS_ID_TO_CLASS).includes(c)).join(' ');
         toothEl.classList.add(newClass);
         if (window.updateToothStatusOverlay) window.updateToothStatusOverlay(toothEl);
 
@@ -561,6 +689,13 @@
 
         if (window.renderRecordsTable) window.renderRecordsTable();
         closeToothModal();
+
+        // Toast
+        Swal.fire({
+            toast: true, position: 'top-end', icon: 'success',
+            title: 'تمت إضافة السن ' + currentToothNumber, showConfirmButton: false, timer: 1200,
+            customClass: { popup: 'rounded-4' }
+        });
     }
 
     function removePendingTooth(num) {

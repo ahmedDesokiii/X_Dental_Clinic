@@ -99,6 +99,8 @@ namespace Dental.Controllers
 
 
             ViewBag.PreviousSessions = await GetPreviousSessionsAsync(patientId);
+ 
+            ViewBag.XRayGroups = await GetXRaysGroupedAsync(patientId);
 
             return View(model);
         }
@@ -513,6 +515,7 @@ namespace Dental.Controllers
                             {
                                 PatientId = req.PatientId,
                                 VisitId = req.VisitId,
+                                ToothNumber = tooth.ToothNumber,
                                 FileName = xr.FileName,
                                 FilePath = $"/uploads/xrays/{safeName}",
                                 TakenDate = DateTime.Now,
@@ -588,6 +591,32 @@ namespace Dental.Controllers
                 return Json(new { success = false, message = "حدث خطأ أثناء حفظ وإنهاء السيشن." });
             }
         }
+
+
+        private async Task<List<XRayGroupDto>> GetXRaysGroupedAsync(int patientId)
+        {
+            var xrays = await _context.PatientXRays
+                .Where(x => x.PatientId == patientId && x.ToothNumber != null)
+                .OrderByDescending(x => x.TakenDate)
+                .ToListAsync();
+
+            return xrays
+                .GroupBy(x => x.ToothNumber!.Value)
+                .OrderBy(g => g.Key)
+                .Select(g => new XRayGroupDto
+                {
+                    ToothNumber = g.Key,
+                    Items = g.Select(x => new XRayItemDto
+                    {
+                        Id = x.Id,
+                        FileName = x.FileName,
+                        FilePath = x.FilePath,
+                        Notes = x.Notes,
+                        TakenDate = x.TakenDate
+                    }).ToList()
+                }).ToList();
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> SaveDentalChart([FromBody] SaveChartRequest req)

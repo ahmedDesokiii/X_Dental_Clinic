@@ -157,4 +157,20 @@ namespace Dental.Modules.Clinical.DTOs
         public decimal VisitDiscount { get; set; }
         public decimal VisitRemaining { get; set; }
     }
+
+
+    public class XRayGroupDto
+    {
+        public int ToothNumber { get; set; }
+        public List<XRayItemDto> Items { get; set; } = new();
+    }
+
+    public class XRayItemDto
+    {
+        public int Id { get; set; }
+        public string FileName { get; set; } = "";
+        public string FilePath { get; set; } = "";
+        public string? Notes { get; set; }
+        public DateTime TakenDate { get; set; }
+    }
 }

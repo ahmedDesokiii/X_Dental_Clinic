@@ -3,24 +3,24 @@
     var previousSessions = ViewBag.PreviousSessions as List<Dental.Modules.Clinical.DTOs.PreviousSessionRecordDto> ?? new();
 }
 
-<div class="records-section" style="margin-top:0;">
-    <div class="records-head">
+<div class="prev-sessions-wrap">
+    <div class="section-head">
         <h4><i class="bi bi-clock-history"></i> سجل الجلسات السابقة</h4>
-        <span class="records-count">@previousSessions.Count سجل</span>
+        <span class="section-badge">@previousSessions.Count سجل</span>
     </div>
-    <div class="table-responsive" style="max-height:520px; overflow-y:auto;">
-        <table class="records-table">
+
+    <div class="table-responsive custom-scroll" style="max-height:520px;">
+        <table class="dc-table">
             <thead>
                 <tr>
-                    <th>السن</th>
+                    <th style="width:50px">السن</th>
                     <th>التاريخ</th>
                     <th>الحالة</th>
                     <th>التشخيص</th>
-                    <th>ملاحظات التشخيص</th>
-                    <th>سعر التشخيص</th>
+                    <th>ملاحظات</th>
+                    <th>السعر</th>
                     <th>إجمالي الزيارة</th>
                     <th>المدفوع</th>
-                    <th>الخصم</th>
                     <th>المتبقي</th>
                 </tr>
             </thead>
@@ -29,22 +29,24 @@
                 {
                     <tr>
                         <td><span class="tooth-chip">@r.ToothNumber</span></td>
-                        <td>@r.Date.ToString("dd/MM/yyyy")</td>
-                        <td>@r.StatusText</td>
+                        <td><span style="white-space:nowrap;">@r.Date.ToString("dd/MM/yyyy")</span></td>
+                        <td><span style="font-weight:700;color:#0d9488;">@r.StatusText</span></td>
                         <td>@(r.DiagnosisName ?? "-")</td>
-                        <td>@(r.DiagnosisNotes ?? "-")</td>
-                        <td>@(r.DiagnosisPrice > 0 ? r.DiagnosisPrice.ToString("N0") + " م.ج" : "-")</td>
+                        <td><small style="color:#64748b;">@(r.DiagnosisNotes ?? "-")</small></td>
+                        <td><b>@(r.DiagnosisPrice > 0 ? r.DiagnosisPrice.ToString("N0") + " م.ج" : "-")</b></td>
                         <td>@r.VisitTotalAmount.ToString("N0") م.ج</td>
-                        <td>@r.VisitPaidAmount.ToString("N0") م.ج</td>
-                        <td>@r.VisitDiscount.ToString("N0") م.ج</td>
-                        <td>@r.VisitRemaining.ToString("N0") م.ج</td>
+                        <td style="color:#16a34a;font-weight:700;">@r.VisitPaidAmount.ToString("N0") م.ج</td>
+                        <td style="color:#dc2626;font-weight:700;">@r.VisitRemaining.ToString("N0") م.ج</td>
                     </tr>
                 }
             </tbody>
         </table>
         @if (!previousSessions.Any())
         {
-            <div class="empty-records">لا يوجد سجل سابق لهذا المريض.</div>
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <p>لا يوجد سجل سابق لهذا المريض.</p>
+            </div>
         }
     </div>
 </div>

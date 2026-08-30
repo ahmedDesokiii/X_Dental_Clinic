@@ -1,18 +1,12 @@
 ﻿@using Dental.Modules.Patients.Enums
 @using static Dental.Constants.EnumHelper
-
 @model Dental.Modules.Clinical.ViewModels.SessionViewModel
 
 @{
     ViewData["Title"] = $"سيشن — {Model.Patient.FullNameAr}";
 
-    var initials = string.Join(
-        "",
-        (Model.Patient.FullNameAr ?? "")
-            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-            .Take(2)
-            .Select(x => x[0])
-    );
+    var initials = string.Join("",
+        (Model.Patient.FullNameAr ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(x => x[0]));
 
     var sessionStatusClass = Model.Visit.Status switch
     {
@@ -45,591 +39,1122 @@
     var paidPercent = Model.Visit.TotalAmount > 0
         ? Math.Min(100, (int)Math.Round((Model.Visit.PaidAmount / Model.Visit.TotalAmount) * 100))
         : 100;
-
-    var progressColor = paidPercent >= 100 ? "#16a34a" : paidPercent >= 50 ? "#0d9488" : "#dc2626";
 }
 
-@*
-    ============================================================
-    Clinical Session - Unified Layout (v2)
-    ============================================================
-    1. Session Hero (هوية المريض + حالة السيشن + كل الأزرار + KPIs + شريط السداد)
-    2. Dental Chart | Payments  (عمود "نظرة عامة" اتشال)
-    3. Clinical Session Records
-
-    الهيدر هنا مستقل بستايله الخاص جوه الملف ده (مش معتمد على
-    patient-hero-shared.css) عشان يضمن إنه يشتغل مهما كان الـ Layout.
-    ============================================================
-*@
-
 <style>
-
     /* ============================================================
-           PAGE CONTAINER
+           DESIGN SYSTEM - Glass Clinic v4
            ============================================================ */
+    :root {
+        --dc-bg: #f0f7f7;
+        --dc-card: rgba(255,255,255,0.82);
+        --dc-card-solid: #ffffff;
+        --dc-border: rgba(255,255,255,0.6);
+        --dc-teal-50: #eafbfc;
+        --dc-teal-100: #c7f2ea;
+        --dc-teal-500: #14b8a6;
+        --dc-teal-600: #0d9488;
+        --dc-teal-700: #0d7377;
+        --dc-teal-900: #0a4d4f;
+        --dc-coral-300: #f6c6bc;
+        --dc-ink-900: #0b2e30;
+        --dc-ink-600: #4b6b6c;
+        --dc-ink-400: #94a3b8;
+        --dc-shadow-sm: 0 2px 8px rgba(10,77,79,0.04);
+        --dc-shadow: 0 8px 32px rgba(10,77,79,0.08);
+        --dc-shadow-lg: 0 20px 60px rgba(10,77,79,0.12);
+        --dc-glass: rgba(255,255,255,0.72);
+    }
 
     .clinical-session-page {
         width: 100%;
         min-height: 100vh;
-        padding: 16px;
-        background: radial-gradient(circle at 3% 0%, #e6fbf8 0%, transparent 40%), radial-gradient(circle at 100% 100%, #fef3ee 0%, transparent 35%), #f7fbfb;
+        background: radial-gradient(circle at 0% 0%, #e6fbf8 0%, transparent 45%), radial-gradient(circle at 100% 100%, #fef3ee 0%, transparent 35%), linear-gradient(180deg, #f0f7f7 0%, #f7fbfb 100%);
+        padding: 16px 20px 100px;
+        font-family: 'Segoe UI', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+        color: var(--dc-ink-900);
     }
-
-    .clinical-session-main-grid {
-        margin-top: 16px;
-    }
-
 
     /* ============================================================
-           SESSION HERO (مستقل بالكامل)
+           ANIMATIONS
            ============================================================ */
-
-    .session-hero-card {
-        position: relative;
-        overflow: hidden;
-        border-radius: 22px;
-        background: linear-gradient(135deg, #0d7377, #119e91, #0f9b8e);
-        padding: 24px 28px;
-        color: #fff;
-        box-shadow: 0 18px 44px rgba(13,115,119,.28);
-        margin-bottom: 16px;
-    }
-
-        .session-hero-card.status-success {
-            background: linear-gradient(135deg, #0d7377, #15803d, #16a34a);
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(24px) scale(0.98);
         }
 
-        .session-hero-card.status-danger {
-            background: linear-gradient(135deg, #7f1d1d, #b91c1c, #dc2626);
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    @@keyframes fadeInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
         }
 
-    .session-hero-top {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 18px;
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
 
-    .session-hero-identity {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-
-    .session-hero-avatar {
-        width: 62px;
-        height: 62px;
-        border-radius: 18px;
-        background: rgba(255,255,255,.18);
-        border: 1px solid rgba(255,255,255,.3);
-        backdrop-filter: blur(6px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.4rem;
-        font-weight: 800;
-        flex-shrink: 0;
-    }
-
-    .session-hero-identity h1 {
-        font-size: 1.25rem;
-        font-weight: 800;
-        margin: 0 0 8px;
-    }
-
-    .session-hero-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .session-hero-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(255,255,255,.18);
-        border: 1px solid rgba(255,255,255,.25);
-        padding: 5px 12px;
-        border-radius: 999px;
-        font-size: .78rem;
-        font-weight: 700;
-    }
-
-    .session-hero-actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .btn-session-hero {
-        border: none;
-        padding: 10px 18px;
-        border-radius: 12px;
-        font-weight: 700;
-        font-size: .84rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        transition: transform .18s ease, box-shadow .18s ease;
-        white-space: nowrap;
-    }
-
-        .btn-session-hero:hover {
-            transform: translateY(-2px);
+    @@keyframes fadeInRight {
+        from {
+            opacity: 0;
+            transform: translateX(30px);
         }
 
-        .btn-session-hero.primary {
-            background: #fff;
-            color: #0d7377;
-            box-shadow: 0 10px 24px rgba(0,0,0,.15);
-            font-size: .9rem;
-            padding: 11px 22px;
+        to {
+            opacity: 1;
+            transform: translateX(0);
         }
-
-        .btn-session-hero.glass {
-            background: rgba(255,255,255,.14);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,.32);
-        }
-
-        .btn-session-hero:disabled {
-            opacity: .7;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-
-    /* ============================================================
-           KPI STRIP (جوه الهيرو)
-           ============================================================ */
-
-    .session-hero-kpis {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 12px;
-        margin-top: 20px;
     }
 
-    .kpi-glass {
-        background: rgba(255,255,255,.14);
-        border: 1px solid rgba(255,255,255,.25);
-        border-radius: 14px;
-        padding: 12px 14px;
-        opacity: 0;
-        transform: translateY(10px);
-        animation: kpiRise .5s ease forwards;
-    }
-
-        .kpi-glass:nth-child(1) {
-            animation-delay: .05s;
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-12px);
         }
 
-        .kpi-glass:nth-child(2) {
-            animation-delay: .12s;
-        }
-
-        .kpi-glass:nth-child(3) {
-            animation-delay: .19s;
-        }
-
-        .kpi-glass:nth-child(4) {
-            animation-delay: .26s;
-        }
-
-    @@keyframes kpiRise {
         to {
             opacity: 1;
             transform: translateY(0);
         }
     }
 
-    .kpi-value {
-        font-size: 1.15rem;
+    @@keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @@keyframes pulseGlow {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(13,148,136,0.25);
+        }
+
+        50% {
+            box-shadow: 0 0 20px 4px rgba(13,148,136,0.15);
+        }
+    }
+
+    @@keyframes shimmer {
+        0% {
+            background-position: -200% 0;
+        }
+
+        100% {
+            background-position: 200% 0;
+        }
+    }
+
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-4px);
+        }
+    }
+
+    @@keyframes progressFill {
+        from {
+            width: 0%;
+        }
+    }
+
+    @@keyframes tabIndicator {
+        from {
+            transform: scaleX(0);
+        }
+
+        to {
+            transform: scaleX(1);
+        }
+    }
+
+    @@keyframes countUp {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+            filter: blur(4px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+        }
+    }
+
+    @@keyframes badgePop {
+        0% {
+            transform: scale(0);
+        }
+
+        70% {
+            transform: scale(1.15);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .anim-fade-up {
+        animation: fadeInUp 0.6s cubic-bezier(0.2,0.8,0.3,1) forwards;
+        opacity: 0;
+    }
+
+    .anim-fade-left {
+        animation: fadeInLeft 0.6s cubic-bezier(0.2,0.8,0.3,1) forwards;
+        opacity: 0;
+    }
+
+    .anim-fade-right {
+        animation: fadeInRight 0.6s cubic-bezier(0.2,0.8,0.3,1) forwards;
+        opacity: 0;
+    }
+
+    .anim-scale {
+        animation: scaleIn 0.5s cubic-bezier(0.2,1.4,0.4,1) forwards;
+        opacity: 0;
+    }
+
+    .anim-d1 {
+        animation-delay: 0.08s;
+    }
+
+    .anim-d2 {
+        animation-delay: 0.16s;
+    }
+
+    .anim-d3 {
+        animation-delay: 0.24s;
+    }
+
+    .anim-d4 {
+        animation-delay: 0.32s;
+    }
+
+    .anim-d5 {
+        animation-delay: 0.40s;
+    }
+
+    /* ============================================================
+           SESSION HERO - Compact Glass Card
+           ============================================================ */
+    .session-hero {
+        background: linear-gradient(135deg, #0d7377 0%, #0f9b8e 50%, #14b8a6 100%);
+        border-radius: 24px;
+        padding: 20px 28px;
+        color: #fff;
+        box-shadow: var(--dc-shadow-lg), 0 0 0 1px rgba(255,255,255,0.15) inset;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 20px;
+        animation: fadeInUp 0.7s ease forwards;
+    }
+
+        .session-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .session-hero.status-success {
+            background: linear-gradient(135deg, #0d7377 0%, #15803d 60%, #16a34a 100%);
+        }
+
+        .session-hero.status-danger {
+            background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 60%, #dc2626 100%);
+        }
+
+    .hero-grid {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 20px;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 20px;
+        background: rgba(255,255,255,0.18);
+        border: 1px solid rgba(255,255,255,0.3);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
         font-weight: 800;
+        flex-shrink: 0;
+        animation: float 4s ease-in-out infinite;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+
+    .hero-info h1 {
+        font-size: 1.3rem;
+        font-weight: 800;
+        margin: 0 0 10px;
+        letter-spacing: -0.3px;
+    }
+
+    .hero-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,0.14);
+        border: 1px solid rgba(255,255,255,0.22);
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        backdrop-filter: blur(4px);
+        transition: all 0.2s ease;
+    }
+
+        .hero-tag:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-1px);
+        }
+
+    .hero-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .btn-hero {
+        border: none;
+        padding: 10px 20px;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 0.82rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+        .btn-hero:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-hero.primary {
+            background: #fff;
+            color: var(--dc-teal-700);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+            animation: pulseGlow 3s ease-in-out infinite;
+        }
+
+        .btn-hero.glass {
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.28);
+        }
+
+            .btn-hero.glass:hover {
+                background: rgba(255,255,255,0.22);
+            }
+
+    /* KPIs & Progress */
+    .hero-metrics {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-top: 18px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .metric-glass {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.18);
+        border-radius: 16px;
+        padding: 14px;
+        text-align: center;
+        backdrop-filter: blur(4px);
+        transition: all 0.3s ease;
+    }
+
+        .metric-glass:hover {
+            background: rgba(255,255,255,0.18);
+            transform: translateY(-3px);
+        }
+
+    .metric-value {
+        font-size: 1.2rem;
+        font-weight: 800;
+        display: block;
+        animation: countUp 0.8s ease forwards;
+    }
+
+    .metric-label {
+        font-size: 0.7rem;
+        opacity: 0.85;
+        font-weight: 600;
+        margin-top: 4px;
         display: block;
     }
 
-    .kpi-label {
-        font-size: .72rem;
-        opacity: .85;
-        font-weight: 600;
-        margin-top: 2px;
+    .payment-progress-hero {
+        margin-top: 16px;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 16px;
+        padding: 14px 18px;
+        position: relative;
+        z-index: 2;
     }
 
-    @@media (max-width: 767.98px) {
-        .session-hero-kpis {
+    .progress-label-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .progress-track {
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.15);
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #fff, #c7f2ea);
+        box-shadow: 0 0 12px rgba(255,255,255,0.3);
+        animation: progressFill 1.2s cubic-bezier(0.2,0.8,0.3,1) forwards;
+        width: @(paidPercent) %;
+    }
+
+    /* ============================================================
+           MAIN DASHBOARD GRID
+           ============================================================ */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 500px 1fr;
+        gap: 20px;
+        align-items: start;
+    }
+
+    /* ============================================================
+           LEFT: CHART PANEL (Sticky)
+           ============================================================ */
+    .chart-panel {
+        position: sticky;
+        top: 16px;
+        background: var(--dc-card);
+        border-radius: 24px;
+        border: 1px solid var(--dc-border);
+        box-shadow: var(--dc-shadow);
+        padding: 20px;
+        backdrop-filter: blur(12px);
+        animation: fadeInLeft 0.7s 0.15s ease forwards;
+        opacity: 0;
+    }
+
+    .chart-panel-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+        .chart-panel-head h3 {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--dc-ink-900);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+    .chart-legend-compact {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(0,0,0,0.04);
+    }
+
+    .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .legend-item-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--dc-ink-600);
+        padding: 3px 8px;
+        border-radius: 8px;
+        background: rgba(0,0,0,0.02);
+    }
+
+    /* ============================================================
+           RIGHT: CONTENT PANEL
+           ============================================================ */
+    .content-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        background: var(--dc-card);
+        border-radius: 24px;
+        border: 1px solid var(--dc-border);
+        box-shadow: var(--dc-shadow);
+        backdrop-filter: blur(12px);
+        overflow: hidden;
+        animation: fadeInRight 0.7s 0.2s ease forwards;
+        opacity: 0;
+        min-height: 600px;
+    }
+
+    /* Tabs */
+    .dc-tabs-bar {
+        display: flex;
+        gap: 4px;
+        background: linear-gradient(180deg, rgba(240,253,250,0.8) 0%, rgba(240,253,250,0.4) 100%);
+        padding: 8px;
+        border-bottom: 1px solid rgba(0,0,0,0.04);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .dc-tab-btn {
+        flex: 1;
+        border: none;
+        background: transparent;
+        color: var(--dc-ink-600);
+        font-weight: 700;
+        font-size: 0.82rem;
+        padding: 10px 12px;
+        border-radius: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.25s cubic-bezier(0.2,0.8,0.3,1);
+        position: relative;
+    }
+
+        .dc-tab-btn:hover {
+            background: rgba(13,148,136,0.06);
+            color: var(--dc-teal-700);
+        }
+
+        .dc-tab-btn.active {
+            background: #fff;
+            color: var(--dc-teal-700);
+            box-shadow: 0 4px 16px rgba(13,115,119,0.12);
+        }
+
+        .dc-tab-btn .tab-badge {
+            background: var(--dc-teal-100);
+            color: var(--dc-teal-700);
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 1px 7px;
+            border-radius: 999px;
+            min-width: 20px;
+            text-align: center;
+        }
+
+    .dc-tab-panel {
+        display: none;
+        padding: 20px;
+        animation: fadeInUp 0.35s ease;
+    }
+
+        .dc-tab-panel.active {
+            display: block;
+        }
+
+    /* ============================================================
+           BOTTOM ACTION BAR (Sticky)
+           ============================================================ */
+    .bottom-action-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(255,255,255,0.92);
+        backdrop-filter: blur(20px) saturate(1.8);
+        border-top: 1px solid rgba(0,0,0,0.06);
+        box-shadow: 0 -8px 32px rgba(10,77,79,0.08);
+        padding: 14px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 100;
+        transform: translateY(100%);
+        transition: transform 0.4s cubic-bezier(0.2,0.8,0.3,1);
+    }
+
+        .bottom-action-bar.visible {
+            transform: translateY(0);
+        }
+
+    .bottom-stats {
+        display: flex;
+        gap: 24px;
+    }
+
+    .bottom-stat {
+        text-align: center;
+    }
+
+    .bottom-stat-value {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--dc-ink-900);
+        display: block;
+        line-height: 1;
+    }
+
+    .bottom-stat-label {
+        font-size: 0.7rem;
+        color: var(--dc-ink-400);
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    .bottom-stat.remaining .bottom-stat-value {
+        color: #dc2626;
+    }
+
+    .bottom-stat.paid .bottom-stat-value {
+        color: #16a34a;
+    }
+
+    .btn-finish {
+        background: linear-gradient(135deg, var(--dc-teal-600), var(--dc-teal-700));
+        color: #fff;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 16px;
+        font-weight: 800;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(13,115,119,0.3);
+        transition: all 0.3s ease;
+        animation: pulseGlow 3s ease-in-out infinite;
+    }
+
+        .btn-finish:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 12px 32px rgba(13,115,119,0.4);
+        }
+
+    /* ============================================================
+           SHARED COMPONENTS
+           ============================================================ */
+    .section-card {
+        background: var(--dc-card-solid);
+        border-radius: 20px;
+        border: 1px solid rgba(0,0,0,0.04);
+        box-shadow: var(--dc-shadow-sm);
+        padding: 20px;
+        margin-bottom: 16px;
+        transition: all 0.3s ease;
+    }
+
+        .section-card:hover {
+            box-shadow: var(--dc-shadow);
+            transform: translateY(-2px);
+        }
+
+    .section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+        .section-head h4 {
+            margin: 0;
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: var(--dc-ink-900);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+    .section-badge {
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: var(--dc-teal-700);
+        background: var(--dc-teal-50);
+        padding: 4px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--dc-teal-100);
+    }
+
+    .dc-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 0.82rem;
+    }
+
+        .dc-table th {
+            text-align: right;
+            padding: 12px 10px;
+            color: var(--dc-ink-400);
+            font-weight: 700;
+            border-bottom: 2px solid #f1f5f9;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .dc-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f8fafc;
+            color: #1e293b;
+            vertical-align: middle;
+            transition: background 0.15s ease;
+        }
+
+        .dc-table tbody tr:hover td {
+            background: linear-gradient(90deg, transparent, rgba(13,148,136,0.03), transparent);
+        }
+
+        .dc-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+    .tooth-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+        color: #5b21b6;
+        font-weight: 800;
+        font-size: 0.85rem;
+        box-shadow: 0 2px 6px rgba(91,33,182,0.1);
+    }
+
+    .badge-pending {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: #b45309;
+        background: #fef3c7;
+        padding: 3px 10px;
+        border-radius: 8px;
+        white-space: nowrap;
+    }
+
+    .row-pending {
+        background: linear-gradient(90deg, #fffbeb, #fff) !important;
+    }
+
+        .row-pending td:first-child {
+            border-right: 3px solid #f59e0b;
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--dc-ink-400);
+    }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            display: block;
+            opacity: 0.4;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+    .btn-sm {
+        border: none;
+        background: transparent;
+        color: var(--dc-ink-400);
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+    }
+
+        .btn-sm:hover {
+            background: #f1f5f9;
+            color: var(--dc-teal-600);
+        }
+
+        .btn-sm.danger:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+    /* Scrollbar styling */
+    .custom-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 999px;
+    }
+
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+    /* Responsive */
+    @@media (max-width: 1199.98px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-panel {
+            position: relative;
+            top: 0;
+        }
+
+        .hero-grid {
+            grid-template-columns: auto 1fr;
+        }
+
+        .hero-actions {
+            flex-direction: row;
+            grid-column: 1 / -1;
+        }
+
+        .hero-metrics {
             grid-template-columns: repeat(2, 1fr);
         }
     }
 
-
-    /* ============================================================
-           PAYMENT PROGRESS BAR
-           ============================================================ */
-
-    .payment-progress-wrap {
-        margin-top: 16px;
-        background: rgba(255,255,255,.14);
-        border: 1px solid rgba(255,255,255,.25);
-        border-radius: 14px;
-        padding: 12px 16px;
-    }
-
-    .payment-progress-label {
-        display: flex;
-        justify-content: space-between;
-        font-size: .8rem;
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 8px;
-    }
-
-    .payment-progress-track {
-        height: 10px;
-        border-radius: 999px;
-        background: rgba(255,255,255,.2);
-        overflow: hidden;
-    }
-
-    .payment-progress-fill {
-        height: 100%;
-        border-radius: 999px;
-        background: #fff;
-        transition: width .6s cubic-bezier(.2,.8,.3,1);
-    }
-
-
-    /* ============================================================
-           RESPONSIVE — HERO
-           ============================================================ */
-
     @@media (max-width: 767.98px) {
-        .session-hero-card {
-            padding: 18px;
+        .clinical-session-page {
+            padding: 12px 12px 100px;
         }
 
-        .session-hero-top {
-            flex-direction: column;
-            align-items: stretch;
+        .hero-metrics {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
         }
 
-        .session-hero-actions {
-            width: 100%;
+        .bottom-stats {
+            gap: 12px;
         }
 
-        .btn-session-hero {
-            flex: 1;
-            justify-content: center;
+        .bottom-stat-label {
+            font-size: 0.6rem;
         }
     }
 
+    @@media print {
+        .session-hero .hero-actions, .payment-progress-hero,
+        .dc-tabs-bar, .bottom-action-bar, .btn-sm {
+            display: none !important;
+        }
+
+        .dc-tab-panel {
+            display: block !important;
+        }
+
+        .clinical-session-page {
+            padding: 0 !important;
+            background: #fff !important;
+        }
+
+        .dashboard-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        .chart-panel, .content-panel {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+    }
 </style>
 
-
-<div class="container-fluid clinical-session-page"
-     dir="rtl"
+<div class="clinical-session-page" dir="rtl"
      data-patient-id="@Model.Patient.Id"
      data-visit-id="@Model.Visit.Id"
      data-session-status="@sessionStatusText">
 
-
-    @* ============================================================
-       SESSION HERO — هوية المريض + KPIs + شريط السداد + كل الأزرار
-       ============================================================ *@
-
-    <div class="session-hero-card status-@sessionStatusClass">
-
-        <div class="session-hero-top">
-
-            <div class="session-hero-identity">
-                <div class="session-hero-avatar">@initials</div>
-                <div>
-                    <h1>@Model.Patient.FullNameAr</h1>
-                    <div class="session-hero-meta">
-                        <span class="session-hero-tag">
-                            <i class="bi bi-circle-fill" style="font-size:.5rem;"></i> @sessionStatusText
-                        </span>
-                        <span class="session-hero-tag"><i class="bi bi-hash"></i> @Model.Patient.PatientCode</span>
-                        <span class="session-hero-tag"><i class="bi bi-telephone"></i> @Model.Patient.Mobile</span>
-                        <span class="session-hero-tag"><i class="bi @typeIcon"></i> @typeText</span>
-                        <span class="session-hero-tag"><i class="bi bi-droplet"></i> @(Model.Patient.BloodGroup?.Name ?? "-")</span>
-                        <span class="session-hero-tag"><i class="bi bi-calendar"></i> @Model.Visit.VisitDate.ToString("dd/MM/yyyy")</span>
-                    </div>
+    @* ====== HERO ====== *@
+    <div class="session-hero status-@sessionStatusClass anim-fade-up pb-0">
+        <div class="hero-grid">
+            <div class="hero-avatar">@initials</div>
+            <div class="hero-info">
+                <h1>@Model.Patient.FullNameAr</h1>
+                <div class="hero-tags">
+                    <span class="hero-tag"><i class="bi bi-circle-fill" style="font-size:.45rem;"></i> @sessionStatusText</span>
+                    <span class="hero-tag"><i class="bi bi-hash"></i> @Model.Patient.PatientCode</span>
+                    <span class="hero-tag"><i class="bi bi-telephone"></i> @Model.Patient.Mobile</span>
+                    <span class="hero-tag"><i class="bi @typeIcon"></i> @typeText</span>
+                    <span class="hero-tag"><i class="bi bi-droplet"></i> @(Model.Patient.BloodGroup?.Name ?? "-")</span>
+                    <span class="hero-tag"><i class="bi bi-calendar"></i> @Model.Visit.VisitDate.ToString("dd/MM/yyyy")</span>
                 </div>
             </div>
-
-            <div class="session-hero-actions">
-                <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.Patient.Id" class="btn-session-hero glass">
-                    <i class="bi bi-arrow-right"></i> رجوع لملف المريض
+            <div class="hero-actions">
+                <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.Patient.Id" class="btn-hero glass">
+                    <i class="bi bi-arrow-right"></i> رجوع
                 </a>
-                <button type="button" id="btnPrintSession" class="btn-session-hero glass">
+                <button type="button" id="btnPrintSession" class="btn-hero glass">
                     <i class="bi bi-printer"></i> طباعة
                 </button>
-                <button type="button" id="btnFinishSession" class="btn-session-hero primary">
-                    <i class="bi bi-check2-circle"></i> إنهاء وحفظ السيشن
+                <button type="button" id="btnFinishSession" class="btn-hero primary">
+                    <i class="bi bi-check2-circle"></i> إنهاء السيشن
                 </button>
             </div>
-
         </div>
 
-        <div class="session-hero-kpis">
-            <div class="kpi-glass">
-                <span class="kpi-value">@Model.Visit.TotalAmount.ToString("N0")</span>
-                <span class="kpi-label">الإجمالي (م.ج)</span>
+        <div class="hero-metrics" hidden>
+            <div class="metric-glass anim-fade-up anim-d1">
+                <span class="metric-value">@Model.Visit.TotalAmount.ToString("N0")</span>
+                <span class="metric-label">الإجمالي (م.ج)</span>
             </div>
-            <div class="kpi-glass">
-                <span class="kpi-value">@Model.Visit.Discount.ToString("N0")</span>
-                <span class="kpi-label">الخصم</span>
+            <div class="metric-glass anim-fade-up anim-d2">
+                <span class="metric-value">@Model.Visit.Discount.ToString("N0")</span>
+                <span class="metric-label">الخصم</span>
             </div>
-            <div class="kpi-glass">
-                <span class="kpi-value">@Model.Visit.PaidAmount.ToString("N0")</span>
-                <span class="kpi-label">المدفوع</span>
+            <div class="metric-glass anim-fade-up anim-d3">
+                <span class="metric-value">@Model.Visit.PaidAmount.ToString("N0")</span>
+                <span class="metric-label">المدفوع</span>
             </div>
-            <div class="kpi-glass">
-                <span class="kpi-value">@Model.Visit.Remaining.ToString("N0")</span>
-                <span class="kpi-label">المتبقي</span>
+            <div class="metric-glass anim-fade-up anim-d4">
+                <span class="metric-value">@Model.Visit.Remaining.ToString("N0")</span>
+                <span class="metric-label">المتبقي</span>
             </div>
         </div>
 
-        <div class="payment-progress-wrap">
-            <div class="payment-progress-label">
+        <div class="payment-progress-hero" hidden>
+            <div class="progress-label-row">
                 <span>نسبة السداد</span>
                 <b>@paidPercent%</b>
             </div>
-            <div class="payment-progress-track">
-                <div class="payment-progress-fill" style="width:@(paidPercent)%;"></div>
+            <div class="progress-track">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    @* ====== MAIN DASHBOARD GRID ====== *@
+    <div class="dashboard-grid">
+
+        @* --- LEFT: Chart --- *@
+        <div class="chart-panel">
+            @await Html.PartialAsync("_DentalChartInteractive", Model)
+            <div class="chart-legend-compact">
+                <span class="legend-item-sm"><span class="legend-dot" style="background:#fff;border:2px solid #0f9b8e;"></span> سليم</span>
+                <span class="legend-item-sm"><span class="legend-dot" style="background:#ef4444;"></span> تسوس</span>
+                <span class="legend-item-sm"><span class="legend-dot" style="background:#3b82f6;"></span> معالج</span>
+                <span class="legend-item-sm"><span class="legend-dot" style="background:#a855f7;"></span> تاج</span>
+                <span class="legend-item-sm"><span class="legend-dot" style="background:#f59e0b;"></span> عصب</span>
+                <span class="legend-item-sm"><span class="legend-dot" style="background:#ec4899;"></span> زرعة</span>
+                <span class="legend-item-sm"><span class="legend-dot" style="background:#cbd5e1;"></span> مفقود</span>
             </div>
         </div>
 
-    </div>
+        @* --- RIGHT: Tabs Content --- *@
+        <div class="content-panel">
+            <div class="dc-tabs-bar">
+                <button type="button" class="dc-tab-btn active" onclick="switchTab('tabCurrent', this)">
+                    <i class="bi bi-table"></i> السيشن الحالي
+                    <span class="tab-badge" id="tabBadgeCurrent">0</span>
+                </button>
 
+                <button type="button" class="dc-tab-btn" onclick="switchTab('tabPrev', this)">
+                    <i class="bi bi-clock-history"></i> سجل سابق
+                </button>
+                <button type="button" class="dc-tab-btn" onclick="switchTab('tabXray', this)">
+                    <i class="bi bi-image"></i> الأشعة
+                </button>
+                <button type="button" class="dc-tab-btn" onclick="switchTab('tabFollow', this)">
+                    <i class="bi bi-calendar-plus"></i> متابعة
+                </button>
+            </div>
 
-    @* ============================================================
-       MAIN SESSION AREA
-       col-8 : Dental Chart
-       col-4 : Payments
-       ============================================================ *@
-
-    <div class="row g-3 align-items-stretch clinical-session-main-grid">
-        <div class="col-12 col-lg-5">
-            @await Html.PartialAsync("_DentalChartInteractive", Model)
+            <div class="dc-tab-panel active custom-scroll" id="tabCurrent" style="max-height:680px; overflow-y:auto;">
+                @await Html.PartialAsync("_ClinicalRecordsTable", Model)
+                @await Html.PartialAsync("_PaymentsCompact", Model)
+            </div>
+            <div class="dc-tab-panel custom-scroll" id="tabPrev" style="max-height:680px; overflow-y:auto;">
+                @await Html.PartialAsync("_PreviousSessionsTable", Model)
+            </div>
+            <div class="dc-tab-panel custom-scroll" id="tabXray" style="max-height:680px; overflow-y:auto;">
+                @await Html.PartialAsync("_XRaysTable", Model)
+            </div>
+            <div class="dc-tab-panel custom-scroll" id="tabFollow" style="max-height:680px; overflow-y:auto;">
+                @await Html.PartialAsync("_FollowUpPanel", Model)
+            </div>
         </div>
-        <div class="col-12 col-lg-7">
-            @await Html.PartialAsync("_PreviousSessionsTable", Model)
-        </div>
     </div>
-
-
-    @* ============================================================
-       CLINICAL SESSION RECORDS
-       ============================================================ *@
-
-    @await Html.PartialAsync("_ClinicalRecordsTable", Model)
-
 
 </div>
 
+@* ====== BOTTOM STICKY ACTION BAR ====== *@
+<div class="bottom-action-bar" id="bottomBar">
+    <div class="bottom-stats">
+        <div class="bottom-stat">
+            <span class="bottom-stat-value" id="barTotal">@Model.Visit.TotalAmount.ToString("N0")</span>
+            <span class="bottom-stat-label">الإجمالي</span>
+        </div>
+        <div class="bottom-stat paid">
+            <span class="bottom-stat-value" id="barPaid">@Model.Visit.PaidAmount.ToString("N0")</span>
+            <span class="bottom-stat-label">المدفوع</span>
+        </div>
+        <div class="bottom-stat remaining">
+            <span class="bottom-stat-value" id="barRemaining">@Model.Visit.Remaining.ToString("N0")</span>
+            <span class="bottom-stat-label">المتبقي</span>
+        </div>
+    </div>
+    <button type="button" class="btn-finish" onclick="window.saveAndEndSession()">
+        <i class="bi bi-check2-circle"></i> إنهاء وحفظ السيشن
+    </button>
+</div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @section Scripts {
-
     <script>
         (() => {
             "use strict";
-            const btnFinishSession = document.getElementById("btnFinishSession");
-            const btnPrintSession = document.getElementById("btnPrintSession");
 
-            if (btnFinishSession) {
-                btnFinishSession.addEventListener("click", function () {
+            // Tab switching with animation reset
+            window.switchTab = function(panelId, btn) {
+                document.querySelectorAll('.dc-tab-panel').forEach(p => p.classList.remove('active'));
+                document.querySelectorAll('.dc-tab-btn').forEach(b => b.classList.remove('active'));
+                const panel = document.getElementById(panelId);
+                panel.classList.add('active');
+                // Re-trigger animation
+                panel.style.animation = 'none';
+                void panel.offsetWidth;
+                panel.style.animation = '';
+                btn.classList.add('active');
+            };
+
+            // Print
+            const btnPrint = document.getElementById("btnPrintSession");
+            if (btnPrint) btnPrint.addEventListener("click", () => window.print());
+            const btnFinishTop = document.getElementById("btnFinishSession");
+            if (btnFinishTop) {
+                btnFinishTop.addEventListener("click", function () {
                     if (window.saveAndEndSession) window.saveAndEndSession();
                 });
             }
-            if (btnPrintSession) {
-                btnPrintSession.addEventListener("click", function () {
-                    window.print();
-                });
+
+            // Show bottom bar when there are pending changes
+            const bottomBar = document.getElementById('bottomBar');
+            function checkPendingChanges() {
+                const hasTeeth = window.pendingToothRecords && Object.keys(window.pendingToothRecords).length > 0;
+                const hasPayments = window.pendingPayments && window.pendingPayments.length > 0;
+                if (hasTeeth || hasPayments) {
+                    bottomBar.classList.add('visible');
+                } else {
+                    bottomBar.classList.remove('visible');
+                }
             }
+            // Hook into existing render functions
+            const origRender = window.renderRecordsTable;
+            window.renderRecordsTable = function() {
+                if (origRender) origRender();
+                checkPendingChanges();
+                updateTabBadge();
+            };
+            const origRenderPay = window.renderPendingPaymentsSummary;
+            window.renderPendingPaymentsSummary = function() {
+                if (origRenderPay) origRenderPay();
+                checkPendingChanges();
+                updateBottomBar();
+            };
+
+            function updateTabBadge() {
+                const count = window.pendingToothRecords ? Object.keys(window.pendingToothRecords).length : 0;
+                const badge = document.getElementById('tabBadgeCurrent');
+                if (badge) {
+                    badge.textContent = count;
+                    badge.style.display = count > 0 ? 'inline-block' : 'none';
+                    if (count > 0) badge.style.animation = 'badgePop 0.4s ease';
+                }
+            }
+
+            function updateBottomBar() {
+                const baseTotal = @(Model.Visit.TotalAmount.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                const basePaid = @(Model.Visit.PaidAmount.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                const discount = @(Model.Visit.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                const pendingDiagnosisTotal = window.pendingToothRecords
+                    ? Object.values(window.pendingToothRecords).reduce((sum, t) => sum + (t.DiagnosisPrice || 0), 0)
+                    : 0;
+                const pendingPaidTotal = window.pendingPayments ? window.pendingPayments.reduce((sum, p) => sum + p.Amount, 0) : 0;
+                const newTotal = baseTotal + pendingDiagnosisTotal;
+                const newPaid = basePaid + pendingPaidTotal;
+                const newRemaining = newTotal - discount - newPaid;
+
+                const fmt = n => n.toLocaleString('en-EG');
+                const elTotal = document.getElementById('barTotal');
+                const elPaid = document.getElementById('barPaid');
+                const elRem = document.getElementById('barRemaining');
+                if (elTotal) elTotal.textContent = fmt(newTotal);
+                if (elPaid) elPaid.textContent = fmt(newPaid);
+                if (elRem) elRem.textContent = fmt(newRemaining);
+            }
+
+            // Initial check
+            setTimeout(checkPendingChanges, 500);
         })();
     </script>
-
-    <script>
-
-        (() => {
-
-            "use strict";
-
-            const btnFinishSession = document.getElementById("btnFinishSession");
-            const btnPrintSession = document.getElementById("btnPrintSession");
-
-            const sessionPage = document.querySelector(".clinical-session-page");
-            const patientId = sessionPage?.dataset.patientId;
-            const visitId = sessionPage?.dataset.visitId;
-
-            const saveClinicalRecordUrl = '@Url.Action("SaveClinicalRecord", "Clinical")';
-            const completeVisitUrl = '@Url.Action("CompleteVisit", "Clinical")';
-
-            function showMessage(message, type = "error") {
-                if (typeof Swal !== "undefined") {
-                    Swal.fire({ icon: type, text: message, confirmButtonText: "حسنًا" });
-                    return;
-                }
-                alert(message);
-            }
-
-            function getToothRecords() {
-                if (window.clinicalToothRecords && Array.isArray(window.clinicalToothRecords)) {
-                    return window.clinicalToothRecords;
-                }
-                if (window.toothRecords && Array.isArray(window.toothRecords)) {
-                    return window.toothRecords;
-                }
-                return [];
-            }
-
-            async function saveClinicalRecord() {
-                const toothRecords = getToothRecords();
-
-                if (!toothRecords.length) {
-                    const result = await confirmWithoutTeeth();
-                    if (!result) return false;
-                    return true;
-                }
-
-                const request = {
-                    patientId: Number(patientId),
-                    visitId: Number(visitId),
-                    toothRecords: toothRecords
-                };
-
-                const response = await fetch(saveClinicalRecordUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(request)
-                });
-
-                if (!response.ok) throw new Error("حدث خطأ أثناء الاتصال بالسيرفر.");
-
-                const result = await response.json();
-                if (!result.success) throw new Error(result.message || "فشل حفظ بيانات السيشن.");
-
-                return true;
-            }
-
-            async function confirmWithoutTeeth() {
-                if (typeof Swal === "undefined") {
-                    return confirm("لم يتم إضافة أي أسنان لهذه السيشن.\n\nهل تريد إنهاء السيشن بدون بيانات أسنان؟");
-                }
-
-                const result = await Swal.fire({
-                    icon: "question",
-                    title: "لا توجد بيانات أسنان",
-                    text: "لم يتم إضافة أي سن لهذه السيشن. هل تريد إنهاء السيشن بدون بيانات أسنان؟",
-                    showCancelButton: true,
-                    confirmButtonText: "نعم، إنهاء السيشن",
-                    cancelButtonText: "إلغاء",
-                    reverseButtons: true
-                });
-
-                return result.isConfirmed;
-            }
-
-            async function completeVisit() {
-                const response = await fetch(completeVisitUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ visitId: Number(visitId) })
-                });
-
-                if (!response.ok) throw new Error("حدث خطأ أثناء إنهاء الزيارة.");
-
-                const result = await response.json();
-                if (!result.success) throw new Error(result.message || "تعذر إنهاء الزيارة.");
-
-                return result;
-            }
-
-            async function finishSession() {
-                if (!patientId || !visitId) {
-                    showMessage("بيانات المريض أو الزيارة غير صالحة.");
-                    return;
-                }
-
-                try {
-                    if (btnFinishSession) {
-                        btnFinishSession.disabled = true;
-                        btnFinishSession.dataset.originalText = btnFinishSession.innerHTML;
-                        btnFinishSession.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> جاري الحفظ...';
-                    }
-
-                    const saved = await saveClinicalRecord();
-                    if (!saved) return;
-
-                    await completeVisit();
-
-                    if (typeof Swal !== "undefined") {
-                        await Swal.fire({
-                            icon: "success",
-                            title: "تم بنجاح",
-                            text: "تم حفظ بيانات السيشن وإنهاء الزيارة.",
-                            confirmButtonText: "حسنًا"
-                        });
-                    } else {
-                        alert("تم حفظ بيانات السيشن وإنهاء الزيارة.");
-                    }
-
-                    window.location.href = '@Url.Action("Details", "Patients")' + '?id=' + encodeURIComponent(patientId);
-
-                } catch (error) {
-                    console.error("Finish Session Error:", error);
-                    showMessage(error.message || "حدث خطأ أثناء حفظ وإنهاء السيشن.", "error");
-                } finally {
-                    if (btnFinishSession) {
-                        btnFinishSession.disabled = false;
-                        if (btnFinishSession.dataset.originalText) {
-                            btnFinishSession.innerHTML = btnFinishSession.dataset.originalText;
-                        }
-                    }
-                }
-            }
-
-            function printSession() {
-                window.print();
-            }
-
-            if (btnFinishSession) btnFinishSession.addEventListener("click", finishSession);
-            if (btnPrintSession) btnPrintSession.addEventListener("click", printSession);
-
-        })();
-
-    </script>
-
-    <style>
-        @@media print {
-            .session-hero-card .session-hero-actions,
-            .payment-progress-wrap {
-                display: none !important;
-            }
-
-            .clinical-session-page {
-                padding: 0 !important;
-                background: #fff !important;
-            }
-        }
-    </style>
-
-    <style>
-        @@media print {
-            .session-hero-card .session-hero-actions,
-            .payment-progress-wrap {
-                display: none !important;
-            }
-
-            .clinical-session-page {
-                padding: 0 !important;
-                background: #fff !important;
-            }
-        }
-    </style>
-
 }

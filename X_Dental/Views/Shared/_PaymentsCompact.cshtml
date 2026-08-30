@@ -1,354 +1,259 @@
-@* ============================================================
-   Views/Shared/_PaymentsCompact.cshtml
-   عمود المدفوعات — ملخص الحساب + سجل المدفوعات القديمة + مدفوعات هذا السيشن (مؤقت)
-   ============================================================ *@
 @model Dental.Modules.Clinical.ViewModels.SessionViewModel
 
-<div class="side-panel">
-
+<div class="payments-section" style="margin-top:16px;">
     @if (Model.ShowCategoryBreakdown)
     {
-        <div class="side-panel-head">
-            <i class="bi bi-collection"></i> إجمالي حساب المريض (كل الملفين)
-        </div>
-
-        @foreach (var cat in Model.CategoryBreakdown)
-        {
-            <div class="mini-card pay-summary category-summary">
-                <div class="category-summary-title">
-                    <i class="bi @cat.Icon"></i> @cat.CategoryName
-                </div>
-                <div class="pay-summary-row">
-                    <span>الإجمالي</span><b>@cat.TotalAmount.ToString("N0") م.ج</b>
-                </div>
-                <div class="pay-summary-row">
-                    <span>الخصم</span><b>@cat.Discount.ToString("N0") م.ج</b>
-                </div>
-                <div class="pay-summary-row paid">
-                    <span>المدفوع</span><b>@cat.PaidAmount.ToString("N0") م.ج</b>
-                </div>
-                <div class="pay-summary-row remaining">
-                    <span>المتبقي</span><b>@cat.Remaining.ToString("N0") م.ج</b>
-                </div>
+        <div class="section-card" style="background: linear-gradient(160deg, #f0fdfa, #eafbfc); border-color: #99f6e4;">
+            <div class="section-head">
+                <h4><i class="bi bi-collection"></i> ملخص حساب المريض الكلي</h4>
             </div>
-        }
-
-        <div class="mini-card pay-summary grand-total">
-            <div class="category-summary-title">
-                <i class="bi bi-calculator"></i> الإجمالي الكلي (عام + تقويم)
-            </div>
-            <div class="pay-summary-row">
-                <span>الإجمالي</span><b>@Model.CategoryBreakdown.Sum(c => c.TotalAmount).ToString("N0") م.ج</b>
-            </div>
-            <div class="pay-summary-row">
-                <span>الخصم</span><b>@Model.CategoryBreakdown.Sum(c => c.Discount).ToString("N0") م.ج</b>
-            </div>
-            <div class="pay-summary-row paid">
-                <span>المدفوع</span><b>@Model.CategoryBreakdown.Sum(c => c.PaidAmount).ToString("N0") م.ج</b>
-            </div>
-            <div class="pay-summary-row remaining">
-                <span>المتبقي</span><b>@Model.CategoryBreakdown.Sum(c => c.Remaining).ToString("N0") م.ج</b>
+            <div class="category-grid">
+                @foreach (var cat in Model.CategoryBreakdown)
+                {
+                    <div class="cat-card">
+                        <div class="cat-title"><i class="bi @cat.Icon"></i> @cat.CategoryName</div>
+                        <div class="cat-row"><span>الإجمالي</span><b>@cat.TotalAmount.ToString("N0")</b></div>
+                        <div class="cat-row"><span>الخصم</span><b>@cat.Discount.ToString("N0")</b></div>
+                        <div class="cat-row paid"><span>المدفوع</span><b>@cat.PaidAmount.ToString("N0")</b></div>
+                        <div class="cat-row remaining"><span>المتبقي</span><b>@cat.Remaining.ToString("N0")</b></div>
+                    </div>
+                }
+                <div class="cat-card grand">
+                    <div class="cat-title"><i class="bi bi-calculator"></i> الإجمالي الكلي</div>
+                    <div class="cat-row"><span>الإجمالي</span><b>@Model.CategoryBreakdown.Sum(c => c.TotalAmount).ToString("N0")</b></div>
+                    <div class="cat-row"><span>الخصم</span><b>@Model.CategoryBreakdown.Sum(c => c.Discount).ToString("N0")</b></div>
+                    <div class="cat-row paid"><span>المدفوع</span><b>@Model.CategoryBreakdown.Sum(c => c.PaidAmount).ToString("N0")</b></div>
+                    <div class="cat-row remaining"><span>المتبقي</span><b>@Model.CategoryBreakdown.Sum(c => c.Remaining).ToString("N0")</b></div>
+                </div>
             </div>
         </div>
     }
 
-    <div class="side-panel-head">
-        <i class="bi bi-credit-card-2-front"></i> مدفوعات هذه الزيارة
-    </div>
+    @* Visit Summary + Add Payment *@
+    <div class="section-card" style="margin-bottom:0;">
+        <div class="section-head">
+            <h4><i class="bi bi-credit-card-2-front"></i> ملخص هذه الزيارة</h4>
+            <button class="btn-add-payment" onclick="openPaymentModal()">
+                <i class="bi bi-plus-lg"></i> تسجيل دفعة
+            </button>
+        </div>
+        <div class="pay-summary-grid">
+            <div class="pay-stat-box">
+                <span class="pay-stat-label">الإجمالي</span>
+                <span class="pay-stat-value" id="paySummaryTotal">@Model.Visit.TotalAmount.ToString("N0") <small>م.ج</small></span>
+            </div>
+            <div class="pay-stat-box">
+                <span class="pay-stat-label">الخصم</span>
+                <span class="pay-stat-value" style="color:#f59e0b;" id="paySummaryDiscount">@Model.Visit.Discount.ToString("N0") <small>م.ج</small></span>
+            </div>
+            <div class="pay-stat-box">
+                <span class="pay-stat-label">المدفوع</span>
+                <span class="pay-stat-value" style="color:#16a34a;" id="paySummaryPaid">@Model.Visit.PaidAmount.ToString("N0") <small>م.ج</small></span>
+            </div>
+            <div class="pay-stat-box highlight">
+                <span class="pay-stat-label">المتبقي</span>
+                <span class="pay-stat-value" style="color:#dc2626;" id="paySummaryRemaining">@Model.Visit.Remaining.ToString("N0") <small>م.ج</small></span>
+            </div>
+        </div>
 
-    <div class="mini-card pay-summary">
-        <div class="pay-summary-row">
-            <span>الإجمالي</span><b id="paySummaryTotal">@Model.Visit.TotalAmount.ToString("N0") م.ج</b>
-        </div>
-        <div class="pay-summary-row">
-            <span>الخصم</span><b>@Model.Visit.Discount.ToString("N0") م.ج</b>
-        </div>
-        <div class="pay-summary-row paid">
-            <span>المدفوع</span><b id="paySummaryPaid">@Model.Visit.PaidAmount.ToString("N0") م.ج</b>
-        </div>
-        <div class="pay-summary-row remaining">
-            <span>المتبقي</span><b id="paySummaryRemaining">@Model.Visit.Remaining.ToString("N0") م.ج</b>
-        </div>
-        <button class="btn-add-payment-sm" onclick="openPaymentModal()">
-            <i class="bi bi-plus-lg"></i> تسجيل دفعة
-        </button>
-    </div>
-
-    <div class="mini-card pay-list-card">
-        <div class="mini-card-title">
-            <i class="bi bi-list-ul"></i> سجل المدفوعات السابق (@Model.Visit.Payments.Count)
-        </div>
-        <div class="pay-list">
-            @foreach (var p in Model.Visit.Payments.OrderByDescending(x => x.PaymentDate))
-            {
-                <div class="pay-item">
-                    <div class="pay-item-top">
-                        <b>@p.Amount.ToString("N0") م.ج</b>
-                        <span class="pay-method">@p.Method</span>
+        @* Previous payments list *@
+        <div style="margin-top:16px; padding-top:16px; border-top:1px solid #f1f5f9;">
+            <div style="font-size:.8rem; font-weight:800; color:#475569; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+                <i class="bi bi-list-ul"></i> سجل المدفوعات السابقة (@Model.Visit.Payments.Count)
+            </div>
+            <div class="pay-history custom-scroll" style="max-height:180px; overflow-y:auto;">
+                @foreach (var p in Model.Visit.Payments.OrderByDescending(x => x.PaymentDate))
+                {
+                    <div class="pay-history-item">
+                        <div class="pay-h-left">
+                            <b>@p.Amount.ToString("N0") م.ج</b>
+                            <span class="pay-h-method">@p.Method</span>
+                        </div>
+                        <div class="pay-h-right">
+                            <small style="color:#64748b;">@(string.IsNullOrWhiteSpace(p.Description) ? "-" : p.Description)</small>
+                            <span class="pay-h-date"><i class="bi bi-clock"></i> @p.PaymentDate.ToString("dd/MM HH:mm")</span>
+                        </div>
                     </div>
-                    <div class="pay-item-desc">@p.Description</div>
-                    <div class="pay-item-date"><i class="bi bi-calendar"></i> @p.PaymentDate.ToString("dd/MM HH:mm")</div>
-                </div>
-            }
-            @if (!Model.Visit.Payments.Any())
-            {
-                <div class="pay-empty">لا توجد مدفوعات مسجلة بعد.</div>
-            }
+                }
+                @if (!Model.Visit.Payments.Any())
+                {
+                    <div class="empty-state" style="padding:16px;">
+                        <p style="font-size:.8rem;">لا توجد مدفوعات مسجلة بعد.</p>
+                    </div>
+                }
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Payment Modal — فورم أبسط، حفظ مؤقت -->
-<div class="payment-modal" id="paymentModal" style="display:none;">
-    <div class="modal-overlay" onclick="closePaymentModal()"></div>
-    <div class="modal-glass payment-modal-glass">
-        <h5><i class="bi bi-cash-stack"></i> تسجيل دفعة جديدة</h5>
-
-        <div class="pay-amount-input-wrap">
-            <input type="number" class="pay-amount-input" id="payAmount" placeholder="0" />
-            <span class="pay-amount-suffix">م.ج</span>
+@* Payment Modal *@
+<div class="dc-modal" id="paymentModal" style="display:none;">
+    <div class="dc-modal-overlay" onclick="closePaymentModal()"></div>
+    <div class="dc-modal-box" style="max-width:400px;">
+        <div class="dc-modal-head">
+            <h5><i class="bi bi-cash-stack"></i> تسجيل دفعة جديدة</h5>
+            <button class="dc-modal-close" onclick="closePaymentModal()"><i class="bi bi-x-lg"></i></button>
         </div>
+        <div class="dc-modal-body">
+            <div class="pay-input-wrap">
+                <input type="number" class="pay-input" id="payAmount" placeholder="0" />
+                <span class="pay-suffix">م.ج</span>
+            </div>
 
-        <div class="pay-method-tiles" id="payMethodTiles">
-            <label class="pay-method-tile selected" data-method="Cash">
-                <input type="radio" name="payMethod" value="Cash" checked />
-                <i class="bi bi-cash-coin"></i> نقدي
-            </label>
-            <label class="pay-method-tile" data-method="CreditCard">
-                <input type="radio" name="payMethod" value="CreditCard" />
-                <i class="bi bi-credit-card"></i> فيزا
-            </label>
-            <label class="pay-method-tile" data-method="BankTransfer">
-                <input type="radio" name="payMethod" value="BankTransfer" />
-                <i class="bi bi-bank"></i> تحويل
-            </label>
+            <div class="pay-method-grid" id="payMethodTiles">
+                <label class="pay-method-card selected" data-method="Cash">
+                    <input type="radio" name="payMethod" value="Cash" checked />
+                    <i class="bi bi-cash-coin"></i>
+                    <span>نقدي</span>
+                </label>
+                <label class="pay-method-card" data-method="CreditCard">
+                    <input type="radio" name="payMethod" value="CreditCard" />
+                    <i class="bi bi-credit-card"></i>
+                    <span>فيزا</span>
+                </label>
+                <label class="pay-method-card" data-method="BankTransfer">
+                    <input type="radio" name="payMethod" value="BankTransfer" />
+                    <i class="bi bi-bank"></i>
+                    <span>تحويل</span>
+                </label>
+            </div>
+
+            <textarea class="dc-textarea" id="payDesc" rows="2" placeholder="ملاحظة (اختياري)..."></textarea>
         </div>
-
-        <textarea class="form-glass mt-2" id="payDesc" rows="2" placeholder="ملاحظة (اختياري)..."></textarea>
-
-        <div class="modal-actions mt-3">
-            <button class="btn-glass btn-cancel" onclick="closePaymentModal()">إلغاء</button>
-            <button class="btn-glass btn-save" onclick="submitPayment()">إضافة الدفعة</button>
+        <div class="dc-modal-foot">
+            <button class="dc-btn dc-btn-secondary" onclick="closePaymentModal()">إلغاء</button>
+            <button class="dc-btn dc-btn-primary" onclick="submitPayment()">
+                <i class="bi bi-check-lg"></i> إضافة الدفعة
+            </button>
         </div>
     </div>
 </div>
 
 <style>
-    .category-summary-title {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-weight: 800;
-        font-size: .82rem;
-        color: #0b2e30;
-        margin-bottom: 6px;
-    }
+    .payments-section { display: flex; flex-direction: column; gap: 0; }
 
-    .category-summary {
-        border: 1px solid #f1f5f9;
-        margin-bottom: 10px;
-    }
-
-    .grand-total {
-        background: linear-gradient(160deg, #f0fdfa, #eafbfc);
-        border: 1px solid #99f6e4;
-    }
-
-    .pay-summary-row {
-        display: flex;
-        justify-content: space-between;
-        font-size: .82rem;
-        padding: 6px 0;
-        color: #475569;
-    }
-
-        .pay-summary-row b {
-            color: #0f172a;
-        }
-
-        .pay-summary-row.paid b {
-            color: #16a34a;
-        }
-
-        .pay-summary-row.remaining {
-            border-top: 1px dashed #e2e8f0;
-            margin-top: 4px;
-            padding-top: 8px;
-        }
-
-            .pay-summary-row.remaining b {
-                color: #dc2626;
-                font-size: .95rem;
-            }
-
-    .btn-add-payment-sm {
-        width: 100%;
-        margin-top: 10px;
-        background: linear-gradient(135deg, #0d9488, #0891b2);
-        color: #fff;
-        border: none;
-        padding: 9px 12px;
-        border-radius: 10px;
-        font-weight: 700;
-        font-size: .82rem;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-    }
-
-    .pay-list-card {
-        flex: 1;
-        overflow-y: auto;
-    }
-
-    .pay-list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        max-height: 260px;
-        overflow-y: auto;
-    }
-
-    .pay-item {
-        border: 1px solid #f1f5f9;
-        border-radius: 10px;
-        padding: 8px 10px;
-        background: #fafcfd;
-    }
-
-    .pay-item-top {
-        display: flex;
-        justify-content: space-between;
-        font-size: .82rem;
-    }
-
-    .pay-method {
-        font-size: .68rem;
-        background: #f0fdfa;
-        color: #0d9488;
-        padding: 1px 8px;
-        border-radius: 6px;
-        font-weight: 700;
-    }
-
-    .pay-item-desc {
-        font-size: .74rem;
-        color: #64748b;
-        margin-top: 3px;
-    }
-
-    .pay-item-date {
-        font-size: .7rem;
-        color: #94a3b8;
-        margin-top: 3px;
-    }
-
-    .pay-empty {
-        text-align: center;
-        color: #94a3b8;
-        font-size: .8rem;
-        padding: 12px;
-    }
-
-    .pay-item.pay-item-pending {
-        background: #fffbeb;
-        border-color: #fde68a;
-    }
-
-    /* ---- Payment Modal الجديد ---- */
-    .payment-modal-glass {
-        max-width: 380px;
-    }
-
-    .pay-amount-input-wrap {
-        position: relative;
-        margin: 14px 0;
-    }
-
-    .pay-amount-input {
-        width: 100%;
-        text-align: center;
-        font-size: 2rem;
-        font-weight: 800;
-        color: #0f172a;
-        border: none;
-        border-bottom: 2px solid #e2e8f0;
-        padding: 10px 0;
-        outline: none;
-        transition: border-color .15s ease;
-    }
-
-        .pay-amount-input:focus {
-            border-color: #0d9488;
-        }
-
-    .pay-amount-suffix {
-        position: absolute;
-        left: 0;
-        bottom: 14px;
-        font-size: .8rem;
-        color: #94a3b8;
-        font-weight: 700;
-    }
-
-    .pay-method-tiles {
+    .category-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
     }
+    .cat-card {
+        background: #fff;
+        border: 1px solid #f1f5f9;
+        border-radius: 14px;
+        padding: 14px;
+        transition: all 0.3s ease;
+    }
+    .cat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(10,77,79,0.06); }
+    .cat-card.grand { background: linear-gradient(135deg, #f0fdfa, #eafbfc); border-color: #99f6e4; }
+    .cat-title { font-size: .78rem; font-weight: 800; color: #0b2e30; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .cat-row { display: flex; justify-content: space-between; font-size: .78rem; padding: 4px 0; color: #475569; }
+    .cat-row b { color: #0f172a; font-weight: 700; }
+    .cat-row.paid b { color: #16a34a; }
+    .cat-row.remaining { border-top: 1px dashed #e2e8f0; margin-top: 4px; padding-top: 6px; }
+    .cat-row.remaining b { color: #dc2626; font-size: .9rem; }
 
-    .pay-method-tile {
-        border: 2px solid #f1f5f9;
-        border-radius: 12px;
-        padding: 10px 6px;
+    .btn-add-payment {
+        background: linear-gradient(135deg, #0d9488, #0891b2);
+        color: #fff; border: none; padding: 8px 16px;
+        border-radius: 10px; font-weight: 700; font-size: .78rem;
+        cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+        box-shadow: 0 4px 14px rgba(13,148,136,0.25);
+        transition: all 0.2s ease;
+    }
+    .btn-add-payment:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(13,148,136,0.35); }
+
+    .pay-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+    .pay-stat-box {
+        background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+        border-radius: 14px;
+        padding: 14px 10px;
         text-align: center;
-        font-size: .78rem;
-        font-weight: 700;
-        color: #64748b;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-        transition: all .15s ease;
+        border: 1px solid rgba(0,0,0,0.03);
+        transition: all 0.3s ease;
+    }
+    .pay-stat-box:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(10,77,79,0.06); }
+    .pay-stat-box.highlight { background: linear-gradient(180deg, #fef2f2, #fee2e2); border-color: #fecaca; }
+    .pay-stat-label { font-size: .7rem; font-weight: 700; color: #94a3b8; display: block; margin-bottom: 4px; }
+    .pay-stat-value { font-size: 1.05rem; font-weight: 800; color: #0f172a; line-height: 1; }
+    .pay-stat-value small { font-size: .7rem; font-weight: 600; opacity: .7; }
+
+    .pay-history { display: flex; flex-direction: column; gap: 6px; }
+    .pay-history-item {
+        display: flex; justify-content: space-between; align-items: center;
+        background: #fafcfd; border: 1px solid #f1f5f9;
+        border-radius: 10px; padding: 8px 12px;
+        transition: all 0.2s ease;
+    }
+    .pay-history-item:hover { background: #f0fdfa; border-color: #ccf3ec; transform: translateX(-2px); }
+    .pay-h-left { display: flex; align-items: center; gap: 8px; }
+    .pay-h-left b { color: #0d9488; font-size: .85rem; }
+    .pay-h-method { font-size: .65rem; background: #f0fdfa; color: #0d9488; padding: 2px 8px; border-radius: 6px; font-weight: 700; }
+    .pay-h-right { text-align: left; }
+    .pay-h-date { font-size: .68rem; color: #94a3b8; display: block; margin-top: 2px; }
+
+    @@media (max-width: 767.98px) {
+        .pay-summary-grid { grid-template-columns: repeat(2, 1fr); }
+        .category-grid { grid-template-columns: 1fr; }
     }
 
-        .pay-method-tile input {
-            display: none;
-        }
+    /* Modal */
+    .dc-modal { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; }
+    .dc-modal-overlay { position: absolute; inset: 0; background: rgba(10,40,42,0.45); backdrop-filter: blur(6px); }
+    .dc-modal-box { width: 100%; margin: 16px; background: #fff; border-radius: 24px; overflow: hidden; box-shadow: 0 30px 70px rgba(0,0,0,0.3); position: relative; animation: scaleIn 0.35s cubic-bezier(0.2,1.2,0.3,1) forwards; }
+    .dc-modal-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; background: linear-gradient(135deg, #0d9488, #0d7377); color: #fff; }
+    .dc-modal-head h5 { margin: 0; font-weight: 800; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+    .dc-modal-close { width: 32px; height: 32px; border-radius: 10px; border: none; background: rgba(255,255,255,0.2); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .dc-modal-body { padding: 20px 22px; }
+    .dc-modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px; border-top: 1px solid #f0fdfa; background: #fafcfd; }
 
-        .pay-method-tile i {
-            font-size: 1.1rem;
-        }
+    .pay-input-wrap { position: relative; margin: 14px 0; }
+    .pay-input { width: 100%; text-align: center; font-size: 2.2rem; font-weight: 800; color: #0f172a; border: none; border-bottom: 2px solid #e2e8f0; padding: 12px 0; outline: none; transition: border-color .2s; background: transparent; }
+    .pay-input:focus { border-color: #0d9488; }
+    .pay-suffix { position: absolute; left: 0; bottom: 16px; font-size: .85rem; color: #94a3b8; font-weight: 700; }
 
-        .pay-method-tile.selected {
-            border-color: #0d9488;
-            background: #f0fdfa;
-            color: #0d9488;
-        }
+    .pay-method-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .pay-method-card {
+        border: 2px solid #f1f5f9; border-radius: 14px; padding: 14px 8px;
+        text-align: center; font-size: .78rem; font-weight: 700; color: #64748b;
+        cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px;
+        transition: all .2s ease; background: #fff;
+    }
+    .pay-method-card input { display: none; }
+    .pay-method-card i { font-size: 1.3rem; }
+    .pay-method-card.selected { border-color: #0d9488; background: #f0fdfa; color: #0d9488; box-shadow: 0 4px 14px rgba(13,148,136,0.15); }
+    .pay-method-card:hover:not(.selected) { border-color: #cbd5e1; }
+
+    .dc-textarea { width: 100%; padding: 10px 14px; border: 1.5px solid #f1f5f9; border-radius: 12px; background: #f8fafc; font-size: .85rem; outline: none; transition: all .2s; resize: vertical; margin-top: 12px; }
+    .dc-textarea:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,0.1); }
+
+    .dc-btn { padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: .85rem; border: none; cursor: pointer; transition: all .2s; }
+    .dc-btn-primary { background: linear-gradient(135deg, #0d9488, #0d7377); color: #fff; box-shadow: 0 6px 18px rgba(13,115,119,0.25); }
+    .dc-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(13,115,119,0.35); }
+    .dc-btn-secondary { background: #f1f5f9; color: #475569; }
+    .dc-btn-secondary:hover { background: #e2e8f0; }
 </style>
 
 <script>
-    // ============================================================
-    // مدفوعات مؤقتة (لحد "إنهاء وحفظ السيشن")
-    // ============================================================
     window.pendingPayments = window.pendingPayments || [];
 
     function openPaymentModal() {
         document.getElementById('paymentModal').style.display = 'flex';
+        document.getElementById('payAmount').focus();
     }
-
     function closePaymentModal() {
         document.getElementById('paymentModal').style.display = 'none';
         document.getElementById('payAmount').value = '';
         document.getElementById('payDesc').value = '';
     }
 
-    document.querySelectorAll('#payMethodTiles .pay-method-tile').forEach(function (tile) {
-        tile.addEventListener('click', function () {
-            document.querySelectorAll('#payMethodTiles .pay-method-tile').forEach(t => t.classList.remove('selected'));
+    document.querySelectorAll('#payMethodTiles .pay-method-card').forEach(function(tile) {
+        tile.addEventListener('click', function() {
+            document.querySelectorAll('#payMethodTiles .pay-method-card').forEach(t => t.classList.remove('selected'));
             tile.classList.add('selected');
             tile.querySelector('input').checked = true;
         });
@@ -357,7 +262,7 @@
     function submitPayment() {
         const amount = parseFloat(document.getElementById('payAmount').value);
         if (!amount || amount <= 0) {
-            Swal.fire({ title: 'تنبيه', text: 'من فضلك أدخل مبلغ صحيح', icon: 'warning', confirmButtonColor: '#0d9488' });
+            Swal.fire({ title: 'تنبيه', text: 'من فضلك أدخل مبلغ صحيح', icon: 'warning', confirmButtonColor: '#0d9488', customClass: { popup: 'rounded-4' } });
             return;
         }
         const method = document.querySelector('#payMethodTiles input:checked').value;
@@ -368,6 +273,13 @@
         renderPendingPaymentsSummary();
         if (window.renderRecordsTable) window.renderRecordsTable();
         closePaymentModal();
+
+        // Toast
+        Swal.fire({
+            toast: true, position: 'top-end', icon: 'success',
+            title: 'تمت إضافة الدفعة', showConfirmButton: false, timer: 1500,
+            customClass: { popup: 'rounded-4' }
+        });
     }
 
     function removePendingPayment(idx) {
@@ -378,9 +290,9 @@
     window.removePendingPayment = removePendingPayment;
 
     function renderPendingPaymentsSummary() {
-        const baseTotal = @Model.Visit.TotalAmount.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        const basePaid = @Model.Visit.PaidAmount.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        const discount = @Model.Visit.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        const baseTotal = @(Model.Visit.TotalAmount.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        const basePaid = @(Model.Visit.PaidAmount.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        const discount = @(Model.Visit.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
         const pendingDiagnosisTotal = window.pendingToothRecords
             ? Object.values(window.pendingToothRecords).reduce((sum, t) => sum + (t.DiagnosisPrice || 0), 0)
@@ -391,12 +303,15 @@
         const newPaid = basePaid + pendingPaidTotal;
         const newRemaining = newTotal - discount - newPaid;
 
+        const fmt = n => n.toLocaleString('en-EG');
         const totalEl = document.getElementById('paySummaryTotal');
         const paidEl = document.getElementById('paySummaryPaid');
         const remainingEl = document.getElementById('paySummaryRemaining');
-        if (totalEl) totalEl.textContent = newTotal.toLocaleString('en-EG') + ' م.ج';
-        if (paidEl) paidEl.textContent = newPaid.toLocaleString('en-EG') + ' م.ج';
-        if (remainingEl) remainingEl.textContent = newRemaining.toLocaleString('en-EG') + ' م.ج';
+        const discountEl = document.getElementById('paySummaryDiscount');
+        if (totalEl) totalEl.innerHTML = fmt(newTotal) + ' <small>م.ج</small>';
+        if (paidEl) paidEl.innerHTML = fmt(newPaid) + ' <small>م.ج</small>';
+        if (remainingEl) remainingEl.innerHTML = fmt(newRemaining) + ' <small>م.ج</small>';
+        if (discountEl) discountEl.innerHTML = fmt(discount) + ' <small>م.ج</small>';
     }
     window.renderPendingPaymentsSummary = renderPendingPaymentsSummary;
 </script>

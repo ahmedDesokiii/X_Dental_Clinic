@@ -1,0 +1,297 @@
+@model Dental.Modules.Clinical.ViewModels.SessionViewModel
+
+<div class="followup-wrap">
+    <div class="section-head">
+        <h4><i class="bi bi-calendar-plus"></i> حجز متابعة</h4>
+    </div>
+
+    <div class="followup-form-grid">
+        <div class="form-group">
+            <label>تاريخ الزيارة القادمة</label>
+            <input type="date" class="dc-input" id="followUpDate" onchange="loadSameDayAppointments()" />
+        </div>
+        <div class="form-group">
+            <label>نوع المتابعة</label>
+            <div class="followup-type-grid" id="followUpTypeGrid">
+                <label class="followup-card selected" data-minutes="30">
+                    <input type="radio" name="followUpType" value="30" checked />
+                    <i class="bi bi-clock"></i>
+                    <span>عادي</span>
+                    <small>30 دقيقة</small>
+                </label>
+                <label class="followup-card" data-minutes="60">
+                    <input type="radio" name="followUpType" value="60" />
+                    <i class="bi bi-clock-history"></i>
+                    <span>طويل</span>
+                    <small>60 دقيقة</small>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" class="btn-book-followup" onclick="bookFollowUp()">
+        <i class="bi bi-calendar-check"></i> حجز الموعد
+    </button>
+
+    <div class="same-day-section">
+        <div class="same-day-head">
+            <i class="bi bi-people"></i> مرضى لهم مواعيد في نفس اليوم
+        </div>
+        <div id="sameDayAppointmentsList" class="same-day-list custom-scroll">
+            <div class="empty-state" style="padding:20px;">
+                <p style="font-size:.8rem;">اختر تاريخ لعرض المواعيد المحجوزة.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .followup-form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: .78rem;
+        font-weight: 800;
+        color: #475569;
+        margin-bottom: 8px;
+    }
+
+    .dc-input {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1.5px solid #f1f5f9;
+        border-radius: 14px;
+        background: #f8fafc;
+        font-size: .9rem;
+        outline: none;
+        transition: all .2s;
+    }
+
+        .dc-input:focus {
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13,148,136,0.1);
+        }
+
+    .followup-type-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .followup-card {
+        border: 2px solid #f1f5f9;
+        border-radius: 14px;
+        padding: 14px 8px;
+        text-align: center;
+        cursor: pointer;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        transition: all .2s ease;
+    }
+
+        .followup-card input {
+            display: none;
+        }
+
+        .followup-card i {
+            font-size: 1.3rem;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        .followup-card span {
+            font-size: .85rem;
+            font-weight: 800;
+            color: #475569;
+        }
+
+        .followup-card small {
+            font-size: .68rem;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .followup-card.selected {
+            border-color: #0d9488;
+            background: #f0fdfa;
+        }
+
+            .followup-card.selected i {
+                color: #0d9488;
+            }
+
+            .followup-card.selected span {
+                color: #0d9488;
+            }
+
+    .btn-book-followup {
+        width: 100%;
+        background: linear-gradient(135deg, #0d9488, #0891b2);
+        color: #fff;
+        border: none;
+        padding: 12px;
+        border-radius: 14px;
+        font-weight: 800;
+        font-size: .9rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 6px 20px rgba(13,148,136,0.25);
+        transition: all .2s ease;
+        margin-bottom: 20px;
+    }
+
+        .btn-book-followup:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(13,148,136,0.35);
+        }
+
+    .same-day-section {
+        border-top: 1px dashed #e2e8f0;
+        padding-top: 16px;
+    }
+
+    .same-day-head {
+        font-size: .82rem;
+        font-weight: 800;
+        color: #475569;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .same-day-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-height: 240px;
+        overflow-y: auto;
+    }
+
+    .same-day-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #fafcfd;
+        border: 1px solid #f1f5f9;
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: .8rem;
+        transition: all .2s ease;
+    }
+
+        .same-day-item:hover {
+            background: #f0fdfa;
+            border-color: #ccf3ec;
+            transform: translateX(-2px);
+        }
+
+    .same-day-time {
+        font-weight: 800;
+        color: #0d9488;
+        background: #f0fdfa;
+        padding: 2px 10px;
+        border-radius: 6px;
+        font-size: .75rem;
+    }
+
+    @@media (max-width: 767.98px) {
+        .followup-form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script>
+    document.querySelectorAll('.followup-card').forEach(function(card) {
+        card.addEventListener('click', function() {
+            document.querySelectorAll('.followup-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            card.querySelector('input').checked = true;
+        });
+    });
+
+    async function loadSameDayAppointments() {
+        const date = document.getElementById('followUpDate').value;
+        const listEl = document.getElementById('sameDayAppointmentsList');
+        if (!date) return;
+
+        listEl.innerHTML = '<div class="empty-state" style="padding:12px;"><p style="font-size:.8rem;">جاري التحميل...</p></div>';
+
+        const start = date + 'T00:00:00';
+        const end = date + 'T23:59:59';
+
+        try {
+            const res = await fetch(`/Appointments/GetEvents?start=${start}&end=${end}`);
+            const data = await res.json();
+
+            if (!data.success || !data.data.length) {
+                listEl.innerHTML = '<div class="empty-state" style="padding:12px;"><p style="font-size:.8rem;">لا توجد مواعيد في هذا اليوم.</p></div>';
+                return;
+            }
+
+            listEl.innerHTML = '';
+            data.data.forEach(function(ap, idx) {
+                const time = new Date(ap.start).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+                const row = document.createElement('div');
+                row.className = 'same-day-item';
+                row.style.animation = `fadeInUp 0.3s ${idx * 0.05}s ease forwards`;
+                row.style.opacity = '0';
+                row.innerHTML = `<span>${ap.patientName}</span><span class="same-day-time">${time}</span>`;
+                listEl.appendChild(row);
+            });
+        } catch (err) {
+            listEl.innerHTML = '<div class="empty-state" style="padding:12px;"><p style="font-size:.8rem;">تعذر تحميل المواعيد.</p></div>';
+        }
+    }
+
+    async function bookFollowUp() {
+        const date = document.getElementById('followUpDate').value;
+        const minutes = parseInt(document.querySelector('input[name="followUpType"]:checked').value);
+
+        if (!date) {
+            Swal.fire({ title: 'تنبيه', text: 'اختر تاريخ الموعد أولاً', icon: 'warning', confirmButtonColor: '#0d9488', customClass: { popup: 'rounded-4' } });
+            return;
+        }
+
+        const payload = {
+            PatientId: @Model.Patient.Id,
+            AppointmentDate: date + 'T10:00:00',
+            DurationMinutes: minutes,
+            Reason: 'متابعة سيشن',
+            Notes: null
+        };
+
+        try {
+            const res = await fetch('/Appointments/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                Swal.fire({
+                    toast: true, position: 'top-end', icon: 'success',
+                    title: 'تم حجز الموعد', showConfirmButton: false, timer: 2000,
+                    customClass: { popup: 'rounded-4' }
+                });
+            } else {
+                Swal.fire({ title: 'خطأ', text: data.message || 'تعذر حجز الموعد', icon: 'error', confirmButtonColor: '#dc2626', customClass: { popup: 'rounded-4' } });
+            }
+        } catch (err) {
+            Swal.fire({ title: 'خطأ', text: 'تعذر الاتصال بالسيرفر', icon: 'error', confirmButtonColor: '#dc2626', customClass: { popup: 'rounded-4' } });
+        }
+    }
+</script>

@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using static Dental.Constants.EnumHelper;
+using static Dental.Constants.Permissions;
 
 namespace Dental.Controllers
 {
@@ -466,7 +467,7 @@ namespace Dental.Controllers
                 TempData[Helper.MsgType] = Helper.Success;
                 TempData[Helper.Title] = "تم بنجاح";
                 TempData[Helper.Msg] = "تم تعديل بيانات المريض بنجاح";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Details", "Patients", new { id = dto.Id});
             }
             catch (Exception ex)
             {

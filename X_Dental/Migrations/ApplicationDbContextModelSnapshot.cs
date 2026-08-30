@@ -1063,6 +1063,9 @@ namespace Dental.Migrations
                     b.Property<DateTime>("TakenDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("ToothNumber")
+                        .HasColumnType("int");
+
                     b.Property<int?>("VisitId")
                         .HasColumnType("int");
 

@@ -16,5 +16,7 @@ namespace Dental.Models.Patient
             public string FilePath { get; set; } = null!; // path on disk/blob, NOT binary
             public DateTime TakenDate { get; set; }
             public string? Notes { get; set; }
-        }
+
+        public int? ToothNumber { get; set; }
+    }
     }

@@ -230,4 +230,7 @@ namespace Dental.Modules.Patients.DTOs
         RootCanal,
         ExtractionNeeded
     }
+
+
+   
 }
