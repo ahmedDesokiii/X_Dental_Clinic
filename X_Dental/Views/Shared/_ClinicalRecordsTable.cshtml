@@ -1,167 +1,40 @@
-@* ============================================================
-   Views/Shared/_ClinicalRecordsTable.cshtml
-   سجل هذا السيشن: أسنان + مدفوعات (الاتنين مؤقتين لحد "إنهاء وحفظ السيشن")
-   ============================================================ *@
 @model Dental.Modules.Clinical.ViewModels.SessionViewModel
 
-<div class="row gap-4 mx-auto">
-    <div class="col-lg-7 col-12 records-section">
-        <div class="records-head">
-            <h4><i class="bi bi-table"></i> سجل هذا السيشن — الأسنان</h4>
-            <span class="records-count" id="recordsCount">0 سن مسجل</span>
+<div class="session-workspace">
+    <div class="section-card anim-fade-up anim-d1" style="margin-bottom:0;">
+        <div class="section-head">
+            <h4><i class="bi bi-grid-3x3-gap"></i> أسنان السيشن الحالي</h4>
+            <span class="section-badge" id="recordsCountBadge">0 سن</span>
         </div>
-        <div class="table-responsive">
-            <table class="records-table" id="recordsTable">
+        <div class="table-responsive custom-scroll" style="max-height:520px;">
+            <table class="dc-table" id="recordsTable">
                 <thead>
                     <tr>
-                        <th>السن</th>
+                        <th style="width:50px">السن</th>
                         <th>الحالة</th>
                         <th>التشخيص</th>
-                        <th>سعر التشخيص</th>
-                        <th>السطوح</th>
-                        <th>الإجراء</th>
+                        <th>السعر</th>
+                        @* <th>السطوح</th>
+                        <th>الإجراء</th> *@
                         <th>الأشعة</th>
-                        <th>ملاحظات</th>
-                        <th></th>
+                        <th style="width:80px"></th>
                     </tr>
                 </thead>
                 <tbody id="recordsTableBody"></tbody>
             </table>
-            <div class="empty-records" id="emptyRecordsMsg">
-                لا يوجد أي سن مسجل في هذا السيشن حتى الآن.
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-4 col-12 records-section">
-        <div class="records-head">
-            <h4><i class="bi bi-cash-coin"></i> سجل هذا السيشن — المدفوعات</h4>
-            <span class="records-count" id="paymentsRecordsCount">0 دفعة مسجلة</span>
-        </div>
-        <div class="table-responsive">
-            <table class="records-table">
-                <thead>
-                    <tr>
-                        <th>المبلغ</th>
-                        <th>طريقة الدفع</th>
-                        <th>ملاحظات</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="paymentsTableBody"></tbody>
-            </table>
-            <div class="empty-records" id="emptyPaymentsMsg">
-                لا توجد أي دفعة مسجلة في هذا السيشن حتى الآن.
+            <div class="empty-state" id="emptyRecordsMsg">
+                <i class="bi bi-grid-3x3"></i>
+                <p>لا يوجد أي سن مسجل في هذا السيشن حتى الآن.<br><small>اضغط على أي سن في الشارت لبدء التسجيل</small></p>
             </div>
         </div>
     </div>
 </div>
 
-
 <style>
-    .records-section {
-        background: rgba(255,255,255,.9);
-        border-radius: 20px;
-        border: 1px solid rgba(255,255,255,.6);
-        box-shadow: 0 10px 34px rgba(10,77,79,.08);
-        padding: 18px 20px;
-        margin-top: 20px;
-    }
-
-    .records-head {
+    .session-workspace {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-    }
-
-        .records-head h4 {
-            margin: 0;
-            font-weight: 800;
-            color: #0f172a;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1.05rem;
-        }
-
-    .records-count {
-        font-size: .8rem;
-        font-weight: 700;
-        color: #0d9488;
-        background: #f0fdfa;
-        padding: 4px 12px;
-        border-radius: 999px;
-    }
-
-    .records-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: .85rem;
-    }
-
-        .records-table th {
-            text-align: right;
-            padding: 10px 8px;
-            color: #64748b;
-            font-weight: 700;
-            border-bottom: 2px solid #f1f5f9;
-            white-space: nowrap;
-        }
-
-        .records-table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #f1f5f9;
-            color: #1e293b;
-            vertical-align: middle;
-        }
-
-    .row-pending {
-        background: #fffbeb;
-    }
-
-    .tooth-chip {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 34px;
-        height: 34px;
-        border-radius: 10px;
-        background: linear-gradient(135deg,#ede9fe,#ddd6fe);
-        color: #5b21b6;
-        font-weight: 800;
-    }
-
-    .badge-pending {
-        font-size: .72rem;
-        font-weight: 700;
-        color: #b45309;
-        background: #fef3c7;
-        padding: 3px 8px;
-        border-radius: 6px;
-    }
-
-    .row-actions button {
-        border: none;
-        background: transparent;
-        color: #64748b;
-        cursor: pointer;
-        padding: 4px 6px;
-    }
-
-        .row-actions button:hover {
-            color: #0d9488;
-        }
-
-        .row-actions button.danger:hover {
-            color: #dc2626;
-        }
-
-    .empty-records {
-        text-align: center;
-        color: #94a3b8;
-        padding: 20px;
-        font-size: .88rem;
+        flex-direction: column;
+        gap: 0;
     }
 </style>
 
@@ -170,78 +43,53 @@
         1: 'سليم', 2: 'تسوس', 3: 'معالج', 4: 'مفقود', 5: 'مخلوع', 6: 'مطمور',
         7: 'تاج', 8: 'جسر', 9: 'زرعة', 10: 'مكسور', 11: 'عصب', 12: 'حشوة'
     };
+    const STATUS_ID_TO_COLOR = {
+        1: '#0f9b8e', 2: '#ef4444', 3: '#3b82f6', 4: '#94a3b8', 5: '#1e293b',
+        6: '#6366f1', 7: '#a855f7', 8: '#06b6d4', 9: '#ec4899', 10: '#f97316',
+        11: '#f59e0b', 12: '#14b8a6'
+    };
 
     function renderRecordsTable() {
         const tbody = document.getElementById('recordsTableBody');
         const emptyEl = document.getElementById('emptyRecordsMsg');
-        const countEl = document.getElementById('recordsCount');
+        const badgeEl = document.getElementById('recordsCountBadge');
         if (!tbody) return;
 
         const list = Object.values(window.pendingToothRecords || {}).sort((a, b) => a.ToothNumber - b.ToothNumber);
         tbody.innerHTML = '';
 
-        list.forEach(r => {
+        list.forEach((r, idx) => {
             const tr = document.createElement('tr');
             tr.className = 'row-pending';
+            tr.style.animation = `fadeInUp 0.4s ${idx * 0.05}s ease forwards`;
+            tr.style.opacity = '0';
+            const color = STATUS_ID_TO_COLOR[r.Status] || '#0f9b8e';
             tr.innerHTML = `
                 <td><span class="tooth-chip">${r.ToothNumber}</span></td>
-                <td>${STATUS_ID_TO_LABEL[r.Status] || '-'}</td>
+                <td><span style="color:${color};font-weight:700;">${STATUS_ID_TO_LABEL[r.Status] || '-'}</span></td>
                 <td>${r.DiagnosisName || '-'}</td>
-                <td>${r.DiagnosisPrice ? r.DiagnosisPrice.toLocaleString('en-EG') + ' م.ج' : '-'}</td>
-                <td>${(r.Surfaces || []).map(s => s.Surface).join(', ') || '-'}</td>
-                <td>${r.ProcedureCode || '-'}</td>
-                <td>${r.XRays && r.XRays.length ? '<i class="bi bi-image text-teal"></i> ' + r.XRays.length + ' صورة' : '-'}</td>
-                <td>${r.Notes || '-'}</td>
+                <td><b>${r.DiagnosisPrice ? r.DiagnosisPrice.toLocaleString('en-EG') + ' م.ج' : '-'}</b></td>
+
+                <td>${r.XRays && r.XRays.length ? '<i class="bi bi-image-fill" style="color:#0d9488;"></i> ' + r.XRays.length : '-'}</td>
                 <td class="row-actions">
-                    <span class="badge-pending">لم يُحفظ بعد</span>
-                    <button onclick="openToothModal(${r.ToothNumber})" title="تعديل"><i class="bi bi-pencil"></i></button>
-                    <button class="danger" onclick="removePendingTooth(${r.ToothNumber})" title="حذف"><i class="bi bi-trash"></i></button>
+                    <button class="btn-sm" onclick="openToothModal(${r.ToothNumber})" title="تعديل"><i class="bi bi-pencil-square"></i></button>
+                    <button class="btn-sm danger" onclick="removePendingTooth(${r.ToothNumber})" title="حذف"><i class="bi bi-trash3"></i></button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
 
-        if (countEl) countEl.textContent = list.length + ' سن مسجل';
+        if (badgeEl) {
+            badgeEl.textContent = list.length + ' سن';
+            badgeEl.style.animation = 'badgePop 0.4s ease';
+            setTimeout(() => badgeEl.style.animation = '', 400);
+        }
         if (emptyEl) emptyEl.style.display = list.length === 0 ? 'block' : 'none';
 
-        renderPaymentsTable();
         if (window.renderPendingPaymentsSummary) window.renderPendingPaymentsSummary();
     }
     window.renderRecordsTable = renderRecordsTable;
 
-    function renderPaymentsTable() {
-        const tbody = document.getElementById('paymentsTableBody');
-        const emptyEl = document.getElementById('emptyPaymentsMsg');
-        const countEl = document.getElementById('paymentsRecordsCount');
-        if (!tbody) return;
-
-        const list = window.pendingPayments || [];
-        tbody.innerHTML = '';
-
-        const methodLabels = { Cash: 'نقدي', CreditCard: 'فيزا', BankTransfer: 'تحويل بنكي' };
-
-        list.forEach((p, idx) => {
-            const tr = document.createElement('tr');
-            tr.className = 'row-pending';
-            tr.innerHTML = `
-                <td><b>${p.Amount.toLocaleString('en-EG')} م.ج</b></td>
-                <td>${methodLabels[p.Method] || p.Method}</td>
-                <td>${p.Description || '-'}</td>
-                <td class="row-actions">
-                    <span class="badge-pending">لم تُحفظ بعد</span>
-                    <button class="danger" onclick="removePendingPayment(${idx})" title="حذف"><i class="bi bi-trash"></i></button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-        if (countEl) countEl.textContent = list.length + ' دفعة مسجلة';
-        if (emptyEl) emptyEl.style.display = list.length === 0 ? 'block' : 'none';
-    }
-
-    // ============================================================
-    // الحفظ النهائي الموحّد — أسنان + مدفوعات + إنهاء الزيارة
-    // ============================================================
     async function saveAndEndSession() {
         const teeth = Object.values(window.pendingToothRecords || {});
         const payments = window.pendingPayments || [];
@@ -255,11 +103,19 @@
             cancelButtonColor: '#64748b',
             confirmButtonText: 'نعم، إنهاء وحفظ',
             cancelButtonText: 'إلغاء',
-            reverseButtons: true
+            reverseButtons: true,
+            backdrop: 'rgba(10,40,42,0.4)',
+            customClass: { popup: 'rounded-4' }
         });
         if (!confirmResult.isConfirmed) return;
 
-        Swal.fire({ title: 'جاري الحفظ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({
+            title: 'جاري الحفظ...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+            backdrop: 'rgba(10,40,42,0.4)',
+            customClass: { popup: 'rounded-4' }
+        });
 
         try {
             const payload = {
@@ -277,15 +133,22 @@
             const data = await res.json();
 
             if (!data.success) {
-                Swal.fire({ title: 'خطأ', text: data.message || 'حدث خطأ أثناء الحفظ', icon: 'error', confirmButtonColor: '#dc2626' });
+                Swal.fire({ title: 'خطأ', text: data.message || 'حدث خطأ أثناء الحفظ', icon: 'error', confirmButtonColor: '#dc2626', customClass: { popup: 'rounded-4' } });
                 return;
             }
 
-            Swal.fire({ title: 'تم', text: 'تم حفظ السيشن وإنهاؤه بنجاح', icon: 'success', timer: 1600, showConfirmButton: false })
-                .then(() => window.location.href = '/Patients/Details/@Model.Patient.Id');
+            Swal.fire({
+                title: 'تم بنجاح',
+                text: 'تم حفظ السيشن وإنهاؤه',
+                icon: 'success',
+                timer: 1600,
+                showConfirmButton: false,
+                backdrop: 'rgba(10,40,42,0.4)',
+                customClass: { popup: 'rounded-4' }
+            }).then(() => window.location.href = '/Patients/Details/@Model.Patient.Id');
 
         } catch (err) {
-            Swal.fire({ title: 'خطأ', text: 'تعذر الاتصال بالسيرفر', icon: 'error', confirmButtonColor: '#dc2626' });
+            Swal.fire({ title: 'خطأ', text: 'تعذر الاتصال بالسيرفر', icon: 'error', confirmButtonColor: '#dc2626', customClass: { popup: 'rounded-4' } });
         }
     }
     window.saveAndEndSession = saveAndEndSession;

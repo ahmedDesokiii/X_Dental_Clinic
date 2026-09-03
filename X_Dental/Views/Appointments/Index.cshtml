@@ -832,7 +832,7 @@
     </div>
     <div class="week-grid" id="weekGrid">
         <!-- Loading Skeleton -->
-        @for (int i = 0; i < 7; i++)
+        @for (int i = 1; i <= 7; i++)
         {
             <div class="skeleton-day">
                 <div class="skeleton-header"></div>
@@ -860,32 +860,13 @@
                 <input type="hidden" id="apptPatientId" />
                 <div class="search-results-box" id="apptPatientResults"></div>
             </div>
-            <div class="row g-3 mb-3">
-                <div class="col-6">
-                    <label class="form-label-custom">التاريخ <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control-custom" id="apptDate" />
-                </div>
-                <div class="col-6">
-                    <label class="form-label-custom">الوقت <span class="text-danger">*</span></label>
-                    <input type="time" class="form-control-custom" id="apptTime" />
-                </div>
+            <div class="mb-3">
+                <label class="form-label-custom">التاريخ <span class="text-danger">*</span></label>
+                <input type="date" class="form-control-custom" id="apptDate" />
             </div>
             <div class="mb-3">
-                <label class="form-label-custom">المدة</label>
-                <select class="form-control-custom" id="apptDuration">
-                    <option value="15">15 دقيقة</option>
-                    <option value="30" selected>30 دقيقة</option>
-                    <option value="45">45 دقيقة</option>
-                    <option value="60">ساعة</option>
-                    <option value="90">ساعة ونص</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label-custom">السبب / الملاحظات</label>
-                <textarea class="form-control-custom" id="apptReason" rows="2" placeholder="مثال: تركيب تاج، متابعة..."></textarea>
-            </div>
-            <div id="apptConflictWarning" class="text-danger small" style="display:none;">
-                <i class="bi bi-exclamation-triangle-fill"></i> يوجد موعد آخر متعارض مع هذا التوقيت.
+                <label class="form-label-custom">الملاحظات</label>
+                <textarea class="form-control-custom" id="apptReason" rows="3" placeholder="مثال: تركيب تاج، متابعة..."></textarea>
             </div>
         </div>
         <div class="modal-foot">
@@ -896,7 +877,6 @@
         </div>
     </div>
 </div>
-
 <!-- 🔷 Details Modal -->
 <div class="custom-modal" id="detailsModal">
     <div class="modal-overlay" onclick="closeDetailsModal()"></div>
@@ -924,7 +904,11 @@
         }
 
         function formatDateOnly(date) {
-            return date.toISOString().split('T')[0];
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+
+            return `${y}-${m}-${d}`;
         }
 
         function goToToday() {
@@ -1015,14 +999,13 @@
                     </div>
                     <div class="day-slots">
                         ${dayEvents.length === 0 ? '<div class="empty-day"><i class="bi bi-calendar-x"></i>لا توجد مواعيد</div>' : ''}
-                        ${dayEvents.map((e, idx) => `
-                            <div class="patient-slot" style="animation-delay: ${idx * 0.05}s" onclick="openDetailsModal(${e.id})">
-                                <div class="slot-time">${new Date(e.start).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</div>
-                                <div class="slot-name">${e.patientName}</div>
-                                <div class="slot-phone"><i class="bi bi-telephone-fill"></i> ${e.patientMobile}</div>
-                                <span class="slot-status ${e.statusColorClass}">${e.statusText}</span>
-                            </div>
-                        `).join('')}
+                                ${dayEvents.map((e, idx) => `
+                                    <div class="patient-slot" style="animation-delay: ${idx * 0.05}s" onclick="openDetailsModal(${e.id})">
+                                        <div class="slot-name">${e.patientName}</div>
+                                        <div class="slot-phone"><i class="bi bi-telephone-fill"></i> ${e.patientMobile}</div>
+                                        <span class="slot-status ${e.statusColorClass}">${e.statusText}</span>
+                                    </div>
+                                `).join('')}
                     </div>`;
                 grid.appendChild(col);
             }
@@ -1031,13 +1014,11 @@
         // ── Create Modal ──
         function openCreateModal() {
             const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setDate(tomorrow.getDate());
             document.getElementById('apptDate').value = formatDateOnly(tomorrow);
-            document.getElementById('apptTime').value = '09:00';
             document.getElementById('apptPatientId').value = '';
             document.getElementById('apptPatientSearch').value = '';
             document.getElementById('apptReason').value = '';
-            document.getElementById('apptConflictWarning').style.display = 'none';
             document.getElementById('apptModal').classList.add('show');
             document.body.style.overflow = 'hidden';
         }
@@ -1101,25 +1082,23 @@
         async function saveAppointment() {
             const patientId = parseInt(document.getElementById('apptPatientId').value);
             const date = document.getElementById('apptDate').value;
-            const time = document.getElementById('apptTime').value;
-            const duration = parseInt(document.getElementById('apptDuration').value);
             const reason = document.getElementById('apptReason').value;
 
             if (!patientId) {
                 Swal.fire({ title: 'مطلوب', text: 'اختر المريض من نتائج البحث', icon: 'warning', confirmButtonColor: '#14b8a6' });
                 return;
             }
-            if (!date || !time) {
-                Swal.fire({ title: 'مطلوب', text: 'اختر التاريخ والوقت', icon: 'warning', confirmButtonColor: '#14b8a6' });
+            if (!date) {
+                Swal.fire({ title: 'مطلوب', text: 'اختر التاريخ', icon: 'warning', confirmButtonColor: '#14b8a6' });
                 return;
             }
 
-            const appointmentDate = new Date(`${date}T${time}`);
-
+            // ⭐ بنبعت التاريخ كـ string مباشر من غير new Date().toISOString() اللي كانت بتحوّل للـ UTC
+            //    وبتزوّد/تنقص يوم حسب فرق التوقيت المحلي — وده كان سبب تسجيل الموعد "اليوم التالي".
             const data = {
                 PatientId: patientId,
-                AppointmentDate: appointmentDate.toISOString(),
-                DurationMinutes: duration,
+                AppointmentDate: `${date}T12:00:00`,
+                DurationMinutes: 15,
                 Reason: reason
             };
 
@@ -1154,12 +1133,12 @@
             const a = result.data;
 
             document.getElementById('detailsBody').innerHTML = `
-                <div class="mb-2"><strong style="font-size:1.1rem; color:var(--sc-ink-900);">${a.patientName}</strong> <span class="slot-status ${a.statusColorClass}">${a.statusText}</span></div>
-                <div class="mb-2" style="color:var(--sc-ink-600); font-size:.85rem;"><i class="bi bi-telephone"></i> ${a.patientMobile}</div>
-                <div class="mb-2" style="color:var(--sc-ink-600); font-size:.85rem;"><i class="bi bi-clock"></i> ${new Date(a.start).toLocaleString('ar-EG')} — ${a.durationMinutes} دقيقة</div>
-                ${a.reason ? `<div class="mb-2" style="color:var(--sc-ink-900);"><strong>السبب:</strong> ${a.reason}</div>` : ''}
-                ${a.notes ? `<div class="mb-2" style="color:var(--sc-ink-600);"><strong>ملاحظات:</strong> ${a.notes}</div>` : ''}
-            `;
+            <div class="mb-2"><strong style="font-size:1.1rem; color:var(--sc-ink-900);">${a.patientName}</strong> <span class="slot-status ${a.statusColorClass}">${a.statusText}</span></div>
+            <div class="mb-2" style="color:var(--sc-ink-600); font-size:.85rem;"><i class="bi bi-telephone"></i> ${a.patientMobile}</div>
+            <div class="mb-2" style="color:var(--sc-ink-600); font-size:.85rem;"><i class="bi bi-calendar3"></i> ${new Date(a.start).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+            ${a.reason ? `<div class="mb-2" style="color:var(--sc-ink-900);"><strong>الملاحظات:</strong> ${a.reason}</div>` : ''}
+            ${a.notes ? `<div class="mb-2" style="color:var(--sc-ink-600);"><strong>ملاحظات إضافية:</strong> ${a.notes}</div>` : ''}
+        `;
 
             const actions = [];
             if (a.status === 1) {

@@ -315,17 +315,40 @@
     </div>
 
     <!-- ===== Grass Graphs ===== -->
-    <div class="charts-row1 reveal">
-        <div class="chart-glass">
+    <div class="charts-row1 reveal ">
+        <div class="chart-glass col-5">
             <h5><i class="bi bi-graph-up"></i> المواعيد القادمة 7 أيام</h5>
             <div id="chartAppointments" style="height: 250px;"></div>
         </div>
-        <div class="chart-glass">
+        <div class="chart-glass col-2">
             <h5><i class="bi bi-pie-chart-fill"></i> توزيع الزيارات</h5>
             <div id="chartVisitsPie" style="height: 250px;"></div>
         </div>
-    </div>
 
+        <div class="chart-glass col-5">
+            <h5><i class="bi bi-list-check"></i> آخر الزيارات</h5>
+            @if (Model.RecentVisits.Any())
+            {
+                <table class="info-table">
+                    <thead><tr><th>المريض</th><th>النوع</th><th>المبلغ</th></tr></thead>
+                    <tbody>
+                        @foreach (var v in Model.RecentVisits)
+                        {
+                            <tr>
+                                <td>@v.PatientName</td>
+                                <td>@(v.Category == "General" ? "عام" : "تقويم")</td>
+                                <td>@v.TotalAmount.ToString("N0") ج.م</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="empty-state"><i class="bi bi-clipboard"></i> لا توجد زيارات حديثة</p>
+            }
+        </div>
+    </div>
     <div class="charts-row2 reveal">
         <div class="chart-glass">
             <h5><i class="bi bi-bar-chart-fill"></i> الإيرادات آخر 6 شهور</h5>
@@ -367,29 +390,7 @@
             }
         </div>
 
-        <div class="chart-glass">
-            <h5><i class="bi bi-list-check"></i> آخر الزيارات</h5>
-            @if (Model.RecentVisits.Any())
-            {
-                <table class="info-table">
-                    <thead><tr><th>المريض</th><th>النوع</th><th>المبلغ</th></tr></thead>
-                    <tbody>
-                        @foreach (var v in Model.RecentVisits)
-                        {
-                            <tr>
-                                <td>@v.PatientName</td>
-                                <td>@(v.Category == "General" ? "عام" : "تقويم")</td>
-                                <td>@v.TotalAmount.ToString("N0") ج.م</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-            else
-            {
-                <p class="empty-state"><i class="bi bi-clipboard"></i> لا توجد زيارات حديثة</p>
-            }
-        </div>
+     
     </div>
 </div>
 

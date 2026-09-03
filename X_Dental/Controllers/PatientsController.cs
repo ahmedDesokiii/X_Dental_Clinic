@@ -219,6 +219,7 @@ namespace Dental.Controllers
                     : (v.ChiefComplaint ?? "زيارة عامة"),
                 Description = v.ChiefComplaint ?? string.Empty,
                 Notes = v.Notes ?? string.Empty,
+                
                 Status = v.Status switch
                 {
                     VisitStatus.InProgress => SessionStatus.InProgress,
@@ -340,10 +341,23 @@ namespace Dental.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreatePatientDto dto)
         {
+            var isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+
             _logger.LogWarning("DEBUG: GenderId={GenderId}, PatientType={PatientType}", dto.GenderId, dto.PatientType);
 
             if (!ModelState.IsValid)
             {
+                if (isAjax)
+                {
+                    var validationErrors = ModelState
+                        .Where(kv => kv.Value != null && kv.Value.Errors.Count > 0)
+                        .ToDictionary(
+                            kv => kv.Key,
+                            kv => kv.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+                    return Json(new { success = false, errors = validationErrors });
+                }
+
                 await LoadSelectListsAsync(dto.GenderId, dto.BloodGroupId);
                 return View(dto);
             }
@@ -357,9 +371,17 @@ namespace Dental.Controllers
                 patient.CreatedBy = 1;
 
                 // Medical Info لو موجود في الـ DTO
+                // ⚠️ الشرط ده بيتحقق فعليًا دلوقتي بعد ما اتصلح الـ binding في الـ View
+                // (كانت الحقول بترسل باسم "MedicalInfo.X" وهو اسم مش موجود، فالقيم كانت
+                // بتوصل null دايمًا ومعاها الشرط ده كان بيفشل طول الوقت)
                 if (!string.IsNullOrWhiteSpace(dto.Allergies)
                     || !string.IsNullOrWhiteSpace(dto.ChronicDiseases)
-                    || !string.IsNullOrWhiteSpace(dto.CurrentMedications))
+                    || !string.IsNullOrWhiteSpace(dto.CurrentMedications)
+                    || !string.IsNullOrWhiteSpace(dto.MedicalNotes)
+                    || !string.IsNullOrWhiteSpace(dto.EmergencyNotes)
+                    || !string.IsNullOrWhiteSpace(dto.MedicalNotes)
+                    || !string.IsNullOrWhiteSpace(dto.SmokingStatus)
+                    || dto.IsPregnant == true)
                 {
                     patient.MedicalInfo = new PatientMedicalInfo
                     {
@@ -387,7 +409,7 @@ namespace Dental.Controllers
                     {
                         Models.Patient.PatientType.General => VisitCategory.General,
                         Models.Patient.PatientType.Orthodontics => VisitCategory.Orthodontics,
-                        Models.Patient.PatientType.Both => VisitCategory.General, // أو أي منطق تاني لو "كلا الملفين" محتاجة تفتح Visit من كل نوع
+                        Models.Patient.PatientType.Both => VisitCategory.General,
                         _ => VisitCategory.General
                     }
                 };
@@ -395,16 +417,34 @@ namespace Dental.Controllers
                 await _context.Visits.AddAsync(visit);
                 await _context.SaveChangesAsync();
 
+                var successMessage = "تم إضافة المريض وفتح سيشن جديد";
+                var redirectUrl = Url.Action("Session", "Clinical", new { patientId = patient.Id, visitId = visit.Id });
+
+                if (isAjax)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = successMessage,
+                        redirectUrl
+                    });
+                }
+
+                // 3️⃣ التوجيه للسيشن مباشرة (fallback بدون JS)
                 TempData[Helper.MsgType] = Helper.Success;
                 TempData[Helper.Title] = "تم بنجاح";
-                TempData[Helper.Msg] = "تم إضافة المريض وفتح سيشن جديد";
-
-                // 3️⃣ التوجيه للسيشن مباشرة
-                return RedirectToAction("Session", "Clinical", new { patientId = patient.Id, visitId = visit.Id });
+                TempData[Helper.Msg] = successMessage;
+                return Redirect(redirectUrl!);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating patient");
+
+                if (isAjax)
+                {
+                    return Json(new { success = false, message = "حدث خطأ أثناء إضافة المريض" });
+                }
+
                 ModelState.AddModelError("", "حدث خطأ أثناء إضافة المريض");
                 await LoadSelectListsAsync(dto.GenderId, dto.BloodGroupId);
                 return View(dto);
@@ -438,18 +478,37 @@ namespace Dental.Controllers
                 Address = patient.Address,
                 Occupation = patient.Occupation,
                 Notes = patient.Notes,
-                PatientType = patient.PatientType
+                PatientType = patient.PatientType,
+                Allergies = patient.Allergies,
+                ChronicDiseases = patient.ChronicDiseases,
+                CurrentMedications = patient.CurrentMedications,
+                MedicalNotes = patient.MedicalNotes,
+                SmokingStatus = patient.SmokingStatus,
+                EmergencyNotes = patient.MedicalNotes
+
             };
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        
         public async Task<IActionResult> Edit(UpdatePatientDto dto)
         {
+            var isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+
             if (!ModelState.IsValid)
             {
+                if (isAjax)
+                {
+                    var validationErrors = ModelState
+                        .Where(kv => kv.Value != null && kv.Value.Errors.Count > 0)
+                        .ToDictionary(
+                            kv => kv.Key,
+                            kv => kv.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+                    return Json(new { success = false, errors = validationErrors });
+                }
+
                 await LoadSelectListsAsync(dto.GenderId, dto.BloodGroupId);
                 return View(dto);
             }
@@ -459,19 +518,43 @@ namespace Dental.Controllers
                 var result = await _patientService.UpdateAsync(dto);
                 if (!result.Success)
                 {
+                    if (isAjax)
+                    {
+                        return Json(new { success = false, message = result.Message ?? "تعذر تعديل بيانات المريض" });
+                    }
+
                     ModelState.AddModelError("", result.Message);
                     await LoadSelectListsAsync(dto.GenderId, dto.BloodGroupId);
                     return View(dto);
                 }
 
+                var successMessage = "تم تعديل بيانات المريض بنجاح";
+                var redirectUrl = Url.Action("Details", "Patients", new { id = dto.Id });
+
+                if (isAjax)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = successMessage,
+                        redirectUrl
+                    });
+                }
+
                 TempData[Helper.MsgType] = Helper.Success;
                 TempData[Helper.Title] = "تم بنجاح";
-                TempData[Helper.Msg] = "تم تعديل بيانات المريض بنجاح";
-                return RedirectToAction("Details", "Patients", new { id = dto.Id});
+                TempData[Helper.Msg] = successMessage;
+                return Redirect(redirectUrl!);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating patient {PatientId}", dto.Id);
+
+                if (isAjax)
+                {
+                    return Json(new { success = false, message = "حدث خطأ أثناء تعديل بيانات المريض" });
+                }
+
                 ModelState.AddModelError("", "حدث خطأ أثناء تعديل بيانات المريض");
                 await LoadSelectListsAsync(dto.GenderId, dto.BloodGroupId);
                 return View(dto);

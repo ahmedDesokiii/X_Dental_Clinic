@@ -29,7 +29,6 @@
         </div>
     }
 
-    @* Visit Summary + Add Payment *@
     <div class="section-card" style="margin-bottom:0;">
         <div class="section-head">
             <h4><i class="bi bi-credit-card-2-front"></i> ملخص هذه الزيارة</h4>
@@ -56,28 +55,34 @@
             </div>
         </div>
 
-        @* Previous payments list *@
         <div style="margin-top:16px; padding-top:16px; border-top:1px solid #f1f5f9;">
             <div style="font-size:.8rem; font-weight:800; color:#475569; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
                 <i class="bi bi-list-ul"></i> سجل المدفوعات السابقة (@Model.Visit.Payments.Count)
             </div>
-            <div class="pay-history custom-scroll" style="max-height:180px; overflow-y:auto;">
-                @foreach (var p in Model.Visit.Payments.OrderByDescending(x => x.PaymentDate))
-                {
-                    <div class="pay-history-item">
-                        <div class="pay-h-left">
-                            <b>@p.Amount.ToString("N0") م.ج</b>
-                            <span class="pay-h-method">@p.Method</span>
+            <div class="pay-history custom-scroll" style="max-height:220px; overflow-y:auto;">
+                <div id="pendingPaymentsRows"></div>
+                <div id="existingPaymentsRows">
+                    @foreach (var p in Model.Visit.Payments.OrderByDescending(x => x.PaymentDate))
+                    {
+                        <div class="pay-history-item">
+                            <div class="pay-h-left">
+                                <b>@p.Amount.ToString("N0") م.ج</b>
+                                <span class="pay-h-method">@p.Method</span>
+                                @if (p.Discount > 0)
+                                {
+                                    <span class="pay-h-discount">خصم @p.Discount.ToString("N0")</span>
+                                }
+                            </div>
+                            <div class="pay-h-right">
+                                <small style="color:#64748b;">@(string.IsNullOrWhiteSpace(p.Description) ? "-" : p.Description)</small>
+                                <span class="pay-h-date"><i class="bi bi-clock"></i> @p.PaymentDate.ToString("dd/MM HH:mm")</span>
+                            </div>
                         </div>
-                        <div class="pay-h-right">
-                            <small style="color:#64748b;">@(string.IsNullOrWhiteSpace(p.Description) ? "-" : p.Description)</small>
-                            <span class="pay-h-date"><i class="bi bi-clock"></i> @p.PaymentDate.ToString("dd/MM HH:mm")</span>
-                        </div>
-                    </div>
-                }
+                    }
+                </div>
                 @if (!Model.Visit.Payments.Any())
                 {
-                    <div class="empty-state" style="padding:16px;">
+                    <div class="empty-state" id="emptyPayHistoryMsg" style="padding:16px;">
                         <p style="font-size:.8rem;">لا توجد مدفوعات مسجلة بعد.</p>
                     </div>
                 }
@@ -98,6 +103,11 @@
             <div class="pay-input-wrap">
                 <input type="number" class="pay-input" id="payAmount" placeholder="0" />
                 <span class="pay-suffix">م.ج</span>
+            </div>
+
+            <div class="form-group-v4" style="margin: 0 0 14px;">
+                <label style="display:block;font-size:.78rem;font-weight:800;color:#475569;margin-bottom:6px;">الخصم (اختياري)</label>
+                <input type="number" class="dc-textarea" id="payDiscount" placeholder="0" style="padding:10px 14px;font-weight:700;margin-top:0;" />
             </div>
 
             <div class="pay-method-grid" id="payMethodTiles">
@@ -130,13 +140,18 @@
 </div>
 
 <style>
-    .payments-section { display: flex; flex-direction: column; gap: 0; }
+    .payments-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
 
     .category-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 12px;
     }
+
     .cat-card {
         background: #fff;
         border: 1px solid #f1f5f9;
@@ -144,30 +159,82 @@
         padding: 14px;
         transition: all 0.3s ease;
     }
-    .cat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(10,77,79,0.06); }
-    .cat-card.grand { background: linear-gradient(135deg, #f0fdfa, #eafbfc); border-color: #99f6e4; }
-    .cat-title { font-size: .78rem; font-weight: 800; color: #0b2e30; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-    .cat-row { display: flex; justify-content: space-between; font-size: .78rem; padding: 4px 0; color: #475569; }
-    .cat-row b { color: #0f172a; font-weight: 700; }
-    .cat-row.paid b { color: #16a34a; }
-    .cat-row.remaining { border-top: 1px dashed #e2e8f0; margin-top: 4px; padding-top: 6px; }
-    .cat-row.remaining b { color: #dc2626; font-size: .9rem; }
+
+        .cat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(10,77,79,0.06);
+        }
+
+        .cat-card.grand {
+            background: linear-gradient(135deg, #f0fdfa, #eafbfc);
+            border-color: #99f6e4;
+        }
+
+    .cat-title {
+        font-size: .78rem;
+        font-weight: 800;
+        color: #0b2e30;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .cat-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: .78rem;
+        padding: 4px 0;
+        color: #475569;
+    }
+
+        .cat-row b {
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        .cat-row.paid b {
+            color: #16a34a;
+        }
+
+        .cat-row.remaining {
+            border-top: 1px dashed #e2e8f0;
+            margin-top: 4px;
+            padding-top: 6px;
+        }
+
+            .cat-row.remaining b {
+                color: #dc2626;
+                font-size: .9rem;
+            }
 
     .btn-add-payment {
         background: linear-gradient(135deg, #0d9488, #0891b2);
-        color: #fff; border: none; padding: 8px 16px;
-        border-radius: 10px; font-weight: 700; font-size: .78rem;
-        cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: .78rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
         box-shadow: 0 4px 14px rgba(13,148,136,0.25);
         transition: all 0.2s ease;
     }
-    .btn-add-payment:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(13,148,136,0.35); }
+
+        .btn-add-payment:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(13,148,136,0.35);
+        }
 
     .pay-summary-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 10px;
     }
+
     .pay-stat-box {
         background: linear-gradient(180deg, #f8fafc, #f1f5f9);
         border-radius: 14px;
@@ -176,66 +243,314 @@
         border: 1px solid rgba(0,0,0,0.03);
         transition: all 0.3s ease;
     }
-    .pay-stat-box:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(10,77,79,0.06); }
-    .pay-stat-box.highlight { background: linear-gradient(180deg, #fef2f2, #fee2e2); border-color: #fecaca; }
-    .pay-stat-label { font-size: .7rem; font-weight: 700; color: #94a3b8; display: block; margin-bottom: 4px; }
-    .pay-stat-value { font-size: 1.05rem; font-weight: 800; color: #0f172a; line-height: 1; }
-    .pay-stat-value small { font-size: .7rem; font-weight: 600; opacity: .7; }
 
-    .pay-history { display: flex; flex-direction: column; gap: 6px; }
-    .pay-history-item {
-        display: flex; justify-content: space-between; align-items: center;
-        background: #fafcfd; border: 1px solid #f1f5f9;
-        border-radius: 10px; padding: 8px 12px;
-        transition: all 0.2s ease;
+        .pay-stat-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(10,77,79,0.06);
+        }
+
+        .pay-stat-box.highlight {
+            background: linear-gradient(180deg, #fef2f2, #fee2e2);
+            border-color: #fecaca;
+        }
+
+    .pay-stat-label {
+        font-size: .7rem;
+        font-weight: 700;
+        color: #94a3b8;
+        display: block;
+        margin-bottom: 4px;
     }
-    .pay-history-item:hover { background: #f0fdfa; border-color: #ccf3ec; transform: translateX(-2px); }
-    .pay-h-left { display: flex; align-items: center; gap: 8px; }
-    .pay-h-left b { color: #0d9488; font-size: .85rem; }
-    .pay-h-method { font-size: .65rem; background: #f0fdfa; color: #0d9488; padding: 2px 8px; border-radius: 6px; font-weight: 700; }
-    .pay-h-right { text-align: left; }
-    .pay-h-date { font-size: .68rem; color: #94a3b8; display: block; margin-top: 2px; }
+
+    .pay-stat-value {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1;
+    }
+
+        .pay-stat-value small {
+            font-size: .7rem;
+            font-weight: 600;
+            opacity: .7;
+        }
+
+    .pay-history {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .pay-history-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #fafcfd;
+        border: 1px solid #f1f5f9;
+        border-radius: 10px;
+        padding: 8px 12px;
+        transition: all 0.2s ease;
+        animation: fadeInUp 0.3s ease forwards;
+    }
+
+        .pay-history-item:hover {
+            background: #f0fdfa;
+            border-color: #ccf3ec;
+            transform: translateX(-2px);
+        }
+
+    .pay-h-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+        .pay-h-left b {
+            color: #0d9488;
+            font-size: .85rem;
+        }
+
+    .pay-h-method {
+        font-size: .65rem;
+        background: #f0fdfa;
+        color: #0d9488;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-weight: 700;
+    }
+
+    .pay-h-discount {
+        font-size: .65rem;
+        background: #fffbeb;
+        color: #b45309;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-weight: 700;
+    }
+
+    .pay-h-right {
+        text-align: left;
+    }
+
+    .pay-h-date {
+        font-size: .68rem;
+        color: #94a3b8;
+        display: block;
+        margin-top: 2px;
+    }
+
+    .badge-pending-pay {
+        font-size: .65rem;
+        font-weight: 700;
+        color: #b45309;
+        background: #fef3c7;
+        padding: 2px 8px;
+        border-radius: 6px;
+    }
 
     @@media (max-width: 767.98px) {
-        .pay-summary-grid { grid-template-columns: repeat(2, 1fr); }
-        .category-grid { grid-template-columns: 1fr; }
+        .pay-summary-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .category-grid {
+            grid-template-columns: 1fr;
+        }
     }
 
-    /* Modal */
-    .dc-modal { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; }
-    .dc-modal-overlay { position: absolute; inset: 0; background: rgba(10,40,42,0.45); backdrop-filter: blur(6px); }
-    .dc-modal-box { width: 100%; margin: 16px; background: #fff; border-radius: 24px; overflow: hidden; box-shadow: 0 30px 70px rgba(0,0,0,0.3); position: relative; animation: scaleIn 0.35s cubic-bezier(0.2,1.2,0.3,1) forwards; }
-    .dc-modal-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; background: linear-gradient(135deg, #0d9488, #0d7377); color: #fff; }
-    .dc-modal-head h5 { margin: 0; font-weight: 800; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
-    .dc-modal-close { width: 32px; height: 32px; border-radius: 10px; border: none; background: rgba(255,255,255,0.2); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .dc-modal-body { padding: 20px 22px; }
-    .dc-modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px; border-top: 1px solid #f0fdfa; background: #fafcfd; }
+    .dc-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-    .pay-input-wrap { position: relative; margin: 14px 0; }
-    .pay-input { width: 100%; text-align: center; font-size: 2.2rem; font-weight: 800; color: #0f172a; border: none; border-bottom: 2px solid #e2e8f0; padding: 12px 0; outline: none; transition: border-color .2s; background: transparent; }
-    .pay-input:focus { border-color: #0d9488; }
-    .pay-suffix { position: absolute; left: 0; bottom: 16px; font-size: .85rem; color: #94a3b8; font-weight: 700; }
+    .dc-modal-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(10,40,42,0.45);
+        backdrop-filter: blur(6px);
+    }
 
-    .pay-method-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .dc-modal-box {
+        width: 100%;
+        margin: 16px;
+        background: #fff;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 30px 70px rgba(0,0,0,0.3);
+        position: relative;
+        animation: scaleIn 0.35s cubic-bezier(0.2,1.2,0.3,1) forwards;
+    }
+
+    .dc-modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 22px;
+        background: linear-gradient(135deg, #0d9488, #0d7377);
+        color: #fff;
+    }
+
+        .dc-modal-head h5 {
+            margin: 0;
+            font-weight: 800;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+    .dc-modal-close {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        border: none;
+        background: rgba(255,255,255,0.2);
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .dc-modal-body {
+        padding: 20px 22px;
+    }
+
+    .dc-modal-foot {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 14px 22px;
+        border-top: 1px solid #f0fdfa;
+        background: #fafcfd;
+    }
+
+    .pay-input-wrap {
+        position: relative;
+        margin: 14px 0;
+    }
+
+    .pay-input {
+        width: 100%;
+        text-align: center;
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #0f172a;
+        border: none;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 12px 0;
+        outline: none;
+        transition: border-color .2s;
+        background: transparent;
+    }
+
+        .pay-input:focus {
+            border-color: #0d9488;
+        }
+
+    .pay-suffix {
+        position: absolute;
+        left: 0;
+        bottom: 16px;
+        font-size: .85rem;
+        color: #94a3b8;
+        font-weight: 700;
+    }
+
+    .pay-method-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+
     .pay-method-card {
-        border: 2px solid #f1f5f9; border-radius: 14px; padding: 14px 8px;
-        text-align: center; font-size: .78rem; font-weight: 700; color: #64748b;
-        cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px;
-        transition: all .2s ease; background: #fff;
+        border: 2px solid #f1f5f9;
+        border-radius: 14px;
+        padding: 14px 8px;
+        text-align: center;
+        font-size: .78rem;
+        font-weight: 700;
+        color: #64748b;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        transition: all .2s ease;
+        background: #fff;
     }
-    .pay-method-card input { display: none; }
-    .pay-method-card i { font-size: 1.3rem; }
-    .pay-method-card.selected { border-color: #0d9488; background: #f0fdfa; color: #0d9488; box-shadow: 0 4px 14px rgba(13,148,136,0.15); }
-    .pay-method-card:hover:not(.selected) { border-color: #cbd5e1; }
 
-    .dc-textarea { width: 100%; padding: 10px 14px; border: 1.5px solid #f1f5f9; border-radius: 12px; background: #f8fafc; font-size: .85rem; outline: none; transition: all .2s; resize: vertical; margin-top: 12px; }
-    .dc-textarea:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,0.1); }
+        .pay-method-card input {
+            display: none;
+        }
 
-    .dc-btn { padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: .85rem; border: none; cursor: pointer; transition: all .2s; }
-    .dc-btn-primary { background: linear-gradient(135deg, #0d9488, #0d7377); color: #fff; box-shadow: 0 6px 18px rgba(13,115,119,0.25); }
-    .dc-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(13,115,119,0.35); }
-    .dc-btn-secondary { background: #f1f5f9; color: #475569; }
-    .dc-btn-secondary:hover { background: #e2e8f0; }
+        .pay-method-card i {
+            font-size: 1.3rem;
+        }
+
+        .pay-method-card.selected {
+            border-color: #0d9488;
+            background: #f0fdfa;
+            color: #0d9488;
+            box-shadow: 0 4px 14px rgba(13,148,136,0.15);
+        }
+
+        .pay-method-card:hover:not(.selected) {
+            border-color: #cbd5e1;
+        }
+
+    .dc-textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid #f1f5f9;
+        border-radius: 12px;
+        background: #f8fafc;
+        font-size: .85rem;
+        outline: none;
+        transition: all .2s;
+        resize: vertical;
+        margin-top: 12px;
+    }
+
+        .dc-textarea:focus {
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13,148,136,0.1);
+        }
+
+    .dc-btn {
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: .85rem;
+        border: none;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+    .dc-btn-primary {
+        background: linear-gradient(135deg, #0d9488, #0d7377);
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(13,115,119,0.25);
+    }
+
+        .dc-btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(13,115,119,0.35);
+        }
+
+    .dc-btn-secondary {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+        .dc-btn-secondary:hover {
+            background: #e2e8f0;
+        }
 </style>
 
 <script>
@@ -248,6 +563,7 @@
     function closePaymentModal() {
         document.getElementById('paymentModal').style.display = 'none';
         document.getElementById('payAmount').value = '';
+        document.getElementById('payDiscount').value = '';
         document.getElementById('payDesc').value = '';
     }
 
@@ -259,22 +575,27 @@
         });
     });
 
+    function methodLabel(m) {
+        return { Cash: 'نقدي', CreditCard: 'فيزا', BankTransfer: 'تحويل' }[m] || m;
+    }
+
     function submitPayment() {
-        const amount = parseFloat(document.getElementById('payAmount').value);
-        if (!amount || amount <= 0) {
-            Swal.fire({ title: 'تنبيه', text: 'من فضلك أدخل مبلغ صحيح', icon: 'warning', confirmButtonColor: '#0d9488', customClass: { popup: 'rounded-4' } });
+        const amount = parseFloat(document.getElementById('payAmount').value) || 0;
+        const discount = parseFloat(document.getElementById('payDiscount').value) || 0;
+
+        if (amount <= 0 && discount <= 0) {
+            Swal.fire({ title: 'تنبيه', text: 'أدخل مبلغ الدفعة أو الخصم', icon: 'warning', confirmButtonColor: '#0d9488', customClass: { popup: 'rounded-4' } });
             return;
         }
         const method = document.querySelector('#payMethodTiles input:checked').value;
         const description = document.getElementById('payDesc').value;
 
-        window.pendingPayments.push({ Amount: amount, Method: method, Description: description });
+        window.pendingPayments.push({ Amount: amount, Discount: discount, Method: method, Description: description });
 
         renderPendingPaymentsSummary();
         if (window.renderRecordsTable) window.renderRecordsTable();
         closePaymentModal();
 
-        // Toast
         Swal.fire({
             toast: true, position: 'top-end', icon: 'success',
             title: 'تمت إضافة الدفعة', showConfirmButton: false, timer: 1500,
@@ -289,19 +610,47 @@
     }
     window.removePendingPayment = removePendingPayment;
 
+    function renderPendingPaymentsRows() {
+        const wrap = document.getElementById('pendingPaymentsRows');
+        if (!wrap) return;
+        wrap.innerHTML = '';
+        (window.pendingPayments || []).forEach((p, idx) => {
+            const row = document.createElement('div');
+            row.className = 'pay-history-item';
+            row.style.background = '#fffbeb';
+            row.style.borderColor = '#fde68a';
+            row.innerHTML = `
+                    <div class="pay-h-left">
+                        <b>${p.Amount.toLocaleString('en-EG')} م.ج</b>
+                        <span class="pay-h-method">${methodLabel(p.Method)}</span>
+                        ${p.Discount > 0 ? `<span class="pay-h-discount">خصم ${p.Discount.toLocaleString('en-EG')}</span>` : ''}
+                        <span class="badge-pending-pay">قيد الحفظ</span>
+                    </div>
+                    <div class="pay-h-right" style="display:flex; align-items:center; gap:8px;">
+                        <small style="color:#64748b;">${p.Description || '-'}</small>
+                        <button class="btn-sm danger" onclick="removePendingPayment(${idx})" title="حذف"><i class="bi bi-trash3"></i></button>
+                    </div>
+                `;
+            wrap.appendChild(row);
+        });
+    }
+    window.renderPendingPaymentsRows = renderPendingPaymentsRows;
+
     function renderPendingPaymentsSummary() {
         const baseTotal = @(Model.Visit.TotalAmount.ToString(System.Globalization.CultureInfo.InvariantCulture));
         const basePaid = @(Model.Visit.PaidAmount.ToString(System.Globalization.CultureInfo.InvariantCulture));
-        const discount = @(Model.Visit.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        const baseDiscount = @(Model.Visit.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
         const pendingDiagnosisTotal = window.pendingToothRecords
             ? Object.values(window.pendingToothRecords).reduce((sum, t) => sum + (t.DiagnosisPrice || 0), 0)
             : 0;
         const pendingPaidTotal = window.pendingPayments.reduce((sum, p) => sum + p.Amount, 0);
+        const pendingDiscountTotal = window.pendingPayments.reduce((sum, p) => sum + (p.Discount || 0), 0);
 
         const newTotal = baseTotal + pendingDiagnosisTotal;
+        const newDiscount = baseDiscount + pendingDiscountTotal;
         const newPaid = basePaid + pendingPaidTotal;
-        const newRemaining = newTotal - discount - newPaid;
+        const newRemaining = newTotal - newDiscount - newPaid;
 
         const fmt = n => n.toLocaleString('en-EG');
         const totalEl = document.getElementById('paySummaryTotal');
@@ -311,7 +660,11 @@
         if (totalEl) totalEl.innerHTML = fmt(newTotal) + ' <small>م.ج</small>';
         if (paidEl) paidEl.innerHTML = fmt(newPaid) + ' <small>م.ج</small>';
         if (remainingEl) remainingEl.innerHTML = fmt(newRemaining) + ' <small>م.ج</small>';
-        if (discountEl) discountEl.innerHTML = fmt(discount) + ' <small>م.ج</small>';
+        if (discountEl) discountEl.innerHTML = fmt(newDiscount) + ' <small>م.ج</small>';
+
+        renderPendingPaymentsRows();
     }
     window.renderPendingPaymentsSummary = renderPendingPaymentsSummary;
+
+    document.addEventListener('DOMContentLoaded', renderPendingPaymentsRows);
 </script>

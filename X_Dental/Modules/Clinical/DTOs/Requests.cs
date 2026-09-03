@@ -59,6 +59,7 @@ namespace Dental.Modules.Clinical.DTOs
     public class PendingPaymentRequest
     {
         public decimal Amount { get; set; }
+        public decimal Discount { get; set; }
         public PaymentMethod Method { get; set; }
         public string? Description { get; set; }
     }

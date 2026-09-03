@@ -102,6 +102,57 @@ namespace Dental.Controllers
  
             ViewBag.XRayGroups = await GetXRaysGroupedAsync(patientId);
 
+            ViewBag.PatientPaymentsHistory = await _context.VisitPayments
+                .Where(p => _context.Visits.Any(v => v.Id == p.VisitId && v.PatientId == patientId))
+                .OrderByDescending(p => p.PaymentDate)
+                .Select(p => new
+                {
+                    Amount = p.Amount,
+                    Method = p.Method.ToString(),
+                    Description = p.Description,
+                    PaymentDate = p.PaymentDate
+                })
+                .ToListAsync();
+
+
+            // ⭐ خريطة أحدث حالة/تشخيص لكل سن — تُستخدم في الـ Tooltip عند الهوفر
+            var statusLabelsForTooltip = new Dictionary<Dental.Models.Patient.ToothStatus, string>
+{
+    { Dental.Models.Patient.ToothStatus.Healthy, "سليم" },
+    { Dental.Models.Patient.ToothStatus.Decayed, "تسوس" },
+    { Dental.Models.Patient.ToothStatus.Treated, "معالج" },
+    { Dental.Models.Patient.ToothStatus.Missing, "مفقود" },
+    { Dental.Models.Patient.ToothStatus.Extracted, "مخلوع" },
+    { Dental.Models.Patient.ToothStatus.RootCanal, "عصب" },
+    { Dental.Models.Patient.ToothStatus.Crown, "تاج" },
+    { Dental.Models.Patient.ToothStatus.Filling, "حشوة" }
+};
+
+            var latestPerTooth = model.DentalHistory
+                .GroupBy(d => d.ToothNumber)
+                .Select(g => g.OrderByDescending(x => x.Date).First())
+                .ToList();
+
+            var latestVisitIds = latestPerTooth.Select(d => d.VisitId).Distinct().ToList();
+            var latestDiagnoses = await _context.VisitDiagnoses
+                .Where(d => latestVisitIds.Contains(d.VisitId))
+                .Include(d => d.Diagnosis)
+                .ToListAsync();
+
+            var toothInfoMap = latestPerTooth.ToDictionary(
+                e => e.ToothNumber.ToString(),
+                e => new
+                {
+                    status = statusLabelsForTooltip.TryGetValue(e.Status, out var lbl) ? lbl : e.Status.ToString(),
+                    diagnosis = latestDiagnoses.FirstOrDefault(d => d.VisitId == e.VisitId && d.ToothNumber == e.ToothNumber)?.Diagnosis?.NameAr,
+                    notes = e.Notes
+                });
+
+            ViewBag.ToothInfoMap = System.Text.Json.JsonSerializer.Serialize(toothInfoMap);
+
+
+
+
             return View(model);
         }
 
@@ -392,6 +443,8 @@ namespace Dental.Controllers
 
             return Json(new { success = true, data = vd });
         }
+        
+        
         [HttpPost]
         public async Task<IActionResult> AddProcedure([FromBody] AddProcedureRequest req)
         {
@@ -438,9 +491,34 @@ namespace Dental.Controllers
             return Json(new { success = true, data = payment, remaining = 0 });
         }
 
+
+
+
+
         [HttpPost]
-        public async Task<IActionResult> FinishSession([FromBody] FinishSessionRequest req)
+        public async Task<IActionResult> FinishSession()
         {
+            string rawBody;
+            using (var reader = new StreamReader(Request.Body))
+            {
+                rawBody = await reader.ReadToEndAsync();
+            }
+
+            FinishSessionRequest req;
+            try
+            {
+                req = System.Text.Json.JsonSerializer.Deserialize<FinishSessionRequest>(rawBody, new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "FinishSession JSON parse failed. Raw body: {Body}", rawBody);
+                return Json(new { success = false, message = "خطأ في قراءة بيانات السيشن: " + ex.Message });
+            }
+
             if (req == null || req.PatientId <= 0 || req.VisitId <= 0)
                 return Json(new { success = false, message = "بيانات غير صالحة." });
 
@@ -561,18 +639,26 @@ namespace Dental.Controllers
                 // ================= 2) مدفوعات السيشن =================
                 foreach (var pay in req.Payments)
                 {
-                    if (pay.Amount <= 0) continue;
+                    if (pay.Amount <= 0 && pay.Discount <= 0) continue;
 
-                    _context.VisitPayments.Add(new VisitPayment
+                    if (pay.Amount > 0)
                     {
-                        VisitId = req.VisitId,
-                        Amount = pay.Amount,
-                        Method = pay.Method,
-                        Description = pay.Description,
-                        ReceiptNo = $"REC-{DateTime.Now:yyMMdd}-{new Random().Next(1000, 9999)}"
-                    });
+                        _context.VisitPayments.Add(new VisitPayment
+                        {
+                            VisitId = req.VisitId,
+                            Amount = pay.Amount,
+                            Discount = pay.Discount,
+                            Method = pay.Method,
+                            Description = pay.Description,
+                            ReceiptNo = $"REC-{DateTime.Now:yyMMdd}-{new Random().Next(1000, 9999)}"
+                        });
+                        visit.PaidAmount += pay.Amount;
+                    }
 
-                    visit.PaidAmount += pay.Amount;
+                    if (pay.Discount > 0)
+                    {
+                        visit.Discount += pay.Discount;
+                    }
                 }
 
                 // ================= 3) إنهاء الزيارة =================

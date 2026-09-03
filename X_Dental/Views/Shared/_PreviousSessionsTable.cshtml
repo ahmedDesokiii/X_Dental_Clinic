@@ -21,6 +21,7 @@
                     <th>السعر</th>
                     <th>إجمالي الزيارة</th>
                     <th>المدفوع</th>
+                    <th>الخصم</th>
                     <th>المتبقي</th>
                 </tr>
             </thead>
@@ -36,6 +37,7 @@
                         <td><b>@(r.DiagnosisPrice > 0 ? r.DiagnosisPrice.ToString("N0") + " م.ج" : "-")</b></td>
                         <td>@r.VisitTotalAmount.ToString("N0") م.ج</td>
                         <td style="color:#16a34a;font-weight:700;">@r.VisitPaidAmount.ToString("N0") م.ج</td>
+                        <td style="color:#f59e0b;font-weight:700;">@r.VisitDiscount.ToString("N0") م.ج</td>
                         <td style="color:#dc2626;font-weight:700;">@r.VisitRemaining.ToString("N0") م.ج</td>
                     </tr>
                 }

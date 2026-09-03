@@ -42,9 +42,6 @@
 }
 
 <style>
-    /* ============================================================
-           DESIGN SYSTEM - Glass Clinic v4
-           ============================================================ */
     :root {
         --dc-bg: #f0f7f7;
         --dc-card: rgba(255,255,255,0.82);
@@ -66,6 +63,7 @@
         --dc-glass: rgba(255,255,255,0.72);
     }
 
+
     .clinical-session-page {
         width: 100%;
         min-height: 100vh;
@@ -75,9 +73,6 @@
         color: var(--dc-ink-900);
     }
 
-    /* ============================================================
-           ANIMATIONS
-           ============================================================ */
     @@keyframes fadeInUp {
         from {
             opacity: 0;
@@ -114,18 +109,6 @@
         }
     }
 
-    @@keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-12px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
     @@keyframes scaleIn {
         from {
             opacity: 0;
@@ -148,39 +131,9 @@
         }
     }
 
-    @@keyframes shimmer {
-        0% {
-            background-position: -200% 0;
-        }
-
-        100% {
-            background-position: 200% 0;
-        }
-    }
-
-    @@keyframes float {
-        0%, 100% {
-            transform: translateY(0);
-        }
-
-        50% {
-            transform: translateY(-4px);
-        }
-    }
-
     @@keyframes progressFill {
         from {
             width: 0%;
-        }
-    }
-
-    @@keyframes tabIndicator {
-        from {
-            transform: scaleX(0);
-        }
-
-        to {
-            transform: scaleX(1);
         }
     }
 
@@ -252,9 +205,6 @@
         animation-delay: 0.40s;
     }
 
-    /* ============================================================
-           SESSION HERO - Compact Glass Card
-           ============================================================ */
     .session-hero {
         background: linear-gradient(135deg, #0d7377 0%, #0f9b8e 50%, #14b8a6 100%);
         border-radius: 24px;
@@ -310,6 +260,16 @@
         flex-shrink: 0;
         animation: float 4s ease-in-out infinite;
         box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-4px);
+        }
     }
 
     .hero-info h1 {
@@ -386,7 +346,6 @@
                 background: rgba(255,255,255,0.22);
             }
 
-    /* KPIs & Progress */
     .hero-metrics {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -460,19 +419,13 @@
         width: @(paidPercent) %;
     }
 
-    /* ============================================================
-           MAIN DASHBOARD GRID
-           ============================================================ */
     .dashboard-grid {
         display: grid;
-        grid-template-columns: 500px 1fr;
+        grid-template-columns: 620px 1fr;
         gap: 20px;
         align-items: start;
     }
 
-    /* ============================================================
-           LEFT: CHART PANEL (Sticky)
-           ============================================================ */
     .chart-panel {
         position: sticky;
         top: 16px;
@@ -531,9 +484,6 @@
         background: rgba(0,0,0,0.02);
     }
 
-    /* ============================================================
-           RIGHT: CONTENT PANEL
-           ============================================================ */
     .content-panel {
         display: flex;
         flex-direction: column;
@@ -549,7 +499,6 @@
         min-height: 600px;
     }
 
-    /* Tabs */
     .dc-tabs-bar {
         display: flex;
         gap: 4px;
@@ -611,9 +560,6 @@
             display: block;
         }
 
-    /* ============================================================
-           BOTTOM ACTION BAR (Sticky)
-           ============================================================ */
     .bottom-action-bar {
         position: fixed;
         bottom: 0;
@@ -690,9 +636,6 @@
             box-shadow: 0 12px 32px rgba(13,115,119,0.4);
         }
 
-    /* ============================================================
-           SHARED COMPONENTS
-           ============================================================ */
     .section-card {
         background: var(--dc-card-solid);
         border-radius: 20px;
@@ -842,7 +785,6 @@
             color: #dc2626;
         }
 
-    /* Scrollbar styling */
     .custom-scroll::-webkit-scrollbar {
         width: 6px;
     }
@@ -860,7 +802,6 @@
             background: #94a3b8;
         }
 
-    /* Responsive */
     @@media (max-width: 1199.98px) {
         .dashboard-grid {
             grid-template-columns: 1fr;
@@ -928,9 +869,16 @@
             border: 1px solid #ddd !important;
         }
     }
+
+    .modal-col-divider {
+        width: 1px;
+        background: linear-gradient(180deg, transparent, #e2e8f0, transparent);
+        flex-shrink: 0;
+    }
 </style>
 
-<div class="clinical-session-page" dir="rtl"
+
+<div  dir="rtl"
      data-patient-id="@Model.Patient.Id"
      data-visit-id="@Model.Visit.Id"
      data-session-status="@sessionStatusText">
@@ -1017,9 +965,11 @@
                     <i class="bi bi-table"></i> السيشن الحالي
                     <span class="tab-badge" id="tabBadgeCurrent">0</span>
                 </button>
-
+                <button type="button" class="dc-tab-btn" onclick="switchTab('tabPayments', this)">
+                    <i class="bi bi-credit-card-2-front"></i> المدفوعات
+                </button>
                 <button type="button" class="dc-tab-btn" onclick="switchTab('tabPrev', this)">
-                    <i class="bi bi-clock-history"></i> سجل سابق
+                    <i class="bi bi-clock-history"></i> سجلات سابقة
                 </button>
                 <button type="button" class="dc-tab-btn" onclick="switchTab('tabXray', this)">
                     <i class="bi bi-image"></i> الأشعة
@@ -1031,13 +981,15 @@
 
             <div class="dc-tab-panel active custom-scroll" id="tabCurrent" style="max-height:680px; overflow-y:auto;">
                 @await Html.PartialAsync("_ClinicalRecordsTable", Model)
-                @await Html.PartialAsync("_PaymentsCompact", Model)
             </div>
             <div class="dc-tab-panel custom-scroll" id="tabPrev" style="max-height:680px; overflow-y:auto;">
                 @await Html.PartialAsync("_PreviousSessionsTable", Model)
             </div>
             <div class="dc-tab-panel custom-scroll" id="tabXray" style="max-height:680px; overflow-y:auto;">
                 @await Html.PartialAsync("_XRaysTable", Model)
+            </div>
+            <div class="dc-tab-panel custom-scroll" id="tabPayments" style="max-height:680px; overflow-y:auto;">
+                @await Html.PartialAsync("_PaymentsCompact", Model)
             </div>
             <div class="dc-tab-panel custom-scroll" id="tabFollow" style="max-height:680px; overflow-y:auto;">
                 @await Html.PartialAsync("_FollowUpPanel", Model)
@@ -1068,36 +1020,25 @@
     </button>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @section Scripts {
     <script>
         (() => {
             "use strict";
 
-            // Tab switching with animation reset
             window.switchTab = function(panelId, btn) {
                 document.querySelectorAll('.dc-tab-panel').forEach(p => p.classList.remove('active'));
                 document.querySelectorAll('.dc-tab-btn').forEach(b => b.classList.remove('active'));
                 const panel = document.getElementById(panelId);
                 panel.classList.add('active');
-                // Re-trigger animation
                 panel.style.animation = 'none';
                 void panel.offsetWidth;
                 panel.style.animation = '';
                 btn.classList.add('active');
             };
 
-            // Print
             const btnPrint = document.getElementById("btnPrintSession");
             if (btnPrint) btnPrint.addEventListener("click", () => window.print());
-            const btnFinishTop = document.getElementById("btnFinishSession");
-            if (btnFinishTop) {
-                btnFinishTop.addEventListener("click", function () {
-                    if (window.saveAndEndSession) window.saveAndEndSession();
-                });
-            }
 
-            // Show bottom bar when there are pending changes
             const bottomBar = document.getElementById('bottomBar');
             function checkPendingChanges() {
                 const hasTeeth = window.pendingToothRecords && Object.keys(window.pendingToothRecords).length > 0;
@@ -1108,7 +1049,7 @@
                     bottomBar.classList.remove('visible');
                 }
             }
-            // Hook into existing render functions
+
             const origRender = window.renderRecordsTable;
             window.renderRecordsTable = function() {
                 if (origRender) origRender();
@@ -1135,14 +1076,17 @@
             function updateBottomBar() {
                 const baseTotal = @(Model.Visit.TotalAmount.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 const basePaid = @(Model.Visit.PaidAmount.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                const discount = @(Model.Visit.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                const baseDiscount = @(Model.Visit.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 const pendingDiagnosisTotal = window.pendingToothRecords
                     ? Object.values(window.pendingToothRecords).reduce((sum, t) => sum + (t.DiagnosisPrice || 0), 0)
                     : 0;
                 const pendingPaidTotal = window.pendingPayments ? window.pendingPayments.reduce((sum, p) => sum + p.Amount, 0) : 0;
+                const pendingDiscountTotal = window.pendingPayments ? window.pendingPayments.reduce((sum, p) => sum + (p.Discount || 0), 0) : 0;
+
                 const newTotal = baseTotal + pendingDiagnosisTotal;
+                const newDiscount = baseDiscount + pendingDiscountTotal;
                 const newPaid = basePaid + pendingPaidTotal;
-                const newRemaining = newTotal - discount - newPaid;
+                const newRemaining = newTotal - newDiscount - newPaid;
 
                 const fmt = n => n.toLocaleString('en-EG');
                 const elTotal = document.getElementById('barTotal');
@@ -1153,7 +1097,6 @@
                 if (elRem) elRem.textContent = fmt(newRemaining);
             }
 
-            // Initial check
             setTimeout(checkPendingChanges, 500);
         })();
     </script>

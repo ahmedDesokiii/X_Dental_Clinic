@@ -230,8 +230,9 @@ namespace Dental.Modules.Appointments.ServicesAppointments
             if (dto.AppointmentDate < DateTime.Now.AddMinutes(-5))
                 return ServiceResult<int>.Fail("لا يمكن حجز موعد في وقت ماضٍ.");
 
-            if (await HasConflictAsync(dto.AppointmentDate, dto.DurationMinutes))
-                return ServiceResult<int>.Fail("يوجد موعد آخر متعارض مع هذا التوقيت.");
+            // ⭐ تم إلغاء فحص تعارض الوقت بالكامل — ممكن تسجيل أي عدد من المرضى في نفس اليوم/الوقت من غير أي اعتراض.
+            // if (await HasConflictAsync(dto.AppointmentDate, dto.DurationMinutes))
+            //     return ServiceResult<int>.Fail("يوجد موعد آخر متعارض مع هذا التوقيت.");
 
             var appointment = new Appointment
             {
@@ -250,6 +251,32 @@ namespace Dental.Modules.Appointments.ServicesAppointments
             return ServiceResult<int>.Ok(appointment.Id, "تم حجز الموعد بنجاح.");
         }
 
+        public async Task<ServiceResult<bool>> RescheduleAsync(RescheduleAppointmentDto dto)
+        {
+            var appointment = await _context.Appointments.FindAsync(dto.Id);
+            if (appointment == null)
+                return ServiceResult<bool>.Fail("الموعد غير موجود.");
+
+            if (appointment.Status is AppointmentStatus.Cancelled or AppointmentStatus.Completed)
+                return ServiceResult<bool>.Fail("لا يمكن تأجيل موعد ملغي أو مكتمل.");
+
+            if (dto.NewAppointmentDate < DateTime.Now.AddMinutes(-5))
+                return ServiceResult<bool>.Fail("لا يمكن نقل الموعد لوقت ماضٍ.");
+
+            // ⭐ نفس المنطق — بدون فحص تعارض
+            // if (await HasConflictAsync(dto.NewAppointmentDate, dto.DurationMinutes, dto.Id))
+            //     return ServiceResult<bool>.Fail("يوجد موعد آخر متعارض مع الميعاد الجديد.");
+
+            appointment.AppointmentDate = dto.NewAppointmentDate;
+            appointment.Duration = TimeSpan.FromMinutes(dto.DurationMinutes);
+
+            if (appointment.Status == AppointmentStatus.Confirmed)
+                appointment.Status = AppointmentStatus.Scheduled;
+
+            await _context.SaveChangesAsync();
+            return ServiceResult<bool>.Ok(true, "تم تأجيل الموعد بنجاح.");
+        }
+
         public async Task<ServiceResult<bool>> UpdateAsync(UpdateAppointmentDto dto)
         {
             var appointment = await _context.Appointments.FindAsync(dto.Id);
@@ -266,31 +293,6 @@ namespace Dental.Modules.Appointments.ServicesAppointments
             return ServiceResult<bool>.Ok(true, "تم تحديث بيانات الموعد.");
         }
 
-        public async Task<ServiceResult<bool>> RescheduleAsync(RescheduleAppointmentDto dto)
-        {
-            var appointment = await _context.Appointments.FindAsync(dto.Id);
-            if (appointment == null)
-                return ServiceResult<bool>.Fail("الموعد غير موجود.");
-
-            if (appointment.Status is AppointmentStatus.Cancelled or AppointmentStatus.Completed)
-                return ServiceResult<bool>.Fail("لا يمكن تأجيل موعد ملغي أو مكتمل.");
-
-            if (dto.NewAppointmentDate < DateTime.Now.AddMinutes(-5))
-                return ServiceResult<bool>.Fail("لا يمكن نقل الموعد لوقت ماضٍ.");
-
-            if (await HasConflictAsync(dto.NewAppointmentDate, dto.DurationMinutes, dto.Id))
-                return ServiceResult<bool>.Fail("يوجد موعد آخر متعارض مع الميعاد الجديد.");
-
-            appointment.AppointmentDate = dto.NewAppointmentDate;
-            appointment.Duration = TimeSpan.FromMinutes(dto.DurationMinutes);
-
-            // أي تأكيد سابق بيتلغي تلقائيًا لأن الميعاد اتغيّر
-            if (appointment.Status == AppointmentStatus.Confirmed)
-                appointment.Status = AppointmentStatus.Scheduled;
-
-            await _context.SaveChangesAsync();
-            return ServiceResult<bool>.Ok(true, "تم تأجيل الموعد بنجاح.");
-        }
 
         #endregion
 

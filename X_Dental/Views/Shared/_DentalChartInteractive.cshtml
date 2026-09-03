@@ -76,7 +76,87 @@
         animation: badgePop 0.4s ease;
     }
 
-    /* Diagnosis row in modal */
+    /* ====== Tooth Hover Tooltip ====== */
+    .tooth-tooltip {
+        position: fixed;
+        z-index: 3000;
+        background: #0b2e30;
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: .78rem;
+        line-height: 1.6;
+        max-width: 230px;
+        min-width: 140px;
+        box-shadow: 0 14px 34px rgba(0,0,0,0.28);
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(6px);
+        transition: opacity .15s ease, transform .15s ease;
+    }
+
+        .tooth-tooltip.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .tooth-tooltip .tt-title {
+            font-weight: 800;
+            font-size: .82rem;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #5eead4;
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+            padding-bottom: 6px;
+        }
+
+        .tooth-tooltip .tt-pending-tag {
+            color: #fbbf24;
+            font-size: .65rem;
+            font-weight: 700;
+            background: rgba(251,191,36,0.15);
+            padding: 1px 7px;
+            border-radius: 999px;
+        }
+
+        .tooth-tooltip .tt-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 2px 0;
+        }
+
+            .tooth-tooltip .tt-row span:first-child {
+                color: #94a3b8;
+                flex-shrink: 0;
+            }
+
+            .tooth-tooltip .tt-row b {
+                color: #fff;
+                font-weight: 700;
+                text-align: left;
+            }
+
+        .tooth-tooltip .tt-notes-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+            margin-top: 2px;
+        }
+
+            .tooth-tooltip .tt-notes-row span {
+                color: #e2e8f0;
+                font-weight: 500;
+            }
+
+        .tooth-tooltip .tt-empty {
+            color: #94a3b8;
+            font-style: italic;
+            font-size: .74rem;
+        }
+
     .diagnosis-row {
         display: flex;
         align-items: center;
@@ -120,7 +200,6 @@
         }
     }
 
-    /* Xray upload */
     .xray-upload-zone {
         border: 2px dashed #cbd5e1;
         border-radius: 14px;
@@ -192,7 +271,7 @@
             transform: scale(1.1);
         }
 
-    /* Modal - Glass v4 */
+    /* ====== MODAL XL — 3 Columns ====== */
     .tooth-modal {
         position: fixed;
         inset: 0;
@@ -212,9 +291,9 @@
             animation: fadeInUp 0.25s ease;
         }
 
-    .modal-glass-v4 {
+    .modal-glass-xl {
         width: 100%;
-        max-width: 480px;
+        max-width: 960px;
         margin: 16px;
         background: #fff;
         border-radius: 24px;
@@ -223,6 +302,9 @@
         transform: translateY(20px) scale(0.96);
         opacity: 0;
         animation: dcModalIn 0.4s cubic-bezier(0.2,1.2,0.3,1) forwards;
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
     }
 
     @@keyframes dcModalIn {
@@ -236,15 +318,16 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 18px 22px;
+        padding: 18px 24px;
         background: linear-gradient(135deg, #0d9488, #0d7377);
         color: #fff;
+        flex-shrink: 0;
     }
 
         .tooth-modal-head h5 {
             margin: 0;
             font-weight: 800;
-            font-size: 1rem;
+            font-size: 1.05rem;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -270,16 +353,25 @@
         }
 
     .tooth-modal-body {
-        padding: 20px 22px;
+        padding: 24px;
+        overflow-y: auto;
+        flex: 1;
     }
 
-    .tooth-modal-foot {
+    .modal-body-row {
         display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        padding: 14px 22px;
-        border-top: 1px solid #f0fdfa;
-        background: linear-gradient(180deg, #fafcfd, #fff);
+        gap: 20px;
+    }
+
+    .modal-col {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    .modal-col-divider {
+        width: 1px;
+        background: linear-gradient(180deg, transparent, #e2e8f0, transparent);
+        flex-shrink: 0;
     }
 
     .form-group-v4 label {
@@ -336,6 +428,16 @@
             display: none;
         }
 
+    .tooth-modal-foot {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 14px 24px;
+        border-top: 1px solid #f0fdfa;
+        background: linear-gradient(180deg, #fafcfd, #fff);
+        flex-shrink: 0;
+    }
+
     .btn-glass-v4 {
         padding: 10px 20px;
         border-radius: 12px;
@@ -368,9 +470,41 @@
             transform: translateY(-1px);
             box-shadow: 0 8px 24px rgba(13,115,119,0.35);
         }
+
+    /* Responsive: stack columns on mobile */
+    @@media (max-width: 768px) {
+        .modal-body-row {
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .modal-col-divider {
+            display: none;
+        }
+
+        .modal-glass-xl {
+            margin: 8px;
+            max-height: 95vh;
+            border-radius: 18px;
+        }
+
+        .tooth-modal-body {
+            padding: 16px;
+        }
+
+        .tooth-modal-head {
+            padding: 14px 16px;
+        }
+
+        .tooth-modal-foot {
+            padding: 12px 16px;
+        }
+    }
 </style>
 
 <div class="chart-shell">
+    <div class="tooth-tooltip" id="toothTooltip"></div>
+
     <div class="chart-canvas" id="chartCanvas">
         <svg class="bg-arcs" viewBox="0 0 620 632" preserveAspectRatio="xMidYMid meet">
             <div class="quadrant-divider-v"></div>
@@ -452,80 +586,97 @@
         </div>
     </div>
 
-    <!-- Tooth Detail Modal -->
+    <!-- Tooth Detail Modal — XL 3-Column Layout -->
     <div class="tooth-modal" id="toothModal">
         <div class="modal-overlay" onclick="closeToothModal()"></div>
-        <div class="modal-glass-v4">
+        <div class="modal-glass-xl">
             <div class="tooth-modal-head">
                 <h5><i class="bi bi-grid-3x3-gap"></i> تفاصيل السن <span id="selectedToothNum"></span></h5>
                 <button type="button" class="btn-close-modal" onclick="closeToothModal()"><i class="bi bi-x-lg"></i></button>
             </div>
             <div class="tooth-modal-body">
-                <div class="form-group-v4 mb-3">
-                    <label>حالة السن</label>
-                    <select class="form-glass-v4" id="toothStatus">
-                        <option value="1">سليم</option>
-                        <option value="2">تسوس</option>
-                        <option value="3">معالج</option>
-                        <option value="4">مفقود</option>
-                        <option value="5">مخلوع</option>
-                        <option value="6">مطمور</option>
-                        <option value="7">تاج</option>
-                        <option value="8">جسر</option>
-                        <option value="9">زرعة</option>
-                        <option value="10">مكسور</option>
-                        <option value="11">عصب</option>
-                        <option value="12">حشوة</option>
-                    </select>
-                </div>
+                <div class="modal-body-row">
+                    @* ====== Column 1: Status + Surfaces + Procedure ====== *@
+                    <div class="modal-col">
+                        <div class="form-group-v4 mb-3">
+                            <label>حالة السن</label>
+                            <select class="form-glass-v4" id="toothStatus">
+                                <option value="1">سليم</option>
+                                <option value="2">تسوس</option>
+                                <option value="3">معالج</option>
+                                <option value="4">مفقود</option>
+                                <option value="5">مخلوع</option>
+                                <option value="6">مطمور</option>
+                                <option value="7">تاج</option>
+                                <option value="8">جسر</option>
+                                <option value="9">زرعة</option>
+                                <option value="10">مكسور</option>
+                                <option value="11">عصب</option>
+                                <option value="12">حشوة</option>
+                            </select>
+                        </div>
 
-                <div class="form-group-v4 mb-3">
-                    <label>السطوح المتأثرة</label>
-                    <div class="surface-picker-v4">
-                        <label class="surf-check-v4"><input type="checkbox" value="M" /> M</label>
-                        <label class="surf-check-v4"><input type="checkbox" value="D" /> D</label>
-                        <label class="surf-check-v4"><input type="checkbox" value="B" /> B</label>
-                        <label class="surf-check-v4"><input type="checkbox" value="L" /> L</label>
-                        <label class="surf-check-v4"><input type="checkbox" value="O" /> O</label>
+                        <div class="form-group-v4 mb-3" hidden>
+                            <label>السطوح المتأثرة</label>
+                            <div class="surface-picker-v4">
+                                <label class="surf-check-v4"><input type="checkbox" value="M" /> M</label>
+                                <label class="surf-check-v4"><input type="checkbox" value="D" /> D</label>
+                                <label class="surf-check-v4"><input type="checkbox" value="B" /> B</label>
+                                <label class="surf-check-v4"><input type="checkbox" value="L" /> L</label>
+                                <label class="surf-check-v4"><input type="checkbox" value="O" /> O</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group-v4 mb-0" hidden="">
+                            <label>كود الإجراء</label>
+                            <input type="text" class="form-glass-v4" id="toothProcedure" placeholder="مثال: RCT, CRN, FLL" />
+                        </div>
+                            <div class="modal-col">
+                            <div class="form-group-v4 mb-3">
+                                <label>التشخيص</label>
+                                <div class="diagnosis-row">
+                                    <select class="form-glass-v4" id="toothDiagnosis" onchange="onDiagnosisChange()">
+                                        <option value="">-- اختر التشخيص --</option>
+                                        @if (ViewBag.DiagnosisList != null)
+                                        {
+                                            @foreach (var d in (List<Dental.Models.Clinic.DiagnosisCatalog>)ViewBag.DiagnosisList)
+                                            {
+                                                <option value="@d.Id" data-price="@d.Price">@d.NameAr</option>
+                                            }
+                                        }
+                                    </select>
+                                    <span class="diagnosis-price-badge" id="diagnosisPriceBadge">0 م.ج</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group-v4 mb-0">
+                                <label>ملاحظات الحالة</label>
+                                <textarea class="form-glass-v4" id="diagnosisNotes" rows="5" placeholder="ملاحظات عن التشخيص/الحالة..."></textarea>
+                            </div>
+                        </div>
+                    
                     </div>
-                </div>
 
-                <div class="form-group-v4 mb-3">
-                    <label>كود الإجراء</label>
-                    <input type="text" class="form-glass-v4" id="toothProcedure" placeholder="مثال: RCT, CRN, FLL" />
-                </div>
+                    <div class="modal-col-divider"></div>
 
-                <div class="form-group-v4 mb-3">
-                    <label>التشخيص</label>
-                    <div class="diagnosis-row">
-                        <select class="form-glass-v4" id="toothDiagnosis" onchange="onDiagnosisChange()">
-                            <option value="">-- اختر التشخيص --</option>
-                            @if (ViewBag.DiagnosisList != null)
-                            {
-                                @foreach (var d in (List<Dental.Models.Clinic.DiagnosisCatalog>)ViewBag.DiagnosisList)
-                                {
-                                    <option value="@d.Id" data-price="@d.Price">@d.NameAr</option>
-                                }
-                            }
-                        </select>
-                        <span class="diagnosis-price-badge" id="diagnosisPriceBadge">0 م.ج</span>
+                    @* ====== Column 2: Diagnosis + Price + Notes ====== *@
+                    <div class="modal-col">
+                        <div class="form-group-v4 mb-0">
+                            <label>أشعة السن (اختياري)</label>
+                            <div class="xray-upload-zone p-0" onclick="document.getElementById('toothXrayFiles').click()">
+                                <input type="file" id="toothXrayFiles" accept="image/*" multiple hidden onchange="onToothXrayFilesChange(event)" />
+                                <i class="bi bi-cloud-arrow-up" style="font-size:1.8rem;display:block;margin-bottom:8px;color:#0d9488;"></i>
+                                <span class="mt-0" style="font-weight:700;color:#475569;">اضغط لرفع صورة أو أكثر</span>
+                                <small style="display:block;margin-top:4px;color:#94a3b8;">JPG, PNG, DICOM</small>
+                            </div>
+                            <div id="xrayFilesList" class="xray-files-list"></div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="form-group-v4 mb-3">
-                    <label>ملاحظات الحالة</label>
-                    <textarea class="form-glass-v4" id="diagnosisNotes" rows="2" placeholder="ملاحظات عن التشخيص/الحالة..."></textarea>
+                    
                 </div>
-
-                <div class="form-group-v4">
-                    <label>أشعة السن (اختياري)</label>
-                    <div class="xray-upload-zone" onclick="document.getElementById('toothXrayFiles').click()">
-                        <input type="file" id="toothXrayFiles" accept="image/*" multiple hidden onchange="onToothXrayFilesChange(event)" />
-                        <i class="bi bi-cloud-arrow-up" style="font-size:1.5rem;display:block;margin-bottom:6px;"></i>
-                        اضغط لرفع صورة أو أكثر
-                    </div>
-                    <div id="xrayFilesList" class="xray-files-list"></div>
-                </div>
+                @* ====== Column 3: X-Rays Upload + List ====== *@
+               
             </div>
             <div class="tooth-modal-foot">
                 <button type="button" class="btn-glass-v4 btn-cancel-v4" onclick="closeToothModal()">إلغاء</button>
@@ -552,6 +703,14 @@
         6: 'impacted', 7: 'crown', 8: 'bridge', 9: 'implant', 10: 'fractured',
         11: 'rootcanal', 12: 'filling'
     };
+
+    const STATUS_ID_TO_LABEL_TT = {
+        1: 'سليم', 2: 'تسوس', 3: 'معالج', 4: 'مفقود', 5: 'مخلوع', 6: 'مطمور',
+        7: 'تاج', 8: 'جسر', 9: 'زرعة', 10: 'مكسور', 11: 'عصب', 12: 'حشوة'
+    };
+
+    // ⭐ خريطة أحدث حالة/تشخيص محفوظ لكل سن (جايه من السيرفر)
+    window.toothInfoMap = @Html.Raw(ViewBag.ToothInfoMap ?? "{}");
 
     function onDiagnosisChange() {
         const select = document.getElementById('toothDiagnosis');
@@ -586,6 +745,8 @@
         document.querySelectorAll('#chartCanvas .tooth-box').forEach(t => t.classList.remove('selected'));
         const target = document.querySelector('#chartCanvas [data-tooth="' + num + '"]');
         if (target) target.classList.add('selected');
+
+        hideToothTooltip();
 
         const modal = document.getElementById('toothModal');
         modal.classList.add('dc-show');
@@ -690,7 +851,6 @@
         if (window.renderRecordsTable) window.renderRecordsTable();
         closeToothModal();
 
-        // Toast
         Swal.fire({
             toast: true, position: 'top-end', icon: 'success',
             title: 'تمت إضافة السن ' + currentToothNumber, showConfirmButton: false, timer: 1200,
@@ -709,4 +869,103 @@
     }
     window.removePendingTooth = removePendingTooth;
     window.openToothModal = openToothModal;
+
+    // ============================================================
+    // ⭐ Tooth Hover Tooltip — الحالة + التشخيص + الملاحظات
+    // ============================================================
+    const toothTooltipEl = document.getElementById('toothTooltip');
+
+    function buildTooltipContent(num) {
+        const pending = window.pendingToothRecords ? window.pendingToothRecords[num] : null;
+        let statusText, diagnosisText, notesText, isPending = false;
+
+        if (pending) {
+            isPending = true;
+            statusText = STATUS_ID_TO_LABEL_TT[pending.Status] || '-';
+            diagnosisText = pending.DiagnosisName || null;
+            notesText = pending.DiagnosisNotes || pending.Notes || null;
+        } else {
+            const info = window.toothInfoMap ? window.toothInfoMap[num] : null;
+            if (!info) return null; // سن سليم وملوش أي سجل سابق — من غير تولتيب
+            statusText = info.status || '-';
+            diagnosisText = info.diagnosis || null;
+            notesText = info.notes || null;
+        }
+
+        let html = `<div class="tt-title"><i class="bi bi-grid-3x3-gap"></i> سن ${num}`;
+        if (isPending) html += `<span class="tt-pending-tag">قيد الحفظ</span>`;
+        html += `</div>`;
+
+        html += `<div class="tt-row"><span>الحالة</span><b>${statusText}</b></div>`;
+
+        if (diagnosisText) {
+            html += `<div class="tt-row"><span>التشخيص</span><b>${diagnosisText}</b></div>`;
+        }
+
+        if (notesText) {
+            html += `<div class="tt-row tt-notes-row"><span>ملاحظات</span><span>${notesText}</span></div>`;
+        }
+
+        if (!diagnosisText && !notesText) {
+            html += `<div class="tt-empty">لا يوجد تشخيص أو ملاحظات مسجلة</div>`;
+        }
+
+        return html;
+    }
+
+    function positionTooltip(evt) {
+        if (!toothTooltipEl || !evt) return;
+        const offset = 14;
+        let x = evt.clientX + offset;
+        let y = evt.clientY + offset;
+        const rect = toothTooltipEl.getBoundingClientRect();
+        if (x + rect.width > window.innerWidth - 10) x = evt.clientX - rect.width - offset;
+        if (y + rect.height > window.innerHeight - 10) y = evt.clientY - rect.height - offset;
+        toothTooltipEl.style.left = x + 'px';
+        toothTooltipEl.style.top = y + 'px';
+    }
+
+    function showToothTooltip(num, evt) {
+        if (!toothTooltipEl) return;
+        const content = buildTooltipContent(num);
+        if (!content) {
+            toothTooltipEl.classList.remove('show');
+            return;
+        }
+        toothTooltipEl.innerHTML = content;
+        toothTooltipEl.classList.add('show');
+        positionTooltip(evt);
+    }
+
+    function hideToothTooltip() {
+        if (toothTooltipEl) toothTooltipEl.classList.remove('show');
+    }
+
+    // ⭐ نقل التولتيب لـ body عشان position:fixed يتحسب بالنسبة للشاشة مش لأي ancestor فيه backdrop-filter
+    if (toothTooltipEl && toothTooltipEl.parentElement !== document.body) {
+        document.body.appendChild(toothTooltipEl);
+    }
+
+    // ⭐ Event Delegation بدل الربط الفردي — يضمن الاشتغال حتى لو DOM اتعاد بناؤه
+    const chartCanvasEl = document.getElementById('chartCanvas');
+    let lastHoveredTooth = null;
+
+    if (chartCanvasEl) {
+        chartCanvasEl.addEventListener('mousemove', function(e) {
+            const box = e.target.closest('.tooth-box');
+            if (!box) {
+                if (lastHoveredTooth !== null) {
+                    hideToothTooltip();
+                    lastHoveredTooth = null;
+                }
+                return;
+            }
+            lastHoveredTooth = parseInt(box.getAttribute('data-tooth'));
+            showToothTooltip(lastHoveredTooth, e);
+        });
+        chartCanvasEl.addEventListener('mouseleave', function() {
+            lastHoveredTooth = null;
+            hideToothTooltip();
+        });
+    }
 </script>
