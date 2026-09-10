@@ -57,7 +57,7 @@
 
         <div style="margin-top:16px; padding-top:16px; border-top:1px solid #f1f5f9;">
             <div style="font-size:.8rem; font-weight:800; color:#475569; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-                <i class="bi bi-list-ul"></i> سجل المدفوعات السابقة (@Model.Visit.Payments.Count)
+                <i class="bi bi-list-ul"></i> سجل مدفوعات السيشن @* (@Model.Visit.Payments.Count) *@
             </div>
             <div class="pay-history custom-scroll" style="max-height:220px; overflow-y:auto;">
                 <div id="pendingPaymentsRows"></div>
@@ -82,9 +82,9 @@
                 </div>
                 @if (!Model.Visit.Payments.Any())
                 {
-                    <div class="empty-state" id="emptyPayHistoryMsg" style="padding:16px;">
+                   @*  <div class="empty-state" id="emptyPayHistoryMsg" style="padding:16px;">
                         <p style="font-size:.8rem;">لا توجد مدفوعات مسجلة بعد.</p>
-                    </div>
+                    </div> *@
                 }
             </div>
         </div>

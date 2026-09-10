@@ -26,6 +26,837 @@
 }
 
 <link rel="stylesheet" href="~/css/patient-hero-shared.css" asp-append-version="true" />
+
+
+<style>
+    :root {
+        --dc-bg: #f0f7f7;
+        --dc-card: rgba(255,255,255,0.82);
+        --dc-card-solid: #ffffff;
+        --dc-border: rgba(255,255,255,0.6);
+        --dc-teal-50: #eafbfc;
+        --dc-teal-100: #c7f2ea;
+        --dc-teal-500: #14b8a6;
+        --dc-teal-600: #0d9488;
+        --dc-teal-700: #0d7377;
+        --dc-teal-900: #0a4d4f;
+        --dc-coral-300: #f6c6bc;
+        --dc-ink-900: #0b2e30;
+        --dc-ink-600: #4b6b6c;
+        --dc-ink-400: #94a3b8;
+        --dc-shadow-sm: 0 2px 8px rgba(10,77,79,0.04);
+        --dc-shadow: 0 8px 32px rgba(10,77,79,0.08);
+        --dc-shadow-lg: 0 20px 60px rgba(10,77,79,0.12);
+        --dc-glass: rgba(255,255,255,0.72);
+    }
+
+
+    .clinical-session-page {
+        width: 100%;
+        min-height: 100vh;
+        background: radial-gradient(circle at 0% 0%, #e6fbf8 0%, transparent 45%), radial-gradient(circle at 100% 100%, #fef3ee 0%, transparent 35%), linear-gradient(180deg, #f0f7f7 0%, #f7fbfb 100%);
+        padding: 16px 20px 100px;
+        font-family: 'Segoe UI', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+        color: var(--dc-ink-900);
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(24px) scale(0.98);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    @@keyframes fadeInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @@keyframes fadeInRight {
+        from {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @@keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @@keyframes pulseGlow {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(13,148,136,0.25);
+        }
+
+        50% {
+            box-shadow: 0 0 20px 4px rgba(13,148,136,0.15);
+        }
+    }
+
+    @@keyframes progressFill {
+        from {
+            width: 0%;
+        }
+    }
+
+    @@keyframes countUp {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+            filter: blur(4px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+        }
+    }
+
+    @@keyframes badgePop {
+        0% {
+            transform: scale(0);
+        }
+
+        70% {
+            transform: scale(1.15);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .anim-fade-up {
+        animation: fadeInUp 0.6s cubic-bezier(0.2,0.8,0.3,1) forwards;
+        opacity: 0;
+    }
+
+    .anim-fade-left {
+        animation: fadeInLeft 0.6s cubic-bezier(0.2,0.8,0.3,1) forwards;
+        opacity: 0;
+    }
+
+    .anim-fade-right {
+        animation: fadeInRight 0.6s cubic-bezier(0.2,0.8,0.3,1) forwards;
+        opacity: 0;
+    }
+
+    .anim-scale {
+        animation: scaleIn 0.5s cubic-bezier(0.2,1.4,0.4,1) forwards;
+        opacity: 0;
+    }
+
+    .anim-d1 {
+        animation-delay: 0.08s;
+    }
+
+    .anim-d2 {
+        animation-delay: 0.16s;
+    }
+
+    .anim-d3 {
+        animation-delay: 0.24s;
+    }
+
+    .anim-d4 {
+        animation-delay: 0.32s;
+    }
+
+    .anim-d5 {
+        animation-delay: 0.40s;
+    }
+
+    .session-hero {
+        background: linear-gradient(135deg, #0d7377 0%, #0f9b8e 50%, #14b8a6 100%);
+        border-radius: 24px;
+        padding: 20px 28px;
+        color: #fff;
+        box-shadow: var(--dc-shadow-lg), 0 0 0 1px rgba(255,255,255,0.15) inset;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 20px;
+        animation: fadeInUp 0.7s ease forwards;
+    }
+
+        .session-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .session-hero.status-success {
+            background: linear-gradient(135deg, #0d7377 0%, #15803d 60%, #16a34a 100%);
+        }
+
+        .session-hero.status-danger {
+            background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 60%, #dc2626 100%);
+        }
+
+    .hero-grid {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 20px;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 20px;
+        background: rgba(255,255,255,0.18);
+        border: 1px solid rgba(255,255,255,0.3);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        font-weight: 800;
+        flex-shrink: 0;
+        animation: float 4s ease-in-out infinite;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-4px);
+        }
+    }
+
+    .hero-info h1 {
+        font-size: 1.3rem;
+        font-weight: 800;
+        margin: 0 0 10px;
+        letter-spacing: -0.3px;
+    }
+
+    .hero-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,0.14);
+        border: 1px solid rgba(255,255,255,0.22);
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        backdrop-filter: blur(4px);
+        transition: all 0.2s ease;
+    }
+
+        .hero-tag:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-1px);
+        }
+
+    .hero-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .btn-hero {
+        border: none;
+        padding: 10px 20px;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 0.82rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+        .btn-hero:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-hero.primary {
+            background: #fff;
+            color: var(--dc-teal-700);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+            animation: pulseGlow 3s ease-in-out infinite;
+        }
+
+        .btn-hero.glass {
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.28);
+        }
+
+            .btn-hero.glass:hover {
+                background: rgba(255,255,255,0.22);
+            }
+
+    .hero-metrics {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-top: 18px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .metric-glass {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.18);
+        border-radius: 16px;
+        padding: 14px;
+        text-align: center;
+        backdrop-filter: blur(4px);
+        transition: all 0.3s ease;
+    }
+
+        .metric-glass:hover {
+            background: rgba(255,255,255,0.18);
+            transform: translateY(-3px);
+        }
+
+    .metric-value {
+        font-size: 1.2rem;
+        font-weight: 800;
+        display: block;
+        animation: countUp 0.8s ease forwards;
+    }
+
+    .metric-label {
+        font-size: 0.7rem;
+        opacity: 0.85;
+        font-weight: 600;
+        margin-top: 4px;
+        display: block;
+    }
+
+    .payment-progress-hero {
+        margin-top: 16px;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 16px;
+        padding: 14px 18px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .progress-label-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .progress-track {
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.15);
+        overflow: hidden;
+    }
+
+    
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 620px 1fr;
+        gap: 20px;
+        align-items: start;
+    }
+
+    .chart-panel {
+        position: sticky;
+        top: 16px;
+        background: var(--dc-card);
+        border-radius: 24px;
+        border: 1px solid var(--dc-border);
+        box-shadow: var(--dc-shadow);
+        padding: 20px;
+        backdrop-filter: blur(12px);
+        animation: fadeInLeft 0.7s 0.15s ease forwards;
+        opacity: 0;
+    }
+
+    .chart-panel-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+        .chart-panel-head h3 {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--dc-ink-900);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+    .chart-legend-compact {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(0,0,0,0.04);
+    }
+
+    .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .legend-item-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--dc-ink-600);
+        padding: 3px 8px;
+        border-radius: 8px;
+        background: rgba(0,0,0,0.02);
+    }
+
+    .content-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        background: var(--dc-card);
+        border-radius: 24px;
+        border: 1px solid var(--dc-border);
+        box-shadow: var(--dc-shadow);
+        backdrop-filter: blur(12px);
+        overflow: hidden;
+        animation: fadeInRight 0.7s 0.2s ease forwards;
+        opacity: 0;
+        min-height: 600px;
+    }
+
+    .dc-tabs-bar {
+        display: flex;
+        gap: 4px;
+        background: linear-gradient(180deg, rgba(240,253,250,0.8) 0%, rgba(240,253,250,0.4) 100%);
+        padding: 8px;
+        border-bottom: 1px solid rgba(0,0,0,0.04);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .dc-tab-btn {
+        flex: 1;
+        border: none;
+        background: transparent;
+        color: var(--dc-ink-600);
+        font-weight: 700;
+        font-size: 0.82rem;
+        padding: 10px 12px;
+        border-radius: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.25s cubic-bezier(0.2,0.8,0.3,1);
+        position: relative;
+    }
+
+        .dc-tab-btn:hover {
+            background: rgba(13,148,136,0.06);
+            color: var(--dc-teal-700);
+        }
+
+        .dc-tab-btn.active {
+            background: #fff;
+            color: var(--dc-teal-700);
+            box-shadow: 0 4px 16px rgba(13,115,119,0.12);
+        }
+
+        .dc-tab-btn .tab-badge {
+            background: var(--dc-teal-100);
+            color: var(--dc-teal-700);
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 1px 7px;
+            border-radius: 999px;
+            min-width: 20px;
+            text-align: center;
+        }
+
+    .dc-tab-panel {
+        display: none;
+        padding: 20px;
+        animation: fadeInUp 0.35s ease;
+    }
+
+        .dc-tab-panel.active {
+            display: block;
+        }
+
+    .bottom-action-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(255,255,255,0.92);
+        backdrop-filter: blur(20px) saturate(1.8);
+        border-top: 1px solid rgba(0,0,0,0.06);
+        box-shadow: 0 -8px 32px rgba(10,77,79,0.08);
+        padding: 14px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 100;
+        transform: translateY(100%);
+        transition: transform 0.4s cubic-bezier(0.2,0.8,0.3,1);
+    }
+
+        .bottom-action-bar.visible {
+            transform: translateY(0);
+        }
+
+    .bottom-stats {
+        display: flex;
+        gap: 24px;
+    }
+
+    .bottom-stat {
+        text-align: center;
+    }
+
+    .bottom-stat-value {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--dc-ink-900);
+        display: block;
+        line-height: 1;
+    }
+
+    .bottom-stat-label {
+        font-size: 0.7rem;
+        color: var(--dc-ink-400);
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    .bottom-stat.remaining .bottom-stat-value {
+        color: #dc2626;
+    }
+
+    .bottom-stat.paid .bottom-stat-value {
+        color: #16a34a;
+    }
+
+    .btn-finish {
+        background: linear-gradient(135deg, var(--dc-teal-600), var(--dc-teal-700));
+        color: #fff;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 16px;
+        font-weight: 800;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(13,115,119,0.3);
+        transition: all 0.3s ease;
+        animation: pulseGlow 3s ease-in-out infinite;
+    }
+
+        .btn-finish:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 12px 32px rgba(13,115,119,0.4);
+        }
+
+    .section-card {
+        background: var(--dc-card-solid);
+        border-radius: 20px;
+        border: 1px solid rgba(0,0,0,0.04);
+        box-shadow: var(--dc-shadow-sm);
+        padding: 20px;
+        margin-bottom: 16px;
+        transition: all 0.3s ease;
+    }
+
+        .section-card:hover {
+            box-shadow: var(--dc-shadow);
+            transform: translateY(-2px);
+        }
+
+    .section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+        .section-head h4 {
+            margin: 0;
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: var(--dc-ink-900);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+    .section-badge {
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: var(--dc-teal-700);
+        background: var(--dc-teal-50);
+        padding: 4px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--dc-teal-100);
+    }
+
+    .dc-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 0.82rem;
+    }
+
+        .dc-table th {
+            text-align: right;
+            padding: 12px 10px;
+            color: var(--dc-ink-400);
+            font-weight: 700;
+            border-bottom: 2px solid #f1f5f9;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .dc-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f8fafc;
+            color: #1e293b;
+            vertical-align: middle;
+            transition: background 0.15s ease;
+        }
+
+        .dc-table tbody tr:hover td {
+            background: linear-gradient(90deg, transparent, rgba(13,148,136,0.03), transparent);
+        }
+
+        .dc-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+    .tooth-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+        color: #5b21b6;
+        font-weight: 800;
+        font-size: 0.85rem;
+        box-shadow: 0 2px 6px rgba(91,33,182,0.1);
+    }
+
+    .badge-pending {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: #b45309;
+        background: #fef3c7;
+        padding: 3px 10px;
+        border-radius: 8px;
+        white-space: nowrap;
+    }
+
+    .row-pending {
+        background: linear-gradient(90deg, #fffbeb, #fff) !important;
+    }
+
+        .row-pending td:first-child {
+            border-right: 3px solid #f59e0b;
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--dc-ink-400);
+    }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            display: block;
+            opacity: 0.4;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+    .btn-sm {
+        border: none;
+        background: transparent;
+        color: var(--dc-ink-400);
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+    }
+
+        .btn-sm:hover {
+            background: #f1f5f9;
+            color: var(--dc-teal-600);
+        }
+
+        .btn-sm.danger:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+    .custom-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 999px;
+    }
+
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+    @@media (max-width: 1199.98px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-panel {
+            position: relative;
+            top: 0;
+        }
+
+        .hero-grid {
+            grid-template-columns: auto 1fr;
+        }
+
+        .hero-actions {
+            flex-direction: row;
+            grid-column: 1 / -1;
+        }
+
+        .hero-metrics {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .clinical-session-page {
+            padding: 12px 12px 100px;
+        }
+
+        .hero-metrics {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .bottom-stats {
+            gap: 12px;
+        }
+
+        .bottom-stat-label {
+            font-size: 0.6rem;
+        }
+    }
+
+    @@media print {
+        .session-hero .hero-actions, .payment-progress-hero,
+        .dc-tabs-bar, .bottom-action-bar, .btn-sm {
+            display: none !important;
+        }
+
+        .dc-tab-panel {
+            display: block !important;
+        }
+
+        .clinical-session-page {
+            padding: 0 !important;
+            background: #fff !important;
+        }
+
+        .dashboard-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        .chart-panel, .content-panel {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+    }
+
+    .modal-col-divider {
+        width: 1px;
+        background: linear-gradient(180deg, transparent, #e2e8f0, transparent);
+        flex-shrink: 0;
+    }
+</style>
+
 <style>
     /* ── Stats ── */
     .stats-grid {
@@ -737,9 +1568,15 @@
             </div>
         </div>
         <div class="hero-actions">
-            <a asp-action="Edit" asp-route-id="@patient.Id" class="btn-hero btn-hero-edit">
+            @* <a asp-action="Edit" asp-route-id="@patient.Id" class="btn-hero btn-hero-edit">
                 <i class="bi bi-pencil-square"></i> تعديل
             </a>
+
+            <a class="action-icon-btn fs-5" title="Edit"
+                href="javascript:void(0)" onclick="openPatientModal(${data.id})">
+                <i class="bi bi-pencil-square"></i>
+            </a>
+ *@
             <button type="button" class="btn-hero btn-hero-appt" onclick="openApptModal()">
                 <i class="bi bi-calendar-plus"></i> موعد جديد
             </button>
@@ -805,6 +1642,9 @@
             <button class="tab-pill" onclick="switchTab('timeline', this)">
                 <i class="bi bi-clock-history"></i> التاريخ الطبي
             </button>
+            <button class="tab-pill" onclick="switchTab('prevSessions', this)">
+                <i class="bi bi-archive"></i> السجلات السابقة
+            </button>
             <button class="tab-pill" onclick="switchTab('teeth', this)">
                 <i class="bi bi-grid-3x3-gap"></i> Dental Chart
             </button>
@@ -835,9 +1675,9 @@
                         <div class="card-body-glass">
                             <div class="info-row-flex"><span class="info-label-sm">الاسم</span><span class="info-value-sm">@patient.FullNameAr</span></div>
                             <div class="info-row-flex"><span class="info-label-sm">تاريخ الميلاد</span><span class="info-value-sm">@(patient.DateOfBirth?.ToString("dd/MM/yyyy") ?? "-")</span></div>
-                            <div class="info-row-flex"><span class="info-label-sm">الرقم القومي</span><span class="info-value-sm">@(patient.NationalId ?? "-")</span></div>
-                            <div class="info-row-flex"><span class="info-label-sm">فصيلة الدم</span><span class="info-value-sm"><span class="blood-badge-new">@(patient.BloodGroup?.Name ?? "-")</span></span></div>
-                            @* <div class="info-row-flex"><span class="info-label-sm">المهنة</span><span class="info-value-sm">@(patient.Occupation ?? "-")</span></div> *@
+                            @*<div class="info-row-flex"hidden><span class="info-label-sm">الرقم القومي</span><span class="info-value-sm">@(patient.NationalId ?? "-")</span></div>
+                            <div class="info-row-flex" hidden><span class="info-label-sm">فصيلة الدم</span><span class="info-value-sm"><span class="blood-badge-new">@(patient.BloodGroup?.Name ?? "-")</span></span></div>
+                             <div class="info-row-flex"><span class="info-label-sm">المهنة</span><span class="info-value-sm">@(patient.Occupation ?? "-")</span></div> *@
                         </div>
                     </div>
                     <div class="info-card-glass">
@@ -852,19 +1692,21 @@
                     <div class="info-card-glass">
                         <div class="card-header-glass"><i class="bi bi-heart-pulse"></i> التاريخ الطبي</div>
                         <div class="card-body-glass">
-                            <div class="info-row-flex"><span class="info-label-sm">الحساسية</span><span class="info-value-sm @(string.IsNullOrEmpty(patient.Allergies) ? "" : "text-danger")">@(patient.Allergies ?? "لا يوجد")</span></div>
+                            @* <div class="info-row-flex"><span class="info-label-sm">الحساسية</span><span class="info-value-sm @(string.IsNullOrEmpty(patient.Allergies) ? "" : "text-danger")">@(patient.Allergies ?? "لا يوجد")</span></div>
                             <div class="info-row-flex"><span class="info-label-sm">أمراض مزمنة</span><span class="info-value-sm">@(patient.ChronicDiseases ?? "لا يوجد")</span></div>
                             <div class="info-row-flex"><span class="info-label-sm">الأدوية الحالية</span><span class="info-value-sm">@(patient.CurrentMedications ?? "لا يوجد")</span></div>
                             <div class="info-row-flex"><span class="info-label-sm">التدخين</span><span class="info-value-sm">@(patient.SmokingStatus ?? "-")</span></div>
+                            *@ 
+                            <p class="notes-text-new">@(patient.Notes ?? "لا توجد ملاحظات.")</p>
+
+                        </div>
+                    </div>
+                    <div class="info-card-glass"hidden>
+                        <div class="card-header-glass"><i class="bi bi-journal-text"></i> ملاحظات</div>
+                        <div class="card-body-glass">
                         </div>
                     </div>
                     <div class="info-card-glass">
-                        <div class="card-header-glass"><i class="bi bi-journal-text"></i> ملاحظات</div>
-                        <div class="card-body-glass">
-                            <p class="notes-text-new">@(patient.Notes ?? "لا توجد ملاحظات.")</p>
-                        </div>
-                    </div>
-                    <div class="info-card-glass full-width">
                         <div class="card-header-glass"><i class="bi bi-activity"></i> آخر النشاطات</div>
                         <div class="card-body-glass">
                             <div class="timeline-container">
@@ -912,6 +1754,22 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            
+            <!-- 🔷 Tab: Previous Sessions -->
+            <div class="tab-panel" id="prevSessions">
+                @if (ViewBag.PreviousSessions is List<Dental.Modules.Clinical.DTOs.PreviousSessionRecordDto> prevSessions && prevSessions.Any())
+                {
+                    @await Html.PartialAsync("_PreviousSessionsTable", new Dental.Modules.Clinical.ViewModels.SessionViewModel())
+                }
+                else
+                {
+                    <div class="placeholder-glass">
+                        <div class="placeholder-icon-glass"><i class="bi bi-archive"></i></div>
+                        <h3>لا توجد سجلات أسنان سابقة</h3>
+                        <p>هتظهر هنا كل حالات الأسنان المسجلة من السيشنات السابقة</p>
+                    </div>
+                }
             </div>
 
             <!-- 🔷 Tab: Dental Chart -->

@@ -105,6 +105,7 @@ namespace Dental.Controllers
                     .AsNoTracking()
                     .Include(p => p.Gender)
                     .Include(p => p.Visits)
+                    .Include(p => p.Appointments)
                     .AsQueryable();
 
                 if (categoryFilter == "General")
@@ -165,7 +166,12 @@ namespace Dental.Controllers
                         HasGeneralVisits = p.Visits.Any(v => v.Category == VisitCategory.General),
                         HasOrthodonticsVisits = p.Visits.Any(v => v.Category == VisitCategory.Orthodontics),
                         // في الـ .Select(p => new PatientListDto { ... }) ضيف:
-                        PatientType = p.PatientType
+                        PatientType = p.PatientType,
+                        NextSession = p.Appointments
+                        .Where(a => a.AppointmentDate >= DateTime.Today && a.Status != AppointmentStatus.Cancelled)
+                        .OrderBy(a => a.AppointmentDate)
+                        .Select(a => (DateTime?)a.AppointmentDate)
+                        .FirstOrDefault(),
 
                     })
                     .ToListAsync();
@@ -192,6 +198,45 @@ namespace Dental.Controllers
         }
         #endregion
 
+        #region ⚡ Modal (Create & Edit shared)
+        [HttpGet]
+        public async Task<IActionResult> Modal(int? id)
+        {
+            await LoadSelectListsAsync();
+
+            bool isEdit = id.HasValue && id.Value > 0;
+            ViewBag.IsEdit = isEdit;
+
+            if (isEdit)
+            {
+                var result = await _patientService.GetByIdAsync(id!.Value);
+                if (!result.Success || result.Data == null)
+                    return NotFound();
+
+                var p = result.Data;
+                ViewBag.PatientId = p.Id;
+                ViewBag.FullName = p.FullNameAr;
+                ViewBag.Mobile = p.Mobile;
+                ViewBag.Address = p.Address;
+                ViewBag.DateOfBirth = p.DateOfBirth;
+                ViewBag.GenderId = p.Gender?.Id ?? 0;
+                ViewBag.PatientType = (int)p.PatientType;
+                ViewBag.MedNotes = p.Notes;
+            }
+
+            // ✅ مفيش Model متبعت — كله ViewBag، مفيش Casting = مفيش Exception
+            return PartialView("_PatientFormModal");
+        }
+        #endregion
+
+
+
+
+
+
+
+
+
         #region Details
         public async Task<IActionResult> Details(int id)
         {
@@ -208,8 +253,10 @@ namespace Dental.Controllers
                 .OrderByDescending(v => v.VisitDate)
                 .ToListAsync();
 
-            // ── التاريخ الطبي (Sessions) — من الزيارات الفعلية ──
-            var sessions = visits.Select(v => new SessionDto
+            // ✅ السيشن الـ InProgress مش بيتحسب — الكونت بيزيد لما بيخلص بس
+            var completedVisits = visits.Where(v => v.Status == VisitStatus.Completed).ToList();
+
+            var sessions = completedVisits.Select(v => new SessionDto
             {
                 Id = v.Id,
                 PatientId = v.PatientId,
@@ -219,7 +266,6 @@ namespace Dental.Controllers
                     : (v.ChiefComplaint ?? "زيارة عامة"),
                 Description = v.ChiefComplaint ?? string.Empty,
                 Notes = v.Notes ?? string.Empty,
-                
                 Status = v.Status switch
                 {
                     VisitStatus.InProgress => SessionStatus.InProgress,
@@ -313,21 +359,75 @@ namespace Dental.Controllers
             var model = new PatientProfileViewModel
             {
                 Patient = result.Data,
-                VisitsCount = visits.Count,
+                VisitsCount = completedVisits.Count,                        // ✅
                 AppointmentsCount = appointmentsCount,
-                TotalPaid = visits.Sum(v => v.PaidAmount),
-                TotalDue = visits.Sum(v => v.Remaining),
+                TotalPaid = completedVisits.Sum(v => v.PaidAmount),         // ✅
+                TotalDue = completedVisits.Sum(v => v.Remaining),           // ✅
                 DentalChart = dentalChart,
                 Sessions = sessions,
                 XRays = xrays,
-                Prescriptions = new List<PrescriptionDto>(),   // نكملها لاحقًا
-                Photos = new List<PhotoDto>(),                 // نكملها لاحقًا
-                Payments = new List<PaymentDto>(),              // نكملها لاحقًا
+                Prescriptions = new List<PrescriptionDto>(),
+                Photos = new List<PhotoDto>(),
+                Payments = new List<PaymentDto>(),
                 Documents = documents
             };
+
+            // ✅ السجلات السابقة — بنفس شكل شاشة السيشن
+            ViewBag.PreviousSessions = await GetPreviousSessionsAsync(id);
+
             return View(model);
         }
-        #endregion
+
+        private async Task<List<PreviousSessionRecordDto>> GetPreviousSessionsAsync(int patientId)
+        {
+            var entries = await _context.DentalChartEntries
+                .Where(e => e.PatientId == patientId)
+                .Include(e => e.Visit)
+                .OrderByDescending(e => e.Date)
+                .ToListAsync();
+
+            var visitIds = entries.Select(e => e.VisitId).Distinct().ToList();
+
+            var diagnoses = await _context.VisitDiagnoses
+                .Where(d => visitIds.Contains(d.VisitId))
+                .Include(d => d.Diagnosis)
+                .ToListAsync();
+
+            var statusLabels = new Dictionary<Dental.Models.Patient.ToothStatus, string>
+    {
+        { Dental.Models.Patient.ToothStatus.Healthy, "سليم" },
+        { Dental.Models.Patient.ToothStatus.Decayed, "تسوس" },
+        { Dental.Models.Patient.ToothStatus.Treated, "معالج" },
+        { Dental.Models.Patient.ToothStatus.Missing, "مفقود" },
+        { Dental.Models.Patient.ToothStatus.Extracted, "مخلوع" },
+        { Dental.Models.Patient.ToothStatus.RootCanal, "عصب" },
+        { Dental.Models.Patient.ToothStatus.Crown, "تاج" },
+        { Dental.Models.Patient.ToothStatus.Filling, "حشوة" }
+    };
+
+            return entries.Select(e =>
+            {
+                var diag = diagnoses.FirstOrDefault(d => d.VisitId == e.VisitId && d.ToothNumber == e.ToothNumber);
+                return new PreviousSessionRecordDto
+                {
+                    VisitDiagnosisId = diag?.Id ?? 0,                    // ✅
+                    VisitId = (int)e.VisitId,                                 // ✅
+                    DiagnosisCatalogId = diag?.DiagnosisCatalogId,       // ✅
+                    ToothNumber = e.ToothNumber,
+                    Date = e.Date,
+                    StatusText = statusLabels.TryGetValue(e.Status, out var lbl) ? lbl : e.Status.ToString(),
+                    DiagnosisName = diag?.Diagnosis?.NameAr,
+                    DiagnosisNotes = diag?.Notes,
+                    DiagnosisPrice = diag?.Diagnosis?.Price ?? 0,
+                    VisitTotalAmount = e.Visit?.TotalAmount ?? 0,
+                    VisitPaidAmount = e.Visit?.PaidAmount ?? 0,
+                    VisitDiscount = e.Visit?.Discount ?? 0,
+                    VisitRemaining = e.Visit?.Remaining ?? 0
+                };
+            }).ToList();
+        }
+
+    #endregion
 
         #region Create
         [HttpGet]
@@ -370,31 +470,25 @@ namespace Dental.Controllers
                 patient.IsActive = true;
                 patient.CreatedBy = 1;
 
-                // Medical Info لو موجود في الـ DTO
-                // ⚠️ الشرط ده بيتحقق فعليًا دلوقتي بعد ما اتصلح الـ binding في الـ View
-                // (كانت الحقول بترسل باسم "MedicalInfo.X" وهو اسم مش موجود، فالقيم كانت
-                // بتوصل null دايمًا ومعاها الشرط ده كان بيفشل طول الوقت)
                 if (!string.IsNullOrWhiteSpace(dto.Allergies)
                     || !string.IsNullOrWhiteSpace(dto.ChronicDiseases)
                     || !string.IsNullOrWhiteSpace(dto.CurrentMedications)
                     || !string.IsNullOrWhiteSpace(dto.MedicalNotes)
                     || !string.IsNullOrWhiteSpace(dto.EmergencyNotes)
-                    || !string.IsNullOrWhiteSpace(dto.MedicalNotes)
                     || !string.IsNullOrWhiteSpace(dto.SmokingStatus)
                     || dto.IsPregnant == true)
                 {
-                    patient.MedicalInfo = new PatientMedicalInfo
-                    {
-                        Allergies = dto.Allergies,
-                        ChronicDiseases = dto.ChronicDiseases,
-                        CurrentMedications = dto.CurrentMedications,
-                        MedicalNotes = dto.MedicalNotes,
-                        SmokingStatus = dto.SmokingStatus,
-                        IsPregnant = dto.IsPregnant,
-                        EmergencyNotes = dto.EmergencyNotes
-                    };
+                    patient.MedicalInfo ??= new PatientMedicalInfo();
+                    patient.MedicalInfo.Allergies = dto.Allergies;
+                    patient.MedicalInfo.ChronicDiseases = dto.ChronicDiseases;
+                    patient.MedicalInfo.CurrentMedications = dto.CurrentMedications;
+                    patient.MedicalInfo.MedicalNotes = dto.MedicalNotes;
+                    patient.MedicalInfo.SmokingStatus = dto.SmokingStatus;
+                    patient.MedicalInfo.IsPregnant = dto.IsPregnant;
+                    patient.MedicalInfo.EmergencyNotes = dto.EmergencyNotes;
+                    patient.Notes = dto.MedicalNotes;
                 }
-
+                    patient.DateOfBirth = dto.DateOfBirth;
                 await _context.Patients.AddAsync(patient);
                 await _context.SaveChangesAsync();
 
@@ -477,14 +571,14 @@ namespace Dental.Controllers
                 Email = patient.Email,
                 Address = patient.Address,
                 Occupation = patient.Occupation,
-                Notes = patient.Notes,
+                Notes = patient.MedicalNotes,
                 PatientType = patient.PatientType,
                 Allergies = patient.Allergies,
                 ChronicDiseases = patient.ChronicDiseases,
                 CurrentMedications = patient.CurrentMedications,
                 MedicalNotes = patient.MedicalNotes,
                 SmokingStatus = patient.SmokingStatus,
-                EmergencyNotes = patient.MedicalNotes
+                EmergencyNotes = patient.MedicalNotes,
 
             };
             return View(model);
@@ -527,6 +621,27 @@ namespace Dental.Controllers
                     await LoadSelectListsAsync(dto.GenderId, dto.BloodGroupId);
                     return View(dto);
                 }
+
+                // ✅ Medical History — حفظ صريح
+                var patient = await _context.Patients
+                    .Include(p => p.MedicalInfo)
+                    .FirstOrDefaultAsync(p => p.Id == dto.Id);
+
+                if (patient != null)
+                {
+                    patient.MedicalInfo ??= new PatientMedicalInfo();
+                    patient.MedicalInfo.Allergies = dto.Allergies;
+                    patient.MedicalInfo.ChronicDiseases = dto.ChronicDiseases;
+                    patient.MedicalInfo.CurrentMedications = dto.CurrentMedications;
+                    patient.MedicalInfo.MedicalNotes = dto.MedicalNotes;
+                    patient.MedicalInfo.EmergencyNotes = dto.MedicalNotes;
+                    patient.MedicalInfo.SmokingStatus = dto.SmokingStatus;
+                    patient.MedicalInfo.IsPregnant = dto.IsPregnant;
+                    patient.Notes = dto.MedicalNotes;
+                    patient.DateOfBirth = dto.DateOfBirth;
+                }
+
+                    await _context.SaveChangesAsync();
 
                 var successMessage = "تم تعديل بيانات المريض بنجاح";
                 var redirectUrl = Url.Action("Details", "Patients", new { id = dto.Id });

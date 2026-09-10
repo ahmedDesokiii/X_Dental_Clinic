@@ -478,7 +478,7 @@
                                     <label>تاريخ الميلاد</label>
                                     <input asp-for="DateOfBirth" type="date" class="form-control text-center" />
                                 </div>
-                                <div class="text-end sc-field span-2 mx-0">
+                                <div class="text-end sc-field span-2 mx-0" hidden="">
                                     <label>فصيلة الدم</label>
                                     <select asp-for="BloodGroupId" asp-items="@bloodGroupList" class="form-select text-center">
                                         <option value="">-- اختر --</option>
@@ -487,7 +487,7 @@
                                 <!-- ⭐ العنوان بقى هنا تحت فصيلة الدم -->
                                 <div class="text-end sc-field span-2 mx-0">
                                     <label>العنوان</label>
-                                    <textarea asp-for="Address" class="form-control" placeholder="ادخل العنوان"></textarea>
+                                    <textarea asp-for="Address" rows="1" class="form-control" placeholder="ادخل العنوان"></textarea>
                                 </div>
 
 
@@ -495,9 +495,32 @@
                                     <label>الاسم بالإنجليزية</label>
                                     <input asp-for="FullNameEn" class="form-control" placeholder="Optional" autocomplete="off" dir="ltr" />
                                 </div>
+
+                                <div class="row">
+                                    <div class="col-4">
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="segmented text-center" id="genderSegmented">
+                                            <div class="seg-thumb"></div>
+                                            @{
+                                                var genderItems = genderList.ToList();
+                                            }
+                                            @for (int i = 0; i < genderItems.Count; i++)
+                                            {
+                                                var g = genderItems[i];
+                                                var isMale = g.Text.Contains("ذكر");
+                                                <label data-gender="@(isMale ? "male" : "female")" class="@(i == 0 ? "active" : "")">
+                                                    <input type="radio" name="GenderId" value="@g.Value" @(i == 0 ? "checked" : "") />
+                                                    <i class="bi bi-gender-@(isMale ? "male" : "female")"></i> @g.Text
+                                                </label>
+                                            }
+                                        </div>
+
+                                    </div>
+                                </div>
                             </div>
                         </div>
-
+                        
                     </div>
                     <!-- Single flowing document with clear sections -->
                     <div class="form-doc col-12 col-lg-4">
@@ -536,23 +559,7 @@
                                 </label>
                             </div>
                             </div>
-                            <div class="fields-grid mt-3">
-                                <div class="segmented" id="genderSegmented">
-                                    <div class="seg-thumb"></div>
-                                    @{
-                                        var genderItems = genderList.ToList();
-                                    }
-                                    @for (int i = 0; i < genderItems.Count; i++)
-                                    {
-                                        var g = genderItems[i];
-                                        var isMale = g.Text.Contains("ذكر");
-                                        <label data-gender="@(isMale ? "male" : "female")" class="@(i == 0 ? "active" : "")">
-                                            <input type="radio" name="GenderId" value="@g.Value" @(i == 0 ? "checked" : "") />
-                                            <i class="bi bi-gender-@(isMale ? "male" : "female")"></i> @g.Text
-                                        </label>
-                                    }
-                                </div>
-                            </div>
+
                         </div>
 
                         <div class="form-section" hidden>
@@ -588,9 +595,6 @@
                                 <i class="bi bi-check-lg"></i> حفظ المريض
                             </button>
                         </div>
-
-                    </div>
-                    <div class="col-12 col-lg-4">
                         <div class="form-section">
                             <div class="section-head">
                                 <div class="section-icon"><i class="bi bi-heart-pulse-fill"></i></div>
@@ -601,10 +605,14 @@
                             </div>
                             <div class="fields-grid">
                                 <div class="sc-field span-2">
-                                    <label>الحساسية</label>
-                                    <input asp-for="Allergies" class="form-control" placeholder="مثال: بنسلين، ليدوكايين..." />
+
+                                    <label>ملاحظات طبية عاجلة</label>
+                                    <textarea asp-for="Allergies" rows="1" class="form-control" placeholder="ملاحظات طبية"></textarea>
+
+                                    @* <label>الحساسية</label> *@
+                                    @*  <input asp-for="Allergies" class="form-control" placeholder="مثال: بنسلين، ليدوكايين..." /> *@
                                 </div>
-                                <div class="sc-field span-2">
+                                @*                                 <div class="sc-field span-2">
                                     <label>أمراض مزمنة</label>
                                     <input asp-for="ChronicDiseases" class="form-control" placeholder="سكري، ضغط..." />
                                 </div>
@@ -625,9 +633,11 @@
                                     <label>ملاحظات طبية عاجلة</label>
                                     <textarea asp-for="MedicalNotes" class="form-control" placeholder="أي تحذيرات للدكتور..."></textarea>
                                 </div>
+ *@
                             </div>
                         </div>
                     </div>
+                    
                 </div>
             </form>
 

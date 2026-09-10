@@ -247,6 +247,9 @@ namespace Dental.Controllers
                 var diag = diagnoses.FirstOrDefault(d => d.VisitId == e.VisitId && d.ToothNumber == e.ToothNumber);
                 return new PreviousSessionRecordDto
                 {
+                    VisitDiagnosisId = diag?.Id ?? 0,                    // ✅
+                    VisitId = (int)e.VisitId,                                 // ✅
+                    DiagnosisCatalogId = diag?.DiagnosisCatalogId,       // ✅
                     ToothNumber = e.ToothNumber,
                     Date = e.Date,
                     StatusText = statusLabels.TryGetValue(e.Status, out var lbl) ? lbl : e.Status.ToString(),
@@ -260,6 +263,40 @@ namespace Dental.Controllers
                 };
             }).ToList();
         }
+
+
+        public class UpdateVisitDiagnosisRequest
+        {
+            public int Id { get; set; }
+            public int DiagnosisCatalogId { get; set; }
+            public string? Notes { get; set; }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateVisitDiagnosis([FromBody] UpdateVisitDiagnosisRequest req)
+        {
+            var vd = await _context.VisitDiagnoses
+                .Include(x => x.Diagnosis)
+                .FirstOrDefaultAsync(x => x.Id == req.Id);
+            if (vd == null)
+                return Json(new { success = false, message = "Diagnosis record not found." });
+
+            var newDiag = await _context.DiagnosisCatalogs.FindAsync(req.DiagnosisCatalogId);
+            if (newDiag == null)
+                return Json(new { success = false, message = "Diagnosis not found." });
+
+            var oldPrice = vd.Diagnosis?.Price ?? 0;
+            vd.DiagnosisCatalogId = newDiag.Id;
+            vd.Notes = req.Notes;
+
+            // ⭐ تصحيح إجمالي الزيارة بالفرق بين القديم والجديد
+            var visit = await _context.Visits.FindAsync(vd.VisitId);
+            if (visit != null) visit.TotalAmount += newDiag.Price - oldPrice;
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, price = newDiag.Price, name = newDiag.NameEn });
+        }
+
 
 
         [HttpPost]

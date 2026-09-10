@@ -1,128 +1,94 @@
 ﻿@model Dental.Modules.Patients.ViewModels.PatientIndexViewModel
 
 @{
-    ViewData["Title"] = "قائمة المرضى";
+    ViewData["Title"] = "Patients";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 @section Styles {
-
-    <link rel="stylesheet"
-          href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css" />
-
-    <link rel="stylesheet"
-          href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" />
-
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" />
     <style>
-
-        /* ============================================================
-                   DENTAL DESIGN SYSTEM
-                   ============================================================ */
-
         :root {
             --dental-900: #0a4d4f;
-            --dental-800: #0b6265;
             --dental-700: #0d7377;
             --dental-600: #0f9b8e;
             --dental-500: #14b8a6;
-            --dental-400: #2dd4bf;
-            --dental-300: #5eead4;
             --dental-200: #99f6e4;
             --dental-100: #c7f2ea;
             --sky-50: #eafbfc;
             --sky-100: #dcf5f7;
             --coral-300: #f6c6bc;
             --ink-900: #0b2e30;
-            --ink-700: #315758;
             --ink-600: #4b6b6c;
-            --ink-500: #668081;
-            --brand: #0d9488;
-            --brand-dark: #0f766e;
-            --brand-light: #f0fdfa;
-            --white-glass: rgba(255,255,255,.78);
-            --card-grad: linear-gradient( 145deg, rgba(255,255,255,.94), rgba(255,255,255,.68) );
+            --card-grad: linear-gradient(145deg, rgba(255,255,255,.94), rgba(255,255,255,.68));
             --shadow-card: 0 20px 50px rgba(10,77,79,.08);
             --shadow-hover: 0 22px 50px rgba(10,77,79,.15);
-            --radius-xl: 24px;
-            --radius-lg: 20px;
-            --radius-md: 14px;
             --ease-dental: cubic-bezier(.2,.8,.3,1);
         }
 
-
-        /* ============================================================
-                   PAGE BACKGROUND
-                   ============================================================ */
-
         body {
-            background: radial-gradient( circle at 4% 5%, var(--dental-100) 0%, transparent 34% ), radial-gradient( circle at 96% 90%, var(--coral-300) 0%, transparent 27% ), var(--sky-50);
+            background: radial-gradient(circle at 4% 5%, var(--dental-100) 0%, transparent 34%), radial-gradient(circle at 96% 90%, var(--coral-300) 0%, transparent 27%), var(--sky-50);
         }
-
-
-        /* ============================================================
-                   MAIN PAGE
-                   ============================================================ */
 
         .patients-page {
             min-height: 100vh;
             padding-bottom: 30px;
         }
 
-
-        /* ============================================================
-                   HERO
-                   ============================================================ */
-
+        /* ═══════════ HERO — animated gradient + shine text ═══════════ */
         .patients-hero {
             position: relative;
             overflow: hidden;
             isolation: isolate;
-            border-radius: var(--radius-xl);
-            background: linear-gradient( 135deg, #0a5d60 0%, #0d7377 38%, #119e91 72%, #0f9b8e 100% );
-            padding: 27px 30px;
+            border-radius: 24px;
             color: #fff;
+            padding: 27px 30px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 20px;
             box-shadow: 0 20px 45px rgba(13,115,119,.27);
             margin-bottom: 22px;
+            background: linear-gradient(135deg,#0a5d60 0%,#0d7377 35%,#119e91 68%,#14b8a6 100%);
+            background-size: 220% 220%;
             opacity: 0;
             transform: translateY(25px);
-            animation: dentalHeroEnter .75s var(--ease-dental) forwards;
+            animation: dentalHeroEnter .75s var(--ease-dental) forwards, heroGradShift 9s ease-in-out 1s infinite;
         }
 
-
         @@keyframes dentalHeroEnter {
-
             from {
                 opacity: 0;
-                transform: translateY(25px);
+                transform: translateY(25px)
             }
 
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0)
             }
         }
 
+        @@keyframes heroGradShift {
+            0%, 100% {
+                background-position: 0% 50%
+            }
 
-        /* Hero light */
+            50% {
+                background-position: 100% 50%
+            }
+        }
 
         .patients-hero::after {
             content: "";
             position: absolute;
             inset: 0;
-            background: radial-gradient( circle at 90% -20%, rgba(255,255,255,.34), transparent 46% );
-            pointer-events: none;
             z-index: -1;
+            background: radial-gradient(circle at 90% -20%, rgba(255,255,255,.34), transparent 46%);
+            pointer-events: none;
         }
 
-
-        /* ============================================================
-                   FLOATING DENTAL ELEMENTS
-                   ============================================================ */
-
+        /* Floating dental elements */
         .dental-floating-icons {
             position: absolute;
             inset: 0;
@@ -130,7 +96,6 @@
             pointer-events: none;
             z-index: -1;
         }
-
 
         .dental-floating-icon {
             position: absolute;
@@ -148,13 +113,11 @@
             animation: dentalFloat 7s ease-in-out infinite;
         }
 
-
             .dental-floating-icon:nth-child(1) {
                 top: 12px;
                 right: 27%;
                 animation-delay: 0s;
             }
-
 
             .dental-floating-icon:nth-child(2) {
                 bottom: -18px;
@@ -164,7 +127,6 @@
                 font-size: 1.55rem;
                 animation-delay: 1.7s;
             }
-
 
             .dental-floating-icon:nth-child(3) {
                 top: -18px;
@@ -176,22 +138,15 @@
                 animation-delay: 3.2s;
             }
 
-
         @@keyframes dentalFloat {
-
             0%, 100% {
-                transform: translateY(0) rotate(0deg);
+                transform: translateY(0) rotate(0)
             }
 
             50% {
-                transform: translateY(-15px) rotate(7deg);
+                transform: translateY(-15px) rotate(7deg)
             }
         }
-
-
-        /* ============================================================
-                   HERO CONTENT
-                   ============================================================ */
 
         .hero-content {
             display: flex;
@@ -201,7 +156,7 @@
             z-index: 2;
         }
 
-
+        /* ⭐ tooth with pulse ring */
         .hero-tooth {
             width: 58px;
             height: 58px;
@@ -213,32 +168,42 @@
             border: 1px solid rgba(255,255,255,.2);
             backdrop-filter: blur(8px);
             font-size: 1.65rem;
-            animation: toothPulse 4s ease-in-out infinite;
             flex-shrink: 0;
+            animation: toothPulse 4s ease-in-out infinite;
         }
 
-
         @@keyframes toothPulse {
-
             0%, 100% {
-                transform: translateY(0) rotate(0deg);
-                box-shadow: 0 0 0 rgba(255,255,255,0);
+                transform: translateY(0) rotate(0);
+                box-shadow: 0 0 0 0 rgba(255,255,255,.35);
             }
 
             50% {
                 transform: translateY(-5px) rotate(-3deg);
-                box-shadow: 0 10px 25px rgba(255,255,255,.10);
+                box-shadow: 0 0 0 12px rgba(255,255,255,0);
             }
         }
 
-
+        /* ⭐ shining gradient title */
         .hero-text h1 {
             margin: 0;
             font-size: 1.4rem;
             font-weight: 800;
             letter-spacing: -.3px;
+            background: linear-gradient(90deg, #fff 20%, var(--dental-200) 50%, #fff 80%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            animation: textShine 5s linear infinite;
         }
 
+        @@keyframes textShine {
+            to {
+                background-position: -200% center;
+            }
+        }
 
         .hero-text p {
             margin: 5px 0 0;
@@ -247,19 +212,17 @@
             font-weight: 500;
         }
 
-
-        /* ============================================================
-                   ADD PATIENT BUTTON
-                   ============================================================ */
-
+        /* Add patient button + ripple */
         .btn-add-patient {
             position: relative;
             z-index: 3;
+            overflow: hidden;
             display: inline-flex;
             align-items: center;
             gap: 9px;
             padding: 11px 20px;
             border-radius: 13px;
+            border: none;
             background: #fff;
             color: var(--dental-700);
             text-decoration: none;
@@ -269,29 +232,38 @@
             transition: transform .25s var(--ease-dental), box-shadow .25s ease;
         }
 
-
             .btn-add-patient:hover {
                 color: var(--dental-700);
                 transform: translateY(-3px);
                 box-shadow: 0 15px 30px rgba(0,0,0,.18);
             }
 
-
             .btn-add-patient i {
                 font-size: 1rem;
                 transition: transform .3s var(--ease-dental);
             }
 
-
             .btn-add-patient:hover i {
                 transform: rotate(8deg) scale(1.1);
             }
 
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            background: rgba(13,148,136,.25);
+            animation: rippleAnim .6s ease-out forwards;
+            pointer-events: none;
+        }
 
-        /* ============================================================
-                   STATISTICS GRID
-                   ============================================================ */
+        @@keyframes rippleAnim {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
 
+        /* ═══════════ STATS — shine sweep on hover ═══════════ */
         .patients-stats {
             display: grid;
             grid-template-columns: repeat(4,1fr);
@@ -299,14 +271,13 @@
             margin-bottom: 22px;
         }
 
-
         .patient-stat {
             position: relative;
             overflow: hidden;
             background: var(--card-grad);
             backdrop-filter: blur(14px);
             border: 1px solid rgba(255,255,255,.6);
-            border-radius: var(--radius-lg);
+            border-radius: 20px;
             padding: 19px 21px;
             display: flex;
             align-items: center;
@@ -318,43 +289,55 @@
             transition: transform .3s var(--ease-dental), box-shadow .3s ease;
         }
 
-
             .patient-stat:nth-child(1) {
-                animation-delay: .12s;
+                animation-delay: .12s
             }
 
             .patient-stat:nth-child(2) {
-                animation-delay: .20s;
+                animation-delay: .20s
             }
 
             .patient-stat:nth-child(3) {
-                animation-delay: .28s;
+                animation-delay: .28s
             }
 
             .patient-stat:nth-child(4) {
-                animation-delay: .36s;
+                animation-delay: .36s
             }
 
-
         @@keyframes statRise {
-
             from {
                 opacity: 0;
-                transform: translateY(25px) scale(.98);
+                transform: translateY(25px) scale(.98)
             }
 
             to {
                 opacity: 1;
-                transform: translateY(0) scale(1);
+                transform: translateY(0) scale(1)
             }
         }
-
 
         .patient-stat:hover {
             transform: translateY(-5px);
             box-shadow: var(--shadow-hover);
         }
 
+        /* ⭐ shine sweep */
+        .patient-stat::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -80%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(105deg, transparent, rgba(255,255,255,.55), transparent);
+            transform: skewX(-20deg);
+            transition: left .65s ease;
+        }
+
+        .patient-stat:hover::before {
+            left: 135%;
+        }
 
         .patient-stat::after {
             content: "";
@@ -368,15 +351,9 @@
             transition: transform .4s ease;
         }
 
-
         .patient-stat:hover::after {
             transform: scale(1.35);
         }
-
-
-        /* ============================================================
-                   STAT ICONS
-                   ============================================================ */
 
         .patient-stat-icon {
             width: 55px;
@@ -390,40 +367,29 @@
             transition: transform .3s var(--ease-dental);
         }
 
-
-        .patient-stat:hover
-        .patient-stat-icon {
+        .patient-stat:hover .patient-stat-icon {
             transform: scale(1.08) rotate(-4deg);
         }
 
-
-        .stat-total
-        .patient-stat-icon {
+        .stat-total .patient-stat-icon {
             background: #f0fdfa;
             color: #0f766e;
         }
 
-
-        .stat-general
-        .patient-stat-icon {
+        .stat-general .patient-stat-icon {
             background: #eff6ff;
             color: #1d4ed8;
         }
 
-
-        .stat-ortho
-        .patient-stat-icon {
+        .stat-ortho .patient-stat-icon {
             background: #fffbeb;
             color: #b45309;
         }
 
-
-        .stat-both
-        .patient-stat-icon {
+        .stat-both .patient-stat-icon {
             background: #f5f3ff;
             color: #6d28d9;
         }
-
 
         .patient-stat-value {
             display: block;
@@ -433,7 +399,6 @@
             color: var(--ink-900);
         }
 
-
         .patient-stat-label {
             display: block;
             margin-top: 5px;
@@ -442,42 +407,31 @@
             font-weight: 700;
         }
 
-
-        /* ============================================================
-                   MAIN TABLE CARD
-                   ============================================================ */
-
+        /* ═══════════ TABLE CARD ═══════════ */
         .patients-card {
             position: relative;
             overflow: hidden;
             background: var(--card-grad);
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255,255,255,.65);
-            border-radius: var(--radius-xl);
+            border-radius: 24px;
             box-shadow: var(--shadow-card);
             opacity: 0;
             transform: translateY(30px);
             animation: cardEnter .75s var(--ease-dental) .42s forwards;
         }
 
-
         @@keyframes cardEnter {
-
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(30px)
             }
 
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0)
             }
         }
-
-
-        /* ============================================================
-                   FILTER BAR
-                   ============================================================ */
 
         .filter-bar {
             display: flex;
@@ -489,11 +443,6 @@
             flex-wrap: wrap;
         }
 
-
-        /* ============================================================
-                   CATEGORY PILLS
-                   ============================================================ */
-
         .pill-toggle {
             display: inline-flex;
             align-items: center;
@@ -502,7 +451,6 @@
             background: var(--sky-100);
             border-radius: 999px;
         }
-
 
         .pill-btn {
             position: relative;
@@ -521,33 +469,24 @@
             transition: all .25s ease;
         }
 
-
             .pill-btn i {
                 transition: transform .25s var(--ease-dental);
             }
-
 
             .pill-btn:hover i {
                 transform: scale(1.1) rotate(-4deg);
             }
 
-
             .pill-btn.active {
-                background: linear-gradient( 135deg, var(--dental-600), var(--dental-700) );
+                background: linear-gradient(135deg,var(--dental-600),var(--dental-700));
                 color: #fff;
                 box-shadow: 0 5px 13px rgba(13,148,136,.25);
             }
 
-
             .pill-btn:hover:not(.active) {
                 background: #fff;
-                color: var(--brand-dark);
+                color: var(--dental-700);
             }
-
-
-        /* ============================================================
-                   DATATABLE SEARCH
-                   ============================================================ */
 
         .filter-bar-end {
             display: flex;
@@ -557,11 +496,9 @@
             flex-wrap: wrap;
         }
 
-
         #tablePatients_filter {
             margin: 0;
         }
-
 
             #tablePatients_filter label {
                 display: flex;
@@ -572,21 +509,18 @@
                 border: 1.5px solid var(--sky-100);
                 border-radius: 999px;
                 padding: 7px 15px;
-                transition: border-color .2s ease, box-shadow .2s ease;
+                transition: border-color .2s, box-shadow .2s;
             }
 
-
                 #tablePatients_filter label:focus-within {
-                    border-color: var(--dental-400);
+                    border-color: var(--dental-500);
                     box-shadow: 0 0 0 3px rgba(15,155,142,.12);
                 }
-
 
                 #tablePatients_filter label i {
                     color: var(--dental-600);
                     font-size: .9rem;
                 }
-
 
             #tablePatients_filter input {
                 border: none !important;
@@ -599,15 +533,9 @@
                 color: var(--ink-900);
             }
 
-
-        /* ============================================================
-                   LENGTH
-                   ============================================================ */
-
         #tablePatients_length {
             margin: 0;
         }
-
 
             #tablePatients_length label {
                 display: flex;
@@ -620,7 +548,6 @@
                 white-space: nowrap;
             }
 
-
             #tablePatients_length select {
                 border: 1.5px solid var(--sky-100);
                 border-radius: 10px;
@@ -630,16 +557,10 @@
                 font-size: .8rem;
             }
 
-
-        /* ============================================================
-                   TABLE
-                   ============================================================ */
-
         #tablePatients {
             border-collapse: separate;
             border-spacing: 0;
         }
-
 
             #tablePatients thead {
                 opacity: 0;
@@ -647,20 +568,17 @@
                 animation: tableHeaderEnter .5s ease .8s forwards;
             }
 
-
         @@keyframes tableHeaderEnter {
-
             from {
                 opacity: 0;
-                transform: translateY(10px);
+                transform: translateY(10px)
             }
 
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0)
             }
         }
-
 
         #tablePatients thead th {
             background: rgba(234,251,252,.72) !important;
@@ -673,7 +591,6 @@
             white-space: nowrap;
         }
 
-
         #tablePatients tbody td {
             padding: 12px 10px;
             vertical-align: middle;
@@ -681,37 +598,30 @@
             font-size: .84rem;
         }
 
-
         #tablePatients tbody tr {
             opacity: 0;
             transform: translateY(10px);
             animation: patientRowEnter .45s var(--ease-dental) forwards;
-            transition: background-color .2s ease;
+            transition: background-color .2s, box-shadow .2s, transform .2s;
         }
 
-
         @@keyframes patientRowEnter {
-
             from {
                 opacity: 0;
-                transform: translateY(10px);
+                transform: translateY(10px)
             }
 
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0)
             }
         }
-
-
+        /* ⭐ row lift on hover */
         #tablePatients tbody tr:hover {
-            background: var(--brand-light) !important;
+            background: var(--sky-50) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 14px rgba(10,77,79,.07);
         }
-
-
-        /* ============================================================
-                   PATIENT AVATAR
-                   ============================================================ */
 
         .patient-name-cell {
             display: flex;
@@ -719,12 +629,11 @@
             gap: 10px;
         }
 
-
         .patient-avatar {
             width: 39px;
             height: 39px;
             border-radius: 12px;
-            background: linear-gradient( 135deg, var(--dental-500), var(--dental-700) );
+            background: linear-gradient(135deg,var(--dental-500),var(--dental-700));
             color: #fff;
             display: flex;
             align-items: center;
@@ -735,17 +644,10 @@
             transition: transform .3s var(--ease-dental), box-shadow .3s ease;
         }
 
-
-        #tablePatients tbody tr:hover
-        .patient-avatar {
+        #tablePatients tbody tr:hover .patient-avatar {
             transform: scale(1.08) rotate(-3deg);
             box-shadow: 0 8px 18px rgba(13,148,136,.25);
         }
-
-
-        /* ============================================================
-                   SESSION BUTTON
-                   ============================================================ */
 
         .btn-row-session {
             position: relative;
@@ -756,7 +658,7 @@
             padding: 7px 12px;
             border: none;
             border-radius: 10px;
-            background: linear-gradient( 135deg, var(--dental-600), var(--dental-700) );
+            background: linear-gradient(135deg,var(--dental-600),var(--dental-700));
             color: #fff;
             font-size: .74rem;
             font-weight: 800;
@@ -765,13 +667,11 @@
             transition: transform .25s var(--ease-dental), box-shadow .25s ease;
         }
 
-
             .btn-row-session:hover {
                 color: #fff;
                 transform: translateY(-2px);
                 box-shadow: 0 8px 18px rgba(13,148,136,.3);
             }
-
 
             .btn-row-session::before {
                 content: "";
@@ -780,20 +680,14 @@
                 left: -120%;
                 width: 70%;
                 height: 100%;
-                background: linear-gradient( 90deg, transparent, rgba(255,255,255,.35), transparent );
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
                 transform: skewX(-20deg);
                 transition: left .6s ease;
             }
 
-
             .btn-row-session:hover::before {
                 left: 130%;
             }
-
-
-        /* ============================================================
-                   ACTION BUTTONS
-                   ============================================================ */
 
         .row-actions-cell {
             display: flex;
@@ -802,7 +696,6 @@
             gap: 4px;
             flex-wrap: nowrap;
         }
-
 
         .action-icon-btn {
             width: 34px;
@@ -814,92 +707,73 @@
             justify-content: center;
             background: transparent;
             color: var(--ink-600);
-            transition: transform .25s var(--ease-dental), background .2s ease, color .2s ease;
+            transition: transform .25s var(--ease-dental), background .2s, color .2s;
         }
 
-
             .action-icon-btn:hover {
-                background: var(--brand-light);
-                color: var(--brand-dark);
+                background: #f0fdfa;
+                color: var(--dental-700);
                 transform: translateY(-2px) scale(1.05);
             }
-
 
             .action-icon-btn.danger:hover {
                 background: #fee2e2;
                 color: #dc2626;
             }
 
-
-        /* ============================================================
-                   LOADING
-                   ============================================================ */
-
         .table-loading-overlay {
             position: absolute;
             inset: 0;
+            z-index: 10;
             background: rgba(255,255,255,.72);
             backdrop-filter: blur(3px);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 10;
             opacity: 0;
             pointer-events: none;
-            transition: opacity .25s ease;
+            transition: opacity .25s;
         }
-
 
             .table-loading-overlay.show {
                 opacity: 1;
                 pointer-events: all;
             }
 
-
         .loading-pulse {
             display: flex;
             align-items: center;
             gap: 10px;
-            color: var(--brand-dark);
+            color: var(--dental-700);
             font-weight: 800;
             font-size: .85rem;
             animation: loadingFloat 1.5s ease-in-out infinite;
         }
-
 
             .loading-pulse i {
                 font-size: 1.25rem;
                 animation: spin .9s linear infinite;
             }
 
-
         @@keyframes loadingFloat {
-
             0%, 100% {
-                transform: translateY(0);
+                transform: translateY(0)
             }
 
             50% {
-                transform: translateY(-5px);
+                transform: translateY(-5px)
             }
         }
 
-
         @@keyframes spin {
-
             from {
-                transform: rotate(0deg);
+                transform: rotate(0)
             }
 
             to {
-                transform: rotate(360deg);
+                transform: rotate(360deg)
             }
         }
-
-
-        /* ============================================================
-                   FOOTER
-                   ============================================================ */
 
         .table-footer-bar {
             display: flex;
@@ -913,18 +787,15 @@
             animation: footerEnter .5s ease 1s forwards;
         }
 
-
         @@keyframes footerEnter {
-
             from {
-                opacity: 0;
+                opacity: 0
             }
 
             to {
-                opacity: 1;
+                opacity: 1
             }
         }
-
 
         #tablePatients_info {
             margin: 0;
@@ -933,13 +804,11 @@
             font-weight: 600;
         }
 
-
         #tablePatients_paginate {
             margin: 0;
             display: flex;
             align-items: center;
         }
-
 
             #tablePatients_paginate .paginate_button {
                 padding: 5px 11px;
@@ -951,69 +820,47 @@
                 transition: all .2s ease;
             }
 
-
-                #tablePatients_paginate
-                .paginate_button.current {
-                    background: var(--brand) !important;
+                #tablePatients_paginate .paginate_button.current {
+                    background: var(--dental-500) !important;
                     color: #fff !important;
-                    border-color: var(--brand) !important;
+                    border-color: var(--dental-500) !important;
                 }
 
-
-                #tablePatients_paginate
-                .paginate_button:hover:not(.current):not(.disabled) {
-                    background: var(--brand-light) !important;
+                #tablePatients_paginate .paginate_button:hover:not(.current):not(.disabled) {
+                    background: #f0fdfa !important;
                     border-color: var(--dental-200) !important;
                 }
 
-
-                #tablePatients_paginate
-                .paginate_button.disabled {
+                #tablePatients_paginate .paginate_button.disabled {
                     opacity: .4;
                 }
 
-
-        /* ============================================================
-                   RESPONSIVE
-                   ============================================================ */
-
-        @@media (max-width: 1100px) {
-
+        @@media (max-width:1100px) {
             .patients-stats {
                 grid-template-columns: repeat(2,1fr);
             }
         }
 
-
-        @@media (max-width: 760px) {
-
+        @@media (max-width:760px) {
             .patients-hero {
                 padding: 22px;
                 align-items: flex-start;
+                flex-wrap: wrap;
             }
-
 
             .hero-content {
                 width: 100%;
             }
-
 
             .btn-add-patient {
                 width: 100%;
                 justify-content: center;
             }
 
-
-            .filter-bar {
-                align-items: stretch;
-            }
-
-
             .pill-toggle {
                 width: 100%;
                 justify-content: center;
             }
-
 
             .filter-bar-end {
                 width: 100%;
@@ -1021,28 +868,22 @@
             }
         }
 
-
-        @@media (max-width: 640px) {
-
+        @@media (max-width:640px) {
             .patients-stats {
                 grid-template-columns: 1fr;
             }
-
 
             .patients-hero {
                 border-radius: 18px;
             }
 
-
             .hero-text h1 {
                 font-size: 1.15rem;
             }
 
-
             .hero-text p {
                 font-size: .76rem;
             }
-
 
             .hero-tooth {
                 width: 50px;
@@ -1050,1461 +891,566 @@
                 font-size: 1.35rem;
             }
 
-
             #tablePatients_filter input {
                 width: 150px;
             }
-
 
             .table-footer-bar {
                 justify-content: center;
             }
         }
 
-
-        /* ============================================================
-                   REDUCED MOTION
-                   ============================================================ */
-
-        @@media (prefers-reduced-motion: reduce) {
-
-            *,
-            *::before,
-            *::after {
+        @@media (prefers-reduced-motion:reduce) {
+            *, *::before, *::after {
                 animation-duration: .01ms !important;
                 animation-iteration-count: 1 !important;
                 transition-duration: .01ms !important;
             }
         }
-
     </style>
 }
 
-
-<section class="patients-page mt-0" dir="rtl">
-
+<section class="patients-page mt-0">
     <div class="row">
-
         <div class="col-12">
 
-
-            <!-- ======================================================
-                 HERO
-                 ====================================================== -->
-
+            <!-- ═══════ HERO ═══════ -->
             <div class="patients-hero">
-
                 <div class="dental-floating-icons">
-
-                    <div class="dental-floating-icon">
-                        <i class="bi bi-tooth"></i>
-                    </div>
-
-                    <div class="dental-floating-icon">
-                        <i class="bi bi-heart-pulse-fill"></i>
-                    </div>
-
-                    <div class="dental-floating-icon">
-                        <i class="bi bi-clipboard2-pulse"></i>
-                    </div>
-
+                    <div class="dental-floating-icon"><i class="bi bi-tooth"></i></div>
+                    <div class="dental-floating-icon"><i class="bi bi-heart-pulse-fill"></i></div>
+                    <div class="dental-floating-icon"><i class="bi bi-clipboard2-pulse"></i></div>
                 </div>
-
-
                 <div class="hero-content">
-
-                    <div class="hero-tooth">
-                        <i class="bi bi-tooth-fill"></i>
-                    </div>
-
+                    <div class="hero-tooth"><i class="bi bi-tooth-fill"></i></div>
                     <div class="hero-text">
-
-                        <h1>
-                            قائمة المرضى
-                        </h1>
-
-                        <p>
-                            إدارة ملفات المرضى والزيارات والعلاجات في مكان واحد
-                        </p>
-
+                        <h1>Patients</h1>
+                        <p>Manage patient files, visits &amp; treatments in one place</p>
                     </div>
-
                 </div>
-
-
-                <a asp-action="Create"
-                   asp-controller="Patients"
-                   class="btn-add-patient">
-
-                    <i class="bi bi-person-plus-fill"></i>
-
-                    إضافة مريض جديد
-
-                </a>
-
+                <button type="button" class="btn-add-patient" onclick="openPatientModal()">
+                    <i class="bi bi-person-plus-fill"></i> Add New Patient
+                </button>
             </div>
 
-
-            <!-- ======================================================
-                 STATISTICS
-                 ====================================================== -->
-
-            <div class="patients-stats"
-                 id="statsRow">
-
-
-                <!-- Total -->
-
+            <!-- ═══════ STATS ═══════ -->
+            <div class="patients-stats" id="statsRow">
                 <div class="patient-stat">
-
-                    <div class="patient-stat-icon stat-total">
-
-                        <i class="bi bi-people-fill"></i>
-
-                    </div>
-
+                    <div class="patient-stat-icon stat-total"><i class="bi bi-people-fill"></i></div>
                     <div>
-
-                        <span class="patient-stat-value"
-                              data-target="0"
-                              id="statTotal">
-
-                            0
-
-                        </span>
-
-                        <span class="patient-stat-label">
-
-                            إجمالي المرضى
-
-                        </span>
-
+                        <span class="patient-stat-value" id="statTotal">0</span>
+                        <span class="patient-stat-label">Total Patients</span>
                     </div>
-
                 </div>
-
-
-                <!-- General -->
-
                 <div class="patient-stat">
-
-                    <div class="patient-stat-icon stat-general">
-
-                        <i class="bi bi-sign-intersection-side-fill"></i>
-
-                    </div>
-
+                    <div class="patient-stat-icon stat-general"><i class="bi bi-sign-intersection-side-fill"></i></div>
                     <div>
-
-                        <span class="patient-stat-value"
-                              data-target="0"
-                              id="statGeneral">
-
-                            0
-
-                        </span>
-
-                        <span class="patient-stat-label">
-
-                            ملفات العلاج العام
-
-                        </span>
-
+                        <span class="patient-stat-value" id="statGeneral">0</span>
+                        <span class="patient-stat-label">General Files</span>
                     </div>
-
                 </div>
-
-
-                <!-- Orthodontics -->
-
                 <div class="patient-stat">
-
-                    <div class="patient-stat-icon stat-ortho">
-
-                        <i class="bi bi-braces"></i>
-
-                    </div>
-
+                    <div class="patient-stat-icon stat-ortho"><i class="bi bi-braces"></i></div>
                     <div>
-
-                        <span class="patient-stat-value"
-                              data-target="0"
-                              id="statOrtho">
-
-                            0
-
-                        </span>
-
-                        <span class="patient-stat-label">
-
-                            ملفات تقويم الأسنان
-
-                        </span>
-
+                        <span class="patient-stat-value" id="statOrtho">0</span>
+                        <span class="patient-stat-label">Orthodontics Files</span>
                     </div>
-
                 </div>
-
-
-                <!-- Both -->
-
                 <div class="patient-stat">
-
-                    <div class="patient-stat-icon stat-both">
-
-                        <i class="bi bi-person-hearts"></i>
-
-                    </div>
-
+                    <div class="patient-stat-icon stat-both"><i class="bi bi-person-hearts"></i></div>
                     <div>
-
-                        <span class="patient-stat-value"
-                              data-target="0"
-                              id="statBoth">
-
-                            0
-
-                        </span>
-
-                        <span class="patient-stat-label">
-
-                            كلا الملفين
-
-                        </span>
-
+                        <span class="patient-stat-value" id="statBoth">0</span>
+                        <span class="patient-stat-label">Both Files</span>
                     </div>
-
                 </div>
-
             </div>
 
-
-            <!-- ======================================================
-                 PATIENTS TABLE
-                 ====================================================== -->
-
+            <!-- ═══════ TABLE CARD ═══════ -->
             <div class="card patients-card p-0">
-
-
-                <!-- FILTER BAR -->
-
                 <div class="filter-bar">
-
-
-                    <div class="pill-toggle"
-                         id="categoryFilterGroup">
-
-
-                        <button type="button"
-                                class="pill-btn active"
-                                data-category="">
-
-                            <i class="bi bi-grid-fill"></i>
-
-                            الكل
-
+                    <div class="pill-toggle" id="categoryFilterGroup">
+                        <button type="button" class="pill-btn active" data-category="">
+                            <i class="bi bi-grid-fill"></i> All
                         </button>
-
-
-                        <button type="button"
-                                class="pill-btn"
-                                data-category="General">
-
-                            <i class="bi bi-sign-intersection-side-fill"></i>
-
-                            عام
-
+                        <button type="button" class="pill-btn" data-category="General">
+                            <i class="bi bi-sign-intersection-side-fill"></i> General
                         </button>
-
-
-                        <button type="button"
-                                class="pill-btn"
-                                data-category="Orthodontics">
-
-                            <i class="bi bi-braces"></i>
-
-                            تقويم
-
+                        <button type="button" class="pill-btn" data-category="Orthodontics">
+                            <i class="bi bi-braces"></i> Orthodontics
                         </button>
-
-
                     </div>
-
-
-                    <div class="filter-bar-end"
-                         id="filterBarEnd">
-                    </div>
-
+                    <div class="filter-bar-end" id="filterBarEnd"></div>
                 </div>
-
-
-                <!-- TABLE BODY -->
 
                 <div class="card-body p-0 position-relative">
-
-
-                    <!-- LOADING -->
-
-                    <div class="table-loading-overlay"
-                         id="tableLoadingOverlay">
-
+                    <div class="table-loading-overlay" id="tableLoadingOverlay">
                         <div class="loading-pulse">
-
-                            <i class="bi bi-arrow-repeat"></i>
-
-                            جاري تحميل بيانات المرضى...
-
+                            <i class="bi bi-arrow-repeat"></i> Loading patients...
                         </div>
-
                     </div>
-
-
-                    <!-- TABLE -->
 
                     <div class="table-responsive px-3 pb-3">
-
-                        <table class="table table-hover align-middle display nowrap"
-                               id="tablePatients"
-                               style="width:100%">
-
+                        <table class="table table-hover align-middle display nowrap" id="tablePatients" style="width:100%">
                             <thead>
-
                                 <tr class="text-center">
-
-                                    <th class="text-center fs-6">
-                                        الكود
-                                    </th>
-
-                                    <th class="text-center fs-6">
-                                        المريض
-                                    </th>
-
-                                    <th class="text-center fs-6">
-                                        الهاتف
-                                    </th>
-
-                                    <th class="text-center fs-6">
-                                        النوع
-                                    </th>
-
-                                    <th class="text-center fs-6">
-                                        العمر
-                                    </th>
-
-                                    <th class="text-center fs-6">
-                                        نوع الملف
-                                    </th>
-
-                                    <th class="text-center fs-6">
-                                        الحالة
-                                    </th>
-
-                                    <th class="text-center fs-6">
-                                        الإجراءات
-                                    </th>
-
+                                    <th class="text-center fs-6">Code</th>
+                                    <th class="fs-6">Patient</th>
+                                    <th class="text-center fs-6">Phone</th>
+                                    <th class="text-center fs-6">Gender</th>
+                                    <th class="text-center fs-6">Age</th>
+                                    <th class="text-center fs-6">File Type</th>
+                                    <th class="text-center fs-6">Next Session</th>
+                                    <th class="text-center fs-6">Actions</th>
                                 </tr>
-
                             </thead>
-
-                            <tbody>
-                            </tbody>
-
+                            <tbody></tbody>
                         </table>
-
                     </div>
 
-
-                    <!-- FOOTER -->
-
-                    <div class="table-footer-bar"
-                         id="tableFooterBar">
-                    </div>
-
+                    <div class="table-footer-bar" id="tableFooterBar"></div>
                 </div>
-
             </div>
 
         </div>
-
     </div>
-
 </section>
 
+<div id="patientModalContainer"></div>
 
 @section Scripts {
-
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
-
     <script>
-
-        $(document).ready(function () {
-
-
-        /* ========================================================
-        CATEGORY
-        ======================================================== */
-
-        var currentCategoryFilter = '';
-
-
-        /* ========================================================
-        ANIMATED COUNTER
-        Same easing as Dashboard
-        ======================================================== */
-
-        function animateCount(el, target) {
-
-        target = parseInt(target || 0);
-
-        const duration = 900;
-
-        const startTime =
-        performance.now();
-
-
-        function step(now) {
-
-        const progress =
-        Math.min(
-        (now - startTime) / duration,
-        1
-        );
-
-
-        const eased =
-        1 -
-        Math.pow(
-        1 - progress,
-        3
-        );
-
-
-        const value =
-        Math.floor(
-        target * eased
-        );
-
-
-        el.text(
-        value.toLocaleString('en-EG')
-        );
-
-
-        if (progress < 1) {
-
-        requestAnimationFrame(step);
-
-        }
-        else {
-
-        el.text(
-        target.toLocaleString('en-EG')
-        );
-
-        }
-
-        }
-
-
-        requestAnimationFrame(step);
-        }
-
-
-        /* ========================================================
-        LOAD PATIENT STATS
-        ======================================================== */
-
-        function loadStats() {
-
-        $.get(
-        '/Patients/GetPatientsStats',
-        function (res) {
-
-        animateCount(
-        $('#statTotal'),
-        res.total || 0
-        );
-
-
-        animateCount(
-        $('#statGeneral'),
-        res.general || 0
-        );
-
-
-        animateCount(
-        $('#statOrtho'),
-        res.ortho || 0
-        );
-
-
-        animateCount(
-        $('#statBoth'),
-        res.both || 0
-        );
-
-        }
-        );
-
-        }
-
-
-        loadStats();
-
-
-        /* ========================================================
-        DATATABLE
-        ======================================================== */
-
-        var table =
-        $('#tablePatients').DataTable({
-
-        processing: true,
-
-        serverSide: true,
-
-        responsive: true,
-
-        autoWidth: false,
-
-        pageLength: 10,
-
-        lengthMenu:
-        [
-        10,
-        25,
-        50,
-        100,
-        200,
-        400,
-        1000
-        ],
-
-        ordering: true,
-
-
-        ajax: {
-
-        url:
-        '/Patients/GetPatientsData',
-
-        type:
-        'POST',
-
-        contentType:
-        'application/json',
-
-
-        data:
-        function (d) {
-
-        d.categoryFilter =
-        currentCategoryFilter;
-
-        return JSON.stringify(d);
-
-        },
-
-
-        error:
-        function (
-        xhr,
-        error,
-        thrown
-        ) {
-
-        console.error(
-        'DataTables error:',
-        error,
-        thrown
-        );
-
-
-        Swal.fire({
-
-        title:
-        'خطأ',
-
-        text:
-        'فشل تحميل بيانات المرضى من الخادم',
-
-        icon:
-        'error',
-
-        confirmButtonColor:
-        '#0d9488'
-
+        $(document).ready(function() {
+
+            var currentCategoryFilter = '';
+
+            /* Animated counter */
+            function animateCount(el, target) {
+                target = parseInt(target || 0);
+                const duration = 900, startTime = performance.now();
+                function step(now) {
+                    const progress = Math.min((now - startTime) / duration, 1);
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    el.text(Math.floor(target * eased).toLocaleString('en-EG'));
+                    if (progress < 1) requestAnimationFrame(step);
+                    else el.text(target.toLocaleString('en-EG'));
+                }
+                requestAnimationFrame(step);
+            }
+
+            function loadStats() {
+                $.get('/Patients/GetPatientsStats', function(res) {
+                    animateCount($('#statTotal'), res.total || 0);
+                    animateCount($('#statGeneral'), res.general || 0);
+                    animateCount($('#statOrtho'), res.ortho || 0);
+                    animateCount($('#statBoth'), res.both || 0);
+                });
+            }
+            loadStats();
+
+            /* DataTable */
+            var table = $('#tablePatients').DataTable({
+                processing: true,
+                serverSide: true,
+                responsive: true,
+                autoWidth: false,
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100, 200, 400, 1000],
+                ordering: true,
+
+                ajax: {
+                    url: '/Patients/GetPatientsData',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: function(d) {
+                        d.categoryFilter = currentCategoryFilter;
+                        return JSON.stringify(d);
+                    },
+                    error: function(xhr, error, thrown) {
+                        console.error('DataTables error:', error, thrown);
+                        Swal.fire({
+                            title: 'Error', text: 'Failed to load patients from the server',
+                            icon: 'error', confirmButtonColor: '#0d9488'
+                        });
+                    }
+                },
+
+                columns: [
+                    {
+                        data: 'patientCode', name: 'patientCode', className: 'text-center fs-6',
+                        render: function(data) {
+                            return `<span class="badge bg-secondary" style="font-family:Candara;">${data || '-'}</span>`;
+                        }
+                    },
+                    {
+                        data: null, name: 'fullNameAr', className: 'fs-6',
+                        render: function(data) {
+                            var name = data.fullNameAr || '-';
+                            var initials = name.split(' ').filter(Boolean).slice(0, 2)
+                                .map(function(p) { return p[0]; }).join('');
+                            return `<div class="patient-name-cell">
+                                                <div class="patient-avatar">${initials || '?'}</div>
+                                                <span class="link-dark fw-semibold">${name}</span>
+                                            </div>`;
+                        }
+                    },
+                    {
+                        data: 'phone', name: 'phone', className: 'fs-6 text-center',
+                        render: function(data) {
+                            return data ? `<span style="font-family:Candara;direction:ltr;">${data}</span>` : '-';
+                        }
+                    },
+                    { data: 'genderBadge', name: 'genderName', className: 'text-center', searchable: false },
+                    {
+                        data: 'age', name: 'age', className: 'text-center fs-6',
+                        render: function(data) { return data || '<span class="text-muted">-</span>'; }
+                    },
+                    { data: 'categoryBadge', name: 'category', className: 'text-center', orderable: false, searchable: false },
+                    {
+                        data: 'nextSession', name: 'nextSession', className: 'text-center',
+                        render: function(data) {
+                            if (!data) return '<span class="text-muted">—</span>';
+                            var d = new Date(data);
+                            var today = new Date(); today.setHours(0, 0, 0, 0);
+                            var t = new Date(d); t.setHours(0, 0, 0, 0);
+                            var diff = Math.round((t - today) / 86400000);
+                            var label = diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow'
+                                : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                            var cls = diff === 0 ? 'bg-danger' : diff === 1 ? 'bg-warning text-dark' : 'bg-light text-dark border';
+                            return `<span class="badge ${cls}">${label}</span>`;
+                        }
+                    },
+                    {
+                        data: null, orderable: false, searchable: false, className: 'text-center',
+                        render: function(data) {
+                            return `<div class="row-actions-cell">
+                                        <a class="btn-row-session" title="Start a new session"
+                                           href="/Patients/NewSession?patientId=${data.id}">
+                                            <i class="bi bi-clipboard2-pulse"></i> New Session
+                                        </a>
+                                        <a class="action-icon-btn fs-5" title="View details"
+                                           href="/Patients/Details/${data.id}">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a class="action-icon-btn fs-5" title="Edit"
+                                           href="javascript:void(0)" onclick="openPatientModal(${data.id})">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <button type="button" class="action-icon-btn danger fs-5" title="Delete"
+                                                onclick="deletePatient(${data.id})">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </div>`;
+                        }
+                    }
+                ],
+
+                language: {
+                    search: '<i class="bi bi-search"></i>',
+                    searchPlaceholder: 'Search by name, code or phone...',
+                    lengthMenu: '_MENU_',
+                    info: 'Showing _START_ to _END_ of _TOTAL_ entries',
+                    zeroRecords: 'No patients found',
+                    emptyTable: 'No patient data available',
+                    paginate: { first: 'First', previous: 'Previous', next: 'Next', last: 'Last' },
+                    processing: ''
+                },
+
+                deferRender: true,
+
+                drawCallback: function() {
+                    $('#tablePatients tbody tr').each(function(index) {
+                        const row = this;
+                        row.style.animation = 'none';
+                        void row.offsetWidth;
+                        row.style.animation = 'patientRowEnter .45s var(--ease-dental) forwards';
+                        row.style.animationDelay = Math.min(index * .045, .35) + 's';
+                    });
+                },
+
+                initComplete: function() {
+                    $('#tablePatients_filter').appendTo('#filterBarEnd');
+                    $('#tablePatients_length').appendTo('#filterBarEnd');
+                    $('#tablePatients_info').appendTo('#tableFooterBar');
+                    $('#tablePatients_paginate').appendTo('#tableFooterBar');
+                }
+            });
+
+            $('#tablePatients').on('processing.dt', function(e, settings, processing) {
+                $('#tableLoadingOverlay').toggleClass('show', processing);
+            });
+
+            $('.pill-btn').on('click', function() {
+                $('.pill-btn').removeClass('active');
+                $(this).addClass('active');
+                currentCategoryFilter = $(this).data('category');
+                table.ajax.reload();
+            });
+
+            /* ⭐ ripple effect on hero button */
+            $('.btn-add-patient').on('click', function(e) {
+                const btn = this, rect = btn.getBoundingClientRect();
+                const ripple = document.createElement('span');
+                const size = Math.max(rect.width, rect.height);
+                ripple.className = 'ripple';
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                btn.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 650);
+            });
         });
 
-        }
-
-        },
-
-
-        /* =================================================
-        COLUMNS
-        ================================================= */
-
-        columns: [
-
-
-        /* ================= CODE ================= */
-
-        {
-
-        data:
-        'patientCode',
-
-        name:
-        'patientCode',
-
-        className:
-        'text-center fs-6',
-
-
-        render:
-        function (data) {
-
-        return `
-
-        <span
-        class="badge bg-secondary"
-        style="font-family:Candara;">
-
-        ${data || '-'}
-
-        </span>
-
-        `;
-
-        }
-
-        },
-
-
-        /* ================= NAME ================= */
-
-        {
-
-        data:
-        null,
-
-        name:
-        'fullNameAr',
-
-        className:
-        'fs-6',
-
-
-        render:
-        function (data) {
-
-        var name =
-        data.fullNameAr || '-';
-
-
-        var initials =
-        name
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map(
-        function (p) {
-        return p[0];
-        }
-        )
-        .join('');
-
-
-        return `
-
-        <div class="patient-name-cell">
-
-        <div class="patient-avatar">
-
-        ${initials || '?'}
-
-        </div>
-
-        <span
-        class="link-dark fw-semibold">
-
-        ${name}
-
-        </span>
-
-        </div>
-
-        `;
-
-        }
-
-        },
-
-
-        /* ================= PHONE ================= */
-
-        {
-
-        data:
-        'phone',
-
-        name:
-        'phone',
-
-        className:
-        'fs-6 text-center',
-
-
-        render:
-        function (data) {
-
-        return data
-
-        ? `
-
-        <span
-        style="
-        font-family:Candara;
-        direction:ltr;
-        ">
-
-        ${data}
-
-        </span>
-
-        `
-
-        : '-';
-
-        }
-
-        },
-
-
-        /* ================= GENDER ================= */
-
-        {
-
-        data:
-        'genderBadge',
-
-        name:
-        'genderName',
-
-        className:
-        'text-center',
-
-        searchable:
-        false
-
-        },
-
-
-        /* ================= AGE ================= */
-
-        {
-
-        data:
-        'age',
-
-        name:
-        'age',
-
-        className:
-        'text-center fs-6',
-
-
-        render:
-        function (data) {
-
-        return data ||
-
-        '<span class="text-muted">-</span>';
-
-        }
-
-        },
-
-
-        /* ================= CATEGORY ================= */
-
-        {
-
-        data:
-        'categoryBadge',
-
-        name:
-        'category',
-
-        className:
-        'text-center',
-
-        orderable:
-        false,
-
-        searchable:
-        false
-
-        },
-
-
-        /* ================= STATUS ================= */
-
-        {
-
-        data:
-        'statusBadge',
-
-        name:
-        'isActive',
-
-        className:
-        'text-center',
-
-        searchable:
-        false
-
-        },
-
-
-        /* ================= ACTIONS ================= */
-
-        {
-
-        data:
-        null,
-
-        orderable:
-        false,
-
-        searchable:
-        false,
-
-        className:
-        'text-center',
-
-
-        render:
-        function (data) {
-
-        return `
-
-        <div
-        class="row-actions-cell">
-
-
-        <!-- New Session -->
-
-        <a
-
-        class="btn-row-session"
-
-        title="
-        بدء سيشن جديد مع هذا المريض
-        "
-
-        href="
-        /Patients/NewSession?patientId=${data.id}
-        ">
-
-        <i
-        class="bi bi-clipboard2-pulse">
-        </i>
-
-        بدء سيشن
-
-        </a>
-
-
-        <!-- Details -->
-
-        <a
-
-        class="
-        action-icon-btn
-        fs-5
-        "
-
-        title="عرض التفاصيل"
-
-        href="
-        /Patients/Details/${data.id}
-        ">
-
-        <i
-        class="bi bi-eye">
-        </i>
-
-        </a>
-
-
-        <!-- Edit -->
-
-        <a
-
-        class="
-        action-icon-btn
-        fs-5
-        "
-
-        title="تعديل"
-
-        href="
-        /Patients/Edit/${data.id}
-        ">
-
-        <i
-        class="bi bi-pencil-square">
-        </i>
-
-        </a>
-
-
-        <!-- Delete -->
-
-        <button
-
-        type="button"
-
-        class="
-        action-icon-btn
-        danger
-        fs-5
-        "
-
-        title="حذف"
-
-        onclick="
-        deletePatient(${data.id})
-        ">
-
-        <i
-        class="bi bi-trash3-fill">
-        </i>
-
-        </button>
-
-
-        </div>
-
-        `;
-
-        }
-
-        }
-
-        ],
-
-
-        /* =================================================
-        LANGUAGE
-        ================================================= */
-
-        language: {
-
-        search:
-        '<i class="bi bi-search"></i>',
-
-        searchPlaceholder:
-        'ابحث بالاسم، الكود، أو الهاتف...',
-
-        lengthMenu:
-        '_MENU_',
-
-        info:
-        'إظهار _START_ إلى _END_ من أصل _TOTAL_ سجل',
-
-        zeroRecords:
-        'لم يعثر على أي مريض',
-
-        emptyTable:
-        'لا توجد بيانات مرضى',
-
-        paginate: {
-
-        first:
-        'الأول',
-
-        previous:
-        'السابق',
-
-        next:
-        'التالي',
-
-        last:
-        'الأخير'
-
-        },
-
-        processing:
-        ''
-
-        },
-
-
-        /* =================================================
-        PERFORMANCE
-        ================================================= */
-
-        deferRender:
-        true,
-
-
-        /* =================================================
-        DRAW
-        ================================================= */
-
-        drawCallback:
-        function () {
-
-        $('#tablePatients tbody tr')
-        .each(
-        function (index) {
-
-        const row =
-        this;
-
-
-        row.style.animation =
-        'none';
-
-
-        void row.offsetWidth;
-
-
-        row.style.animation =
-        'patientRowEnter .45s var(--ease-dental) forwards';
-
-
-        row.style.animationDelay =
-        Math.min(
-        index * .045,
-        .35
-        ) + 's';
-
-        }
-        );
-
-        },
-
-
-        /* =================================================
-        INIT
-        ================================================= */
-
-        initComplete:
-        function () {
-
-        $('#tablePatients_filter')
-        .appendTo(
-        '#filterBarEnd'
-        );
-
-
-        $('#tablePatients_length')
-        .appendTo(
-        '#filterBarEnd'
-        );
-
-
-        $('#tablePatients_info')
-        .appendTo(
-        '#tableFooterBar'
-        );
-
-
-        $('#tablePatients_paginate')
-        .appendTo(
-        '#tableFooterBar'
-        );
-
-        }
-
-        });
-
-
-        /* ========================================================
-        PROCESSING
-        ======================================================== */
-
-        $('#tablePatients')
-        .on(
-        'processing.dt',
-        function (
-        e,
-        settings,
-        processing
-        ) {
-
-        $('#tableLoadingOverlay')
-        .toggleClass(
-        'show',
-        processing
-        );
-
-        }
-        );
-
-
-        /* ========================================================
-        CATEGORY FILTER
-        ======================================================== */
-
-        $('.pill-btn')
-        .on(
-        'click',
-        function () {
-
-
-        $('.pill-btn')
-        .removeClass(
-        'active'
-        );
-
-
-        $(this)
-        .addClass(
-        'active'
-        );
-
-
-        currentCategoryFilter =
-        $(this)
-        .data(
-        'category'
-        );
-
-
-        table.ajax.reload();
-
-        }
-        );
-
-
-        });
-
-
-        /* ============================================================
-        DELETE PATIENT
-        ============================================================ */
-
+        /* ══════════ Delete ══════════ */
         function deletePatient(id) {
-
-
-        Swal.fire({
-
-        title:
-        'هل أنت متأكد؟',
-
-        text:
-        'سيتم تعطيل المريض من النظام',
-
-        icon:
-        'warning',
-
-        showCancelButton:
-        true,
-
-        confirmButtonColor:
-        '#0d9488',
-
-        cancelButtonColor:
-        '#64748b',
-
-        confirmButtonText:
-        'نعم، احذف!',
-
-        cancelButtonText:
-        'إلغاء',
-
-        reverseButtons:
-        true
-
-        })
-
-
-        .then(
-        function (result) {
-
-
-        if (!result.isConfirmed)
-        return;
-
-
-        $.ajax({
-
-        url:
-        '/Patients/Delete',
-
-        type:
-        'POST',
-
-        data:
-        {
-        id:
-        id
-        },
-
-        headers:
-        {
-        RequestVerificationToken:
-        $('input[name="__RequestVerificationToken"]')
-        .val()
-        },
-
-
-        success:
-        function (response) {
-
-
-        if (response.success) {
-
-
-        $('#tablePatients')
-        .DataTable()
-        .ajax
-        .reload(
-        null,
-        false
-        );
-
-
-        Swal.fire({
-
-        title:
-        'تم الحذف!',
-
-        text:
-        response.message ||
-        'تم تعطيل المريض بنجاح.',
-
-        icon:
-        'success',
-
-        confirmButtonColor:
-        '#0d9488',
-
-        confirmButtonText:
-        'حسنًا',
-
-        timer:
-        2000,
-
-        timerProgressBar:
-        true
-
-        });
-
-
-        /* Update statistics */
-
-        setTimeout(
-        function () {
-
-        $.get(
-        '/Patients/GetPatientsStats',
-        function (res) {
-
-        animatePatientStat(
-        '#statTotal',
-        res.total || 0
-        );
-
-        animatePatientStat(
-        '#statGeneral',
-        res.general || 0
-        );
-
-        animatePatientStat(
-        '#statOrtho',
-        res.ortho || 0
-        );
-
-        animatePatientStat(
-        '#statBoth',
-        res.both || 0
-        );
-
-        }
-        );
-
-        },
-        250
-        );
-
-        }
-        else {
-
-
-        Swal.fire({
-
-        title:
-        'خطأ',
-
-        text:
-        response.message ||
-        'حدث خطأ أثناء الحذف',
-
-        icon:
-        'error',
-
-        confirmButtonColor:
-        '#0d9488',
-
-        confirmButtonText:
-        'حسنًا'
-
-        });
-
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'The patient will be deactivated from the system',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0d9488',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            }).then(function(result) {
+                if (!result.isConfirmed) return;
+                $.ajax({
+                    url: '/Patients/Delete',
+                    type: 'POST',
+                    data: { id: id },
+                    headers: {
+                        RequestVerificationToken:
+                            $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#tablePatients').DataTable().ajax.reload(null, false);
+                            Swal.fire({
+                                title: 'Deleted!',
+                                text: response.message || 'Patient deactivated successfully.',
+                                icon: 'success',
+                                confirmButtonColor: '#0d9488',
+                                confirmButtonText: 'OK',
+                                timer: 2000,
+                                timerProgressBar: true
+                            });
+                            setTimeout(function() {
+                                $.get('/Patients/GetPatientsStats', function(res) {
+                                    animatePatientStat('#statTotal', res.total || 0);
+                                    animatePatientStat('#statGeneral', res.general || 0);
+                                    animatePatientStat('#statOrtho', res.ortho || 0);
+                                    animatePatientStat('#statBoth', res.both || 0);
+                                });
+                            }, 250);
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: response.message || 'Something went wrong while deleting',
+                                icon: 'error',
+                                confirmButtonColor: '#0d9488',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            title: 'Error', text: 'Failed to connect to the server',
+                            icon: 'error', confirmButtonColor: '#0d9488', confirmButtonText: 'OK'
+                        });
+                    }
+                });
+            });
         }
 
-        },
-
-
-        error:
-        function () {
-
-        Swal.fire({
-
-        title:
-        'خطأ',
-
-        text:
-        'فشل الاتصال بالخادم',
-
-        icon:
-        'error',
-
-        confirmButtonColor:
-        '#0d9488',
-
-        confirmButtonText:
-        'حسنًا'
-
-        });
-
+        function animatePatientStat(selector, target) {
+            const el = $(selector);
+            const startValue = parseInt(el.text().replace(/,/g, '')) || 0;
+            const duration = 600, startTime = performance.now();
+            function step(now) {
+                const progress = Math.min((now - startTime) / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const value = Math.round(startValue + (target - startValue) * eased);
+                el.text(value.toLocaleString('en-EG'));
+                if (progress < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
         }
 
-        });
+        /* ══════════ Patient Modal — open / save / dd-mm-yyyy ══════════ */
+        let pmBackdropEl = null;
 
-        }
-        );
+        function openPatientModal(id) {
+            const url = id ? '/Patients/Modal?id=' + id : '/Patients/Modal';
+            const box = document.getElementById('patientModalContainer');
 
-        }
+            box.innerHTML = `<div class="pmodal-backdrop show">
+                        <div class="pmodal" style="min-height:220px;display:flex;align-items:center;justify-content:center;">
+                            <div class="spinner-border" style="color:#0d9488"></div>
+                        </div></div>`;
 
-
-        /* ============================================================
-        STAT UPDATE AFTER DELETE
-        ============================================================ */
-
-        function animatePatientStat(
-        selector,
-        target
-        ) {
-
-        const el =
-        $(selector);
-
-
-        const startValue =
-        parseInt(
-        el.text().replace(/,/g, '')
-        ) || 0;
-
-
-        const duration =
-        600;
-
-        const startTime =
-        performance.now();
-
-
-        function step(now) {
-
-        const progress =
-        Math.min(
-        (now - startTime) /
-        duration,
-        1
-        );
-
-
-        const eased =
-        1 -
-        Math.pow(
-        1 - progress,
-        3
-        );
-
-
-        const value =
-        Math.round(
-        startValue +
-        (target - startValue) *
-        eased
-        );
-
-
-        el.text(
-        value.toLocaleString(
-        'en-EG'
-        )
-        );
-
-
-        if (progress < 1) {
-
-        requestAnimationFrame(step);
-
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => {
+                    if (!r.ok) throw new Error(r.status);
+                    return r.text();
+                })
+                .then(html => {
+                    box.innerHTML = html;
+                    pmBackdropEl = document.getElementById('pmodalBackdrop');
+                    requestAnimationFrame(() => pmBackdropEl.classList.add('show'));
+                    initPatientModal();
+                })
+                .catch(() => {
+                    box.innerHTML = '';
+                    Swal.fire({
+                        title: 'Error', text: 'Failed to load the form',
+                        icon: 'error', confirmButtonColor: '#0d9488'
+                    });
+                });
         }
 
+        function closePatientModal() {
+            if (!pmBackdropEl) return;
+            pmBackdropEl.classList.add('hide-out');
+            setTimeout(() => {
+                document.getElementById('patientModalContainer').innerHTML = '';
+                pmBackdropEl = null;
+            }, 300);
         }
 
+        function initPatientModal() {
+            const form = document.getElementById('patientModalForm');
+            const nameInput = document.getElementById('pmFullName');
+            const avatar = document.getElementById('pmAvatar');
+            const title = document.getElementById('pmTitle');
+            const isEdit = form.action.indexOf('/Edit') > -1;
 
-        requestAnimationFrame(step);
+            /* Live age calculation */
+            const dobInput = document.getElementById('pmDateOfBirth');
+            const ageBadge = document.getElementById('pmAgeBadge');
+            function updateAge() {
+                if (!dobInput.value) { ageBadge.textContent = ''; return; }
+                const dob = new Date(dobInput.value);
+                const now = new Date();
+                let age = now.getFullYear() - dob.getFullYear();
+                const m = now.getMonth() - dob.getMonth();
+                if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
+                ageBadge.textContent = age >= 0 ? age + ' years' : '';
+            }
+            dobInput.addEventListener('change', updateAge);
+            updateAge();
 
+
+            /* Live avatar + title */
+            nameInput.addEventListener('input', function() {
+                const n = this.value.trim();
+                avatar.textContent = n.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('') || '?';
+                title.textContent = n || (isEdit ? 'Edit Patient' : 'New Patient');
+            });
+
+            /* Gender segmented */
+            const seg = document.getElementById('pmGenderSeg');
+            seg.querySelectorAll('input[type=radio]').forEach((radio, idx) => {
+                radio.addEventListener('change', () => {
+                    seg.querySelectorAll('label').forEach(l => l.classList.remove('active'));
+                    radio.closest('label').classList.add('active');
+                    seg.classList.toggle('pos-1', idx === 0);
+                    seg.classList.toggle('pos-2', idx === 1);
+                });
+            });
+
+            /* Type tiles */
+            document.querySelectorAll('#pmTypeTiles input[type=radio]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    document.querySelectorAll('#pmTypeTiles .pm-tile').forEach(t => t.classList.remove('selected'));
+                    radio.closest('.pm-tile').classList.add('selected');
+                });
+            });
+
+            /* Close handlers */
+            pmBackdropEl.querySelectorAll('[data-pm-close]').forEach(b =>
+                b.addEventListener('click', closePatientModal));
+            pmBackdropEl.addEventListener('mousedown', e => {
+                if (e.target === pmBackdropEl) closePatientModal();
+            });
+            document.addEventListener('keydown', function esc(e) {
+                if (e.key === 'Escape' && pmBackdropEl) {
+                    closePatientModal();
+                    document.removeEventListener('keydown', esc);
+                }
+            });
+
+            /* AJAX submit */
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const btn = document.getElementById('pmSaveBtn');
+                const originalHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
+
+                pmBackdropEl.querySelectorAll('.invalid-msg').forEach(s => s.style.display = 'none');
+
+                const fd = new FormData(form);
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: fd,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            closePatientModal();
+                            Swal.fire({
+                                title: 'Success', text: res.message, icon: 'success',
+                                confirmButtonColor: '#0d9488',
+                                timer: 1600, timerProgressBar: true, showConfirmButton: false
+                            }).then(() => {
+                                if (res.redirectUrl) window.location.href = res.redirectUrl;
+                                else $('#tablePatients').DataTable().ajax.reload(null, false);
+                            });
+                        } else if (res.errors) {
+                            btn.disabled = false;
+                            btn.innerHTML = originalHtml;
+                            Object.entries(res.errors).forEach(([field, msgs]) => {
+                                const slot = pmBackdropEl.querySelector(`.invalid-msg[data-for="${field}"]`);
+                                if (slot) { slot.textContent = msgs[0]; slot.style.display = 'block'; }
+                            });
+                        } else {
+                            btn.disabled = false;
+                            btn.innerHTML = originalHtml;
+                            Swal.fire({
+                                title: 'Error', text: res.message || 'Something went wrong',
+                                icon: 'error', confirmButtonColor: '#0d9488'
+                            });
+                        }
+                    })
+                    .catch(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                        Swal.fire({
+                            title: 'Error', text: 'Failed to connect to the server',
+                            icon: 'error', confirmButtonColor: '#0d9488'
+                        });
+                    });
+            });
+
+            nameInput.focus();
         }
-
-
     </script>
-
 
     @if (TempData[Helper.MsgType] != null)
     {
-
         <script>
-
             Swal.fire({
-
-            title:
-            '@TempData[Helper.Title]',
-
-            text:
-            '@Html.Raw(TempData[Helper.Msg])',
-
-            confirmButtonText:
-            'حسنًا',
-
-            icon:
-            '@(
-            TempData[Helper.MsgType]?.ToString()
-            == Helper.Success
-            ? "success"
-            : "error"
-                    )',
-
-            confirmButtonColor:
-            '#0d9488'
-
+                title: '@TempData[Helper.Title]',
+                text: '@Html.Raw(TempData[Helper.Msg])',
+                confirmButtonText: 'OK',
+                icon: '@(TempData[Helper.MsgType]?.ToString() == Helper.Success ? "success" : "error")',
+                confirmButtonColor: '#0d9488'
             });
-
         </script>
-
     }
-
 }

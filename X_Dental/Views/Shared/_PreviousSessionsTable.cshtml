@@ -1,54 +1,99 @@
 @model Dental.Modules.Clinical.ViewModels.SessionViewModel
 @{
     var previousSessions = ViewBag.PreviousSessions as List<Dental.Modules.Clinical.DTOs.PreviousSessionRecordDto> ?? new();
+    string TLbl(int n) => (n / 10) switch
+    {
+        1 => $"UL-{n % 10}",
+        2 => $"UR-{n % 10}",
+        3 => $"LL-{n % 10}",
+        4 => $"LR-{n % 10}",
+        _ => n.ToString()
+    };
 }
 
 <div class="prev-sessions-wrap">
     <div class="section-head">
-        <h4><i class="bi bi-clock-history"></i> سجل الجلسات السابقة</h4>
-        <span class="section-badge">@previousSessions.Count سجل</span>
+        <h4><i class="bi bi-clock-history"></i> Previous Sessions History</h4>
+        <span class="section-badge">@previousSessions.Count record(s)</span>
     </div>
 
     <div class="table-responsive custom-scroll" style="max-height:520px;">
         <table class="dc-table">
             <thead>
                 <tr>
-                    <th style="width:50px">السن</th>
-                    <th>التاريخ</th>
-                    <th>الحالة</th>
-                    <th>التشخيص</th>
-                    <th>ملاحظات</th>
-                    <th>السعر</th>
-                    <th>إجمالي الزيارة</th>
-                    <th>المدفوع</th>
-                    <th>الخصم</th>
-                    <th>المتبقي</th>
+                    <th style="width:70px">Tooth</th>
+                    <th>Date</th>
+                    <th>Diagnosis</th>
+                    <th>Price</th>
+                    <th>Visit Total</th>
+                    <th>Paid</th>
+                    <th>Discount</th>
+                    <th>Remaining</th>
+                    <th style="width:60px">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var r in previousSessions)
                 {
-                    <tr>
-                        <td><span class="tooth-chip">@r.ToothNumber</span></td>
+                    <tr data-vd="@r.VisitDiagnosisId"
+                        data-diag="@(r.DiagnosisCatalogId ?? 0)"
+                        data-notes="@(r.DiagnosisNotes ?? "")"
+                        data-tooth="@r.ToothNumber">
+                        <td><span class="tooth-chip">@TLbl(r.ToothNumber)</span></td>
                         <td><span style="white-space:nowrap;">@r.Date.ToString("dd/MM/yyyy")</span></td>
-                        <td><span style="font-weight:700;color:#0d9488;">@r.StatusText</span></td>
-                        <td>@(r.DiagnosisName ?? "-")</td>
-                        <td><small style="color:#64748b;">@(r.DiagnosisNotes ?? "-")</small></td>
-                        <td><b>@(r.DiagnosisPrice > 0 ? r.DiagnosisPrice.ToString("N0") + " م.ج" : "-")</b></td>
-                        <td>@r.VisitTotalAmount.ToString("N0") م.ج</td>
-                        <td style="color:#16a34a;font-weight:700;">@r.VisitPaidAmount.ToString("N0") م.ج</td>
-                        <td style="color:#f59e0b;font-weight:700;">@r.VisitDiscount.ToString("N0") م.ج</td>
-                        <td style="color:#dc2626;font-weight:700;">@r.VisitRemaining.ToString("N0") م.ج</td>
+                        <td><span style="font-weight:700;color:#0d9488;">@(r.DiagnosisName ?? "-")</span></td>
+                        <td><b>@(r.DiagnosisPrice > 0 ? r.DiagnosisPrice.ToString("N0") + " " : "-")</b></td>
+                        <td>@r.VisitTotalAmount.ToString("N0") </td>
+                        <td style="color:#16a34a;font-weight:700;">@r.VisitPaidAmount.ToString("N0") </td>
+                        <td style="color:#f59e0b;font-weight:700;">@r.VisitDiscount.ToString("N0") </td>
+                        <td style="color:#dc2626;font-weight:700;">@r.VisitRemaining.ToString("N0") </td>
+                        <td class="text-center">
+                            @if (r.VisitDiagnosisId > 0)
+                            {
+                                <button type="button" class="btn-sm" title="Edit diagnosis & price"
+                                        onclick="editPreviousRecord(this)">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>
+            @if (previousSessions.Any())
+            {
+                <tfoot>
+                    <tr style="background:#f0fdfa;font-weight:800;">
+                        <td colspan="2" style="text-align:left;color:#0d7377;">Total</td>
+                        <td colspan="1" style="text-align:left;color:#0d7377;"></td>
+                        <td style="color:#0d7377;">@previousSessions.Sum(x => x.DiagnosisPrice).ToString("N0") </td>
+                        
+                    </tr>
+                </tfoot>
+            }
         </table>
         @if (!previousSessions.Any())
         {
             <div class="empty-state">
                 <i class="bi bi-inbox"></i>
-                <p>لا يوجد سجل سابق لهذا المريض.</p>
+                <p>No previous records for this patient.</p>
             </div>
         }
     </div>
 </div>
+
+<script>
+    /* ⭐ تعديل ريكورد سابق: يفتح مودال السن في وضع History Edit */
+    function editPreviousRecord(btn) {
+        const row = btn.closest('tr');
+        const vdId = parseInt(row.dataset.vd);
+        const tooth = parseInt(row.dataset.tooth);
+        const diagId = row.dataset.diag;
+        const notes = row.dataset.notes;
+
+        // بيستدعي المودال بتاع الشارت — نفس شاشة السيشن الحالي
+        if (window.openToothModal) {
+            openToothModal(tooth, null, null, { vdId: vdId, diagId: diagId, notes: notes });
+        }
+    }
+    window.editPreviousRecord = editPreviousRecord;
+</script>

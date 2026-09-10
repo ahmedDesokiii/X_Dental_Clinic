@@ -147,6 +147,11 @@ namespace Dental.Modules.Clinical.DTOs
 
     public class PreviousSessionRecordDto
     {
+
+        public int VisitDiagnosisId { get; set; }      // ✅ جديد
+        public int VisitId { get; set; }               // ✅ جديد
+        public int? DiagnosisCatalogId { get; set; }   // ✅ جديد
+
         public int ToothNumber { get; set; }
         public DateTime Date { get; set; }
         public string StatusText { get; set; } = "";

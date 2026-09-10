@@ -18,6 +18,9 @@ namespace Dental.Modules.Patients.DTOs
 
         public PatientType PatientType { get; set; }
 
+
+        public DateTime? NextSession { get; set; }
+
         public string TypeBadge => PatientType switch
         {
             PatientType.Orthodontics => "<span class=\"badge bg-info-subtle text-info fw-bold px-2 py-1 rounded-3\"><i class=\"bi bi-braces\"></i> تقويم</span>",

@@ -3,20 +3,18 @@
 <div class="session-workspace">
     <div class="section-card anim-fade-up anim-d1" style="margin-bottom:0;">
         <div class="section-head">
-            <h4><i class="bi bi-grid-3x3-gap"></i> أسنان السيشن الحالي</h4>
-            <span class="section-badge" id="recordsCountBadge">0 سن</span>
+            <h4><i class="bi bi-grid-3x3-gap"></i> Current Session Teeth</h4>
+            <span class="section-badge" id="recordsCountBadge">0 teeth</span>
         </div>
         <div class="table-responsive custom-scroll" style="max-height:520px;">
             <table class="dc-table" id="recordsTable">
                 <thead>
                     <tr>
-                        <th style="width:50px">السن</th>
-                        <th>الحالة</th>
-                        <th>التشخيص</th>
-                        <th>السعر</th>
-                        @* <th>السطوح</th>
-                        <th>الإجراء</th> *@
-                        <th>الأشعة</th>
+                        <th style="width:70px">Tooth</th>
+                        <th>Status</th>
+                        <th>Diagnosis</th>
+                        <th>Price</th>
+                        <th>X-Rays</th>
                         <th style="width:80px"></th>
                     </tr>
                 </thead>
@@ -24,7 +22,7 @@
             </table>
             <div class="empty-state" id="emptyRecordsMsg">
                 <i class="bi bi-grid-3x3"></i>
-                <p>لا يوجد أي سن مسجل في هذا السيشن حتى الآن.<br><small>اضغط على أي سن في الشارت لبدء التسجيل</small></p>
+                <p>No teeth recorded in this session yet.<br><small>Click any tooth on the chart to start</small></p>
             </div>
         </div>
     </div>
@@ -40,14 +38,18 @@
 
 <script>
     const STATUS_ID_TO_LABEL = {
-        1: 'سليم', 2: 'تسوس', 3: 'معالج', 4: 'مفقود', 5: 'مخلوع', 6: 'مطمور',
-        7: 'تاج', 8: 'جسر', 9: 'زرعة', 10: 'مكسور', 11: 'عصب', 12: 'حشوة'
+        1: 'Healthy', 2: 'Decayed', 3: 'Treated', 4: 'Missing', 5: 'Extracted', 6: 'Impacted',
+        7: 'Crown', 8: 'Bridge', 9: 'Implant', 10: 'Fractured', 11: 'Root Canal', 12: 'Filling'
     };
     const STATUS_ID_TO_COLOR = {
-        1: '#0f9b8e', 2: '#ef4444', 3: '#3b82f6', 4: '#94a3b8', 5: '#1e293b',
-        6: '#6366f1', 7: '#a855f7', 8: '#06b6d4', 9: '#ec4899', 10: '#f97316',
-        11: '#f59e0b', 12: '#14b8a6'
+        1: '#0f9b8e', 2: '#ef4444', 3: '#3b82f6', 4: '#94a3b8', 5: '#1e293b', 6: '#6366f1',
+        7: '#a855f7', 8: '#06b6d4', 9: '#ec4899', 10: '#f97316', 11: '#f59e0b', 12: '#14b8a6'
     };
+
+    function toothLbl(num) {
+        const q = Math.floor(num / 10), p = num % 10;
+        return ({ 1: 'UL', 2: 'UR', 3: 'LL', 4: 'LR' })[q] + '-' + p;
+    }
 
     function renderRecordsTable() {
         const tbody = document.getElementById('recordsTableBody');
@@ -55,7 +57,9 @@
         const badgeEl = document.getElementById('recordsCountBadge');
         if (!tbody) return;
 
-        const list = Object.values(window.pendingToothRecords || {}).sort((a, b) => a.ToothNumber - b.ToothNumber);
+        const list = (window.pendingToothRecords || [])
+            .slice()
+            .sort((a, b) => a.ToothNumber - b.ToothNumber);
         tbody.innerHTML = '';
 
         list.forEach((r, idx) => {
@@ -65,22 +69,21 @@
             tr.style.opacity = '0';
             const color = STATUS_ID_TO_COLOR[r.Status] || '#0f9b8e';
             tr.innerHTML = `
-                <td><span class="tooth-chip">${r.ToothNumber}</span></td>
-                <td><span style="color:${color};font-weight:700;">${STATUS_ID_TO_LABEL[r.Status] || '-'}</span></td>
-                <td>${r.DiagnosisName || '-'}</td>
-                <td><b>${r.DiagnosisPrice ? r.DiagnosisPrice.toLocaleString('en-EG') + ' م.ج' : '-'}</b></td>
-
-                <td>${r.XRays && r.XRays.length ? '<i class="bi bi-image-fill" style="color:#0d9488;"></i> ' + r.XRays.length : '-'}</td>
-                <td class="row-actions">
-                    <button class="btn-sm" onclick="openToothModal(${r.ToothNumber})" title="تعديل"><i class="bi bi-pencil-square"></i></button>
-                    <button class="btn-sm danger" onclick="removePendingTooth(${r.ToothNumber})" title="حذف"><i class="bi bi-trash3"></i></button>
-                </td>
-            `;
+                    <td><span class="tooth-chip">${toothLbl(r.ToothNumber)}</span></td>
+                    <td><span style="color:${color};font-weight:700;">${STATUS_ID_TO_LABEL[r.Status] || '-'}</span></td>
+                    <td>${r.DiagnosisName || '-'}</td>
+                    <td><b>${r.DiagnosisPrice ? r.DiagnosisPrice.toLocaleString('en-EG') + ' EGP' : '-'}</b></td>
+                    <td>${r.XRays && r.XRays.length ? '<i class="bi bi-image-fill" style="color:#0d9488;"></i> ' + r.XRays.length : '-'}</td>
+                    <td class="row-actions">
+                        <button class="btn-sm" onclick="openToothModal(${r.ToothNumber}, null, '${r.uid}')" title="Edit"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn-sm danger" onclick="removePendingRecord('${r.uid}')" title="Delete"><i class="bi bi-trash3"></i></button>
+                    </td>
+                `;
             tbody.appendChild(tr);
         });
 
         if (badgeEl) {
-            badgeEl.textContent = list.length + ' سن';
+            badgeEl.textContent = list.length + (list.length === 1 ? ' tooth' : ' teeth');
             badgeEl.style.animation = 'badgePop 0.4s ease';
             setTimeout(() => badgeEl.style.animation = '', 400);
         }
@@ -91,18 +94,18 @@
     window.renderRecordsTable = renderRecordsTable;
 
     async function saveAndEndSession() {
-        const teeth = Object.values(window.pendingToothRecords || {});
+        const teeth = window.pendingToothRecords || [];
         const payments = window.pendingPayments || [];
 
         const confirmResult = await Swal.fire({
-            title: 'إنهاء وحفظ السيشن؟',
-            text: `سيتم حفظ ${teeth.length} سن و ${payments.length} دفعة، وإنهاء السيشن.`,
+            title: 'Finish & save session?',
+            text: `This will save ${teeth.length} record(s) and ${payments.length} payment(s), then complete the session.`,
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#0d9488',
             cancelButtonColor: '#64748b',
-            confirmButtonText: 'نعم، إنهاء وحفظ',
-            cancelButtonText: 'إلغاء',
+            confirmButtonText: 'Yes, finish & save',
+            cancelButtonText: 'Cancel',
             reverseButtons: true,
             backdrop: 'rgba(10,40,42,0.4)',
             customClass: { popup: 'rounded-4' }
@@ -110,7 +113,7 @@
         if (!confirmResult.isConfirmed) return;
 
         Swal.fire({
-            title: 'جاري الحفظ...',
+            title: 'Saving...',
             allowOutsideClick: false,
             didOpen: () => Swal.showLoading(),
             backdrop: 'rgba(10,40,42,0.4)',
@@ -121,7 +124,7 @@
             const payload = {
                 PatientId: @Model.Patient.Id,
                 VisitId: @Model.Visit.Id,
-                ToothRecords: teeth,
+                ToothRecords: teeth.map(({ uid, ...rest }) => rest), // ⭐ شيل الـ uid قبل الإرسال
                 Payments: payments
             };
 
@@ -133,13 +136,13 @@
             const data = await res.json();
 
             if (!data.success) {
-                Swal.fire({ title: 'خطأ', text: data.message || 'حدث خطأ أثناء الحفظ', icon: 'error', confirmButtonColor: '#dc2626', customClass: { popup: 'rounded-4' } });
+                Swal.fire({ title: 'Error', text: data.message || 'Something went wrong while saving', icon: 'error', confirmButtonColor: '#dc2626', customClass: { popup: 'rounded-4' } });
                 return;
             }
 
             Swal.fire({
-                title: 'تم بنجاح',
-                text: 'تم حفظ السيشن وإنهاؤه',
+                title: 'Done!',
+                text: 'Session saved & completed successfully',
                 icon: 'success',
                 timer: 1600,
                 showConfirmButton: false,
@@ -148,7 +151,7 @@
             }).then(() => window.location.href = '/Patients/Details/@Model.Patient.Id');
 
         } catch (err) {
-            Swal.fire({ title: 'خطأ', text: 'تعذر الاتصال بالسيرفر', icon: 'error', confirmButtonColor: '#dc2626', customClass: { popup: 'rounded-4' } });
+            Swal.fire({ title: 'Error', text: 'Could not reach the server', icon: 'error', confirmButtonColor: '#dc2626', customClass: { popup: 'rounded-4' } });
         }
     }
     window.saveAndEndSession = saveAndEndSession;

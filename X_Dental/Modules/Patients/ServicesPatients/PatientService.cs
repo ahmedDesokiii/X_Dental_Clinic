@@ -165,8 +165,10 @@ namespace Dental.Modules.Patients.ServicesPatients
                     MedicalNotes = dto.MedicalNotes,
                     SmokingStatus = dto.SmokingStatus,
                     IsPregnant = (bool)dto.IsPregnant,
-                    EmergencyNotes = dto.EmergencyNotes
+                    EmergencyNotes = dto.MedicalNotes
+                   
                 };
+
             }
             else
             {
@@ -176,7 +178,8 @@ namespace Dental.Modules.Patients.ServicesPatients
                 patient.MedicalInfo.MedicalNotes = dto.MedicalNotes;
                 patient.MedicalInfo.SmokingStatus = dto.SmokingStatus;
                 patient.MedicalInfo.IsPregnant = (bool)dto.IsPregnant;
-                patient.MedicalInfo.EmergencyNotes = dto.EmergencyNotes;
+                patient.MedicalInfo.EmergencyNotes = dto.MedicalNotes;
+                patient.Notes = dto.MedicalNotes;
             }
 
             await _context.SaveChangesAsync();

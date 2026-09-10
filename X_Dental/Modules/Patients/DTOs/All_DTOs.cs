@@ -146,6 +146,11 @@ namespace Dental.Modules.Patients.DTOs
         public string? SmokingStatus { get; set; }
         public bool IsPregnant { get; set; }
         public string? EmergencyNotes { get; set; }
+
+        public static explicit operator UpdatePatientDto(CreatePatientDto v)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 }

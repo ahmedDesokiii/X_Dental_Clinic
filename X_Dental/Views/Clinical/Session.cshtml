@@ -3,7 +3,7 @@
 @model Dental.Modules.Clinical.ViewModels.SessionViewModel
 
 @{
-    ViewData["Title"] = $"سيشن — {Model.Patient.FullNameAr}";
+    ViewData["Title"] = $"Session — {Model.Patient.FullNameAr}";
 
     var initials = string.Join("",
         (Model.Patient.FullNameAr ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(x => x[0]));
@@ -17,9 +17,16 @@
 
     var sessionStatusText = Model.Visit.Status switch
     {
-        VisitStatus.Completed => "مكتمل",
-        VisitStatus.Cancelled => "ملغي",
-        _ => "قيد التنفيذ"
+        VisitStatus.Completed => "Completed",
+        VisitStatus.Cancelled => "Cancelled",
+        _ => "In Progress"
+    };
+
+    var typeText = Model.Patient.PatientType switch
+    {
+        Dental.Models.Patient.PatientType.Orthodontics => "Orthodontics",
+        Dental.Models.Patient.PatientType.Both => "General + Ortho",
+        _ => "General"
     };
 
     var typeIcon = Model.Patient.PatientType switch
@@ -28,14 +35,6 @@
         Dental.Models.Patient.PatientType.Both => "bi-heart-pulse",
         _ => "bi-app-indicator"
     };
-
-    var typeText = Model.Patient.PatientType switch
-    {
-        Dental.Models.Patient.PatientType.Orthodontics => "تقويم",
-        Dental.Models.Patient.PatientType.Both => "عام + تقويم",
-        _ => "عام"
-    };
-
     var paidPercent = Model.Visit.TotalAmount > 0
         ? Math.Min(100, (int)Math.Round((Model.Visit.PaidAmount / Model.Visit.TotalAmount) * 100))
         : 100;
@@ -875,10 +874,106 @@
         background: linear-gradient(180deg, transparent, #e2e8f0, transparent);
         flex-shrink: 0;
     }
+
+
+
+
+</style>
+<style>
+    /* ⭐ Shine sweep across hero */
+    .session-hero::before {
+        content: '';
+        position: absolute;
+        top: -60%;
+        right: -30%;
+        width: 55%;
+        height: 220%;
+        background: linear-gradient(105deg, transparent, rgba(255,255,255,.14), transparent);
+        transform: rotate(12deg);
+        animation: heroShine 6s ease-in-out infinite;
+        pointer-events: none;
+    }
+    @@keyframes heroShine {
+        0%, 100% {
+            right: -40%;
+        }
+
+        50% {
+            right: 110%;
+        }
+    }
+
+    /* ⭐ Floating particles */
+    .session-hero .particle {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255,255,255,.35);
+        animation: particleFloat linear infinite;
+        pointer-events: none;
+    }
+    @@keyframes particleFloat {
+        0% {
+            transform: translateY(20px) scale(1);
+            opacity: 0;
+        }
+
+        15% {
+            opacity: .8;
+        }
+
+        90% {
+            opacity: .5;
+        }
+
+        100% {
+            transform: translateY(-160px) scale(.3);
+            opacity: 0;
+        }
+    }
+
+    /* ⭐ Tab badge pulse when active */
+    .tab-badge {
+        transition: transform .2s ease;
+    }
+
+    .dc-tab-btn.active .tab-badge {
+        animation: badgePop .4s ease;
+    }
+
+    /* ⭐ Finish button shine */
+    .btn-finish::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -80%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+        transform: skewX(-20deg);
+        animation: btnShine 3.2s ease infinite;
+    }
+
+    .btn-finish {
+        position: relative;
+        overflow: hidden;
+    }
+    @@keyframes btnShine {
+        0% {
+            left: -80%;
+        }
+
+        55% {
+            left: 130%;
+        }
+
+        100% {
+            left: 130%;
+        }
+    }
 </style>
 
 
-<div  dir="rtl"
+<div  >
      data-patient-id="@Model.Patient.Id"
      data-visit-id="@Model.Visit.Id"
      data-session-status="@sessionStatusText">
@@ -886,6 +981,11 @@
     @* ====== HERO ====== *@
     <div class="session-hero status-@sessionStatusClass anim-fade-up pb-0">
         <div class="hero-grid">
+            <span class="particle" style="width:8px;height:8px;right:12%;bottom:20%;animation-duration:7s;"></span>
+            <span class="particle" style="width:5px;height:5px;right:28%;bottom:10%;animation-duration:9s;animation-delay:1.2s;"></span>
+            <span class="particle" style="width:6px;height:6px;right:55%;bottom:25%;animation-duration:8s;animation-delay:.6s;"></span>
+            <span class="particle" style="width:4px;height:4px;right:75%;bottom:15%;animation-duration:10s;animation-delay:2s;"></span>
+            <span class="particle" style="width:7px;height:7px;right:88%;bottom:30%;animation-duration:6.5s;animation-delay:.3s;"></span>
             <div class="hero-avatar">@initials</div>
             <div class="hero-info">
                 <h1>@Model.Patient.FullNameAr</h1>
@@ -962,20 +1062,20 @@
         <div class="content-panel">
             <div class="dc-tabs-bar">
                 <button type="button" class="dc-tab-btn active" onclick="switchTab('tabCurrent', this)">
-                    <i class="bi bi-table"></i> السيشن الحالي
+                    <i class="bi bi-table"></i> Current Session
                     <span class="tab-badge" id="tabBadgeCurrent">0</span>
                 </button>
                 <button type="button" class="dc-tab-btn" onclick="switchTab('tabPayments', this)">
-                    <i class="bi bi-credit-card-2-front"></i> المدفوعات
+                    <i class="bi bi-credit-card-2-front"></i> Payments
                 </button>
                 <button type="button" class="dc-tab-btn" onclick="switchTab('tabPrev', this)">
-                    <i class="bi bi-clock-history"></i> سجلات سابقة
+                    <i class="bi bi-clock-history"></i> Previous Sessions
                 </button>
                 <button type="button" class="dc-tab-btn" onclick="switchTab('tabXray', this)">
-                    <i class="bi bi-image"></i> الأشعة
+                    <i class="bi bi-image"></i> X-Rays
                 </button>
                 <button type="button" class="dc-tab-btn" onclick="switchTab('tabFollow', this)">
-                    <i class="bi bi-calendar-plus"></i> متابعة
+                    <i class="bi bi-calendar-plus"></i> Follow Up
                 </button>
             </div>
 
@@ -1040,14 +1140,11 @@
             if (btnPrint) btnPrint.addEventListener("click", () => window.print());
 
             const bottomBar = document.getElementById('bottomBar');
+            
             function checkPendingChanges() {
-                const hasTeeth = window.pendingToothRecords && Object.keys(window.pendingToothRecords).length > 0;
+                const hasTeeth = (window.pendingToothRecords || []).length > 0;
                 const hasPayments = window.pendingPayments && window.pendingPayments.length > 0;
-                if (hasTeeth || hasPayments) {
-                    bottomBar.classList.add('visible');
-                } else {
-                    bottomBar.classList.remove('visible');
-                }
+                bottomBar.classList.toggle('visible', hasTeeth || hasPayments);
             }
 
             const origRender = window.renderRecordsTable;
@@ -1064,7 +1161,7 @@
             };
 
             function updateTabBadge() {
-                const count = window.pendingToothRecords ? Object.keys(window.pendingToothRecords).length : 0;
+                const count = (window.pendingToothRecords || []).length;
                 const badge = document.getElementById('tabBadgeCurrent');
                 if (badge) {
                     badge.textContent = count;
@@ -1073,13 +1170,13 @@
                 }
             }
 
+
             function updateBottomBar() {
                 const baseTotal = @(Model.Visit.TotalAmount.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 const basePaid = @(Model.Visit.PaidAmount.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 const baseDiscount = @(Model.Visit.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                const pendingDiagnosisTotal = window.pendingToothRecords
-                    ? Object.values(window.pendingToothRecords).reduce((sum, t) => sum + (t.DiagnosisPrice || 0), 0)
-                    : 0;
+                const pendingDiagnosisTotal = (window.pendingToothRecords || [])
+                    .reduce((sum, t) => sum + (t.DiagnosisPrice || 0), 0);
                 const pendingPaidTotal = window.pendingPayments ? window.pendingPayments.reduce((sum, p) => sum + p.Amount, 0) : 0;
                 const pendingDiscountTotal = window.pendingPayments ? window.pendingPayments.reduce((sum, p) => sum + (p.Discount || 0), 0) : 0;
 

@@ -1,11 +1,12 @@
 @{
     var xrayGroups = ViewBag.XRayGroups as List<Dental.Modules.Clinical.DTOs.XRayGroupDto> ?? new();
+
 }
 
 <div class="xray-section">
     <div class="section-head">
-        <h4><i class="bi bi-image"></i> أشعة الأسنان</h4>
-        <span class="section-badge">@xrayGroups.Sum(g => g.Items.Count) صورة</span>
+        <h4><i class="bi bi-image"></i> Teeth X-Rays</h4>
+        <span class="section-badge">@xrayGroups.Sum(g => g.Items.Count) image</span>
     </div>
 
     @if (!xrayGroups.Any())
@@ -23,7 +24,7 @@
                 <div class="xray-group">
                     <div class="xray-group-head">
                         <span class="tooth-chip">@group.ToothNumber</span>
-                        <span class="xray-count">@group.Items.Count صورة</span>
+                        <span class="xray-count">@group.Items.Count image</span>
                     </div>
                     <div class="xray-grid">
                         @foreach (var item in group.Items)

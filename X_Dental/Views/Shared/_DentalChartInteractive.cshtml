@@ -1,6 +1,18 @@
 ﻿@model Dental.Modules.Clinical.ViewModels.SessionViewModel
 @await Html.PartialAsync("_DentalArchStyles")
 
+@functions {
+    // ⭐ الترقيم الجديد: 28→UR-8, 15→UL-5 (Q1=UL, Q2=UR, Q3=LL, Q4=LR)
+    string TLabel(int n) => (n / 10) switch
+    {
+        1 => $"UL-{n % 10}",
+        2 => $"UR-{n % 10}",
+        3 => $"LL-{n % 10}",
+        4 => $"LR-{n % 10}",
+        _ => n.ToString()
+    };
+}
+
 <style>
     .chart-shell {
         position: relative;
@@ -76,7 +88,39 @@
         animation: badgePop 0.4s ease;
     }
 
-    /* ====== Tooth Hover Tooltip ====== */
+    /* ⭐ tooth pop-in stagger */
+    @@keyframes toothPopIn {
+        from {
+            opacity: 0;
+            transform: scale(.3) translateY(8px);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    .tooth-box {
+        animation: toothPopIn .5s cubic-bezier(.2,1.5,.4,1) backwards;
+    }
+
+    /* ⭐ glow on selected */
+    @@keyframes selGlow {
+        0%, 100% {
+            filter: drop-shadow(0 0 6px rgba(13,148,136,.55));
+        }
+
+        50% {
+            filter: drop-shadow(0 0 16px rgba(13,148,136,.9));
+        }
+    }
+
+    .tooth-box.selected {
+        animation: selGlow 1.2s ease-in-out infinite;
+        z-index: 20;
+    }
+
     .tooth-tooltip {
         position: fixed;
         z-index: 3000;
@@ -86,8 +130,8 @@
         border-radius: 12px;
         font-size: .78rem;
         line-height: 1.6;
-        max-width: 230px;
-        min-width: 140px;
+        max-width: 250px;
+        min-width: 150px;
         box-shadow: 0 14px 34px rgba(0,0,0,0.28);
         pointer-events: none;
         opacity: 0;
@@ -110,6 +154,12 @@
             color: #5eead4;
             border-bottom: 1px solid rgba(255,255,255,0.12);
             padding-bottom: 6px;
+        }
+
+        .tooth-tooltip .tt-num {
+            color: #94a3b8;
+            font-weight: 600;
+            font-size: .68rem;
         }
 
         .tooth-tooltip .tt-pending-tag {
@@ -271,13 +321,11 @@
             transform: scale(1.1);
         }
 
-    /* ====== MODAL XL — 3 Columns ====== */
     .tooth-modal {
         position: fixed;
         inset: 0;
         background: rgba(10,40,42,0.45);
         backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
         display: none;
         align-items: center;
         justify-content: center;
@@ -471,7 +519,6 @@
             box-shadow: 0 8px 24px rgba(13,115,119,0.35);
         }
 
-    /* Responsive: stack columns on mobile */
     @@media (max-width: 768px) {
         .modal-body-row {
             flex-direction: column;
@@ -509,10 +556,10 @@
         <svg class="bg-arcs" viewBox="0 0 620 632" preserveAspectRatio="xMidYMid meet">
             <div class="quadrant-divider-v"></div>
             <div class="quadrant-divider-h"></div>
-            <span class="quadrant-badge fs-5 ur">UR</span>
-            <span class="quadrant-badge fs-5 ul">UL</span>
-            <span class="quadrant-badge fs-5 lr">LR</span>
-            <span class="quadrant-badge fs-5 ll">LL</span>
+            <span class="quadrant-badge ur fs-5">UR</span>
+            <span class="quadrant-badge ul fs-5">UL</span>
+            <span class="quadrant-badge lr fs-5">LR</span>
+            <span class="quadrant-badge ll fs-5">LL</span>
             <defs>
                 <linearGradient id="gumUpperInt" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stop-color="#f8d3ca" /><stop offset="100%" stop-color="#f2b6a8" />
@@ -535,9 +582,9 @@
             {
                 var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="openToothModal(@i, event)">
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((i % 10) * 45)ms" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
-                        <span class="tooth-num">@i</span>
+                        <span class="tooth-num">@(i-10)</span>
                         <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                     <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
@@ -547,9 +594,9 @@
             {
                 var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="openToothModal(@i, event)">
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((i % 10) * 45 + 360)ms" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
-                        <span class="tooth-num">@i</span>
+                        <span class="tooth-num">@(i-20)</span>
                         <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                     <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
@@ -563,9 +610,9 @@
             {
                 var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="openToothModal(@i, event)">
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((i % 10) * 45 + 720)ms" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
-                        <span class="tooth-num">@i</span>
+                        <span class="tooth-num">@(i-40)</span>
                         <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                     <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
@@ -575,9 +622,9 @@
             {
                 var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" onclick="openToothModal(@i, event)">
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((i % 10) * 45 + 1080)ms" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
-                        <span class="tooth-num">@i</span>
+                        <span class="tooth-num">@(i-30)</span>
                         <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                     <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
@@ -586,38 +633,55 @@
         </div>
     </div>
 
-    <!-- Tooth Detail Modal — XL 3-Column Layout -->
-    <div class="tooth-modal" id="toothModal">
+    <!-- Tooth Detail Modal — XL 3-Column -->
+    <div class="tooth-modal " id="toothModal">
         <div class="modal-overlay" onclick="closeToothModal()"></div>
         <div class="modal-glass-xl">
             <div class="tooth-modal-head">
-                <h5><i class="bi bi-grid-3x3-gap"></i> تفاصيل السن <span id="selectedToothNum"></span></h5>
                 <button type="button" class="btn-close-modal" onclick="closeToothModal()"><i class="bi bi-x-lg"></i></button>
+                <h5><span id="selectedToothNum"></span>Tooth Details<i class="bi bi-grid-3x3-gap"></i>  </h5>
             </div>
             <div class="tooth-modal-body">
                 <div class="modal-body-row">
-                    @* ====== Column 1: Status + Surfaces + Procedure ====== *@
+                    @* Column 1: Status *@
                     <div class="modal-col">
                         <div class="form-group-v4 mb-3">
-                            <label>حالة السن</label>
-                            <select class="form-glass-v4" id="toothStatus">
-                                <option value="1">سليم</option>
-                                <option value="2">تسوس</option>
-                                <option value="3">معالج</option>
-                                <option value="4">مفقود</option>
-                                <option value="5">مخلوع</option>
-                                <option value="6">مطمور</option>
-                                <option value="7">تاج</option>
-                                <option value="8">جسر</option>
-                                <option value="9">زرعة</option>
-                                <option value="10">مكسور</option>
-                                <option value="11">عصب</option>
-                                <option value="12">حشوة</option>
+                            <label>Tooth Status</label>
+                            <select class="form-glass-v4 mb-2" id="toothStatus">
+                                <option value="1">Healthy</option>
+                                <option value="2">Decayed</option>
+                                <option value="3">Treated</option>
+                                <option value="4">Missing</option>
+                                <option value="5">Extracted</option>
+                                <option value="6">Impacted</option>
+                                <option value="7">Crown</option>
+                                <option value="8">Bridge</option>
+                                <option value="9">Implant</option>
+                                <option value="10">Fractured</option>
+                                <option value="11">Root Canal</option>
+                                <option value="12">Filling</option>
                             </select>
-                        </div>
 
+                            <label>Diagnosis</label>
+                            <div class="diagnosis-row mb-2">
+                                <select class="form-glass-v4" id="toothDiagnosis" onchange="onDiagnosisChange()">
+                                    <option value="">-- Select diagnosis --</option>
+                                    @if (ViewBag.DiagnosisList != null)
+                                    {
+                                        @foreach (var d in (List<Dental.Models.Clinic.DiagnosisCatalog>)ViewBag.DiagnosisList)
+                                        {
+                                            <option value="@d.Id" data-price="@d.Price">@d.NameEn</option>
+                                        }
+                                    }
+                                </select>
+                                <span class="diagnosis-price-badge" id="diagnosisPriceBadge">0 EGP</span>
+                            </div>
+
+                            <label>Condition Notes</label>
+                            <textarea class="form-glass-v4" id="diagnosisNotes" rows="2" placeholder="Notes about the diagnosis / condition..."></textarea>
+                        </div>
                         <div class="form-group-v4 mb-3" hidden>
-                            <label>السطوح المتأثرة</label>
+                            <label>Affected Surfaces</label>
                             <div class="surface-picker-v4">
                                 <label class="surf-check-v4"><input type="checkbox" value="M" /> M</label>
                                 <label class="surf-check-v4"><input type="checkbox" value="D" /> D</label>
@@ -626,62 +690,44 @@
                                 <label class="surf-check-v4"><input type="checkbox" value="O" /> O</label>
                             </div>
                         </div>
-
-                        <div class="form-group-v4 mb-0" hidden="">
-                            <label>كود الإجراء</label>
-                            <input type="text" class="form-glass-v4" id="toothProcedure" placeholder="مثال: RCT, CRN, FLL" />
+                        <div class="form-group-v4 mb-0" hidden>
+                            <label>Procedure Code</label>
+                            <input type="text" class="form-glass-v4" id="toothProcedure" placeholder="e.g. RCT, CRN, FLL" />
                         </div>
-                            <div class="modal-col">
-                            <div class="form-group-v4 mb-3">
-                                <label>التشخيص</label>
-                                <div class="diagnosis-row">
-                                    <select class="form-glass-v4" id="toothDiagnosis" onchange="onDiagnosisChange()">
-                                        <option value="">-- اختر التشخيص --</option>
-                                        @if (ViewBag.DiagnosisList != null)
-                                        {
-                                            @foreach (var d in (List<Dental.Models.Clinic.DiagnosisCatalog>)ViewBag.DiagnosisList)
-                                            {
-                                                <option value="@d.Id" data-price="@d.Price">@d.NameAr</option>
-                                            }
-                                        }
-                                    </select>
-                                    <span class="diagnosis-price-badge" id="diagnosisPriceBadge">0 م.ج</span>
-                                </div>
-                            </div>
-
-                            <div class="form-group-v4 mb-0">
-                                <label>ملاحظات الحالة</label>
-                                <textarea class="form-glass-v4" id="diagnosisNotes" rows="5" placeholder="ملاحظات عن التشخيص/الحالة..."></textarea>
-                            </div>
-                        </div>
-                    
                     </div>
 
+   @*                  <div class="modal-col-divider"></div>
+ *@
+                    @* Column 2: Diagnosis + Notes *@
+@*                     <div class="modal-col">
+                        <div class="form-group-v4 mb-3">
+                        </div>
+                        <div class="form-group-v4 mb-0">
+
+                        </div>
+                    </div>
+ *@
                     <div class="modal-col-divider"></div>
 
-                    @* ====== Column 2: Diagnosis + Price + Notes ====== *@
-                    <div class="modal-col">
+                    @* Column 3: X-Rays *@
+                    <div class="modal-col" id="colXray">
                         <div class="form-group-v4 mb-0">
-                            <label>أشعة السن (اختياري)</label>
+                            <label>Tooth X-Rays (optional)</label>
                             <div class="xray-upload-zone p-0" onclick="document.getElementById('toothXrayFiles').click()">
                                 <input type="file" id="toothXrayFiles" accept="image/*" multiple hidden onchange="onToothXrayFilesChange(event)" />
                                 <i class="bi bi-cloud-arrow-up" style="font-size:1.8rem;display:block;margin-bottom:8px;color:#0d9488;"></i>
-                                <span class="mt-0" style="font-weight:700;color:#475569;">اضغط لرفع صورة أو أكثر</span>
+                                <span class="mt-0" style="font-weight:700;color:#475569;">Click to upload one or more images</span>
                                 <small style="display:block;margin-top:4px;color:#94a3b8;">JPG, PNG, DICOM</small>
                             </div>
                             <div id="xrayFilesList" class="xray-files-list"></div>
                         </div>
                     </div>
-
-                    
                 </div>
-                @* ====== Column 3: X-Rays Upload + List ====== *@
-               
             </div>
             <div class="tooth-modal-foot">
-                <button type="button" class="btn-glass-v4 btn-cancel-v4" onclick="closeToothModal()">إلغاء</button>
-                <button type="button" class="btn-glass-v4 btn-save-v4" onclick="applyToothChanges()">
-                    <i class="bi bi-check-lg"></i> إضافة للسيشن
+                <button type="button" class="btn-glass-v4 btn-cancel-v4" onclick="closeToothModal()">Cancel</button>
+                <button type="button" class="btn-glass-v4 btn-save-v4" id="btnApplyTooth" onclick="applyToothChanges()">
+                    <i class="bi bi-check-lg"></i> <span id="btnApplyToothText">Add to Session</span>
                 </button>
             </div>
         </div>
@@ -689,50 +735,68 @@
 </div>
 
 <script>
-    (function () {
+    (function() {
         var canvas = document.getElementById('chartCanvas');
         if (window.initDentalArch) window.initDentalArch(canvas);
     })();
 
-    window.pendingToothRecords = window.pendingToothRecords || {};
+    /* ⭐ الآن Array — نفس السن ممكن ياخد أكتر من تشخيص (Insert) */
+    window.pendingToothRecords = [];
     let currentToothNumber = null;
     let currentXrayFiles = [];
+    let editingRecordUid = null;   // ⭐ تعديل ريكورد موجود في السيشن الحالي
+    let historyEditCtx = null;     // ⭐ تعديل ريكورد من السجلات السابقة { vdId }
 
     const STATUS_ID_TO_CLASS = {
-        1: 'healthy', 2: 'decayed', 3: 'treated', 4: 'missing', 5: 'extracted',
-        6: 'impacted', 7: 'crown', 8: 'bridge', 9: 'implant', 10: 'fractured',
-        11: 'rootcanal', 12: 'filling'
+        1: 'healthy', 2: 'decayed', 3: 'treated', 4: 'missing', 5: 'extracted', 6: 'impacted',
+        7: 'crown', 8: 'bridge', 9: 'implant', 10: 'fractured', 11: 'rootcanal', 12: 'filling'
     };
-
     const STATUS_ID_TO_LABEL_TT = {
-        1: 'سليم', 2: 'تسوس', 3: 'معالج', 4: 'مفقود', 5: 'مخلوع', 6: 'مطمور',
-        7: 'تاج', 8: 'جسر', 9: 'زرعة', 10: 'مكسور', 11: 'عصب', 12: 'حشوة'
+        1: 'Healthy', 2: 'Decayed', 3: 'Treated', 4: 'Missing', 5: 'Extracted', 6: 'Impacted',
+        7: 'Crown', 8: 'Bridge', 9: 'Implant', 10: 'Fractured', 11: 'Root Canal', 12: 'Filling'
     };
 
-    // ⭐ خريطة أحدث حالة/تشخيص محفوظ لكل سن (جايه من السيرفر)
     window.toothInfoMap = @Html.Raw(ViewBag.ToothInfoMap ?? "{}");
+
+    // ⭐ نفس منطق الترقيم في الـ Razor: 28→UR-8, 15→UL-5
+    function toothLabelJs(num) {
+        const q = Math.floor(num / 10), p = num % 10;
+        return ({ 1: 'UL', 2: 'UR', 3: 'LL', 4: 'LR' })[q] + '-' + p;
+    }
+
+    function genUid() { return 'r' + Date.now() + '_' + Math.floor(Math.random() * 10000); }
+    function getPendingForTooth(num) {
+        return window.pendingToothRecords.filter(r => r.ToothNumber === num);
+    }
 
     function onDiagnosisChange() {
         const select = document.getElementById('toothDiagnosis');
         const badge = document.getElementById('diagnosisPriceBadge');
         const selectedOption = select.options[select.selectedIndex];
         const price = selectedOption ? parseFloat(selectedOption.dataset.price || 0) : 0;
-        badge.textContent = price.toLocaleString('en-EG') + ' م.ج';
+        badge.textContent = price.toLocaleString('en-EG') + ' EGP';
         badge.classList.remove('updated');
         void badge.offsetWidth;
         badge.classList.add('updated');
     }
 
-    function openToothModal(num, evt) {
+    function openToothModal(num, evt, uid = null, hist = null) {
         if (evt) { evt.preventDefault(); evt.stopPropagation(); }
-        currentToothNumber = num;
-        document.getElementById('selectedToothNum').textContent = '#' + num;
 
-        const existing = window.pendingToothRecords[num];
+        currentToothNumber = num;
+        editingRecordUid = uid;
+        historyEditCtx = hist;
+
+        document.getElementById('selectedToothNum').textContent =
+            ' (' + toothLabelJs(num) + ')' + (hist ? ' — Edit History' : '');
+
+        const existing = uid ? window.pendingToothRecords.find(r => r.uid === uid) : null;
         document.getElementById('toothStatus').value = existing ? existing.Status : 1;
         document.getElementById('toothProcedure').value = existing ? (existing.ProcedureCode || '') : '';
-        document.getElementById('toothDiagnosis').value = existing ? (existing.DiagnosisCatalogId || '') : '';
-        document.getElementById('diagnosisNotes').value = existing ? (existing.DiagnosisNotes || '') : '';
+        document.getElementById('toothDiagnosis').value =
+            hist ? (hist.diagId || '') : (existing ? (existing.DiagnosisCatalogId || '') : '');
+        document.getElementById('diagnosisNotes').value =
+            hist ? (hist.notes || '') : (existing ? (existing.DiagnosisNotes || '') : '');
 
         document.querySelectorAll('.surf-check-v4 input').forEach(cb => {
             cb.checked = existing ? (existing.Surfaces || []).some(s => s.Surface === cb.value) : false;
@@ -741,6 +805,16 @@
         currentXrayFiles = existing && existing.XRays ? existing.XRays.map(x => ({ ...x })) : [];
         renderXrayFilesList();
         onDiagnosisChange();
+
+        // نص زرار الحفظ حسب الوضع
+        const btnText = document.getElementById('btnApplyToothText');
+        if (hist) btnText.textContent = 'Update Record';
+        else if (uid) btnText.textContent = 'Save Changes';
+        else btnText.textContent = 'Add to Session';
+
+        // في وضع تعديل التاريخ: خبي الأقسام اللي ملهاش لازمة
+        document.getElementById('toothStatus').closest('.form-group-v4').style.display = hist ? 'none' : '';
+        document.getElementById('colXray').style.display = hist ? 'none' : '';
 
         document.querySelectorAll('#chartCanvas .tooth-box').forEach(t => t.classList.remove('selected'));
         const target = document.querySelector('#chartCanvas [data-tooth="' + num + '"]');
@@ -767,11 +841,13 @@
         }
         document.querySelectorAll('#chartCanvas .tooth-box').forEach(t => t.classList.remove('selected'));
         currentToothNumber = null;
+        editingRecordUid = null;
+        historyEditCtx = null;
     }
 
     const toothModalEl = document.getElementById('toothModal');
     if (toothModalEl) {
-        toothModalEl.addEventListener('click', function (e) {
+        toothModalEl.addEventListener('click', function(e) {
             if (e.target === toothModalEl) closeToothModal();
         });
     }
@@ -796,14 +872,14 @@
             const row = document.createElement('div');
             row.className = 'xray-file-row';
             row.innerHTML = `
-                <img src="${xr.base64}" class="xray-thumb" />
-                <input type="text" class="form-glass-v4 xray-note-input" placeholder="ملاحظة..." value="${xr.notes || ''}" />
-                <button type="button" class="xray-remove-btn"><i class="bi bi-x"></i></button>
-            `;
-            row.querySelector('.xray-note-input').addEventListener('input', function () {
+                    <img src="${xr.base64}" class="xray-thumb" />
+                    <input type="text" class="form-glass-v4 xray-note-input" placeholder="Note..." value="${xr.notes || ''}" />
+                    <button type="button" class="xray-remove-btn"><i class="bi bi-x"></i></button>
+                `;
+            row.querySelector('.xray-note-input').addEventListener('input', function() {
                 currentXrayFiles[idx].notes = this.value;
             });
-            row.querySelector('.xray-remove-btn').addEventListener('click', function () {
+            row.querySelector('.xray-remove-btn').addEventListener('click', function() {
                 currentXrayFiles.splice(idx, 1);
                 renderXrayFilesList();
             });
@@ -811,7 +887,9 @@
         });
     }
 
+    /* ⭐ الحفظ: Insert دايمًا للجديد — Update بس لو فيه editingRecordUid */
     function applyToothChanges() {
+        if (historyEditCtx) { saveHistoryEdit(); return; }
         if (!currentToothNumber) return;
 
         const statusId = parseInt(document.getElementById('toothStatus').value);
@@ -824,7 +902,8 @@
         const diagPrice = diagOption ? parseFloat(diagOption.dataset.price || 0) : 0;
         const diagName = diagOption ? diagOption.textContent : null;
 
-        window.pendingToothRecords[currentToothNumber] = {
+        const rec = {
+            uid: editingRecordUid || genUid(),
             ToothNumber: currentToothNumber,
             Status: statusId,
             Surfaces: surfaces,
@@ -839,76 +918,122 @@
             PrescriptionItems: []
         };
 
+        const wasEdit = !!editingRecordUid;
+        if (wasEdit) {
+            const idx = window.pendingToothRecords.findIndex(r => r.uid === editingRecordUid);
+            if (idx > -1) window.pendingToothRecords[idx] = rec;
+        } else {
+            window.pendingToothRecords.push(rec); // ✅ Insert — حتى لو نفس السن
+        }
+
+        // شكل السن = آخر ريكورد عليه
         const toothEl = document.querySelector(`#chartCanvas [data-tooth="${currentToothNumber}"]`);
-        const newClass = STATUS_ID_TO_CLASS[statusId] || 'healthy';
-        toothEl.className = toothEl.className.split(' ').filter(c => !Object.values(STATUS_ID_TO_CLASS).includes(c)).join(' ');
+        const records = getPendingForTooth(currentToothNumber);
+        const lastRec = records[records.length - 1];
+        const newClass = STATUS_ID_TO_CLASS[lastRec.Status] || 'healthy';
+        toothEl.className = toothEl.className.split(' ').filter(c => !Object.values(STATUS_ID_TO_CLASS).includes(c) && c !== 'selected').join(' ');
         toothEl.classList.add(newClass);
         if (window.updateToothStatusOverlay) window.updateToothStatusOverlay(toothEl);
-
-        const flag = toothEl.querySelector('.pending-flag');
-        if (flag) flag.style.display = 'flex';
+        updateToothFlag(currentToothNumber);
 
         if (window.renderRecordsTable) window.renderRecordsTable();
         closeToothModal();
 
         Swal.fire({
             toast: true, position: 'top-end', icon: 'success',
-            title: 'تمت إضافة السن ' + currentToothNumber, showConfirmButton: false, timer: 1200,
+            title: wasEdit
+                ? 'Record updated for ' + toothLabelJs(currentToothNumber)
+                : toothLabelJs(currentToothNumber) + ' added to session',
+            showConfirmButton: false, timer: 1200,
             customClass: { popup: 'rounded-4' }
         });
     }
 
-    function removePendingTooth(num) {
-        delete window.pendingToothRecords[num];
+    function updateToothFlag(num) {
         const toothEl = document.querySelector(`#chartCanvas [data-tooth="${num}"]`);
-        if (toothEl) {
-            const flag = toothEl.querySelector('.pending-flag');
-            if (flag) flag.style.display = 'none';
-        }
+        if (!toothEl) return;
+        const flag = toothEl.querySelector('.pending-flag');
+        if (flag) flag.style.display = getPendingForTooth(num).length ? 'flex' : 'none';
+    }
+
+    function removePendingRecord(uid) {
+        const rec = window.pendingToothRecords.find(r => r.uid === uid);
+        window.pendingToothRecords = window.pendingToothRecords.filter(r => r.uid !== uid);
+        if (rec) updateToothFlag(rec.ToothNumber);
         if (window.renderRecordsTable) window.renderRecordsTable();
     }
-    window.removePendingTooth = removePendingTooth;
+
+    /* ⭐ تعديل ريكورد من السجلات السابقة */
+    async function saveHistoryEdit() {
+        const diagSelect = document.getElementById('toothDiagnosis');
+        if (!diagSelect.value) {
+            Swal.fire({ title: 'Required', text: 'Please select a diagnosis', icon: 'warning', confirmButtonColor: '#0d9488' });
+            return;
+        }
+        const payload = {
+            Id: historyEditCtx.vdId,
+            DiagnosisCatalogId: parseInt(diagSelect.value),
+            Notes: document.getElementById('diagnosisNotes').value
+        };
+
+        Swal.fire({ title: 'Updating...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        try {
+            const res = await fetch('/Clinical/UpdateVisitDiagnosis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                closeToothModal();
+                Swal.fire({
+                    title: 'Updated!', text: 'Diagnosis & price updated successfully',
+                    icon: 'success', timer: 1400, showConfirmButton: false
+                }).then(() => location.reload());
+            } else {
+                Swal.fire({ title: 'Error', text: data.message || 'Update failed', icon: 'error' });
+            }
+        } catch (e) {
+            Swal.fire({ title: 'Error', text: 'Server connection failed', icon: 'error' });
+        }
+    }
+
     window.openToothModal = openToothModal;
+    window.removePendingRecord = removePendingRecord;
 
     // ============================================================
-    // ⭐ Tooth Hover Tooltip — الحالة + التشخيص + الملاحظات
+    // ⭐ Tooth Hover Tooltip
     // ============================================================
     const toothTooltipEl = document.getElementById('toothTooltip');
 
     function buildTooltipContent(num) {
-        const pending = window.pendingToothRecords ? window.pendingToothRecords[num] : null;
-        let statusText, diagnosisText, notesText, isPending = false;
+        const records = getPendingForTooth(num);
+        const pending = records.length ? records[records.length - 1] : null;
+        let statusText, diagnosisText, notesText, isPending = false, extraCount = 0;
 
         if (pending) {
             isPending = true;
             statusText = STATUS_ID_TO_LABEL_TT[pending.Status] || '-';
             diagnosisText = pending.DiagnosisName || null;
             notesText = pending.DiagnosisNotes || pending.Notes || null;
+            extraCount = records.length - 1;
         } else {
             const info = window.toothInfoMap ? window.toothInfoMap[num] : null;
-            if (!info) return null; // سن سليم وملوش أي سجل سابق — من غير تولتيب
+            if (!info) return null;
             statusText = info.status || '-';
             diagnosisText = info.diagnosis || null;
             notesText = info.notes || null;
         }
 
-        let html = `<div class="tt-title"><i class="bi bi-grid-3x3-gap"></i> سن ${num}`;
-        if (isPending) html += `<span class="tt-pending-tag">قيد الحفظ</span>`;
+        let html = `<div class="tt-title"><i class="bi bi-grid-3x3-gap"></i> ${toothLabelJs(num)} <span class="tt-num">FDI ${num}</span>`;
+        if (isPending) html += `<span class="tt-pending-tag">Pending</span>`;
         html += `</div>`;
 
-        html += `<div class="tt-row"><span>الحالة</span><b>${statusText}</b></div>`;
-
-        if (diagnosisText) {
-            html += `<div class="tt-row"><span>التشخيص</span><b>${diagnosisText}</b></div>`;
-        }
-
-        if (notesText) {
-            html += `<div class="tt-row tt-notes-row"><span>ملاحظات</span><span>${notesText}</span></div>`;
-        }
-
-        if (!diagnosisText && !notesText) {
-            html += `<div class="tt-empty">لا يوجد تشخيص أو ملاحظات مسجلة</div>`;
-        }
+        html += `<div class="tt-row"><span>Status</span><b>${statusText}</b></div>`;
+        if (diagnosisText) html += `<div class="tt-row"><span>Diagnosis</span><b>${diagnosisText}</b></div>`;
+        if (extraCount > 0) html += `<div class="tt-row"><span>Records</span><b>${records.length} entries</b></div>`;
+        if (notesText) html += `<div class="tt-row tt-notes-row"><span>Notes</span><span>${notesText}</span></div>`;
+        if (!diagnosisText && !notesText) html += `<div class="tt-empty">No diagnosis or notes recorded</div>`;
 
         return html;
     }
@@ -928,10 +1053,7 @@
     function showToothTooltip(num, evt) {
         if (!toothTooltipEl) return;
         const content = buildTooltipContent(num);
-        if (!content) {
-            toothTooltipEl.classList.remove('show');
-            return;
-        }
+        if (!content) { toothTooltipEl.classList.remove('show'); return; }
         toothTooltipEl.innerHTML = content;
         toothTooltipEl.classList.add('show');
         positionTooltip(evt);
@@ -941,12 +1063,10 @@
         if (toothTooltipEl) toothTooltipEl.classList.remove('show');
     }
 
-    // ⭐ نقل التولتيب لـ body عشان position:fixed يتحسب بالنسبة للشاشة مش لأي ancestor فيه backdrop-filter
     if (toothTooltipEl && toothTooltipEl.parentElement !== document.body) {
         document.body.appendChild(toothTooltipEl);
     }
 
-    // ⭐ Event Delegation بدل الربط الفردي — يضمن الاشتغال حتى لو DOM اتعاد بناؤه
     const chartCanvasEl = document.getElementById('chartCanvas');
     let lastHoveredTooth = null;
 
@@ -954,10 +1074,7 @@
         chartCanvasEl.addEventListener('mousemove', function(e) {
             const box = e.target.closest('.tooth-box');
             if (!box) {
-                if (lastHoveredTooth !== null) {
-                    hideToothTooltip();
-                    lastHoveredTooth = null;
-                }
+                if (lastHoveredTooth !== null) { hideToothTooltip(); lastHoveredTooth = null; }
                 return;
             }
             lastHoveredTooth = parseInt(box.getAttribute('data-tooth'));
