@@ -1,4 +1,45 @@
 @model Dental.Modules.Clinical.ViewModels.SessionViewModel
+@{
+    var previousPayments = (ViewBag.PatientPaymentsHistory as IEnumerable<dynamic>) ?? Enumerable.Empty<dynamic>();
+    var previousPaymentsList = previousPayments.ToList();
+
+    // ⭐ Merge: لو المريض دفع أكتر من دفعة في نفس التاريخ لنفس الزيارة → يتجمعوا في صف واحد
+    var mergedPayments = previousPaymentsList
+        .GroupBy(x => new { VisitId = (int)x.VisitId, Date = ((DateTime)x.PaymentDate).Date })
+        .Select(g => new
+        {
+            Date = g.Key.Date,
+            VisitId = g.Key.VisitId,
+            Methods = g.Select(x => (string)x.Method).Distinct().ToList(),
+            Amount = g.Sum(x => (decimal)x.Amount),
+            Discount = g.Sum(x => (decimal)x.Discount),
+            VisitTotalAmount = (decimal)g.First().VisitTotalAmount,
+            VisitRemaining = (decimal)g.First().VisitRemaining
+        })
+        .OrderByDescending(x => x.Date)
+        .ToList();
+
+    var totalPaidPrev = previousPaymentsList.Sum(x => (decimal)x.Amount);
+    var totalDiscountPrev = previousPaymentsList.Sum(x => (decimal)x.Discount);
+
+    // ⭐ الإجماليات دي بتتحسب مرة واحدة لكل زيارة (مش لكل صف) عشان متتكررش
+    var totalVisitAmountPrev = previousPaymentsList
+        .GroupBy(x => (int)x.VisitId)
+        .Sum(g => (decimal)g.First().VisitTotalAmount);
+
+    var totalRemainingPrev = previousPaymentsList
+        .GroupBy(x => (int)x.VisitId)
+        .Sum(g => (decimal)g.First().VisitRemaining);
+
+    string MethodLabelAr(string m) => m switch
+    {
+        "Cash" => "نقدي",
+        "CreditCard" => "فيزا",
+        "BankTransfer" => "تحويل",
+        _ => m
+    };
+}
+
 
 <div class="payments-section" style="margin-top:16px;">
     @if (Model.ShowCategoryBreakdown)
@@ -29,27 +70,32 @@
         </div>
     }
 
-    <div class="section-card" style="margin-bottom:0;">
+    @* ================= PART 1: مدفوعات السيشن الحالية ================= *@
+    <div class="section-card" style="margin-bottom:16px;">
         <div class="section-head">
-            <h4><i class="bi bi-credit-card-2-front"></i> ملخص هذه الزيارة</h4>
+            <h4><i class="bi bi-credit-card-2-front"></i> مدفوعات السيشن الحالية</h4>
             <button class="btn-add-payment" onclick="openPaymentModal()">
                 <i class="bi bi-plus-lg"></i> تسجيل دفعة
             </button>
         </div>
         <div class="pay-summary-grid">
             <div class="pay-stat-box">
+                <div class="pay-stat-icon"><i class="bi bi-wallet2"></i></div>
                 <span class="pay-stat-label">الإجمالي</span>
                 <span class="pay-stat-value" id="paySummaryTotal">@Model.Visit.TotalAmount.ToString("N0") <small>م.ج</small></span>
             </div>
             <div class="pay-stat-box">
+                <div class="pay-stat-icon" style="color:#f59e0b;"><i class="bi bi-percent"></i></div>
                 <span class="pay-stat-label">الخصم</span>
                 <span class="pay-stat-value" style="color:#f59e0b;" id="paySummaryDiscount">@Model.Visit.Discount.ToString("N0") <small>م.ج</small></span>
             </div>
             <div class="pay-stat-box">
+                <div class="pay-stat-icon" style="color:#16a34a;"><i class="bi bi-check-circle"></i></div>
                 <span class="pay-stat-label">المدفوع</span>
                 <span class="pay-stat-value" style="color:#16a34a;" id="paySummaryPaid">@Model.Visit.PaidAmount.ToString("N0") <small>م.ج</small></span>
             </div>
             <div class="pay-stat-box highlight">
+                <div class="pay-stat-icon" style="color:#dc2626;"><i class="bi bi-exclamation-circle"></i></div>
                 <span class="pay-stat-label">المتبقي</span>
                 <span class="pay-stat-value" style="color:#dc2626;" id="paySummaryRemaining">@Model.Visit.Remaining.ToString("N0") <small>م.ج</small></span>
             </div>
@@ -57,7 +103,7 @@
 
         <div style="margin-top:16px; padding-top:16px; border-top:1px solid #f1f5f9;">
             <div style="font-size:.8rem; font-weight:800; color:#475569; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-                <i class="bi bi-list-ul"></i> سجل مدفوعات السيشن @* (@Model.Visit.Payments.Count) *@
+                <i class="bi bi-list-ul"></i> سجل مدفوعات السيشن
             </div>
             <div class="pay-history custom-scroll" style="max-height:220px; overflow-y:auto;">
                 <div id="pendingPaymentsRows"></div>
@@ -66,8 +112,9 @@
                     {
                         <div class="pay-history-item">
                             <div class="pay-h-left">
+                                <span class="pay-h-icon"><i class="bi @(p.Method.ToString() == "Cash" ? "bi-cash-coin" : p.Method.ToString() == "CreditCard" ? "bi-credit-card" : "bi-bank")"></i></span>
                                 <b>@p.Amount.ToString("N0") م.ج</b>
-                                <span class="pay-h-method">@p.Method</span>
+                                <span class="pay-h-method">@MethodLabelAr(p.Method.ToString())</span>
                                 @if (p.Discount > 0)
                                 {
                                     <span class="pay-h-discount">خصم @p.Discount.ToString("N0")</span>
@@ -80,55 +127,109 @@
                         </div>
                     }
                 </div>
-                @if (!Model.Visit.Payments.Any())
-                {
-                   @*  <div class="empty-state" id="emptyPayHistoryMsg" style="padding:16px;">
-                        <p style="font-size:.8rem;">لا توجد مدفوعات مسجلة بعد.</p>
-                    </div> *@
-                }
             </div>
         </div>
+    </div>
+
+    @* ================= PART 2: مدفوعات سابقة ================= *@
+    <div class="section-card" style="margin-bottom:0;">
+        <div class="section-head">
+            <h4><i class="bi bi-clock-history"></i> مدفوعات سابقة</h4>
+            <span class="section-badge">@mergedPayments.Count حركة</span>
+        </div>
+
+        @if (mergedPayments.Any())
+        {
+            <div class="table-responsive custom-scroll" style="max-height:280px;">
+                <table class="dc-table">
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>طريقة الدفع</th>
+                            <th>إجمالي السيشن</th>
+                            <th>المدفوع</th>
+                            <th>الخصم</th>
+                            <th>الباقي</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in mergedPayments)
+                        {
+                            <tr>
+                                <td style="white-space:nowrap;">@item.Date.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <span class="pay-h-method">
+                                        @(item.Methods.Count > 1 ? "متعدد" : MethodLabelAr(item.Methods.First()))
+                                    </span>
+                                </td>
+                                <td style="font-weight:700;color:#0d7377;">@item.VisitTotalAmount.ToString("N0")</td>
+                                <td style="color:#16a34a;font-weight:700;">@item.Amount.ToString("N0")</td>
+                                <td style="color:#f59e0b;font-weight:700;">@item.Discount.ToString("N0")</td>
+                                <td style="color:#dc2626;font-weight:700;">@item.VisitRemaining.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr style="background:#f0fdfa;font-weight:800;">
+                            <td colspan="2" style="text-align:right;color:#0d7377;">الإجمالي</td>
+                            <td style="color:#0d7377;">@totalVisitAmountPrev.ToString("N0")</td>
+                            <td style="color:#16a34a;">@totalPaidPrev.ToString("N0")</td>
+                            <td style="color:#f59e0b;">@totalDiscountPrev.ToString("N0")</td>
+                            <td style="color:#dc2626;">@totalRemainingPrev.ToString("N0")</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state" style="padding:24px;">
+                <i class="bi bi-inbox"></i>
+                <p>لا توجد مدفوعات سابقة لهذا المريض.</p>
+            </div>
+        }
     </div>
 </div>
 
 @* Payment Modal *@
 <div class="dc-modal" id="paymentModal" style="display:none;">
     <div class="dc-modal-overlay" onclick="closePaymentModal()"></div>
-    <div class="dc-modal-box" style="max-width:400px;">
+    <div class="dc-modal-box" style="max-width:380px;">
         <div class="dc-modal-head">
-            <h5><i class="bi bi-cash-stack"></i> تسجيل دفعة جديدة</h5>
+            <h5 class="text-light"><i class="bi bi-cash-stack"></i> تسجيل دفعة جديدة</h5>
             <button class="dc-modal-close" onclick="closePaymentModal()"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="dc-modal-body">
-            <div class="pay-input-wrap">
-                <input type="number" class="pay-input" id="payAmount" placeholder="0" />
-                <span class="pay-suffix">م.ج</span>
+            <div class="pay-row-main">
+                <div class="pay-field amount-field">
+                    <label class="pay-field-label">المبلغ</label>
+                    <div class="pay-input-wrap">
+                        <input type="number" class="pay-input" id="payAmount" placeholder="0" />
+                        <span class="pay-suffix">م.ج</span>
+                    </div>
+                </div>
+                <div class="pay-field discount-field">
+                    <label class="pay-field-label">الخصم</label>
+                    <input type="number" class="pay-input-sm" id="payDiscount" placeholder="0" />
+                </div>
             </div>
 
-            <div class="form-group-v4" style="margin: 0 0 14px;">
-                <label style="display:block;font-size:.78rem;font-weight:800;color:#475569;margin-bottom:6px;">الخصم (اختياري)</label>
-                <input type="number" class="dc-textarea" id="payDiscount" placeholder="0" style="padding:10px 14px;font-weight:700;margin-top:0;" />
-            </div>
-
-            <div class="pay-method-grid" id="payMethodTiles">
-                <label class="pay-method-card selected" data-method="Cash">
+            <div class="pay-method-grid-compact" id="payMethodTiles">
+                <label class="pay-method-chip selected" data-method="Cash">
                     <input type="radio" name="payMethod" value="Cash" checked />
-                    <i class="bi bi-cash-coin"></i>
-                    <span>نقدي</span>
+                    <i class="bi bi-cash-coin"></i><span>نقدي</span>
                 </label>
-                <label class="pay-method-card" data-method="CreditCard">
+                <label class="pay-method-chip" data-method="CreditCard">
                     <input type="radio" name="payMethod" value="CreditCard" />
-                    <i class="bi bi-credit-card"></i>
-                    <span>فيزا</span>
+                    <i class="bi bi-credit-card"></i><span>فيزا</span>
                 </label>
-                <label class="pay-method-card" data-method="BankTransfer">
+                <label class="pay-method-chip" data-method="BankTransfer">
                     <input type="radio" name="payMethod" value="BankTransfer" />
-                    <i class="bi bi-bank"></i>
-                    <span>تحويل</span>
+                    <i class="bi bi-bank"></i><span>تحويل</span>
                 </label>
             </div>
 
-            <textarea class="dc-textarea" id="payDesc" rows="2" placeholder="ملاحظة (اختياري)..."></textarea>
+            <input type="text" class="dc-input-line" id="payDesc" placeholder="ملاحظة (اختياري)..." />
         </div>
         <div class="dc-modal-foot">
             <button class="dc-btn dc-btn-secondary" onclick="closePaymentModal()">إلغاء</button>
@@ -242,7 +343,20 @@
         text-align: center;
         border: 1px solid rgba(0,0,0,0.03);
         transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
     }
+
+        .pay-stat-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+            opacity: .5;
+        }
 
         .pay-stat-box:hover {
             transform: translateY(-3px);
@@ -253,6 +367,18 @@
             background: linear-gradient(180deg, #fef2f2, #fee2e2);
             border-color: #fecaca;
         }
+
+            .pay-stat-box.highlight::before {
+                background: linear-gradient(90deg, #dc2626, #f87171);
+                opacity: .6;
+            }
+
+    .pay-stat-icon {
+        font-size: 1rem;
+        opacity: .55;
+        margin-bottom: 4px;
+        color: #0d9488;
+    }
 
     .pay-stat-label {
         font-size: .7rem;
@@ -311,6 +437,18 @@
             font-size: .85rem;
         }
 
+    .pay-h-icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 7px;
+        background: #f0fdfa;
+        color: #0d9488;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .75rem;
+    }
+
     .pay-h-method {
         font-size: .65rem;
         background: #f0fdfa;
@@ -364,8 +502,9 @@
         inset: 0;
         z-index: 2000;
         display: flex;
-        align-items: center;
+        align-items: flex-start; /* ⭐ بدل center */
         justify-content: center;
+        padding-top: 10px; /* ⭐ المسافة من أعلى الشاشة */
     }
 
     .dc-modal-overlay {
@@ -418,7 +557,7 @@
     }
 
     .dc-modal-body {
-        padding: 20px 22px;
+        padding: 18px 22px 20px;
     }
 
     .dc-modal-foot {
@@ -430,20 +569,49 @@
         background: #fafcfd;
     }
 
+    /* ⭐ New compact modal layout */
+    .pay-row-main {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+        margin: 4px 0 14px;
+    }
+
+    .pay-field {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .amount-field {
+        flex: 7;
+    }
+
+    .discount-field {
+        flex: 3;
+    }
+
+    .pay-field-label {
+        font-size: .7rem;
+        font-weight: 800;
+        color: #94a3b8;
+        margin-bottom: 4px;
+        text-align: center;
+    }
+
     .pay-input-wrap {
         position: relative;
-        margin: 14px 0;
+        margin: 0;
     }
 
     .pay-input {
         width: 100%;
         text-align: center;
-        font-size: 2.2rem;
+        font-size: 1.9rem;
         font-weight: 800;
         color: #0f172a;
         border: none;
         border-bottom: 2px solid #e2e8f0;
-        padding: 12px 0;
+        padding: 8px 0;
         outline: none;
         transition: border-color .2s;
         background: transparent;
@@ -456,70 +624,86 @@
     .pay-suffix {
         position: absolute;
         left: 0;
-        bottom: 16px;
-        font-size: .85rem;
+        bottom: 12px;
+        font-size: .7rem;
         color: #94a3b8;
         font-weight: 700;
     }
 
-    .pay-method-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
+    .pay-input-sm {
+        width: 100%;
+        text-align: center;
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #b45309;
+        border: none;
+        border-bottom: 2px solid #fde68a;
+        padding: 8px 0;
+        outline: none;
+        background: transparent;
+        transition: border-color .2s;
     }
 
-    .pay-method-card {
-        border: 2px solid #f1f5f9;
-        border-radius: 14px;
-        padding: 14px 8px;
-        text-align: center;
-        font-size: .78rem;
+        .pay-input-sm:focus {
+            border-color: #f59e0b;
+        }
+
+    .pay-method-grid-compact {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .pay-method-chip {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border: 1.5px solid #f1f5f9;
+        border-radius: 10px;
+        padding: 9px 6px;
+        font-size: .74rem;
         font-weight: 700;
         color: #64748b;
         cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
         transition: all .2s ease;
         background: #fff;
     }
 
-        .pay-method-card input {
+        .pay-method-chip input {
             display: none;
         }
 
-        .pay-method-card i {
-            font-size: 1.3rem;
+        .pay-method-chip i {
+            font-size: .95rem;
         }
 
-        .pay-method-card.selected {
+        .pay-method-chip.selected {
             border-color: #0d9488;
             background: #f0fdfa;
             color: #0d9488;
-            box-shadow: 0 4px 14px rgba(13,148,136,0.15);
+            box-shadow: 0 3px 10px rgba(13,148,136,0.15);
         }
 
-        .pay-method-card:hover:not(.selected) {
+        .pay-method-chip:hover:not(.selected) {
             border-color: #cbd5e1;
         }
 
-    .dc-textarea {
+    .dc-input-line {
         width: 100%;
-        padding: 10px 14px;
+        padding: 9px 12px;
         border: 1.5px solid #f1f5f9;
-        border-radius: 12px;
+        border-radius: 10px;
         background: #f8fafc;
-        font-size: .85rem;
+        font-size: .8rem;
         outline: none;
         transition: all .2s;
-        resize: vertical;
-        margin-top: 12px;
     }
 
-        .dc-textarea:focus {
+        .dc-input-line:focus {
             border-color: #0d9488;
-            box-shadow: 0 0 0 3px rgba(13,148,136,0.1);
+            box-shadow: 0 0 0 3px rgba(13,148,136,.1);
         }
 
     .dc-btn {
@@ -567,9 +751,9 @@
         document.getElementById('payDesc').value = '';
     }
 
-    document.querySelectorAll('#payMethodTiles .pay-method-card').forEach(function(tile) {
+    document.querySelectorAll('#payMethodTiles .pay-method-chip').forEach(function(tile) {
         tile.addEventListener('click', function() {
-            document.querySelectorAll('#payMethodTiles .pay-method-card').forEach(t => t.classList.remove('selected'));
+            document.querySelectorAll('#payMethodTiles .pay-method-chip').forEach(t => t.classList.remove('selected'));
             tile.classList.add('selected');
             tile.querySelector('input').checked = true;
         });
@@ -620,17 +804,17 @@
             row.style.background = '#fffbeb';
             row.style.borderColor = '#fde68a';
             row.innerHTML = `
-                    <div class="pay-h-left">
-                        <b>${p.Amount.toLocaleString('en-EG')} م.ج</b>
-                        <span class="pay-h-method">${methodLabel(p.Method)}</span>
-                        ${p.Discount > 0 ? `<span class="pay-h-discount">خصم ${p.Discount.toLocaleString('en-EG')}</span>` : ''}
-                        <span class="badge-pending-pay">قيد الحفظ</span>
-                    </div>
-                    <div class="pay-h-right" style="display:flex; align-items:center; gap:8px;">
-                        <small style="color:#64748b;">${p.Description || '-'}</small>
-                        <button class="btn-sm danger" onclick="removePendingPayment(${idx})" title="حذف"><i class="bi bi-trash3"></i></button>
-                    </div>
-                `;
+                        <div class="pay-h-left">
+                            <b>${p.Amount.toLocaleString('en-EG')} م.ج</b>
+                            <span class="pay-h-method">${methodLabel(p.Method)}</span>
+                            ${p.Discount > 0 ? `<span class="pay-h-discount">خصم ${p.Discount.toLocaleString('en-EG')}</span>` : ''}
+                            <span class="badge-pending-pay">قيد الحفظ</span>
+                        </div>
+                        <div class="pay-h-right" style="display:flex; align-items:center; gap:8px;">
+                            <small style="color:#64748b;">${p.Description || '-'}</small>
+                            <button class="btn-sm danger" onclick="removePendingPayment(${idx})" title="حذف"><i class="bi bi-trash3"></i></button>
+                        </div>
+                    `;
             wrap.appendChild(row);
         });
     }

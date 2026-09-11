@@ -238,6 +238,13 @@ namespace Dental.Controllers
 
 
         #region Details
+        // ============================================================
+        // 📁 PATCH: Controllers/PatientsController.cs — Details() method
+        // ============================================================
+        // استبدل الـ method بتاعة Details بالكامل بالنسخة دي.
+        // الإضافات الجديدة اتحطلها تعليق ⭐ NEW عشان تلاقيها بسهولة.
+        // ============================================================
+
         public async Task<IActionResult> Details(int id)
         {
             var result = await _patientService.GetByIdAsync(id);
@@ -253,7 +260,6 @@ namespace Dental.Controllers
                 .OrderByDescending(v => v.VisitDate)
                 .ToListAsync();
 
-            // ✅ السيشن الـ InProgress مش بيتحسب — الكونت بيزيد لما بيخلص بس
             var completedVisits = visits.Where(v => v.Status == VisitStatus.Completed).ToList();
 
             var sessions = completedVisits.Select(v => new SessionDto
@@ -278,7 +284,7 @@ namespace Dental.Controllers
                 CreatedAt = v.CreatedDate
             }).ToList();
 
-            // ── Dental Chart — مجمّع لكل سن، آخر حالة + كل العلاجات ──
+            // ── Dental Chart — مجمّع لكل سن ──
             var chartEntries = await _context.DentalChartEntries
                 .Where(d => d.PatientId == id)
                 .OrderByDescending(d => d.Date)
@@ -315,6 +321,48 @@ namespace Dental.Controllers
                         .OrderBy(t => t.ToothNumber)
                         .ToList()
                 };
+            }
+
+            // ⭐ NEW: خريطة أحدث حالة/تشخيص لكل سن — تُستخدم في الـ Tooltip الخاص بالـ Dental Chart التفاعلي
+            var statusLabelsForTooltip = new Dictionary<Dental.Models.Patient.ToothStatus, string>
+    {
+        { Dental.Models.Patient.ToothStatus.Healthy, "سليم" },
+        { Dental.Models.Patient.ToothStatus.Decayed, "تسوس" },
+        { Dental.Models.Patient.ToothStatus.Treated, "معالج" },
+        { Dental.Models.Patient.ToothStatus.Missing, "مفقود" },
+        { Dental.Models.Patient.ToothStatus.Extracted, "مخلوع" },
+        { Dental.Models.Patient.ToothStatus.RootCanal, "عصب" },
+        { Dental.Models.Patient.ToothStatus.Crown, "تاج" },
+        { Dental.Models.Patient.ToothStatus.Filling, "حشوة" }
+    };
+
+            if (chartEntries.Any())
+            {
+                var latestPerTooth = chartEntries
+                    .GroupBy(d => d.ToothNumber)
+                    .Select(g => g.OrderByDescending(x => x.Date).First())
+                    .ToList();
+
+                var latestVisitIds = latestPerTooth.Select(d => d.VisitId).Distinct().ToList();
+                var latestDiagnoses = await _context.VisitDiagnoses
+                    .Where(d => latestVisitIds.Contains(d.VisitId))
+                    .Include(d => d.Diagnosis)
+                    .ToListAsync();
+
+                var toothInfoMap = latestPerTooth.ToDictionary(
+                    e => e.ToothNumber.ToString(),
+                    e => new
+                    {
+                        status = statusLabelsForTooltip.TryGetValue(e.Status, out var lbl) ? lbl : e.Status.ToString(),
+                        diagnosis = latestDiagnoses.FirstOrDefault(d => d.VisitId == e.VisitId && d.ToothNumber == e.ToothNumber)?.Diagnosis?.NameAr,
+                        notes = e.Notes
+                    });
+
+                ViewBag.ToothInfoMap = System.Text.Json.JsonSerializer.Serialize(toothInfoMap);
+            }
+            else
+            {
+                ViewBag.ToothInfoMap = "{}";
             }
 
             // ── الأشعة ──
@@ -356,13 +404,23 @@ namespace Dental.Controllers
                     && a.AppointmentDate >= DateTime.Now
                     && a.Status != AppointmentStatus.Cancelled);
 
+            // ⭐ NEW: أقرب موعد قادم — يتعرض في KPI
+            var nextAppointmentDate = await _context.Appointments
+                .Where(a => a.PatientId == id
+                    && a.AppointmentDate >= DateTime.Now
+                    && a.Status != AppointmentStatus.Cancelled)
+                .OrderBy(a => a.AppointmentDate)
+                .Select(a => (DateTime?)a.AppointmentDate)
+                .FirstOrDefaultAsync();
+            ViewBag.NextAppointmentDate = nextAppointmentDate;
+
             var model = new PatientProfileViewModel
             {
                 Patient = result.Data,
-                VisitsCount = completedVisits.Count,                        // ✅
+                VisitsCount = completedVisits.Count,
                 AppointmentsCount = appointmentsCount,
-                TotalPaid = completedVisits.Sum(v => v.PaidAmount),         // ✅
-                TotalDue = completedVisits.Sum(v => v.Remaining),           // ✅
+                TotalPaid = completedVisits.Sum(v => v.PaidAmount),
+                TotalDue = completedVisits.Sum(v => v.Remaining),
                 DentalChart = dentalChart,
                 Sessions = sessions,
                 XRays = xrays,
@@ -372,12 +430,10 @@ namespace Dental.Controllers
                 Documents = documents
             };
 
-            // ✅ السجلات السابقة — بنفس شكل شاشة السيشن
             ViewBag.PreviousSessions = await GetPreviousSessionsAsync(id);
-
+            ViewBag.XRayGroups = await GetXRaysGroupedAsync(id);
             return View(model);
         }
-
         private async Task<List<PreviousSessionRecordDto>> GetPreviousSessionsAsync(int patientId)
         {
             var entries = await _context.DentalChartEntries
@@ -772,6 +828,31 @@ namespace Dental.Controllers
 
             return RedirectToAction("Session", "Clinical", new { patientId = patient.Id, visitId = visit.Id });
         }
+
+        private async Task<List<XRayGroupDto>> GetXRaysGroupedAsync(int patientId)
+        {
+            var xrays = await _context.PatientXRays
+                .Where(x => x.PatientId == patientId && x.ToothNumber != null)
+                .OrderByDescending(x => x.TakenDate)
+                .ToListAsync();
+
+            return xrays
+                .GroupBy(x => x.ToothNumber!.Value)
+                .OrderBy(g => g.Key)
+                .Select(g => new XRayGroupDto
+                {
+                    ToothNumber = g.Key,
+                    Items = g.Select(x => new XRayItemDto
+                    {
+                        Id = x.Id,
+                        FileName = x.FileName,
+                        FilePath = x.FilePath,
+                        Notes = x.Notes,
+                        TakenDate = x.TakenDate
+                    }).ToList()
+                }).ToList();
+        }
+
 
     }
 }

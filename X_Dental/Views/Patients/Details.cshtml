@@ -1,4 +1,5 @@
-﻿@using Dental.Models.Patient
+﻿
+@using Dental.Models.Patient
 @using Dental.Modules.Patients.DTOs
 @model Dental.Modules.Patients.ViewModels.PatientProfileViewModel
 @{
@@ -1549,60 +1550,71 @@
     }
 </style>
 
-<div class="container-fluid patients-page-anim" dir="rtl" style="padding: 12px;">
+<div class="container-fluid patients-page-anim"  style="padding: 12px;">
 
     <!-- 🔷 Hero Header -->
-    <div class="patient-hero">
-        <div class="hero-content">
+    <div class="session-hero anim-fade-up" dir="ltr">
+        <div class="hero-grid">
             <div class="hero-avatar">@initials</div>
-            <div>
+            <div class="hero-info">
                 <h1>@patient.FullNameAr</h1>
-                <div class="hero-meta">
-                    <span class="hero-meta-tag"><i class="bi bi-hash"></i> @patient.PatientCode</span>
-                    <span class="hero-meta-tag"><i class="bi bi-telephone"></i> @patient.Mobile</span>
-                    <span class="hero-meta-tag"><i class="bi @genderIconClass"></i> @patient.Gender?.NameAr</span>
-                    <span class="hero-meta-tag"><i class="bi bi-calendar"></i> @(patient.Age) سنة</span>
-                    <span class="hero-meta-tag" style="background: rgba(255,255,255,.25);"><i class="bi bi-app-indicator"></i> @patientTypeLabel</span>
-                    <span class="hero-meta-tag hero-tag-optional"><i class="bi bi-droplet"></i> @(patient.BloodGroup?.Name ?? "-")</span>
+                <div class="hero-tags">
+                    <span class="hero-tag"><i class="bi bi-hash"></i> @patient.PatientCode</span>
+                    <span class="hero-tag"><i class="bi bi-telephone"></i> @patient.Mobile</span>
+                    <span class="hero-tag"><i class="bi @genderIconClass"></i> @patient.Gender?.NameAr</span>
+                    <span class="hero-tag"><i class="bi bi-calendar"></i> @(patient.Age) سنة</span>
+                    <span class="hero-tag"><i class="bi bi-app-indicator"></i> @patientTypeLabel</span>
+                    <span class="hero-tag"><i class="bi bi-droplet"></i> @(patient.BloodGroup?.Name ?? "-")</span>
                 </div>
             </div>
-        </div>
-        <div class="hero-actions">
-            @* <a asp-action="Edit" asp-route-id="@patient.Id" class="btn-hero btn-hero-edit">
-                <i class="bi bi-pencil-square"></i> تعديل
-            </a>
+            <div class="hero-actions d-flex">
+                <button type="button" class="btn-hero primary" onclick="openApptModal()">
+                    <i class="bi bi-calendar-plus"></i> موعد جديد
+                </button>
 
-            <a class="action-icon-btn fs-5" title="Edit"
-                href="javascript:void(0)" onclick="openPatientModal(${data.id})">
-                <i class="bi bi-pencil-square"></i>
-            </a>
- *@
-            <button type="button" class="btn-hero btn-hero-appt" onclick="openApptModal()">
-                <i class="bi bi-calendar-plus"></i> موعد جديد
-            </button>
-            @if (patient.PatientType == Dental.Models.Patient.PatientType.Both)
-            {
-                <div class="dropdown d-inline-block">
-                    <button class="btn-hero btn-hero-session dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                @if (patient.PatientType == Dental.Models.Patient.PatientType.Both)
+                {
+                    <div class="dropdown d-inline-block">
+                        <button class="btn-hero glass dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-clipboard-pulse"></i> بدء سيشن جديد
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" style="border-radius: 12px; border: 1px solid var(--dc-teal-100); box-shadow: var(--dc-shadow);">
+                            <li><a class="dropdown-item" asp-action="NewSession" asp-route-patientId="@patient.Id" asp-route-category="General">سيشن عام</a></li>
+                            <li><a class="dropdown-item" asp-action="NewSession" asp-route-patientId="@patient.Id" asp-route-category="Orthodontics">سيشن تقويم</a></li>
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <a asp-action="NewSession" asp-route-patientId="@patient.Id" class="btn-hero glass">
                         <i class="bi bi-clipboard-pulse"></i> بدء سيشن جديد
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" style="border-radius: 12px; border: 1px solid var(--sc-sky-100); box-shadow: var(--shadow-hover);">
-                        <li><a class="dropdown-item" asp-action="NewSession" asp-route-patientId="@patient.Id" asp-route-category="General">سيشن عام</a></li>
-                        <li><a class="dropdown-item" asp-action="NewSession" asp-route-patientId="@patient.Id" asp-route-category="Orthodontics">سيشن تقويم</a></li>
-                    </ul>
-                </div>
-            }
-            else
-            {
-                <a asp-action="NewSession" asp-route-patientId="@patient.Id" class="btn-hero btn-hero-session">
-                    <i class="bi bi-clipboard-pulse"></i> بدء سيشن جديد
-                </a>
-            }
+                    </a>
+                }
+            </div>
         </div>
+
+    @*     <div class="hero-metrics">
+            <div class="metric-glass anim-fade-up anim-d1">
+                <span class="metric-value">@Model.VisitsCount</span>
+                <span class="metric-label">الزيارات</span>
+            </div>
+            <div class="metric-glass anim-fade-up anim-d2">
+                <span class="metric-value">@Model.TotalPaid.ToString("N0")</span>
+                <span class="metric-label">المدفوع (ج.م)</span>
+            </div>
+            <div class="metric-glass anim-fade-up anim-d3">
+                <span class="metric-value">@Model.TotalDue.ToString("N0")</span>
+                <span class="metric-label">المتبقي</span>
+            </div>
+            <div class="metric-glass anim-fade-up anim-d4">
+                <span class="metric-value">@Model.AppointmentsCount</span>
+                <span class="metric-label">المواعيد القادمة</span>
+            </div>
+        </div> *@
     </div>
 
     <!-- 🔷 Stats Bar -->
-    <div class="stats-grid">
+    <div class="stats-grid" dir="ltr">
         <div class="stat-card-glass">
             <div class="stat-icon-box teal"><i class="bi bi-calendar-check"></i></div>
             <div>
@@ -1639,9 +1651,7 @@
             <button class="tab-pill active" onclick="switchTab('overview', this)">
                 <i class="bi bi-person-lines-fill"></i> نظرة عامة
             </button>
-            <button class="tab-pill" onclick="switchTab('timeline', this)">
-                <i class="bi bi-clock-history"></i> التاريخ الطبي
-            </button>
+            
             <button class="tab-pill" onclick="switchTab('prevSessions', this)">
                 <i class="bi bi-archive"></i> السجلات السابقة
             </button>
@@ -1729,32 +1739,6 @@
                 </div>
             </div>
 
-            <!-- 🔷 Tab: Timeline -->
-            <div class="tab-panel" id="timeline">
-                <div class="info-card-glass">
-                    <div class="card-header-glass"><i class="bi bi-clock-history"></i> التاريخ الطبي الكامل</div>
-                    <div class="card-body-glass">
-                        <div class="timeline-container">
-                            @foreach (var visit in Model.Sessions ?? new List<SessionDto>())
-                            {
-                                <div class="timeline-node">
-                                    <div class="timeline-date">@visit.SessionDate.ToString("dd MMM yyyy")</div>
-                                    <div class="timeline-title">@visit.ProcedureName</div>
-                                    <div class="timeline-desc">@visit.Notes</div>
-                                </div>
-                            }
-                            @if ((Model.Sessions?.Count ?? 0) == 0)
-                            {
-                                <div class="placeholder-glass" style="border:none; box-shadow:none; padding:32px;">
-                                    <div class="placeholder-icon-glass"><i class="bi bi-clock-history"></i></div>
-                                    <h3>لا توجد نشاطات مسجلة</h3>
-                                    <p>ستظهر هنا جميع الزيارات والإجراءات والمدفوعات</p>
-                                </div>
-                            }
-                        </div>
-                    </div>
-                </div>
-            </div>
             
             <!-- 🔷 Tab: Previous Sessions -->
             <div class="tab-panel" id="prevSessions">
@@ -1801,30 +1785,7 @@
 
             <!-- 🔷 Tab: X-Rays -->
             <div class="tab-panel" id="xrays">
-                @if (Model.XRays.Any())
-                {
-                    <div class="xray-grid">
-                        @foreach (var xray in Model.XRays)
-                        {
-                            <div class="xray-card">
-                                <a href="@xray.ImageUrl" target="_blank">
-                                    <img src="@xray.ImageUrl" alt="@xray.FileName" onerror="this.src='/images/placeholder-xray.png'" />
-                                </a>
-                                <div class="xray-card-body">
-                                    <small>@xray.TakenDate.ToString("dd/MM/yyyy")</small>
-                                    <p class="mb-0">@xray.Description</p>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div class="placeholder-glass">
-                        <div class="placeholder-icon-glass"><i class="bi bi-image"></i></div>
-                        <h3>لا توجد أشعة مرفوعة بعد</h3>
-                    </div>
-                }
+                @await Html.PartialAsync("_XRaysTable")
             </div>
 
             <!-- 🔷 Tab: Prescriptions -->

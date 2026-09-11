@@ -102,18 +102,25 @@ namespace Dental.Controllers
  
             ViewBag.XRayGroups = await GetXRaysGroupedAsync(patientId);
 
-            ViewBag.PatientPaymentsHistory = await _context.VisitPayments
-                .Where(p => _context.Visits.Any(v => v.Id == p.VisitId && v.PatientId == patientId))
-                .OrderByDescending(p => p.PaymentDate)
-                .Select(p => new
-                {
-                    Amount = p.Amount,
-                    Method = p.Method.ToString(),
-                    Description = p.Description,
-                    PaymentDate = p.PaymentDate
-                })
-                .ToListAsync();
-
+            ViewBag.PatientPaymentsHistory = await (
+         from p in _context.VisitPayments
+         join v in _context.Visits on p.VisitId equals v.Id
+         where v.PatientId == patientId && p.VisitId != visitId   // ⭐ استبعاد مدفوعات السيشن الحالي
+         orderby p.PaymentDate descending
+         select new
+         {
+             p.Amount,
+             p.Discount,
+             Method = p.Method.ToString(),
+             p.Description,
+             p.PaymentDate,
+             p.VisitId,
+             VisitTotalAmount = v.TotalAmount,
+             VisitPaidAmount = v.PaidAmount,
+             VisitDiscount = v.Discount,
+             VisitRemaining = v.Remaining
+         }
+     ).ToListAsync();
 
             // ⭐ خريطة أحدث حالة/تشخيص لكل سن — تُستخدم في الـ Tooltip عند الهوفر
             var statusLabelsForTooltip = new Dictionary<Dental.Models.Patient.ToothStatus, string>
@@ -716,29 +723,6 @@ namespace Dental.Controllers
         }
 
 
-        private async Task<List<XRayGroupDto>> GetXRaysGroupedAsync(int patientId)
-        {
-            var xrays = await _context.PatientXRays
-                .Where(x => x.PatientId == patientId && x.ToothNumber != null)
-                .OrderByDescending(x => x.TakenDate)
-                .ToListAsync();
-
-            return xrays
-                .GroupBy(x => x.ToothNumber!.Value)
-                .OrderBy(g => g.Key)
-                .Select(g => new XRayGroupDto
-                {
-                    ToothNumber = g.Key,
-                    Items = g.Select(x => new XRayItemDto
-                    {
-                        Id = x.Id,
-                        FileName = x.FileName,
-                        FilePath = x.FilePath,
-                        Notes = x.Notes,
-                        TakenDate = x.TakenDate
-                    }).ToList()
-                }).ToList();
-        }
 
 
         [HttpPost]
@@ -852,7 +836,31 @@ namespace Dental.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
+        private async Task<List<XRayGroupDto>> GetXRaysGroupedAsync(int patientId)
+        {
+            var xrays = await _context.PatientXRays
+                .Where(x => x.PatientId == patientId && x.ToothNumber != null)
+                .OrderByDescending(x => x.TakenDate)
+                .ToListAsync();
+
+            return xrays
+                .GroupBy(x => x.ToothNumber!.Value)
+                .OrderBy(g => g.Key)
+                .Select(g => new XRayGroupDto
+                {
+                    ToothNumber = g.Key,
+                    Items = g.Select(x => new XRayItemDto
+                    {
+                        Id = x.Id,
+                        FileName = x.FileName,
+                        FilePath = x.FilePath,
+                        Notes = x.Notes,
+                        TakenDate = x.TakenDate
+                    }).ToList()
+                }).ToList();
+        }
+
+
     }
-
-
 }

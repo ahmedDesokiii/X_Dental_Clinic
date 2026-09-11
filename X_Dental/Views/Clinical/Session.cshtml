@@ -305,8 +305,11 @@
 
     .hero-actions {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
         gap: 8px;
+        flex-wrap: nowrap;
     }
 
     .btn-hero {
@@ -432,7 +435,7 @@
         border-radius: 24px;
         border: 1px solid var(--dc-border);
         box-shadow: var(--dc-shadow);
-        padding: 20px;
+        padding: 5px;
         backdrop-filter: blur(12px);
         animation: fadeInLeft 0.7s 0.15s ease forwards;
         opacity: 0;
@@ -442,7 +445,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 16px;
+        margin-bottom: 10px;
     }
 
         .chart-panel-head h3 {
@@ -973,13 +976,13 @@
 </style>
 
 
-<div  >
+<div dir="ltr"
      data-patient-id="@Model.Patient.Id"
      data-visit-id="@Model.Visit.Id"
      data-session-status="@sessionStatusText">
 
     @* ====== HERO ====== *@
-    <div class="session-hero status-@sessionStatusClass anim-fade-up pb-0">
+    <div class="session-hero status-@sessionStatusClass anim-fade-up">
         <div class="hero-grid">
             <span class="particle" style="width:8px;height:8px;right:12%;bottom:20%;animation-duration:7s;"></span>
             <span class="particle" style="width:5px;height:5px;right:28%;bottom:10%;animation-duration:9s;animation-delay:1.2s;"></span>
@@ -999,15 +1002,18 @@
                 </div>
             </div>
             <div class="hero-actions">
-                <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.Patient.Id" class="btn-hero glass">
-                    <i class="bi bi-arrow-right"></i> رجوع
-                </a>
-                <button type="button" id="btnPrintSession" class="btn-hero glass">
-                    <i class="bi bi-printer"></i> طباعة
-                </button>
                 <button type="button" id="btnFinishSession" class="btn-hero primary">
                     <i class="bi bi-check2-circle"></i> إنهاء السيشن
                 </button>
+                <button type="button" id="btnPrintSession" class="btn-hero glass">
+                    طباعة
+                    <i class="bi bi-printer"></i>
+                </button>
+                <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.Patient.Id" class="btn-hero glass">
+                    رجوع
+                    <i class="bi bi-arrow-right"></i>
+
+                </a>
             </div>
         </div>
 

@@ -1,6 +1,14 @@
 @{
     var xrayGroups = ViewBag.XRayGroups as List<Dental.Modules.Clinical.DTOs.XRayGroupDto> ?? new();
 
+    string TLbl(int n) => (n / 10) switch
+    {
+        1 => $"UL-{n % 10}",
+        2 => $"UR-{n % 10}",
+        3 => $"LL-{n % 10}",
+        4 => $"LR-{n % 10}",
+        _ => n.ToString()
+    };
 }
 
 <div class="xray-section">
@@ -23,7 +31,7 @@
             {
                 <div class="xray-group">
                     <div class="xray-group-head">
-                        <span class="tooth-chip">@group.ToothNumber</span>
+                        <span class="tooth-chip">@TLbl(group.ToothNumber)</span>
                         <span class="xray-count">@group.Items.Count image</span>
                     </div>
                     <div class="xray-grid">
@@ -36,7 +44,9 @@
                                 </div>
                                 <div class="xray-meta">
                                     <span class="xray-date">@item.TakenDate.ToString("dd/MM/yyyy")</span>
-                                    <span class="xray-note">@(string.IsNullOrWhiteSpace(item.Notes) ? "بدون ملاحظات" : item.Notes)</span>
+                                    <small class="">@TLbl(group.ToothNumber)</small>
+
+                                    @* <span class="xray-note">@(string.IsNullOrWhiteSpace(item.Notes) ? "بدون ملاحظات" : item.Notes)</span> *@
                                 </div>
                             </div>
                         }

@@ -1,6 +1,7 @@
 @model Dental.Modules.Clinical.ViewModels.SessionViewModel
 @{
     var previousSessions = ViewBag.PreviousSessions as List<Dental.Modules.Clinical.DTOs.PreviousSessionRecordDto> ?? new();
+
     string TLbl(int n) => (n / 10) switch
     {
         1 => $"UL-{n % 10}",
@@ -9,88 +10,399 @@
         4 => $"LR-{n % 10}",
         _ => n.ToString()
     };
+
+    var groupedSessions = previousSessions
+        .GroupBy(r => new { r.VisitId, Date = r.Date.Date })
+        .OrderByDescending(g => g.Key.Date)
+        .Select(g => new
+        {
+            g.Key.VisitId,
+            g.Key.Date,
+            Teeth = g.OrderBy(x => x.ToothNumber).ToList(),
+            DiagnosisTotal = g.Sum(x => x.DiagnosisPrice),
+            VisitTotalAmount = g.First().VisitTotalAmount,
+            VisitPaidAmount = g.First().VisitPaidAmount,
+            VisitDiscount = g.First().VisitDiscount,
+            VisitRemaining = g.First().VisitRemaining
+        })
+        .ToList();
+
+    var grandDiagnosisTotal = previousSessions.Sum(x => x.DiagnosisPrice);
+    var grandVisitTotal = previousSessions.GroupBy(x => x.VisitId).Sum(g => g.First().VisitTotalAmount);
+    var grandPaid = previousSessions.GroupBy(x => x.VisitId).Sum(g => g.First().VisitPaidAmount);
+    var grandDiscount = previousSessions.GroupBy(x => x.VisitId).Sum(g => g.First().VisitDiscount);
+    var grandRemaining = previousSessions.GroupBy(x => x.VisitId).Sum(g => g.First().VisitRemaining);
 }
 
-<div class="prev-sessions-wrap">
-    <div class="section-head">
-        <h4><i class="bi bi-clock-history"></i> Previous Sessions History</h4>
-        <span class="section-badge">@previousSessions.Count record(s)</span>
+<div class="ps-grand-totals mb-2 mt-0">
+    <div class="ps-grand-item">
+        <span>إجمالي التشخيصات</span>
+        <b>@grandDiagnosisTotal.ToString("N0")</b>
     </div>
+    <div class="ps-grand-item">
+        <span>إجمالي الزيارات</span>
+        <b>@grandVisitTotal.ToString("N0")</b>
+    </div>
+    <div class="ps-grand-item paid">
+        <span>المدفوع</span>
+        <b>@grandPaid.ToString("N0")</b>
+    </div>
+    <div class="ps-grand-item discount">
+        <span>الخصم</span>
+        <b>@grandDiscount.ToString("N0")</b>
+    </div>
+    <div class="ps-grand-item remaining">
+        <span>المتبقي</span>
+        <b>@grandRemaining.ToString("N0")</b>
+    </div>
+</div>
+<div class="prev-sessions-wrap">
+    <div class="section-card" style="margin-bottom:16px;">
+        <div class="section-head">
+            <h4><i class="bi bi-clock-history"></i> السجل السابق للمريض</h4>
+            <span class="section-badge">@groupedSessions.Count زيارة سابقة</span>
+        </div>
 
-    <div class="table-responsive custom-scroll" style="max-height:520px;">
-        <table class="dc-table">
-            <thead>
-                <tr>
-                    <th style="width:70px">Tooth</th>
-                    <th>Date</th>
-                    <th>Diagnosis</th>
-                    <th>Price</th>
-                    <th>Visit Total</th>
-                    <th>Paid</th>
-                    <th>Discount</th>
-                    <th>Remaining</th>
-                    <th style="width:60px">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var r in previousSessions)
+        @if (groupedSessions.Any())
+        {
+            <div class="ps-groups">
+                @foreach (var grp in groupedSessions)
                 {
-                    <tr data-vd="@r.VisitDiagnosisId"
-                        data-diag="@(r.DiagnosisCatalogId ?? 0)"
-                        data-notes="@(r.DiagnosisNotes ?? "")"
-                        data-tooth="@r.ToothNumber">
-                        <td><span class="tooth-chip">@TLbl(r.ToothNumber)</span></td>
-                        <td><span style="white-space:nowrap;">@r.Date.ToString("dd/MM/yyyy")</span></td>
-                        <td><span style="font-weight:700;color:#0d9488;">@(r.DiagnosisName ?? "-")</span></td>
-                        <td><b>@(r.DiagnosisPrice > 0 ? r.DiagnosisPrice.ToString("N0") + " " : "-")</b></td>
-                        <td>@r.VisitTotalAmount.ToString("N0") </td>
-                        <td style="color:#16a34a;font-weight:700;">@r.VisitPaidAmount.ToString("N0") </td>
-                        <td style="color:#f59e0b;font-weight:700;">@r.VisitDiscount.ToString("N0") </td>
-                        <td style="color:#dc2626;font-weight:700;">@r.VisitRemaining.ToString("N0") </td>
-                        <td class="text-center">
-                            @if (r.VisitDiagnosisId > 0)
+                    var panelId = $"psPanel_{grp.VisitId}_{grp.Date:yyyyMMdd}";
+                    <div class="ps-session-block">
+                        <button type="button" class="ps-session-head" onclick="togglePsPanel(this)" data-target="@panelId">
+                            <div class="ps-session-date">
+                                <i class="bi bi-chevron-left ps-chevron"></i>
+                                <i class="bi bi-calendar-event"></i>
+                                <b>@grp.Date.ToString("dd/MM/yyyy")</b>
+                                <span class="ps-teeth-count">@grp.Teeth.Count سن</span>
+                            </div>
+                            <div class="ps-session-financials">
+                                <span class="ps-fin-chip total"><i class="bi bi-wallet2"></i> @grp.VisitTotalAmount.ToString("N0")</span>
+                                <span class="ps-fin-chip paid"><i class="bi bi-check-circle"></i> @grp.VisitPaidAmount.ToString("N0")</span>
+                                <span class="ps-fin-chip discount"><i class="bi bi-percent"></i> @grp.VisitDiscount.ToString("N0")</span>
+                                <span class="ps-fin-chip remaining"><i class="bi bi-exclamation-circle"></i> @grp.VisitRemaining.ToString("N0")</span>
+                            </div>
+                        </button>
+
+                        <div class="ps-teeth-list" id="@panelId" style="display:none;">
+                            @foreach (var r in grp.Teeth)
                             {
-                                <button type="button" class="btn-sm" title="Edit diagnosis & price"
-                                        onclick="editPreviousRecord(this)">
-                                    <i class="bi bi-pencil-square"></i>
-                                </button>
+                                <div class="ps-tooth-row"
+                                     data-vd="@r.VisitDiagnosisId"
+                                     data-diag="@(r.DiagnosisCatalogId ?? 0)"
+                                     data-notes="@(r.DiagnosisNotes ?? "")"
+                                     data-tooth="@r.ToothNumber">
+                                    <span class="tooth-chip">@TLbl(r.ToothNumber)</span>
+                                    <div class="ps-tooth-info">
+                                        <span class="ps-diag-name">@(r.DiagnosisName ?? "بدون تشخيص")</span>
+                                        @if (!string.IsNullOrWhiteSpace(r.DiagnosisNotes))
+                                        {
+                                            <span class="ps-diag-notes">@r.DiagnosisNotes</span>
+                                        }
+                                    </div>
+                                    <span class="ps-diag-price">@(r.DiagnosisPrice > 0 ? r.DiagnosisPrice.ToString("N0") + " م.ج" : "-")</span>
+                                    @if (r.VisitDiagnosisId > 0)
+                                    {
+                                        <button type="button" class="btn-sm" title="تعديل التشخيص والسعر"
+                                                onclick="editPreviousRecord(this)">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span style="width:28px;display:inline-block;"></span>
+                                    }
+                                </div>
                             }
-                        </td>
-                    </tr>
+                        </div>
+
+                        <div class="ps-session-subtotal">
+                            <span>إجمالي تشخيصات هذه الزيارة</span>
+                            <b>@grp.DiagnosisTotal.ToString("N0") م.ج</b>
+                        </div>
+                    </div>
                 }
-            </tbody>
-            @if (previousSessions.Any())
-            {
-                <tfoot>
-                    <tr style="background:#f0fdfa;font-weight:800;">
-                        <td colspan="2" style="text-align:left;color:#0d7377;">Total</td>
-                        <td colspan="1" style="text-align:left;color:#0d7377;"></td>
-                        <td style="color:#0d7377;">@previousSessions.Sum(x => x.DiagnosisPrice).ToString("N0") </td>
-                        
-                    </tr>
-                </tfoot>
-            }
-        </table>
-        @if (!previousSessions.Any())
+            </div>
+
+            
+        }
+        else
         {
             <div class="empty-state">
                 <i class="bi bi-inbox"></i>
-                <p>No previous records for this patient.</p>
+                <p>لا توجد سجلات سابقة لهذا المريض.</p>
             </div>
         }
     </div>
 </div>
 
+<style>
+    .ps-groups {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .ps-session-block {
+        background: #fafcfd;
+        border: 1px solid #f1f5f9;
+        border-radius: 16px;
+        padding: 0;
+        overflow: hidden;
+        transition: all 0.25s ease;
+    }
+
+        .ps-session-block:hover {
+            border-color: #ccf3ec;
+            box-shadow: 0 8px 24px rgba(10,77,79,0.06);
+        }
+
+        .ps-session-block.open .ps-chevron {
+            transform: rotate(-90deg);
+        }
+
+    .ps-session-head {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 12px 16px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        text-align: right;
+        font-family: inherit;
+    }
+
+        .ps-session-head:hover {
+            background: rgba(13,148,136,0.04);
+        }
+
+    .ps-chevron {
+        font-size: .75rem;
+        color: #94a3b8;
+        transition: transform 0.25s ease;
+        margin-left: 4px;
+    }
+
+    .ps-session-date {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: .85rem;
+        color: #0b2e30;
+    }
+
+        .ps-session-date i.bi-calendar-event {
+            color: #0d9488;
+        }
+
+    .ps-teeth-count {
+        font-size: .68rem;
+        font-weight: 700;
+        color: #0d9488;
+        background: #f0fdfa;
+        padding: 2px 9px;
+        border-radius: 999px;
+        border: 1px solid #ccf3ec;
+    }
+
+    .ps-session-financials {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .ps-fin-chip {
+        font-size: .7rem;
+        font-weight: 800;
+        padding: 4px 10px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+        .ps-fin-chip.total {
+            background: #f0fdfa;
+            color: #0d7377;
+        }
+
+        .ps-fin-chip.paid {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .ps-fin-chip.discount {
+            background: #fffbeb;
+            color: #b45309;
+        }
+
+        .ps-fin-chip.remaining {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+    .ps-teeth-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 4px 16px 10px;
+        animation: fadeInUp 0.25s ease;
+    }
+
+    .ps-tooth-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #fff;
+        border: 1px solid #f8fafc;
+        border-radius: 10px;
+        padding: 8px 10px;
+        transition: background .15s ease;
+    }
+
+        .ps-tooth-row:hover {
+            background: #f0fdfa;
+        }
+
+    .ps-tooth-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .ps-diag-name {
+        font-size: .8rem;
+        font-weight: 700;
+        color: #0d9488;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ps-diag-notes {
+        font-size: .68rem;
+        color: #94a3b8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ps-diag-price {
+        font-size: .8rem;
+        font-weight: 800;
+        color: #0f172a;
+        white-space: nowrap;
+    }
+
+    .ps-session-subtotal {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 16px 12px;
+        border-top: 1px dashed #e2e8f0;
+        font-size: .76rem;
+        color: #64748b;
+        font-weight: 700;
+        margin-top: 2px;
+    }
+
+        .ps-session-subtotal b {
+            color: #0d7377;
+            font-size: .85rem;
+        }
+
+    .ps-grand-totals {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 2px solid #f0fdfa;
+    }
+
+    .ps-grand-item {
+        background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+        border-radius: 12px;
+        padding: 10px;
+        text-align: center;
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+
+        .ps-grand-item span {
+            display: block;
+            font-size: .68rem;
+            color: #94a3b8;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .ps-grand-item b {
+            font-size: .95rem;
+            color: #0f172a;
+        }
+
+        .ps-grand-item.paid b {
+            color: #16a34a;
+        }
+
+        .ps-grand-item.discount b {
+            color: #b45309;
+        }
+
+        .ps-grand-item.remaining {
+            background: linear-gradient(180deg, #fef2f2, #fee2e2);
+            border-color: #fecaca;
+        }
+
+            .ps-grand-item.remaining b {
+                color: #dc2626;
+            }
+
+    @@media (max-width: 767.98px) {
+        .ps-grand-totals {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .ps-session-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+
 <script>
-    /* ⭐ تعديل ريكورد سابق: يفتح مودال السن في وضع History Edit */
+    // ⭐ Accordion: هيدر + فوتر ظاهرين دايمًا، الـ body بس اللي بيتفتح/يتقفل
+    function togglePsPanel(headerBtn) {
+        const targetId = headerBtn.dataset.target;
+        const panel = document.getElementById(targetId);
+        const block = headerBtn.closest('.ps-session-block');
+        if (!panel) return;
+
+        const isOpen = panel.style.display !== 'none';
+        panel.style.display = isOpen ? 'none' : 'flex';
+        block.classList.toggle('open', !isOpen);
+    }
+    window.togglePsPanel = togglePsPanel;
+
+    /* ⭐ تعديل ريكورد سابق: يفتح مودال السن في وضع History Edit — بدون أي تغيير في المدفوعات */
     function editPreviousRecord(btn) {
-        const row = btn.closest('tr');
+        // منع إغلاق/فتح الـ accordion عند الضغط على زرار التعديل
+        if (event) event.stopPropagation();
+
+        const row = btn.closest('.ps-tooth-row');
         const vdId = parseInt(row.dataset.vd);
         const tooth = parseInt(row.dataset.tooth);
         const diagId = row.dataset.diag;
         const notes = row.dataset.notes;
 
-        // بيستدعي المودال بتاع الشارت — نفس شاشة السيشن الحالي
         if (window.openToothModal) {
             openToothModal(tooth, null, null, { vdId: vdId, diagId: diagId, notes: notes });
         }

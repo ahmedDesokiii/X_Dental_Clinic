@@ -327,12 +327,12 @@
         background: rgba(10,40,42,0.45);
         backdrop-filter: blur(8px);
         display: none;
-        align-items: center;
+        align-items: flex-start; /* ⭐ بدل center */
         justify-content: center;
         z-index: 1500;
         pointer-events: none;
-    }
-
+        padding-top: 10px; /* ⭐ المسافة من أعلى الشاشة */
+    }   
         .tooth-modal.dc-show {
             display: flex;
             pointer-events: auto;
@@ -638,10 +638,10 @@
         <div class="modal-overlay" onclick="closeToothModal()"></div>
         <div class="modal-glass-xl">
             <div class="tooth-modal-head">
+                <h5 class="text-light"><i class="bi bi-grid-3x3-gap"></i>Tooth Details<span id="selectedToothNum"></span>  </h5>
                 <button type="button" class="btn-close-modal" onclick="closeToothModal()"><i class="bi bi-x-lg"></i></button>
-                <h5><span id="selectedToothNum"></span>Tooth Details<i class="bi bi-grid-3x3-gap"></i>  </h5>
             </div>
-            <div class="tooth-modal-body">
+            <div class="tooth-modal-body pb-0 mb-0">
                 <div class="modal-body-row">
                     @* Column 1: Status *@
                     <div class="modal-col">
@@ -724,11 +724,11 @@
                     </div>
                 </div>
             </div>
-            <div class="tooth-modal-foot">
-                <button type="button" class="btn-glass-v4 btn-cancel-v4" onclick="closeToothModal()">Cancel</button>
+            <div class="tooth-modal-foot pt-0 mt-0">
                 <button type="button" class="btn-glass-v4 btn-save-v4" id="btnApplyTooth" onclick="applyToothChanges()">
                     <i class="bi bi-check-lg"></i> <span id="btnApplyToothText">Add to Session</span>
                 </button>
+                <button type="button" class="btn-glass-v4 btn-cancel-v4" onclick="closeToothModal()">Cancel</button>
             </div>
         </div>
     </div>
