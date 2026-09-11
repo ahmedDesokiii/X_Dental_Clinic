@@ -27,19 +27,22 @@ namespace Dental.Controllers
         private readonly IMemoryCache _cache;
         private readonly ILogger<PatientsController> _logger;
         private readonly IMapper _mapper;
+        private readonly IWebHostEnvironment _env;
 
         public PatientsController(
             IPatientService patientService,
             ApplicationDbContext context,
             IMemoryCache cache,
             ILogger<PatientsController> logger,
-            IMapper mapper)
+            IMapper mapper,
+            IWebHostEnvironment env)   // ⭐ NEW
         {
             _patientService = patientService;
             _context = context;
             _cache = cache;
             _logger = logger;
             _mapper = mapper;
+            _env = env;                // ⭐ NEW
         }
 
         #region 🚀 Index (Server-Side DataTables)
@@ -432,8 +435,113 @@ namespace Dental.Controllers
 
             ViewBag.PreviousSessions = await GetPreviousSessionsAsync(id);
             ViewBag.XRayGroups = await GetXRaysGroupedAsync(id);
+            ViewBag.DocumentTypes = await _context.DocumentTypes
+                .Where(d => d.IsActive)
+                .ToListAsync();
+
             return View(model);
         }
+
+        #region Documents Upload/Delete
+        [HttpPost]
+        [RequestSizeLimit(100_000_000)]
+        public async Task<IActionResult> UploadDocuments(int patientId, int documentTypeId, string? description, List<IFormFile> files)
+        {
+            if (files == null || !files.Any())
+                return Json(new { success = false, message = "No files were selected." });
+
+            var patient = await _context.Patients.FindAsync(patientId);
+            if (patient == null)
+                return Json(new { success = false, message = "Patient not found." });
+
+            var allowedExtensions = new[] { ".pdf", ".xls", ".xlsx", ".doc", ".docx", ".jpg", ".jpeg", ".png", ".webp" };
+            var uploadsRoot = Path.Combine(_env.WebRootPath, "uploads", "documents");
+            Directory.CreateDirectory(uploadsRoot);
+
+            var savedFiles = new List<object>();
+
+            foreach (var file in files)
+            {
+                if (file.Length == 0) continue;
+
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(ext))
+                    continue; // skip unsupported types silently
+
+                var safeName = $"{patientId}_{DateTime.Now:yyyyMMddHHmmssfff}_{Guid.NewGuid():N}{ext}";
+                var fullPath = Path.Combine(uploadsRoot, safeName);
+
+                using (var stream = new FileStream(fullPath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var doc = new PatientDocument
+                {
+                    PatientId = patientId,
+                    DocumentTypeId = documentTypeId,
+                    FileName = file.FileName,
+                    FilePath = $"/uploads/documents/{safeName}",
+                    FileExtension = ext,
+                    FileSize = file.Length,
+                    Description = description,
+                    UploadedDate = DateTime.Now,
+                    IsActive = true
+                };
+                _context.PatientDocuments.Add(doc);
+
+                savedFiles.Add(new
+                {
+                    fileName = doc.FileName,
+                    filePath = doc.FilePath,
+                    fileExtension = doc.FileExtension,
+                    fileSize = doc.FileSize
+                });
+            }
+
+            if (!savedFiles.Any())
+                return Json(new { success = false, message = "No valid files were uploaded (unsupported file type)." });
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, count = savedFiles.Count, files = savedFiles });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteDocument(int id)
+        {
+            var doc = await _context.PatientDocuments.FindAsync(id);
+            if (doc == null)
+                return Json(new { success = false, message = "Document not found." });
+
+            doc.IsActive = false; // soft delete — keeps file on disk
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetDocuments(int patientId)
+        {
+            var docs = await _context.PatientDocuments
+                .Include(d => d.DocumentType)
+                .Where(d => d.PatientId == patientId && d.IsActive)
+                .OrderByDescending(d => d.UploadedDate)
+                .Select(d => new
+                {
+                    id = d.Id,
+                    documentTypeName = d.DocumentType.NameEn,
+                    fileName = d.FileName,
+                    filePath = d.FilePath,
+                    fileExtension = d.FileExtension,
+                    fileSize = d.FileSize,
+                    description = d.Description,
+                    uploadedDate = d.UploadedDate
+                })
+                .ToListAsync();
+
+            return Json(new { success = true, data = docs });
+        }
+        #endregion
+
         private async Task<List<PreviousSessionRecordDto>> GetPreviousSessionsAsync(int patientId)
         {
             var entries = await _context.DentalChartEntries

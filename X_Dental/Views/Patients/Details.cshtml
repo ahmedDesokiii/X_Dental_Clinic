@@ -6,6 +6,7 @@
     ViewData["Title"] = $"ملف المريض — {Model.Patient.FullNameAr}";
     var patient = Model.Patient;
     var initials = "";
+
     if (!string.IsNullOrEmpty(patient.FullNameAr))
     {
         var parts = patient.FullNameAr.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -24,6 +25,10 @@
         PatientType.Both => "عام + تقويم",
         _ => "عام"
     };
+
+    
+    ViewBag.CurrentPatientId = patient.Id;   // ⭐ يُستخدم بواسطة _DocumentsManager
+
 }
 
 <link rel="stylesheet" href="~/css/patient-hero-shared.css" asp-append-version="true" />
@@ -1548,197 +1553,211 @@
             grid-template-columns: 1fr;
         }
     }
+
+    .pmt-skeleton {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .pmt-skeleton-row {
+        height: 38px;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 37%, #f1f5f9 63%);
+        background-size: 400% 100%;
+        animation: skeletonShine 1.4s ease infinite;
+    }
+
+    @@keyframes skeletonShine {
+        0% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
 </style>
 
 <div class="container-fluid patients-page-anim"  style="padding: 12px;">
 
-    <!-- 🔷 Hero Header -->
-    <div class="session-hero anim-fade-up" dir="ltr">
-        <div class="hero-grid">
-            <div class="hero-avatar">@initials</div>
-            <div class="hero-info">
-                <h1>@patient.FullNameAr</h1>
-                <div class="hero-tags">
-                    <span class="hero-tag"><i class="bi bi-hash"></i> @patient.PatientCode</span>
-                    <span class="hero-tag"><i class="bi bi-telephone"></i> @patient.Mobile</span>
-                    <span class="hero-tag"><i class="bi @genderIconClass"></i> @patient.Gender?.NameAr</span>
-                    <span class="hero-tag"><i class="bi bi-calendar"></i> @(patient.Age) سنة</span>
-                    <span class="hero-tag"><i class="bi bi-app-indicator"></i> @patientTypeLabel</span>
-                    <span class="hero-tag"><i class="bi bi-droplet"></i> @(patient.BloodGroup?.Name ?? "-")</span>
+    
+    <!-- 🔷 Stats Bar -->
+    <div class="container-fluid patients-page-anim" dir="ltr" style="padding: 12px;">
+
+        <!-- Hero Header -->
+        <div class="session-hero anim-fade-up">
+            <div class="hero-grid">
+                <div class="hero-avatar">@initials</div>
+                <div class="hero-info">
+                    <h1>@patient.FullNameAr</h1>
+                    <div class="hero-tags">
+                        <span class="hero-tag"><i class="bi bi-hash"></i> @patient.PatientCode</span>
+                        <span class="hero-tag"><i class="bi bi-telephone"></i> @patient.Mobile</span>
+                        <span class="hero-tag"><i class="bi @genderIconClass"></i> @patient.Gender?.NameAr</span>
+                        <span class="hero-tag"><i class="bi bi-calendar"></i> @(patient.Age) yrs</span>
+                        <span class="hero-tag"><i class="bi bi-app-indicator"></i> @patientTypeLabel</span>
+                        <span class="hero-tag"><i class="bi bi-droplet"></i> @(patient.BloodGroup?.Name ?? "-")</span>
+                    </div>
+                </div>
+                <div class="hero-actions d-flex">
+                    <button type="button" class="btn-hero primary" onclick="openApptModal()">
+                        <i class="bi bi-calendar-plus"></i> New Appointment
+                    </button>
+
+                    @if (patient.PatientType == Dental.Models.Patient.PatientType.Both)
+                    {
+                        <div class="dropdown d-inline-block">
+                            <button class="btn-hero glass dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-clipboard-pulse"></i> Start New Session
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" style="border-radius: 12px; border: 1px solid var(--dc-teal-100); box-shadow: var(--dc-shadow);">
+                                <li><a class="dropdown-item" asp-action="NewSession" asp-route-patientId="@patient.Id" asp-route-category="General">General Session</a></li>
+                                <li><a class="dropdown-item" asp-action="NewSession" asp-route-patientId="@patient.Id" asp-route-category="Orthodontics">Orthodontics Session</a></li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <a asp-action="NewSession" asp-route-patientId="@patient.Id" class="btn-hero glass">
+                            <i class="bi bi-clipboard-pulse"></i> Start New Session
+                        </a>
+                    }
                 </div>
             </div>
-            <div class="hero-actions d-flex">
-                <button type="button" class="btn-hero primary" onclick="openApptModal()">
-                    <i class="bi bi-calendar-plus"></i> موعد جديد
-                </button>
 
-                @if (patient.PatientType == Dental.Models.Patient.PatientType.Both)
-                {
-                    <div class="dropdown d-inline-block">
-                        <button class="btn-hero glass dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-clipboard-pulse"></i> بدء سيشن جديد
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" style="border-radius: 12px; border: 1px solid var(--dc-teal-100); box-shadow: var(--dc-shadow);">
-                            <li><a class="dropdown-item" asp-action="NewSession" asp-route-patientId="@patient.Id" asp-route-category="General">سيشن عام</a></li>
-                            <li><a class="dropdown-item" asp-action="NewSession" asp-route-patientId="@patient.Id" asp-route-category="Orthodontics">سيشن تقويم</a></li>
-                        </ul>
-                    </div>
-                }
-                else
-                {
-                    <a asp-action="NewSession" asp-route-patientId="@patient.Id" class="btn-hero glass">
-                        <i class="bi bi-clipboard-pulse"></i> بدء سيشن جديد
-                    </a>
-                }
+            <div class="hero-metrics">
+                <div class="metric-glass anim-fade-up anim-d1">
+                    <span class="metric-value">@Model.VisitsCount</span>
+                    <span class="metric-label">Visits</span>
+                </div>
+                <div class="metric-glass anim-fade-up anim-d2">
+                    <span class="metric-value">@Model.TotalPaid.ToString("N0")</span>
+                    <span class="metric-label">Paid (EGP)</span>
+                </div>
+                <div class="metric-glass anim-fade-up anim-d3">
+                    <span class="metric-value">@Model.TotalDue.ToString("N0")</span>
+                    <span class="metric-label">Remaining</span>
+                </div>
+                <div class="metric-glass anim-fade-up anim-d4">
+                    <span class="metric-value">@Model.AppointmentsCount</span>
+                    <span class="metric-label">Upcoming Appts</span>
+                </div>
             </div>
         </div>
-
-    @*     <div class="hero-metrics">
-            <div class="metric-glass anim-fade-up anim-d1">
-                <span class="metric-value">@Model.VisitsCount</span>
-                <span class="metric-label">الزيارات</span>
-            </div>
-            <div class="metric-glass anim-fade-up anim-d2">
-                <span class="metric-value">@Model.TotalPaid.ToString("N0")</span>
-                <span class="metric-label">المدفوع (ج.م)</span>
-            </div>
-            <div class="metric-glass anim-fade-up anim-d3">
-                <span class="metric-value">@Model.TotalDue.ToString("N0")</span>
-                <span class="metric-label">المتبقي</span>
-            </div>
-            <div class="metric-glass anim-fade-up anim-d4">
-                <span class="metric-value">@Model.AppointmentsCount</span>
-                <span class="metric-label">المواعيد القادمة</span>
-            </div>
-        </div> *@
-    </div>
-
-    <!-- 🔷 Stats Bar -->
-    <div class="stats-grid" dir="ltr">
-        <div class="stat-card-glass">
-            <div class="stat-icon-box teal"><i class="bi bi-calendar-check"></i></div>
-            <div>
-                <span class="stat-value-lg">@Model.VisitsCount</span>
-                <span class="stat-label-lg d-block">الزيارات</span>
-            </div>
-        </div>
-        <div class="stat-card-glass">
-            <div class="stat-icon-box green"><i class="bi bi-cash-stack"></i></div>
-            <div>
-                <span class="stat-value-lg">@Model.TotalPaid.ToString("N0")</span>
-                <span class="stat-label-lg d-block">المدفوع (ج.م)</span>
-            </div>
-        </div>
-        <div class="stat-card-glass">
-            <div class="stat-icon-box red"><i class="bi bi-credit-card"></i></div>
-            <div>
-                <span class="stat-value-lg">@Model.TotalDue.ToString("N0")</span>
-                <span class="stat-label-lg d-block">المتبقي</span>
-            </div>
-        </div>
-        <div class="stat-card-glass">
-            <div class="stat-icon-box blue"><i class="bi bi-clock-history"></i></div>
-            <div>
-                <span class="stat-value-lg">@Model.AppointmentsCount</span>
-                <span class="stat-label-lg d-block">المواعيد القادمة</span>
-            </div>
-        </div>
-    </div>
 
     <!-- 🔷 Tabs Container -->
     <div class="tabs-container">
         <div class="tabs-pill-bar">
-            <button class="tab-pill active" onclick="switchTab('overview', this)">
-                <i class="bi bi-person-lines-fill"></i> نظرة عامة
-            </button>
-            
-            <button class="tab-pill" onclick="switchTab('prevSessions', this)">
-                <i class="bi bi-archive"></i> السجلات السابقة
-            </button>
-            <button class="tab-pill" onclick="switchTab('teeth', this)">
-                <i class="bi bi-grid-3x3-gap"></i> Dental Chart
-            </button>
-            <button class="tab-pill" onclick="switchTab('plans', this)">
-                <i class="bi bi-clipboard-check"></i> خطط العلاج
-            </button>
-            <button class="tab-pill" onclick="switchTab('xrays', this)">
-                <i class="bi bi-image"></i> الأشعة
-            </button>
-            <button class="tab-pill" onclick="switchTab('prescriptions', this)">
-                <i class="bi bi-file-medical"></i> الروشتات
-            </button>
-            <button class="tab-pill" onclick="switchTab('payments', this)">
-                <i class="bi bi-cash-coin"></i> المدفوعات
-            </button>
-            <button class="tab-pill" onclick="switchTab('docs', this)">
-                <i class="bi bi-folder"></i> المستندات
-            </button>
+                <button class="tab-pill active" onclick="switchTab('overview', this)"><i class="bi bi-person-lines-fill"></i> Overview</button>
+                <button class="tab-pill" onclick="switchTab('prevSessions', this)"><i class="bi bi-archive"></i> Previous Records</button>
+                <button class="tab-pill" onclick="switchTab('teeth', this)"><i class="bi bi-grid-3x3-gap"></i> Dental Chart</button>
+                <button class="tab-pill" onclick="switchTab('plans', this)"><i class="bi bi-clipboard-check"></i> Treatment Plan</button>
+                <button class="tab-pill" onclick="switchTab('xrays', this)"><i class="bi bi-image"></i> X-Rays</button>
+                <button class="tab-pill" onclick="switchTab('prescriptions', this)"><i class="bi bi-file-medical"></i> Prescriptions</button>
+                <button class="tab-pill" onclick="switchTab('payments', this)"><i class="bi bi-cash-coin"></i> Payments</button>
+                <button class="tab-pill" onclick="switchTab('docs', this)"><i class="bi bi-folder"></i> Documents</button>
         </div>
 
         <div class="tab-panels">
 
-            <!-- 🔷 Tab: Overview -->
-            <div class="tab-panel active" id="overview">
-                <div class="info-grid">
-                    <div class="info-card-glass">
-                        <div class="card-header-glass"><i class="bi bi-person-vcard"></i> البيانات الشخصية</div>
-                        <div class="card-body-glass">
-                            <div class="info-row-flex"><span class="info-label-sm">الاسم</span><span class="info-value-sm">@patient.FullNameAr</span></div>
-                            <div class="info-row-flex"><span class="info-label-sm">تاريخ الميلاد</span><span class="info-value-sm">@(patient.DateOfBirth?.ToString("dd/MM/yyyy") ?? "-")</span></div>
-                            @*<div class="info-row-flex"hidden><span class="info-label-sm">الرقم القومي</span><span class="info-value-sm">@(patient.NationalId ?? "-")</span></div>
-                            <div class="info-row-flex" hidden><span class="info-label-sm">فصيلة الدم</span><span class="info-value-sm"><span class="blood-badge-new">@(patient.BloodGroup?.Name ?? "-")</span></span></div>
-                             <div class="info-row-flex"><span class="info-label-sm">المهنة</span><span class="info-value-sm">@(patient.Occupation ?? "-")</span></div> *@
-                        </div>
-                    </div>
-                    <div class="info-card-glass">
-                        <div class="card-header-glass"><i class="bi bi-telephone-plus"></i> بيانات التواصل</div>
-                        <div class="card-body-glass">
-                            <div class="info-row-flex"><span class="info-label-sm">الموبايل</span><span class="info-value-sm" dir="ltr">@(patient.Mobile ?? "-")</span></div>
-                            @*  <div class="info-row-flex"><span class="info-label-sm">التليفون</span><span class="info-value-sm" dir="ltr">@(patient.Phone ?? "-")</span></div>
-                            <div class="info-row-flex"><span class="info-label-sm">البريد</span><span class="info-value-sm">@(patient.Email ?? "-")</span></div> *@
-                            <div class="info-row-flex"><span class="info-label-sm">العنوان</span><span class="info-value-sm">@(patient.Address ?? "-")</span></div>
-                        </div>
-                    </div>
-                    <div class="info-card-glass">
-                        <div class="card-header-glass"><i class="bi bi-heart-pulse"></i> التاريخ الطبي</div>
-                        <div class="card-body-glass">
-                            @* <div class="info-row-flex"><span class="info-label-sm">الحساسية</span><span class="info-value-sm @(string.IsNullOrEmpty(patient.Allergies) ? "" : "text-danger")">@(patient.Allergies ?? "لا يوجد")</span></div>
-                            <div class="info-row-flex"><span class="info-label-sm">أمراض مزمنة</span><span class="info-value-sm">@(patient.ChronicDiseases ?? "لا يوجد")</span></div>
-                            <div class="info-row-flex"><span class="info-label-sm">الأدوية الحالية</span><span class="info-value-sm">@(patient.CurrentMedications ?? "لا يوجد")</span></div>
-                            <div class="info-row-flex"><span class="info-label-sm">التدخين</span><span class="info-value-sm">@(patient.SmokingStatus ?? "-")</span></div>
-                            *@ 
-                            <p class="notes-text-new">@(patient.Notes ?? "لا توجد ملاحظات.")</p>
+            <!-- Tab: Overview -->
+<div class="tab-panel active" id="overview">
+    <div class="info-grid">
 
-                        </div>
-                    </div>
-                    <div class="info-card-glass"hidden>
-                        <div class="card-header-glass"><i class="bi bi-journal-text"></i> ملاحظات</div>
-                        <div class="card-body-glass">
-                        </div>
-                    </div>
-                    <div class="info-card-glass">
-                        <div class="card-header-glass"><i class="bi bi-activity"></i> آخر النشاطات</div>
-                        <div class="card-body-glass">
-                            <div class="timeline-container">
-                                <div class="timeline-node">
-                                    <div class="timeline-date">@DateTime.Now.ToString("dd MMM yyyy")</div>
-                                    <div class="timeline-title">فتح ملف المريض</div>
-                                    <div class="timeline-desc">تم فتح الملف من لوحة التحكم</div>
-                                </div>
-                                @if (patient.LastVisit.HasValue)
-                                {
-                                    <div class="timeline-node">
-                                        <div class="timeline-date">@patient.LastVisit.Value.ToString("dd MMM yyyy")</div>
-                                        <div class="timeline-title">آخر زيارة</div>
-                                        <div class="timeline-desc">زيارة علاجية</div>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    </div>
+        <div class="info-card-glass">
+            <div class="card-header-glass"><i class="bi bi-person-vcard"></i> Personal Information</div>
+            <div class="card-body-glass">
+                <div class="info-row-flex"><span class="info-label-sm">Name</span><span class="info-value-sm">@patient.FullNameAr</span></div>
+                <div class="info-row-flex"><span class="info-label-sm">Date of Birth</span><span class="info-value-sm">@(patient.DateOfBirth?.ToString("dd/MM/yyyy") ?? "-")</span></div>
+                <div class="info-row-flex"><span class="info-label-sm">Age</span><span class="info-value-sm">@(patient.Age) years</span></div>
+                <div class="info-row-flex"><span class="info-label-sm">Gender</span><span class="info-value-sm">@(patient.Gender?.NameAr ?? "-")</span></div>
+                <div class="info-row-flex"><span class="info-label-sm">Blood Group</span><span class="info-value-sm"><span class="blood-badge-new">@(patient.BloodGroup?.Name ?? "-")</span></span></div>
+                <div class="info-row-flex"><span class="info-label-sm">Patient Type</span><span class="info-value-sm">@patientTypeLabel</span></div>
+            </div>
+        </div>
+
+        <div class="info-card-glass">
+            <div class="card-header-glass"><i class="bi bi-telephone-plus"></i> Contact Information</div>
+            <div class="card-body-glass">
+                <div class="info-row-flex"><span class="info-label-sm">Mobile</span><span class="info-value-sm" dir="ltr">@(patient.Mobile ?? "-")</span></div>
+                <div class="info-row-flex"><span class="info-label-sm">Address</span><span class="info-value-sm">@(patient.Address ?? "-")</span></div>
+                <div class="info-row-flex"><span class="info-label-sm">Patient Code</span><span class="info-value-sm" dir="ltr">@patient.PatientCode</span></div>
+            </div>
+        </div>
+
+        <!-- ⭐ NEW: Financial Overview -->
+        <div class="info-card-glass">
+            <div class="card-header-glass"><i class="bi bi-graph-up-arrow"></i> Financial Overview</div>
+            <div class="card-body-glass">
+                <div class="info-row-flex"><span class="info-label-sm">Total Paid</span><span class="info-value-sm" style="color:#16a34a;">@Model.TotalPaid.ToString("N0") EGP</span></div>
+                <div class="info-row-flex"><span class="info-label-sm">Total Due</span><span class="info-value-sm text-danger">@Model.TotalDue.ToString("N0") EGP</span></div>
+                <div class="info-row-flex">
+                    <span class="info-label-sm">Payment Rate</span>
+                    <span class="info-value-sm">
+                        @{
+                            var grand = Model.TotalPaid + Model.TotalDue;
+                            var rate = grand > 0 ? Math.Round((Model.TotalPaid / grand) * 100, 0) : 100;
+                        }
+                        @rate%
+                    </span>
+                </div>
+                <div class="progress-track" style="margin-top:8px;background:#f1f5f9;">
+                    <div class="progress-fill" style="width:@(rate)%;background:linear-gradient(90deg,#0d9488,#14b8a6);"></div>
                 </div>
             </div>
+        </div>
 
+        <!-- ⭐ NEW: Next Appointment -->
+        <div class="info-card-glass">
+            <div class="card-header-glass"><i class="bi bi-calendar-event"></i> Next Appointment</div>
+            <div class="card-body-glass">
+                @if (ViewBag.NextAppointmentDate != null)
+                {
+                    var next = (DateTime)ViewBag.NextAppointmentDate;
+                    <div class="info-row-flex"><span class="info-label-sm">Date</span><span class="info-value-sm">@next.ToString("dd MMM yyyy")</span></div>
+                    <div class="info-row-flex"><span class="info-label-sm">Time</span><span class="info-value-sm">@next.ToString("hh:mm tt")</span></div>
+                }
+                else
+                {
+                    <p class="notes-text-new">No upcoming appointments scheduled.</p>
+                    <button type="button" class="btn-hero glass" style="margin-top:8px;" onclick="openApptModal()">
+                        <i class="bi bi-calendar-plus"></i> Schedule One
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div class="info-card-glass">
+            <div class="card-header-glass"><i class="bi bi-heart-pulse"></i> Medical Notes</div>
+            <div class="card-body-glass">
+                <p class="notes-text-new">@(patient.Notes ?? "No notes recorded.")</p>
+            </div>
+        </div>
+
+        <div class="info-card-glass">
+            <div class="card-header-glass"><i class="bi bi-activity"></i> Recent Activity</div>
+            <div class="card-body-glass">
+                <div class="timeline-container">
+                    <div class="timeline-node">
+                        <div class="timeline-date">@DateTime.Now.ToString("dd MMM yyyy")</div>
+                        <div class="timeline-title">Profile opened</div>
+                        <div class="timeline-desc">Opened from the dashboard</div>
+                    </div>
+                    @if (patient.LastVisit.HasValue)
+                    {
+                        <div class="timeline-node">
+                            <div class="timeline-date">@patient.LastVisit.Value.ToString("dd MMM yyyy")</div>
+                            <div class="timeline-title">Last visit</div>
+                            <div class="timeline-desc">Treatment visit</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
             
             <!-- 🔷 Tab: Previous Sessions -->
             <div class="tab-panel" id="prevSessions">
@@ -1798,85 +1817,64 @@
             </div>
 
             <!-- 🔷 Tab: Payments -->
-            <div class="tab-panel" id="payments">
-                <div class="pmt-summary-grid-new">
-                    <div class="pmt-summary-card-new">
-                        <div class="pmt-label">إجمالي المطلوب</div>
-                        <div class="pmt-value" id="pmtSumTotal">—</div>
+                <div class="tab-panel" id="payments">
+                    <div class="pmt-summary-grid-new">
+                        <div class="pmt-summary-card-new">
+                            <div class="pmt-label">Total Required</div>
+                            <div class="pmt-value" id="pmtSumTotal">—</div>
+                        </div>
+                        <div class="pmt-summary-card-new">
+                            <div class="pmt-label">Total Discount</div>
+                            <div class="pmt-value" id="pmtSumDiscount">—</div>
+                        </div>
+                        <div class="pmt-summary-card-new is-paid">
+                            <div class="pmt-label">Total Paid</div>
+                            <div class="pmt-value" id="pmtSumPaid">—</div>
+                        </div>
+                        <div class="pmt-summary-card-new is-due">
+                            <div class="pmt-label">Remaining</div>
+                            <div class="pmt-value" id="pmtSumRemaining">—</div>
+                        </div>
                     </div>
-                    <div class="pmt-summary-card-new">
-                        <div class="pmt-label">إجمالي الخصم</div>
-                        <div class="pmt-value" id="pmtSumDiscount">—</div>
+                    <div class="info-card-glass full-width">
+                        <div class="card-header-glass" style="display:flex; justify-content:space-between; align-items:center;">
+                            <span><i class="bi bi-cash-stack"></i> Payment History</span>
+                            <button class="btn-hero glass" style="display:inline-flex; padding:8px 16px; font-size:0.8rem;" onclick="openTabPaymentModal()">
+                                <i class="bi bi-plus-lg"></i> New Payment
+                            </button>
+                        </div>
+                        <div class="card-body-glass" id="pmtPaymentsWrap">
+                            <div class="pmt-skeleton" id="pmtSkeleton">
+                                @for (int s = 0; s < 4; s++)
+                                {
+                                    <div class="pmt-skeleton-row"></div>
+                                }
+                            </div>
+                            <table class="pmt-table-new" id="pmtPaymentsTable" style="display:none;">
+                                <thead>
+                                    <tr><th>Date</th><th>Visit</th><th>Amount</th><th>Method</th><th>Receipt #</th><th>Notes</th><th></th></tr>
+                                </thead>
+                                <tbody id="pmtPaymentsBody"></tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="pmt-summary-card-new is-paid">
-                        <div class="pmt-label">إجمالي المدفوع</div>
-                        <div class="pmt-value" id="pmtSumPaid">—</div>
-                    </div>
-                    <div class="pmt-summary-card-new is-due">
-                        <div class="pmt-label">المتبقي</div>
-                        <div class="pmt-value" id="pmtSumRemaining">—</div>
-                    </div>
-                </div>
-                <div class="info-card-glass full-width">
-                    <div class="card-header-glass" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span><i class="bi bi-cash-stack"></i> سجل الدفعات</span>
-                        <button class="btn-hero btn-hero-session" style="display:inline-flex; padding:8px 16px; font-size:0.8rem;" onclick="openTabPaymentModal()">
-                            <i class="bi bi-plus-lg"></i> دفعة جديدة
-                        </button>
-                    </div>
-                    <div class="card-body-glass">
-                        <table class="pmt-table-new">
-                            <thead>
-                                <tr><th>التاريخ</th><th>الزيارة</th><th>المبلغ</th><th>الطريقة</th><th>رقم الإيصال</th><th>ملاحظات</th><th></th></tr>
-                            </thead>
-                            <tbody id="pmtPaymentsBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="info-card-glass full-width mb-3">
-                    <div class="card-header-glass"><i class="bi bi-clipboard2-data"></i> الزيارات</div>
-                    <div class="card-body-glass">
-                        <table class="pmt-table-new">
-                            <thead>
-                                <tr><th>التاريخ</th><th>النوع</th><th>الإجمالي</th><th>الخصم</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr>
-                            </thead>
-                            <tbody id="pmtVisitsBody"></tbody>
-                        </table>
+                    <div class="info-card-glass full-width mb-3">
+                        <div class="card-header-glass"><i class="bi bi-clipboard2-data"></i> Visits</div>
+                        <div class="card-body-glass">
+                            <table class="pmt-table-new">
+                                <thead>
+                                    <tr><th>Date</th><th>Type</th><th>Total</th><th>Discount</th><th>Paid</th><th>Remaining</th><th>Status</th></tr>
+                                </thead>
+                                <tbody id="pmtVisitsBody"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
-              
-            </div>
 
             <!-- 🔷 Tab: Documents -->
             <div class="tab-panel" id="docs">
-                @if (Model.Documents.Any())
-                {
-                    <div class="doc-table-container">
-                        <table class="pmt-table-new">
-                            <thead><tr><th>النوع</th><th>الملف</th><th>تاريخ الرفع</th><th>ملاحظات</th><th></th></tr></thead>
-                            <tbody>
-                                @foreach (var doc in Model.Documents)
-                                {
-                                    <tr>
-                                        <td>@doc.DocumentTypeName</td>
-                                        <td>@doc.FileName</td>
-                                        <td>@doc.UploadedDate.ToString("dd/MM/yyyy")</td>
-                                        <td>@doc.Description</td>
-                                        <td><a href="@doc.FilePath" target="_blank" class="btn-hero btn-hero-session" style="display:inline-flex;padding:6px 12px; font-size:0.8rem;"><i class="bi bi-download"></i></a></td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-                else
-                {
-                    <div class="placeholder-glass">
-                        <div class="placeholder-icon-glass"><i class="bi bi-folder"></i></div>
-                        <h3>لا توجد مستندات مرفوعة بعد</h3>
-                    </div>
-                }
+                            @await Html.PartialAsync("_DocumentsManager")
             </div>
 
         </div>
@@ -1970,14 +1968,19 @@
         </div>
     </div>
 </div>
-
+</div>
 @section Scripts {
+
     <script>
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-pill').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-panel').forEach(c => c.classList.remove('active'));
             btn.classList.add('active');
             document.getElementById(tabId).classList.add('active');
+
+                    // ⭐ Lazy load per-tab data only when first opened
+                    if (tabId === 'payments') loadPaymentsTab();
+                    if (tabId === 'docs' && window.loadDocumentsTab) window.loadDocumentsTab();
         }
 
         // ── Payments Tab Logic ──
@@ -2097,7 +2100,7 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', loadPaymentsTab);
+       document.addEventListener('DOMContentLoaded', loadPaymentsTab);
 
         // ── Appointment Modal ──
         function openApptModal() {

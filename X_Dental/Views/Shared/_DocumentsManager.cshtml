@@ -1,0 +1,359 @@
+@{
+    var documentTypes = ViewBag.DocumentTypes as List<Dental.Models.Patient.DocumentType> ?? new();
+}
+
+<div class="docs-manager" data-patient-id="@ViewBag.CurrentPatientId">
+    <div class="docs-toolbar">
+        <div class="docs-upload-controls">
+            <input type="text" class="form-control-custom-new" id="docDescInput" placeholder="Note (optional)..." style="max-width:220px;" />
+            <button type="button" class="btn-hero primary" style="padding:9px 18px;font-size:.82rem;" onclick="document.getElementById('docFileInput').click()">
+                <i class="bi bi-cloud-arrow-up"></i> Upload Files
+            </button>
+            <input type="file" id="docFileInput" multiple hidden accept=".pdf,.xls,.xlsx,.doc,.docx,.jpg,.jpeg,.png,.webp" onchange="onDocFilesSelected(event)" />
+        </div>
+        <span class="section-badge" id="docsCountBadge">0 files</span>
+    </div>
+
+    <div class="docs-dropzone py-1" id="docsDropzone">
+        <i class="bi bi-cloud-arrow-up"></i>
+        <p>Drag & drop files here, or click "Upload Files" above</p>
+        <small>Supported: PDF, Excel, Word, JPG, PNG</small>
+    </div>
+
+    <div class="docs-grid" id="docsGrid"></div>
+
+    <div class="empty-state" id="docsEmptyState" style="display:none;">
+        <i class="bi bi-folder"></i>
+        <p>No documents uploaded yet.</p>
+    </div>
+</div>
+
+<!-- Lightbox for image documents -->
+<div class="xray-lightbox" id="docImageViewer" style="display:none;" onclick="closeDocImageViewer()">
+    <img id="docImageViewerImg" src="" />
+</div>
+
+<style>
+    .docs-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .docs-upload-controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .docs-dropzone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 16px;
+        padding: 28px;
+        text-align: center;
+        color: #94a3b8;
+        background: #fff;
+        transition: all .2s ease;
+        margin-bottom: 20px;
+        cursor: pointer;
+    }
+
+        .docs-dropzone.drag-over {
+            border-color: #0d9488;
+            background: #f0fdfa;
+            color: #0d9488;
+        }
+
+        .docs-dropzone i {
+            font-size: 1.8rem;
+            display: block;
+            margin-bottom: 8px;
+            color: #0d9488;
+        }
+
+        .docs-dropzone p {
+            margin: 0;
+            font-weight: 700;
+            font-size: .88rem;
+        }
+
+        .docs-dropzone small {
+            display: block;
+            margin-top: 4px;
+        }
+
+    .docs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        gap: 14px;
+    }
+
+    .doc-card {
+        background: #fff;
+        border: 1px solid #f1f5f9;
+        border-radius: 14px;
+        overflow: hidden;
+        transition: all .25s ease;
+        animation: fadeInUp 0.3s ease;
+        position: relative;
+    }
+
+        .doc-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(10,77,79,0.1);
+            border-color: #ccf3ec;
+        }
+
+    .doc-thumb {
+        width: 100%;
+        height: 110px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        cursor: pointer;
+        overflow: hidden;
+    }
+
+        .doc-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .doc-thumb i {
+            font-size: 2.2rem;
+        }
+
+        .doc-thumb.pdf i {
+            color: #dc2626;
+        }
+
+        .doc-thumb.excel i {
+            color: #16a34a;
+        }
+
+        .doc-thumb.word i {
+            color: #2563eb;
+        }
+
+        .doc-thumb.generic i {
+            color: #94a3b8;
+        }
+
+    .doc-card-body {
+        padding: 10px 12px;
+    }
+
+    .doc-card-name {
+        font-size: .76rem;
+        font-weight: 700;
+        color: #0f172a;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 2px;
+    }
+
+    .doc-card-meta {
+        font-size: .66rem;
+        color: #94a3b8;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .doc-card-actions {
+        display: flex;
+        gap: 4px;
+        margin-top: 8px;
+    }
+
+    .doc-action-btn {
+        flex: 1;
+        border: none;
+        background: #f1f5f9;
+        color: #475569;
+        border-radius: 8px;
+        padding: 6px 0;
+        font-size: .72rem;
+        cursor: pointer;
+        transition: all .2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+    }
+
+        .doc-action-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .doc-action-btn.danger:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+    .doc-uploading-badge {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        background: #fef3c7;
+        color: #b45309;
+        font-size: .6rem;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: 999px;
+        z-index: 2;
+    }
+</style>
+
+<script>
+    (function() {
+        let allDocs = [];
+        const patientId = @(ViewBag.CurrentPatientId ?? 0);
+
+        function fmtSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function iconForExt(ext) {
+            ext = (ext || '').toLowerCase();
+            if (['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) return { type: 'image' };
+            if (ext === '.pdf') return { type: 'icon', cls: 'pdf', icon: 'bi-file-earmark-pdf' };
+            if (['.xls', '.xlsx'].includes(ext)) return { type: 'icon', cls: 'excel', icon: 'bi-file-earmark-excel' };
+            if (['.doc', '.docx'].includes(ext)) return { type: 'icon', cls: 'word', icon: 'bi-file-earmark-word' };
+            return { type: 'icon', cls: 'generic', icon: 'bi-file-earmark' };
+        }
+
+        function renderDocsGrid() {
+            const grid = document.getElementById('docsGrid');
+            const empty = document.getElementById('docsEmptyState');
+            const badge = document.getElementById('docsCountBadge');
+            badge.textContent = allDocs.length + (allDocs.length === 1 ? ' file' : ' files');
+
+            if (!allDocs.length) {
+                grid.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+            empty.style.display = 'none';
+
+            grid.innerHTML = allDocs.map(doc => {
+                const info = iconForExt(doc.fileExtension);
+                const thumbHtml = info.type === 'image'
+                    ? `<div class="doc-thumb" onclick="openDocImageViewer('${doc.filePath}')"><img src="${doc.filePath}" /></div>`
+                    : `<div class="doc-thumb ${info.cls}" onclick="window.open('${doc.filePath}', '_blank')"><i class="bi ${info.icon}"></i></div>`;
+
+                return `
+                        <div class="doc-card">
+                            ${thumbHtml}
+                            <div class="doc-card-body">
+                                <div class="doc-card-name" title="${doc.fileName}">${doc.fileName}</div>
+                                <div class="doc-card-meta">
+                                    <span>${new Date(doc.uploadedDate).toLocaleDateString('en-GB')}</span>
+                                    <span>${fmtSize(doc.fileSize)}</span>
+                                </div>
+                                <div class="doc-card-actions">
+                                    <a class="doc-action-btn" href="${doc.filePath}" download><i class="bi bi-download"></i> Save</a>
+                                    <button class="doc-action-btn danger" onclick="deleteDocument(${doc.id})"><i class="bi bi-trash3"></i> Delete</button>
+                                </div>
+                            </div>
+                        </div>`;
+            }).join('');
+        }
+
+        async function loadDocuments() {
+            try {
+                const res = await fetch(`/Patients/GetDocuments?patientId=${patientId}`);
+                const result = await res.json();
+                if (result.success) {
+                    allDocs = result.data;
+                    renderDocsGrid();
+                }
+            } catch (err) {
+                console.error('Failed to load documents', err);
+            }
+        }
+
+        window.deleteDocument = async function(id) {
+            const confirmResult = await Swal.fire({
+                title: 'Delete this file?',
+                text: 'This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#dc2626'
+            });
+            if (!confirmResult.isConfirmed) return;
+
+            const res = await fetch(`/Patients/DeleteDocument?id=${id}`, { method: 'POST' });
+            const result = await res.json();
+            if (result.success) {
+                allDocs = allDocs.filter(d => d.id !== id);
+                renderDocsGrid();
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'File deleted', showConfirmButton: false, timer: 1200 });
+            } else {
+                Swal.fire({ title: 'Error', text: result.message || 'Delete failed', icon: 'error' });
+            }
+        };
+
+        async function uploadFiles(fileList) {
+            if (!fileList || !fileList.length) return;
+
+            const formData = new FormData();
+            formData.append('patientId', patientId);
+            formData.append('documentTypeId', document.getElementById('docTypeSelect').value || 0);
+            formData.append('description', document.getElementById('docDescInput').value || '');
+            Array.from(fileList).forEach(f => formData.append('files', f));
+
+            Swal.fire({ title: 'Uploading...', text: `${fileList.length} file(s)`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                const res = await fetch('/Patients/UploadDocuments', { method: 'POST', body: formData });
+                const result = await res.json();
+                if (result.success) {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `${result.count} file(s) uploaded`, showConfirmButton: false, timer: 1500 });
+                    document.getElementById('docDescInput').value = '';
+                    document.getElementById('docFileInput').value = '';
+                    loadDocuments();
+                } else {
+                    Swal.fire({ title: 'Upload failed', text: result.message, icon: 'error' });
+                }
+            } catch (err) {
+                Swal.fire({ title: 'Error', text: 'Server connection failed', icon: 'error' });
+            }
+        }
+
+        window.onDocFilesSelected = function(e) {
+            uploadFiles(e.target.files);
+        };
+
+        window.openDocImageViewer = function(path) {
+            document.getElementById('docImageViewerImg').src = path;
+            document.getElementById('docImageViewer').style.display = 'flex';
+        };
+        window.closeDocImageViewer = function() {
+            document.getElementById('docImageViewer').style.display = 'none';
+        };
+
+        // Drag & drop
+        const dropzone = document.getElementById('docsDropzone');
+        if (dropzone) {
+            dropzone.addEventListener('click', () => document.getElementById('docFileInput').click());
+            ['dragover', 'dragenter'].forEach(evt =>
+                dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('drag-over'); }));
+            ['dragleave', 'drop'].forEach(evt =>
+                dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('drag-over'); }));
+            dropzone.addEventListener('drop', e => uploadFiles(e.dataTransfer.files));
+        }
+
+        window.loadDocumentsTab = loadDocuments;
+    })();
+</script>
