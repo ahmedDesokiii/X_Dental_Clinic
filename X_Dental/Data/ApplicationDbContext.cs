@@ -55,15 +55,23 @@ namespace Dental.Data
                 .Property(p => p.DefaultPrice)
                 .HasPrecision(18, 2);
 
-            builder.Entity<TreatmentPlanItem>()
-                .Property(t => t.EstimatedCost)
-                .HasPrecision(18, 2);
 
-            builder.Entity<TreatmentPlanItem>()
-                .Property(t => t.Discount)
-                .HasPrecision(18, 2);
+            builder.Entity<TreatmentPlanStep>()
+                .HasOne(s => s.TreatmentPlan)
+                .WithMany(p => p.Steps)
+                .HasForeignKey(s => s.TreatmentPlanId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Entity<PatientDocument>()
+            builder.Entity<TreatmentPlanStep>()
+                .HasOne(s => s.ProcedureCatalog)
+                .WithMany()
+                .HasForeignKey(s => s.ProcedureCatalogId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<MedicationCatalog>()
+                .HasIndex(m => m.NameAr);
+
+            builder.Entity<PatientDocument>()
            .HasOne(d => d.DocumentType)
            .WithMany()
            .HasForeignKey(d => d.DocumentTypeId)
@@ -95,7 +103,9 @@ namespace Dental.Data
         public DbSet<PatientTag> PatientTags { get; set; }
         public DbSet<PatientXRay> PatientXRays { get; set; }
         public DbSet<Tag> Tags { get; set; }
-        public DbSet<TreatmentCatalog> TreatmentCatalogs { get; set; }
+        public DbSet<MedicationCatalog> MedicationCatalogs { get; set; }
+        public DbSet<TreatmentPlan> TreatmentPlans { get; set; }
+        public DbSet<TreatmentPlanStep> TreatmentPlanSteps { get; set; }
         public DbSet<Visit> Visits { get; set; }
 
         // ⭐ NEW
@@ -108,9 +118,6 @@ namespace Dental.Data
         public DbSet<VisitProcedure> VisitProcedures { get; set; }
         public DbSet<VisitPayment> VisitPayments { get; set; }
         public DbSet<DentalChartEntry> DentalChartEntries { get; set; }
-        public DbSet<TreatmentPlan> TreatmentPlans { get; set; }
-        public DbSet<TreatmentPlanItem> TreatmentPlanItems { get; set; }
-        public DbSet<TreatmentSession> TreatmentSessions { get; set; }
         public DbSet<DocumentType> DocumentTypes { get; set; }
     }
 }

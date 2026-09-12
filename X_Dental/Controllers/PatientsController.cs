@@ -415,7 +415,6 @@ namespace Dental.Controllers
                 .OrderBy(a => a.AppointmentDate)
                 .Select(a => (DateTime?)a.AppointmentDate)
                 .FirstOrDefaultAsync();
-            ViewBag.NextAppointmentDate = nextAppointmentDate;
 
             var model = new PatientProfileViewModel
             {
@@ -430,6 +429,7 @@ namespace Dental.Controllers
                 Prescriptions = new List<PrescriptionDto>(),
                 Photos = new List<PhotoDto>(),
                 Payments = new List<PaymentDto>(),
+                NextAppointmentDate = nextAppointmentDate,
                 Documents = documents
             };
 

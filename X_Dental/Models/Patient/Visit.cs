@@ -38,7 +38,7 @@ namespace Dental.Models.Patient
         public ICollection<VisitPayment> Payments { get; set; } = new List<VisitPayment>();
         public ICollection<PatientXRay> XRays { get; set; } = new List<PatientXRay>();
         public ICollection<Prescription> Prescriptions { get; set; } = new List<Prescription>();
-        public ICollection<TreatmentSession> TreatmentSessions { get; set; } = new List<TreatmentSession>();
+        //public ICollection<TreatmentSession> TreatmentSessions { get; set; } = new List<TreatmentSession>();
         public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
     }
 }

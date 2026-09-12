@@ -9,6 +9,7 @@ namespace Dental.Modules.Patients.ViewModels
     public class PatientProfileViewModel
     {
         public PatientDetailsDto Patient { get; set; } = null!;
+        public DateTime? NextAppointmentDate { get; set; }
         public int VisitsCount { get; set; }
         public int AppointmentsCount { get; set; }
         public decimal TotalPaid { get; set; }

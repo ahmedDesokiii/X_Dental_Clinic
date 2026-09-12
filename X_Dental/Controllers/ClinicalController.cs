@@ -46,7 +46,7 @@ namespace Dental.Controllers
                 .Include(v => v.Diagnoses).ThenInclude(d => d.Diagnosis)
                 .Include(v => v.Procedures).ThenInclude(p => p.Procedure)
                 .Include(v => v.Payments)
-                .Include(v => v.TreatmentSessions)
+                //.Include(v => v.TreatmentSessions)
                 .Include(v => v.XRays)
                 .Include(v => v.Prescriptions)
                 .FirstOrDefaultAsync(v => v.Id == visitId);

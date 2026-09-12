@@ -43,7 +43,7 @@ namespace Dental.Models.Patient
         public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
         public ICollection<PatientXRay> XRays { get; set; } = new List<PatientXRay>();
         public ICollection<DentalChartEntry> DentalHistory { get; set; } = new List<DentalChartEntry>();
-        public ICollection<TreatmentPlan> TreatmentPlans { get; set; } = new List<TreatmentPlan>();
+        //public ICollection<TreatmentPlan> TreatmentPlans { get; set; } = new List<TreatmentPlan>();
        
     }
 }

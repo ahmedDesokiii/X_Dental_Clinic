@@ -1,0 +1,519 @@
+@* _AppointmentModal.cshtml — مودال موحّد لإضافة موعد، بنفس روح تصميم _FollowUpPanel *@
+
+<div class="apm-modal" id="apmModal">
+    <div class="apm-overlay" onclick="AppointmentModal.close()"></div>
+    <div class="apm-box">
+        <div class="apm-head">
+            <h5><i class="bi bi-calendar-plus"></i> موعد جديد</h5>
+            <button type="button" class="apm-close" onclick="AppointmentModal.close()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="apm-body">
+            <div class="apm-row">
+                <div class="apm-col">
+                    <div class="apm-field" id="apmPatientNameWrap">
+                        <label>المريض</label>
+                        <input type="text" class="apm-input" id="apmPatientName" disabled />
+                    </div>
+
+                    <div class="apm-field" id="apmPatientSearchWrap" style="display:none;">
+                        <label>ابحث عن المريض <span class="req">*</span></label>
+                        <input type="text" class="apm-input" id="apmPatientSearch"
+                               placeholder="اسم المريض / الكود / الموبايل" autocomplete="off"
+                               oninput="AppointmentModal.searchPatients(this.value)" />
+                        <div id="apmPatientSearchResults" class="apm-search-results"></div>
+                    </div>
+
+                    <input type="hidden" id="apmPatientId" />
+
+                    <div class="apm-field-row">
+                        <div class="apm-field">
+                            <label>التاريخ <span class="req">*</span></label>
+                            <input type="date" class="apm-input" id="apmDate" onchange="AppointmentModal.loadSameDay()" />
+                        </div>
+                        <div class="apm-field">
+                            <label>الوقت <span class="req">*</span></label>
+                            <input type="time" class="apm-input" id="apmTime" />
+                        </div>
+                    </div>
+
+                    <div class="apm-field">
+                        <label>المدة</label>
+                        <select class="apm-input" id="apmDuration">
+                            <option value="15">15 دقيقة</option>
+                            <option value="30" selected>30 دقيقة</option>
+                            <option value="45">45 دقيقة</option>
+                            <option value="60">ساعة</option>
+                            <option value="90">ساعة ونص</option>
+                        </select>
+                    </div>
+
+                    <div class="apm-field">
+                        <label>السبب / ملاحظات</label>
+                        <textarea class="apm-input" id="apmReason" rows="2" placeholder="مثال: تركيب تاج، متابعة..."></textarea>
+                    </div>
+
+                    <button type="button" class="apm-btn-save" onclick="AppointmentModal.save()">
+                        <i class="bi bi-calendar-check"></i> حجز الموعد
+                    </button>
+                </div>
+
+                <div class="apm-divider"></div>
+
+                <div class="apm-col">
+                    <div class="apm-same-day-head"><i class="bi bi-people"></i> مواعيد نفس اليوم</div>
+                    <div id="apmSameDayList" class="apm-same-day-list custom-scroll">
+                        <div class="apm-empty"><p>اختر تاريخ لعرض المواعيد المحجوزة.</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .apm-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .apm-modal.show {
+            display: flex;
+        }
+
+    .apm-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(15,23,42,0.45);
+        backdrop-filter: blur(4px);
+    }
+
+    .apm-box {
+        position: relative;
+        z-index: 1;
+        width: 92%;
+        max-width: 720px;
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.22);
+        overflow: hidden;
+        animation: apmSlideIn 0.25s ease;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    @@keyframes apmSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.98);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .apm-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 22px;
+        background: linear-gradient(135deg, #0d9488, #0d7377);
+        color: #fff;
+        flex-shrink: 0;
+    }
+
+        .apm-head h5 {
+            margin: 0;
+            font-weight: 800;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+    .apm-close {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        border: none;
+        background: rgba(255,255,255,0.2);
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all .2s;
+    }
+
+        .apm-close:hover {
+            background: rgba(255,255,255,0.35);
+            transform: rotate(90deg);
+        }
+
+    .apm-body {
+        padding: 20px 22px;
+        overflow-y: auto;
+    }
+
+    .apm-row {
+        display: flex;
+        gap: 20px;
+    }
+
+    .apm-col {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    .apm-divider {
+        width: 1px;
+        background: linear-gradient(180deg, transparent, #e2e8f0, transparent);
+        flex-shrink: 0;
+    }
+
+    .apm-field {
+        margin-bottom: 14px;
+    }
+
+        .apm-field label {
+            display: block;
+            font-size: .78rem;
+            font-weight: 800;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+
+            .apm-field label .req {
+                color: #dc2626;
+            }
+
+    .apm-field-row {
+        display: flex;
+        gap: 10px;
+    }
+
+        .apm-field-row .apm-field {
+            flex: 1;
+        }
+
+    .apm-input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid #f1f5f9;
+        border-radius: 12px;
+        background: #f8fafc;
+        font-size: .9rem;
+        outline: none;
+        transition: all .2s;
+        resize: vertical;
+    }
+
+        .apm-input:focus {
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13,148,136,0.1);
+            background: #fff;
+        }
+
+    .apm-search-results {
+        margin-top: 6px;
+        border: 1px solid #f1f5f9;
+        border-radius: 12px;
+        max-height: 160px;
+        overflow-y: auto;
+        display: none;
+    }
+
+        .apm-search-results.show {
+            display: block;
+        }
+
+    .apm-search-item {
+        padding: 8px 12px;
+        font-size: .82rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f8fafc;
+        display: flex;
+        justify-content: space-between;
+    }
+
+        .apm-search-item:last-child {
+            border-bottom: none;
+        }
+
+        .apm-search-item:hover {
+            background: #f0fdfa;
+        }
+
+        .apm-search-item b {
+            color: #0b2e30;
+        }
+
+        .apm-search-item span {
+            color: #94a3b8;
+            font-size: .74rem;
+            direction: ltr;
+        }
+
+    .apm-btn-save {
+        width: 100%;
+        background: linear-gradient(135deg, #0d9488, #0891b2);
+        color: #fff;
+        border: none;
+        padding: 12px;
+        border-radius: 14px;
+        font-weight: 800;
+        font-size: .9rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 6px 20px rgba(13,148,136,0.25);
+        transition: all .2s ease;
+    }
+
+        .apm-btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(13,148,136,0.35);
+        }
+
+    .apm-same-day-head {
+        font-size: .82rem;
+        font-weight: 800;
+        color: #475569;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .apm-same-day-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-height: 320px;
+        overflow-y: auto;
+    }
+
+    .apm-same-day-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #fafcfd;
+        border: 1px solid #f1f5f9;
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: .8rem;
+        transition: all .2s ease;
+    }
+
+        .apm-same-day-item:hover {
+            background: #f0fdfa;
+            border-color: #ccf3ec;
+            transform: translateX(-2px);
+        }
+
+    .apm-sd-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .apm-sd-name {
+        font-weight: 800;
+        color: #0b2e30;
+    }
+
+    .apm-sd-phone {
+        font-size: .72rem;
+        color: #64748b;
+        direction: ltr;
+        text-align: right;
+    }
+
+    .apm-sd-status {
+        font-weight: 800;
+        font-size: .68rem;
+        padding: 3px 10px;
+        border-radius: 8px;
+        white-space: nowrap;
+    }
+
+    .apm-empty {
+        text-align: center;
+        padding: 20px;
+        color: #94a3b8;
+    }
+
+        .apm-empty p {
+            margin: 0;
+            font-size: .8rem;
+        }
+
+    @@media (max-width: 700px) {
+        .apm-row {
+            flex-direction: column;
+        }
+
+        .apm-divider {
+            display: none;
+        }
+    }
+</style>
+
+<script>
+    window.AppointmentModal = (function() {
+        let searchTimer = null;
+        let selectedPatientId = null;
+
+        function open(patientId, patientName) {
+            selectedPatientId = patientId || null;
+            document.getElementById('apmPatientId').value = selectedPatientId || '';
+
+            const hasPatient = !!patientId;
+            document.getElementById('apmPatientNameWrap').style.display = hasPatient ? '' : 'none';
+            document.getElementById('apmPatientSearchWrap').style.display = hasPatient ? 'none' : '';
+            document.getElementById('apmPatientName').value = patientName || '';
+            document.getElementById('apmPatientSearch').value = '';
+            document.getElementById('apmPatientSearchResults').classList.remove('show');
+            document.getElementById('apmPatientSearchResults').innerHTML = '';
+
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('apmDate').value = tomorrow.toISOString().split('T')[0];
+            document.getElementById('apmTime').value = '09:00';
+            document.getElementById('apmReason').value = '';
+
+            document.getElementById('apmModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+            loadSameDay();
+        }
+
+        function close() {
+            document.getElementById('apmModal').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        function searchPatients(term) {
+            clearTimeout(searchTimer);
+            const resultsEl = document.getElementById('apmPatientSearchResults');
+            if (!term || term.trim().length < 2) {
+                resultsEl.classList.remove('show');
+                resultsEl.innerHTML = '';
+                return;
+            }
+            searchTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/Patients/Search?term=${encodeURIComponent(term)}`);
+                    const data = await res.json();
+                    if (!data.length) {
+                        resultsEl.innerHTML = '<div class="apm-search-item"><span>لا توجد نتائج</span></div>';
+                        resultsEl.classList.add('show');
+                        return;
+                    }
+                    resultsEl.innerHTML = data.map(p => `
+                            <div class="apm-search-item" onclick="AppointmentModal.pickPatient(${p.id}, '${(p.fullNameAr || '').replace(/'/g, "\\'")}')">
+                                <b>${p.fullNameAr}</b>
+                                <span>${p.patientCode || ''} ${p.phone ? '· ' + p.phone : ''}</span>
+                            </div>`).join('');
+                    resultsEl.classList.add('show');
+                } catch (e) {
+                    resultsEl.innerHTML = '<div class="apm-search-item"><span>تعذر البحث</span></div>';
+                    resultsEl.classList.add('show');
+                }
+            }, 300);
+        }
+
+        function pickPatient(id, name) {
+            selectedPatientId = id;
+            document.getElementById('apmPatientId').value = id;
+            document.getElementById('apmPatientSearch').value = name;
+            document.getElementById('apmPatientSearchResults').classList.remove('show');
+        }
+
+        async function loadSameDay() {
+            const date = document.getElementById('apmDate').value;
+            const listEl = document.getElementById('apmSameDayList');
+            if (!date) return;
+            listEl.innerHTML = '<div class="apm-empty"><p>جاري التحميل...</p></div>';
+
+            const start = date + 'T00:00:00';
+            const end = date + 'T23:59:59';
+            try {
+                const res = await fetch(`/Appointments/GetEvents?start=${start}&end=${end}`);
+                const data = await res.json();
+                if (!data.success || !data.data.length) {
+                    listEl.innerHTML = '<div class="apm-empty"><p>لا توجد مواعيد في هذا اليوم.</p></div>';
+                    return;
+                }
+                listEl.innerHTML = '';
+                data.data.forEach((ap, idx) => {
+                    const row = document.createElement('div');
+                    row.className = 'apm-same-day-item';
+                    row.style.animation = `fadeInUp 0.3s ${idx * 0.05}s ease forwards`;
+                    row.style.opacity = '0';
+                    row.innerHTML = `
+                            <div class="apm-sd-info">
+                                <span class="apm-sd-name">${ap.patientName}</span>
+                                <span class="apm-sd-phone"><i class="bi bi-telephone-fill"></i> ${ap.patientMobile || '-'}</span>
+                            </div>
+                            <span class="apm-sd-status ${ap.statusColorClass}">${ap.statusText}</span>`;
+                    listEl.appendChild(row);
+                });
+            } catch (e) {
+                listEl.innerHTML = '<div class="apm-empty"><p>تعذر تحميل المواعيد.</p></div>';
+            }
+        }
+
+        async function save() {
+            const patientId = parseInt(document.getElementById('apmPatientId').value);
+            const date = document.getElementById('apmDate').value;
+            const time = document.getElementById('apmTime').value;
+            const reason = document.getElementById('apmReason').value;
+            const duration = parseInt(document.getElementById('apmDuration').value);
+
+            if (!patientId) {
+                Swal.fire({ title: 'مطلوب', text: 'اختر المريض أولاً', icon: 'warning', confirmButtonColor: '#0d9488' });
+                return;
+            }
+            if (!date || !time) {
+                Swal.fire({ title: 'مطلوب', text: 'اختر التاريخ والوقت', icon: 'warning', confirmButtonColor: '#0d9488' });
+                return;
+            }
+
+            const appointmentDate = new Date(`${date}T${time}`);
+            try {
+                const res = await fetch('/Appointments/Create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        PatientId: patientId,
+                        AppointmentDate: appointmentDate.toISOString(),
+                        DurationMinutes: duration,
+                        Reason: reason
+                    })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    close();
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم حجز الموعد', showConfirmButton: false, timer: 2000 });
+                    if (typeof window.onAppointmentCreated === 'function') window.onAppointmentCreated(result.data);
+                } else {
+                    Swal.fire({ title: 'خطأ', text: result.message || 'فشل الحفظ', icon: 'error', confirmButtonColor: '#dc2626' });
+                }
+            } catch (e) {
+                Swal.fire({ title: 'خطأ', text: 'مشكلة في الاتصال', icon: 'error', confirmButtonColor: '#dc2626' });
+            }
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+
+        return { open, close, save, loadSameDay, searchPatients, pickPatient };
+    })();
+</script>

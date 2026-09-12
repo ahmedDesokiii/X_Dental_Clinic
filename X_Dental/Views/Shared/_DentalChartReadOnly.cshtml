@@ -1,41 +1,36 @@
-﻿@* ============================================================
-   📁 _DentalChartReadOnlyInteractive.cshtml
-   ============================================================
-   استبدل استدعاء الشارت في تاب "Dental Chart" في Details.cshtml من:
-      @await Html.PartialAsync("_DentalChartReadOnly", Model.DentalChart)
-   لـ:
-      @await Html.PartialAsync("_DentalChartReadOnlyInteractive", Model.DentalChart)
-
-   نفس تصميم _DentalChartInteractive (الأقواس + الألوان + الـ Tooltip + الـ Legend)
-   لكن بدون أي تعديل — الضغط على السن بيفتح مودال يعرض تاريخ العلاج بتاعه بس.
-   ============================================================ *@
-
-@model Dental.Modules.Patients.DTOs.DentalChartDto
+﻿@model Dental.Modules.Patients.DTOs.DentalChartDto
 @await Html.PartialAsync("_DentalArchStyles")
 
-@{
-    var teethMap = (Model?.Teeth ?? new List<Dental.Modules.Patients.DTOs.ToothDto>())
-        .ToDictionary(t => t.ToothNumber, t => t);
-
-    var statusLabels = new Dictionary<Dental.Models.Patient.ToothStatus, string>
+@functions {
+    string TLabelRo(int n) => (n / 10) switch
     {
-        { Dental.Models.Patient.ToothStatus.Healthy, "سليم" },
-        { Dental.Models.Patient.ToothStatus.Decayed, "تسوس" },
-        { Dental.Models.Patient.ToothStatus.Treated, "معالج" },
-        { Dental.Models.Patient.ToothStatus.Missing, "مفقود" },
-        { Dental.Models.Patient.ToothStatus.Extracted, "مخلوع" },
-        { Dental.Models.Patient.ToothStatus.RootCanal, "عصب" },
-        { Dental.Models.Patient.ToothStatus.Crown, "تاج" },
-        { Dental.Models.Patient.ToothStatus.Filling, "حشوة" }
+        1 => $"UL-{n % 10}",
+        2 => $"UR-{n % 10}",
+        3 => $"LL-{n % 10}",
+        4 => $"LR-{n % 10}",
+        _ => n.ToString()
+    };
+
+    string StatusArLabel(Dental.Models.Patient.ToothStatus s) => s switch
+    {
+        Dental.Models.Patient.ToothStatus.Healthy => "سليم",
+        Dental.Models.Patient.ToothStatus.Decayed => "تسوس",
+        Dental.Models.Patient.ToothStatus.Treated => "معالج",
+        Dental.Models.Patient.ToothStatus.Missing => "مفقود",
+        Dental.Models.Patient.ToothStatus.Extracted => "مخلوع",
+        Dental.Models.Patient.ToothStatus.RootCanal => "عصب",
+        Dental.Models.Patient.ToothStatus.Crown => "تاج",
+        Dental.Models.Patient.ToothStatus.Filling => "حشوة",
+        _ => s.ToString()
     };
 }
 
 <style>
-    .chart-shell {
+    .ro-chart-shell {
         position: relative;
     }
 
-    .quadrant-badge {
+    .ro-quadrant-badge {
         position: absolute;
         font-size: .72rem;
         font-weight: 800;
@@ -47,79 +42,27 @@
         z-index: 5;
     }
 
-        .quadrant-badge.ur {
+        .ro-quadrant-badge.ur {
             top: 8px;
             left: 8px;
         }
 
-        .quadrant-badge.ul {
+        .ro-quadrant-badge.ul {
             top: 8px;
             right: 8px;
         }
 
-        .quadrant-badge.lr {
+        .ro-quadrant-badge.lr {
             bottom: 8px;
             left: 8px;
         }
 
-        .quadrant-badge.ll {
+        .ro-quadrant-badge.ll {
             bottom: 8px;
             right: 8px;
         }
 
-    .quadrant-divider-v {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 50%;
-        width: 0;
-        border-left: 1px dashed rgba(13,115,119,.25);
-        z-index: 1;
-    }
-
-    .quadrant-divider-h {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 50%;
-        height: 0;
-        border-top: 1px dashed rgba(13,115,119,.25);
-        z-index: 1;
-    }
-
-    @@keyframes toothPopIn {
-        from {
-            opacity: 0;
-            transform: scale(.3) translateY(8px);
-        }
-
-        to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
-    }
-
-    .tooth-box {
-        animation: toothPopIn .5s cubic-bezier(.2,1.5,.4,1) backwards;
-        cursor: pointer;
-    }
-
-    @@keyframes selGlow {
-        0%, 100% {
-            filter: drop-shadow(0 0 6px rgba(13,148,136,.55));
-        }
-
-        50% {
-            filter: drop-shadow(0 0 16px rgba(13,148,136,.9));
-        }
-    }
-
-    .tooth-box.selected {
-        animation: selGlow 1.2s ease-in-out infinite;
-        z-index: 20;
-    }
-
-    .tooth-tooltip {
+    .ro-tooth-tooltip {
         position: fixed;
         z-index: 3000;
         background: #0b2e30;
@@ -137,12 +80,12 @@
         transition: opacity .15s ease, transform .15s ease;
     }
 
-        .tooth-tooltip.show {
+        .ro-tooth-tooltip.show {
             opacity: 1;
             transform: translateY(0);
         }
 
-        .tooth-tooltip .tt-title {
+        .ro-tooth-tooltip .tt-title {
             font-weight: 800;
             font-size: .82rem;
             margin-bottom: 6px;
@@ -154,260 +97,116 @@
             padding-bottom: 6px;
         }
 
-        .tooth-tooltip .tt-num {
+        .ro-tooth-tooltip .tt-num {
             color: #94a3b8;
             font-weight: 600;
             font-size: .68rem;
         }
 
-        .tooth-tooltip .tt-row {
+        .ro-tooth-tooltip .tt-row {
             display: flex;
             justify-content: space-between;
             gap: 10px;
             padding: 2px 0;
         }
 
-            .tooth-tooltip .tt-row span:first-child {
+            .ro-tooth-tooltip .tt-row span:first-child {
                 color: #94a3b8;
                 flex-shrink: 0;
             }
 
-            .tooth-tooltip .tt-row b {
+            .ro-tooth-tooltip .tt-row b {
                 color: #fff;
                 font-weight: 700;
                 text-align: left;
             }
 
-        .tooth-tooltip .tt-notes-row {
+        .ro-tooth-tooltip .tt-notes-row {
             flex-direction: column;
             align-items: flex-start;
             gap: 2px;
             margin-top: 2px;
         }
 
-            .tooth-tooltip .tt-notes-row span {
+            .ro-tooth-tooltip .tt-notes-row span {
                 color: #e2e8f0;
                 font-weight: 500;
             }
 
-        .tooth-tooltip .tt-empty {
+        .ro-tooth-tooltip .tt-empty {
             color: #94a3b8;
             font-style: italic;
             font-size: .74rem;
         }
 
-    /* ── History Modal (Read-only) ── */
-    .th-modal {
-        position: fixed;
-        inset: 0;
-        background: rgba(10,40,42,0.45);
-        backdrop-filter: blur(8px);
-        display: none;
-        align-items: flex-start;
-        justify-content: center;
-        z-index: 1500;
-        pointer-events: none;
-        padding-top: 40px;
+    .tooth-box.ro-mode {
+        cursor: default;
     }
 
-        .th-modal.dc-show {
-            display: flex;
-            pointer-events: auto;
-            animation: fadeInUp 0.25s ease;
-        }
-
-    .th-modal-box {
-        width: 100%;
-        max-width: 520px;
-        margin: 16px;
-        background: #fff;
-        border-radius: 22px;
-        overflow: hidden;
-        box-shadow: 0 30px 70px rgba(0,0,0,0.25);
-        max-height: 85vh;
+    .ro-legend {
         display: flex;
-        flex-direction: column;
-        transform: translateY(20px) scale(0.96);
-        opacity: 0;
-        animation: dcModalIn 0.4s cubic-bezier(0.2,1.2,0.3,1) forwards;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(0,0,0,0.04);
     }
 
-    @@keyframes dcModalIn {
-        to {
-            transform: translateY(0) scale(1);
-            opacity: 1;
-        }
-    }
-
-    .th-modal-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 18px 24px;
-        background: linear-gradient(135deg, #0d9488, #0d7377);
-        color: #fff;
-        flex-shrink: 0;
-    }
-
-        .th-modal-head h5 {
-            margin: 0;
-            font-weight: 800;
-            font-size: 1.05rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-    .th-close-btn {
-        width: 34px;
-        height: 34px;
-        border-radius: 10px;
-        border: none;
-        background: rgba(255,255,255,0.2);
-        color: #fff;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all .2s;
-    }
-
-        .th-close-btn:hover {
-            background: rgba(255,255,255,0.35);
-            transform: rotate(90deg);
-        }
-
-    .th-modal-body {
-        padding: 20px 24px;
-        overflow-y: auto;
-        flex: 1;
-    }
-
-    .th-status-badge {
+    .ro-legend-item {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        font-weight: 800;
-        font-size: .85rem;
-        padding: 6px 14px;
-        border-radius: 999px;
-        margin-bottom: 14px;
-    }
-
-    .th-notes-box {
-        background: #f8fafc;
-        border: 1px solid #f1f5f9;
-        border-radius: 12px;
-        padding: 12px 14px;
-        font-size: .85rem;
-        color: #475569;
-        margin-bottom: 16px;
-    }
-
-    .th-timeline {
-        position: relative;
-        padding-right: 22px;
-    }
-
-        .th-timeline::before {
-            content: '';
-            position: absolute;
-            right: 7px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: #e2e8f0;
-        }
-
-    .th-node {
-        position: relative;
-        padding-bottom: 16px;
-    }
-
-        .th-node::before {
-            content: '';
-            position: absolute;
-            right: -22px;
-            top: 4px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #0d9488;
-            border: 2px solid #fff;
-            box-shadow: 0 0 0 2px #0d9488;
-        }
-
-    .th-node-date {
+        gap: 5px;
         font-size: .72rem;
-        color: #94a3b8;
         font-weight: 700;
-        margin-bottom: 2px;
+        color: #4b6b6c;
+        padding: 3px 8px;
+        border-radius: 8px;
+        background: rgba(0,0,0,0.02);
     }
 
-    .th-node-title {
-        font-weight: 800;
-        color: #0b2e30;
-        font-size: .9rem;
-    }
-
-    .th-node-notes {
-        color: #64748b;
-        font-size: .8rem;
-        margin-top: 2px;
-    }
-
-    .th-empty {
-        text-align: center;
-        color: #94a3b8;
-        padding: 24px 0;
-        font-size: .85rem;
+    .ro-legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
     }
 </style>
 
-<div class="chart-shell">
-    <div class="tooth-tooltip" id="toothTooltipRO"></div>
+<div class="ro-chart-shell">
+    <div class="ro-tooth-tooltip" id="roToothTooltip"></div>
 
-    <div class="chart-canvas" id="chartCanvasRO">
+    <div class="chart-canvas" id="roChartCanvas">
         <svg class="bg-arcs" viewBox="0 0 620 632" preserveAspectRatio="xMidYMid meet">
-            <div class="quadrant-divider-v"></div>
-            <div class="quadrant-divider-h"></div>
-            <span class="quadrant-badge ur fs-5">UR</span>
-            <span class="quadrant-badge ul fs-5">UL</span>
-            <span class="quadrant-badge lr fs-5">LR</span>
-            <span class="quadrant-badge ll fs-5">LL</span>
+            <span class="ro-quadrant-badge fs-4 ur">UR</span>
+            <span class="ro-quadrant-badge fs-4 ul">UL</span>
+            <span class="ro-quadrant-badge fs-4 lr">LR</span>
+            <span class="ro-quadrant-badge fs-4 ll">LL</span>
             <defs>
-                <linearGradient id="gumUpperIntRO" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="roGumUpper" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stop-color="#f8d3ca" /><stop offset="100%" stop-color="#f2b6a8" />
                 </linearGradient>
-                <linearGradient id="gumLowerIntRO" x1="0" y1="1" x2="0" y2="0">
+                <linearGradient id="roGumLower" x1="0" y1="1" x2="0" y2="0">
                     <stop offset="0%" stop-color="#f8d3ca" /><stop offset="100%" stop-color="#f2b6a8" />
                 </linearGradient>
             </defs>
-            <path id="upperArchPathRO" fill="url(#gumUpperIntRO)"></path>
-            <path id="lowerArchPathRO" fill="url(#gumLowerIntRO)"></path>
+            <path id="roUpperArchPath" fill="url(#roGumUpper)"></path>
+            <path id="roLowerArchPath" fill="url(#roGumLower)"></path>
         </svg>
 
         <div class="arch-center-mark">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c-2.4 0-3.6 1.3-4.8 1.3-1.6 0-2.7-1-3.5-.4-.9.7-.7 2.4-.4 3.9.4 2.2 1.1 6.6 2 9.3.5 1.5 1 2.9 2.1 2.9 1.4 0 1.4-3 2.6-3s1.2 3 2.6 3c1.1 0 1.6-1.4 2.1-2.9.9-2.7 1.6-7.1 2-9.3.3-1.5.5-3.2-.4-3.9-.8-.6-1.9.4-3.5.4C15.6 4.3 14.4 3 12 3Z" /></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M12 3c-2.4 0-3.6 1.3-4.8 1.3-1.6 0-2.7-1-3.5-.4-.9.7-.7 2.4-.4 3.9.4 2.2 1.1 6.6 2 9.3.5 1.5 1 2.9 2.1 2.9 1.4 0 1.4-3 2.6-3s1.2 3 2.6 3c1.1 0 1.6-1.4 2.1-2.9.9-2.7 1.6-7.1 2-9.3.3-1.5.5-3.2-.4-3.9-.8-.6-1.9.4-3.5.4C15.6 4.3 14.4 3 12 3Z" />
+            </svg>
         </div>
 
         <div class="teeth-row upper">
-            @for (int i = 11; i <= 18; i++)
+            @foreach (var i in Enumerable.Range(11, 8).Concat(Enumerable.Range(21, 8)))
             {
-                var status = teethMap.TryGetValue(i, out var t1) ? t1.Status : Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((i % 10) * 45)ms" onclick="openToothHistoryModal(@i, event)">
+                var tooth = Model?.Teeth?.FirstOrDefault(t => t.ToothNumber == i);
+                var status = tooth?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
+                <div class="tooth-box ro-mode @status.ToString().ToLower()" data-tooth="@i">
                     <div class="tooth-inner">
-                        <span class="tooth-num">@(i - 10)</span>
-                        <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
-                    </div>
-                </div>
-            }
-            @for (int i = 21; i <= 28; i++)
-            {
-                var status = teethMap.TryGetValue(i, out var t2) ? t2.Status : Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((i % 10) * 45 + 360)ms" onclick="openToothHistoryModal(@i, event)">
-                    <div class="tooth-inner">
-                        <span class="tooth-num">@(i - 20)</span>
+                        <span class="tooth-num">@(i % 10)</span>
                         <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                 </div>
@@ -415,22 +214,13 @@
         </div>
 
         <div class="teeth-row lower">
-            @for (int i = 41; i <= 48; i++)
+            @foreach (var i in Enumerable.Range(41, 8).Concat(Enumerable.Range(31, 8)))
             {
-                var status = teethMap.TryGetValue(i, out var t3) ? t3.Status : Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((i % 10) * 45 + 720)ms" onclick="openToothHistoryModal(@i, event)">
+                var tooth = Model?.Teeth?.FirstOrDefault(t => t.ToothNumber == i);
+                var status = tooth?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
+                <div class="tooth-box ro-mode @status.ToString().ToLower()" data-tooth="@i">
                     <div class="tooth-inner">
-                        <span class="tooth-num">@(i - 40)</span>
-                        <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
-                    </div>
-                </div>
-            }
-            @for (int i = 31; i <= 38; i++)
-            {
-                var status = teethMap.TryGetValue(i, out var t4) ? t4.Status : Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((i % 10) * 45 + 1080)ms" onclick="openToothHistoryModal(@i, event)">
-                    <div class="tooth-inner">
-                        <span class="tooth-num">@(i - 30)</span>
+                        <span class="tooth-num">@(i % 10)</span>
                         <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                 </div>
@@ -438,182 +228,91 @@
         </div>
     </div>
 
-    <div class="chart-legend-compact" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(0,0,0,0.04);">
-        <span class="legend-item-sm"><span class="legend-dot" style="width:10px;height:10px;border-radius:50%;display:inline-block;background:#fff;border:2px solid #0f9b8e;"></span> سليم</span>
-        <span class="legend-item-sm"><span class="legend-dot" style="width:10px;height:10px;border-radius:50%;display:inline-block;background:#ef4444;"></span> تسوس</span>
-        <span class="legend-item-sm"><span class="legend-dot" style="width:10px;height:10px;border-radius:50%;display:inline-block;background:#3b82f6;"></span> معالج</span>
-        <span class="legend-item-sm"><span class="legend-dot" style="width:10px;height:10px;border-radius:50%;display:inline-block;background:#a855f7;"></span> تاج</span>
-        <span class="legend-item-sm"><span class="legend-dot" style="width:10px;height:10px;border-radius:50%;display:inline-block;background:#f59e0b;"></span> عصب</span>
-        <span class="legend-item-sm"><span class="legend-dot" style="width:10px;height:10px;border-radius:50%;display:inline-block;background:#cbd5e1;"></span> مفقود</span>
-    </div>
-
-    <!-- History Modal (Read-only) -->
-    <div class="th-modal" id="toothHistoryModal">
-        <div class="modal-overlay" onclick="closeToothHistoryModal()"></div>
-        <div class="th-modal-box">
-            <div class="th-modal-head">
-                <h5><i class="bi bi-grid-3x3-gap"></i> تفاصيل السن <span id="thToothLabel"></span></h5>
-                <button type="button" class="th-close-btn" onclick="closeToothHistoryModal()"><i class="bi bi-x-lg"></i></button>
-            </div>
-            <div class="th-modal-body" id="thModalBody">
-                <!-- يتملى بالـ JS -->
-            </div>
-        </div>
+    <div class="ro-legend">
+        <span class="ro-legend-item"><span class="ro-legend-dot" style="background:#fff;border:2px solid #0f9b8e;"></span> سليم</span>
+        <span class="ro-legend-item"><span class="ro-legend-dot" style="background:#ef4444;"></span> تسوس</span>
+        <span class="ro-legend-item"><span class="ro-legend-dot" style="background:#3b82f6;"></span> معالج</span>
+        <span class="ro-legend-item"><span class="ro-legend-dot" style="background:#a855f7;"></span> تاج</span>
+        <span class="ro-legend-item"><span class="ro-legend-dot" style="background:#f59e0b;"></span> عصب</span>
+        <span class="ro-legend-item"><span class="ro-legend-dot" style="background:#cbd5e1;"></span> مفقود</span>
     </div>
 </div>
 
 <script>
     (function() {
-        var canvas = document.getElementById('chartCanvasRO');
-        // initDentalArch بترسم الأقواس (نفس الفانكشن المشتركة من _DentalArchStyles)
-        if (window.initDentalArch) window.initDentalArch(canvas, { upperPath: 'upperArchPathRO', lowerPath: 'lowerArchPathRO' });
-        else if (window.initDentalArch) window.initDentalArch(canvas);
-    })();
+        var canvas = document.getElementById('roChartCanvas');
+        // نفس فانكشن رسم القوس المستخدمة في الشارت التفاعلي (من _DentalArchStyles)
+        if (window.initDentalArch) window.initDentalArch(canvas, {
+            upperPath: 'roUpperArchPath',
+            lowerPath: 'roLowerArchPath'
+        });
 
-    const RO_STATUS_LABEL = {
-        Healthy: 'سليم', Decayed: 'تسوس', Treated: 'معالج', Missing: 'مفقود', Extracted: 'مخلوع',
-        Impacted: 'منطمر', Crown: 'تاج', Bridge: 'جسر', Implant: 'زرعة', Fractured: 'مكسور',
-        RootCanal: 'عصب', Filling: 'حشوة'
-    };
-    const RO_STATUS_COLOR = {
-        Healthy: '#0f9b8e', Decayed: '#ef4444', Treated: '#3b82f6', Missing: '#94a3b8', Extracted: '#1e293b',
-        Impacted: '#6366f1', Crown: '#a855f7', Bridge: '#06b6d4', Implant: '#ec4899', Fractured: '#f97316',
-        RootCanal: '#f59e0b', Filling: '#14b8a6'
-    };
+        var toothInfoMap = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                                (Model?.Teeth ?? new List<Dental.Modules.Patients.DTOs.ToothDto>()).ToDictionary(
+                        t => t.ToothNumber.ToString(),
+                        t => new
+                        {
+                                        status = StatusArLabel(t.Status),
+                                        notes = t.Notes,
+                                        lastTreatment = t.Treatments != null && t.Treatments.Any()
+                        ? t.Treatments.OrderByDescending(x => x.TreatmentDate).First().ProcedureName
+                        : null,
+                                        lastDate = t.Treatments != null && t.Treatments.Any()
+                        ? t.Treatments.OrderByDescending(x => x.TreatmentDate).First().TreatmentDate.ToString("dd/MM/yyyy")
+                        : null,
+                                        treatmentsCount = t.Treatments != null ? t.Treatments.Count : 0
+                        })
+                        ));
 
-    window.toothInfoMapRO = @Html.Raw(ViewBag.ToothInfoMap ?? "{}");
-
-    // نفس منطق الترقيم: 28→UR-8, 15→UL-5
-    function toothLabelRO(num) {
-        const q = Math.floor(num / 10), p = num % 10;
-        return ({ 1: 'UL', 2: 'UR', 3: 'LL', 4: 'LR' })[q] + '-' + p;
-    }
-
-    // بيانات الأسنان جايه من الموديل (Server-side) — بنبنيها في object عشان الـ JS يستخدمها
-    
-    @* ⚠️ ملحوظة: السطر اللي فوق placeholder — شيله واستخدم بدل منه السيريلايز المباشر تحت *@
-</script>
-
-<script>
-        // ⭐ السيريلايز الفعلي لبيانات الأسنان (تاريخ العلاج لكل سن) — بيتحط هنا مباشرة من الـ Model
-        window.roTeethHistory = {
-        @foreach (var t in (Model?.Teeth ?? new List<Dental.Modules.Patients.DTOs.ToothDto>()))
-            {
-                var statusLabel = statusLabels.TryGetValue(t.Status, out var lblv) ? lblv : t.Status.ToString();
-                @:"@t.ToothNumber": {
-                @:status: "@t.Status.ToString()",
-                    @:statusLabel: "@statusLabel",
-                        @:notes: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(t.Notes ?? "")),
-                            @:treatments: [
-                foreach (var tr in t.Treatments)
-                                {
-                                    @:{ date: "@tr.TreatmentDate.ToString("dd/MM/yyyy")", procedure: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(tr.ProcedureName ?? "-")), notes: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(tr.Notes ?? "")) },
-                                }
-                                @:  ]
-                @:},
+        function toothLabel(num) {
+            const q = Math.floor(num / 10), p = num % 10;
+            return ({ 1: 'UL', 2: 'UR', 3: 'LL', 4: 'LR' })[q] + '-' + p;
         }
-        };
 
-    function openToothHistoryModal(num, evt) {
-        if (evt) { evt.preventDefault(); evt.stopPropagation(); }
-        document.getElementById('thToothLabel').textContent = '(' + toothLabelRO(num) + ' — FDI ' + num + ')';
+        const tooltipEl = document.getElementById('roToothTooltip');
+        if (tooltipEl && tooltipEl.parentElement !== document.body) document.body.appendChild(tooltipEl);
 
-        const data = window.roTeethHistory[num];
-        const body = document.getElementById('thModalBody');
-
-        if (!data) {
-            body.innerHTML = '<div class="th-empty"><i class="bi bi-inbox" style="font-size:1.8rem;display:block;margin-bottom:8px;opacity:.4;"></i>لا يوجد سجل علاجي لهذا السن بعد</div>';
-        } else {
-            const color = RO_STATUS_COLOR[data.status] || '#0f9b8e';
-            let html = `<span class="th-status-badge" style="background:${color}1a;color:${color};"><i class="bi bi-circle-fill" style="font-size:.5rem;"></i> ${RO_STATUS_LABEL[data.status] || data.statusLabel}</span>`;
-            if (data.notes) html += `<div class="th-notes-box"><i class="bi bi-sticky"></i> ${data.notes}</div>`;
-
-            if (data.treatments && data.treatments.length) {
-                html += '<div class="th-timeline">';
-                data.treatments.forEach(tr => {
-                    html += `<div class="th-node">
-                                    <div class="th-node-date">${tr.date}</div>
-                                    <div class="th-node-title">${tr.procedure}</div>
-                                    ${tr.notes ? `<div class="th-node-notes">${tr.notes}</div>` : ''}
-                                 </div>`;
-                });
-                html += '</div>';
-            } else {
-                html += '<div class="th-empty">لا توجد سجلات علاج تفصيلية</div>';
+        function buildContent(num) {
+            const info = toothInfoMap[num];
+            let html = `<div class="tt-title"><i class="bi bi-grid-3x3-gap"></i> ${toothLabel(num)} <span class="tt-num">FDI ${num}</span></div>`;
+            if (!info) {
+                html += `<div class="tt-row"><span>الحالة</span><b>سليم</b></div>`;
+                html += `<div class="tt-empty">لا يوجد سجل علاجي</div>`;
+                return html;
             }
-            body.innerHTML = html;
+            html += `<div class="tt-row"><span>الحالة</span><b>${info.status}</b></div>`;
+            if (info.lastTreatment) html += `<div class="tt-row"><span>آخر إجراء</span><b>${info.lastTreatment}</b></div>`;
+            if (info.lastDate) html += `<div class="tt-row"><span>بتاريخ</span><b>${info.lastDate}</b></div>`;
+            if (info.treatmentsCount > 1) html += `<div class="tt-row"><span>عدد السجلات</span><b>${info.treatmentsCount}</b></div>`;
+            if (info.notes) html += `<div class="tt-row tt-notes-row"><span>ملاحظات</span><span>${info.notes}</span></div>`;
+            return html;
         }
 
-        document.querySelectorAll('#chartCanvasRO .tooth-box').forEach(t => t.classList.remove('selected'));
-        const target = document.querySelector('#chartCanvasRO [data-tooth="' + num + '"]');
-        if (target) target.classList.add('selected');
+        function position(evt) {
+            const offset = 14;
+            let x = evt.clientX + offset, y = evt.clientY + offset;
+            const rect = tooltipEl.getBoundingClientRect();
+            if (x + rect.width > window.innerWidth - 10) x = evt.clientX - rect.width - offset;
+            if (y + rect.height > window.innerHeight - 10) y = evt.clientY - rect.height - offset;
+            tooltipEl.style.left = x + 'px';
+            tooltipEl.style.top = y + 'px';
+        }
 
-        const modal = document.getElementById('toothHistoryModal');
-        modal.classList.add('dc-show');
-    }
-
-    function closeToothHistoryModal() {
-        const modal = document.getElementById('toothHistoryModal');
-        modal.classList.remove('dc-show');
-        document.querySelectorAll('#chartCanvasRO .tooth-box').forEach(t => t.classList.remove('selected'));
-    }
-    window.openToothHistoryModal = openToothHistoryModal;
-    window.closeToothHistoryModal = closeToothHistoryModal;
-
-    // ── Hover Tooltip (من ToothInfoMap اللي جاي من الكنترولر) ──
-    const toothTooltipROEl = document.getElementById('toothTooltipRO');
-    if (toothTooltipROEl && toothTooltipROEl.parentElement !== document.body) {
-        document.body.appendChild(toothTooltipROEl);
-    }
-
-    function buildTooltipContentRO(num) {
-        const info = window.toothInfoMapRO ? window.toothInfoMapRO[num] : null;
-        if (!info) return null;
-        let html = `<div class="tt-title"><i class="bi bi-grid-3x3-gap"></i> ${toothLabelRO(num)} <span class="tt-num">FDI ${num}</span></div>`;
-        html += `<div class="tt-row"><span>الحالة</span><b>${info.status || '-'}</b></div>`;
-        if (info.diagnosis) html += `<div class="tt-row"><span>التشخيص</span><b>${info.diagnosis}</b></div>`;
-        if (info.notes) html += `<div class="tt-row tt-notes-row"><span>ملاحظات</span><span>${info.notes}</span></div>`;
-        if (!info.diagnosis && !info.notes) html += `<div class="tt-empty">لا توجد بيانات إضافية</div>`;
-        return html;
-    }
-
-    function positionTooltipRO(evt) {
-        if (!toothTooltipROEl || !evt) return;
-        const offset = 14;
-        let x = evt.clientX + offset, y = evt.clientY + offset;
-        const rect = toothTooltipROEl.getBoundingClientRect();
-        if (x + rect.width > window.innerWidth - 10) x = evt.clientX - rect.width - offset;
-        if (y + rect.height > window.innerHeight - 10) y = evt.clientY - rect.height - offset;
-        toothTooltipROEl.style.left = x + 'px';
-        toothTooltipROEl.style.top = y + 'px';
-    }
-
-    const chartCanvasROEl = document.getElementById('chartCanvasRO');
-    let lastHoveredToothRO = null;
-    if (chartCanvasROEl) {
-        chartCanvasROEl.addEventListener('mousemove', function(e) {
+        let lastTooth = null;
+        canvas.addEventListener('mousemove', function(e) {
             const box = e.target.closest('.tooth-box');
             if (!box) {
-                if (lastHoveredToothRO !== null) { toothTooltipROEl.classList.remove('show'); lastHoveredToothRO = null; }
+                if (lastTooth !== null) { tooltipEl.classList.remove('show'); lastTooth = null; }
                 return;
             }
-            lastHoveredToothRO = parseInt(box.getAttribute('data-tooth'));
-            const content = buildTooltipContentRO(lastHoveredToothRO);
-            if (!content) { toothTooltipROEl.classList.remove('show'); return; }
-            toothTooltipROEl.innerHTML = content;
-            toothTooltipROEl.classList.add('show');
-            positionTooltipRO(e);
+            lastTooth = box.getAttribute('data-tooth');
+            tooltipEl.innerHTML = buildContent(lastTooth);
+            tooltipEl.classList.add('show');
+            position(e);
         });
-        chartCanvasROEl.addEventListener('mouseleave', function() {
-            lastHoveredToothRO = null;
-            toothTooltipROEl.classList.remove('show');
+        canvas.addEventListener('mouseleave', function() {
+            lastTooth = null;
+            tooltipEl.classList.remove('show');
         });
-    }
-
-    const thModalEl = document.getElementById('toothHistoryModal');
-    if (thModalEl) {
-        thModalEl.addEventListener('click', function(e) {
-            if (e.target === thModalEl) closeToothHistoryModal();
-        });
-    }
+    })();
 </script>

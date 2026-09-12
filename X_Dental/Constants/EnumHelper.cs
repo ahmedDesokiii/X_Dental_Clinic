@@ -32,5 +32,38 @@ namespace Dental.Constants
 
             return displayAttr?.Name ?? enumValue.ToString();
         }
-    }
+
+
+
+            public enum MedicationCategory
+            {
+                Antibiotic = 1,      // مضاد حيوي
+                PainKiller = 2,      // مسكن
+                AntiInflammatory = 3,// مضاد التهاب
+                MouthWash = 4,       // غسول فم
+                Vitamin = 5,         // فيتامينات
+                LocalAnesthetic = 6, // بنج موضعي
+                Other = 99           // أخرى
+            }
+
+            public enum TreatmentPlanStatus
+            {
+                Draft = 1,        // مسودة — لسه ما تعرضتش على المريض
+                Approved = 2,     // المريض وافق
+                InProgress = 3,   // جاري التنفيذ
+                Completed = 4,    // اكتملت كل المراحل
+                Cancelled = 5     // اتلغت
+            }
+
+            public enum TreatmentStepStatus
+            {
+                Planned = 1,     // مجدولة
+                InProgress = 2,  // شغال عليها دلوقتي
+                Done = 3,        // خلصت
+                Skipped = 4      // اتلغت/اتخطت
+            }
+        
+
+
+}
 }

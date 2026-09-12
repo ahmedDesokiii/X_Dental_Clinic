@@ -1,0 +1,1026 @@
+@* _TreatmentPlansPanel.cshtml — لسه صفحة الـ Patients Details هي اللي بتستدعيه في تبويب plans *@
+
+<div class="tp-wrap" data-patient-id="@ViewBag.CurrentPatientId">
+    <div class="tp-header">
+        <div class="tp-header-info">
+            <h4><i class="bi bi-clipboard-check"></i> Treatment Plans</h4>
+            <span class="tp-header-sub">Proposed and ongoing treatment roadmaps for this patient</span>
+        </div>
+        <button type="button" class="btn-hero primary" onclick="TreatmentPlans.openCreateModal()">
+            <i class="bi bi-plus-lg"></i> New Plan
+        </button>
+    </div>
+
+    <div id="tpSkeleton" class="tp-skeleton">
+        <div class="tp-skeleton-card"></div>
+        <div class="tp-skeleton-card"></div>
+    </div>
+
+    <div id="tpPlansList" class="tp-plans-list" style="display:none;"></div>
+
+    <div id="tpEmptyState" class="placeholder-glass" style="display:none;">
+        <div class="placeholder-icon-glass"><i class="bi bi-clipboard-check"></i></div>
+        <h3>No Treatment Plans Yet</h3>
+        <p>Create a plan to map out future procedures and track progress step by step.</p>
+        <button type="button" class="btn-hero primary" style="display:inline-flex;" onclick="TreatmentPlans.openCreateModal()">
+            <i class="bi bi-plus-lg"></i> Create First Plan
+        </button>
+    </div>
+</div>
+
+@* ══════════ Create Plan Modal ══════════ *@
+<div class="custom-modal-new" id="tpCreateModal">
+    <div class="modal-overlay-new" onclick="TreatmentPlans.closeCreateModal()"></div>
+    <div class="modal-box-new tp-modal-lg">
+        <div class="modal-head-new">
+            <h5><i class="bi bi-clipboard-plus me-2"></i> New Treatment Plan</h5>
+            <button type="button" class="btn-close btn-close-white" onclick="TreatmentPlans.closeCreateModal()"></button>
+        </div>
+        <div class="modal-body-new">
+            <div class="mb-3">
+                <label class="form-label-custom-new">Plan Title <span class="text-danger">*</span></label>
+                <input type="text" class="form-control-custom-new" id="tpPlanTitle" placeholder="e.g. Orthodontic Treatment Plan" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label-custom-new">Notes</label>
+                <textarea class="form-control-custom-new" id="tpPlanNotes" rows="2" placeholder="Overview or patient consent notes..."></textarea>
+            </div>
+
+            <div class="tp-steps-editor-head">
+                <label class="form-label-custom-new mb-0">Plan Steps</label>
+                <button type="button" class="tp-add-step-btn" onclick="TreatmentPlans.addStepRow()">
+                    <i class="bi bi-plus-lg"></i> Add Step
+                </button>
+            </div>
+            <div id="tpStepsEditor" class="tp-steps-editor"></div>
+        </div>
+        <div class="modal-foot-new">
+            <button type="button" class="btn-modal-new btn-modal-cancel-new" onclick="TreatmentPlans.closeCreateModal()">Cancel</button>
+            <button type="button" class="btn-modal-new btn-modal-save-new" id="tpBtnSavePlan" onclick="TreatmentPlans.savePlan()">
+                <i class="bi bi-check-lg"></i> <span id="tpBtnSavePlanText">Save Plan</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+@* ══════════ Add Step Modal (for existing plan) ══════════ *@
+<div class="custom-modal-new" id="tpAddStepModal">
+    <div class="modal-overlay-new" onclick="TreatmentPlans.closeAddStepModal()"></div>
+    <div class="modal-box-new">
+        <div class="modal-head-new">
+            <h5><i class="bi bi-plus-circle me-2"></i> Add Step</h5>
+            <button type="button" class="btn-close btn-close-white" onclick="TreatmentPlans.closeAddStepModal()"></button>
+        </div>
+        <div class="modal-body-new">
+            <input type="hidden" id="tpAddStepPlanId" />
+            <div class="tp-step-row-fields">
+@*                 @Html.Partial("_TreatmentStepFields", "solo") *@
+            </div>
+        </div>
+        <div class="modal-foot-new">
+            <button type="button" class="btn-modal-new btn-modal-cancel-new" onclick="TreatmentPlans.closeAddStepModal()">Cancel</button>
+            <button type="button" class="btn-modal-new btn-modal-save-new" onclick="TreatmentPlans.saveNewStep()">
+                <i class="bi bi-check-lg"></i> Add Step
+            </button>
+        </div>
+    </div>
+</div>
+
+@* ══════════ Link-to-visit Modal (when marking a step Done) ══════════ *@
+<div class="custom-modal-new" id="tpLinkVisitModal">
+    <div class="modal-overlay-new" onclick="TreatmentPlans.closeLinkVisitModal()"></div>
+    <div class="modal-box-new">
+        <div class="modal-head-new">
+            <h5><i class="bi bi-check2-circle me-2"></i> Mark Step as Done</h5>
+            <button type="button" class="btn-close btn-close-white" onclick="TreatmentPlans.closeLinkVisitModal()"></button>
+        </div>
+        <div class="modal-body-new">
+            <input type="hidden" id="tpDoneStepId" />
+            <div class="mb-3">
+                <label class="form-label-custom-new">Link to a visit (optional)</label>
+                <select class="form-control-custom-new" id="tpDoneVisitId">
+                    <option value="">— No specific visit —</option>
+                </select>
+            </div>
+            <p class="tp-hint-text"><i class="bi bi-info-circle"></i> Linking helps trace back which session this step was actually performed in.</p>
+        </div>
+        <div class="modal-foot-new">
+            <button type="button" class="btn-modal-new btn-modal-cancel-new" onclick="TreatmentPlans.closeLinkVisitModal()">Cancel</button>
+            <button type="button" class="btn-modal-new btn-modal-save-new" onclick="TreatmentPlans.confirmStepDone()">
+                <i class="bi bi-check-lg"></i> Confirm Done
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tp-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .tp-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .tp-header-info h4 {
+        margin: 0 0 2px;
+        font-weight: 800;
+        font-size: 1.05rem;
+        color: var(--dc-ink-900);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .tp-header-sub {
+        font-size: .8rem;
+        color: var(--dc-ink-400);
+        font-weight: 600;
+    }
+
+    /* ── Skeleton ── */
+    .tp-skeleton {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .tp-skeleton-card {
+        height: 90px;
+        border-radius: 16px;
+        background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 37%, #f1f5f9 63%);
+        background-size: 400% 100%;
+        animation: skeletonShine 1.4s ease infinite;
+    }
+
+    /* ── Plan Cards ── */
+    .tp-plans-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .tp-plan-card {
+        background: rgba(255,255,255,.92);
+        border: 1px solid rgba(255,255,255,.6);
+        border-radius: 18px;
+        box-shadow: var(--dc-shadow-sm);
+        overflow: hidden;
+        transition: box-shadow .25s ease;
+    }
+
+        .tp-plan-card:hover {
+            box-shadow: var(--dc-shadow);
+        }
+
+    .tp-plan-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 16px 18px;
+        cursor: pointer;
+    }
+
+    .tp-plan-title-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .tp-plan-title {
+        font-weight: 800;
+        font-size: .98rem;
+        color: var(--dc-ink-900);
+    }
+
+    .tp-plan-badge {
+        font-size: .68rem;
+        font-weight: 800;
+        padding: 3px 11px;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+
+    .plan-badge-draft {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .plan-badge-approved {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .plan-badge-progress {
+        background: #fff7ed;
+        color: #c2410c;
+    }
+
+    .plan-badge-completed {
+        background: #ecfdf5;
+        color: #047857;
+    }
+
+    .plan-badge-cancelled {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .tp-plan-meta {
+        display: flex;
+        gap: 16px;
+        margin-top: 8px;
+        font-size: .76rem;
+        color: var(--dc-ink-400);
+        font-weight: 700;
+    }
+
+        .tp-plan-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+    .tp-plan-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .tp-chevron {
+        transition: transform .25s ease;
+        color: var(--dc-ink-400);
+        font-size: 1.1rem;
+    }
+
+    .tp-plan-card.expanded .tp-chevron {
+        transform: rotate(180deg);
+    }
+
+    .tp-icon-btn {
+        border: none;
+        background: #f8fafc;
+        color: var(--dc-ink-600);
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all .2s;
+    }
+
+        .tp-icon-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .tp-icon-btn.danger:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+    .tp-progress-row {
+        padding: 0 18px 16px;
+    }
+
+    .tp-progress-track {
+        height: 8px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        overflow: hidden;
+    }
+
+    .tp-progress-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--dc-teal-600), var(--dc-teal-500));
+        transition: width .5s ease;
+    }
+
+    .tp-progress-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: .72rem;
+        font-weight: 700;
+        color: var(--dc-ink-600);
+        margin-top: 6px;
+    }
+
+    .tp-plan-body {
+        display: none;
+        border-top: 1px solid var(--dc-teal-50);
+        padding: 16px 18px 18px;
+        background: linear-gradient(180deg, #fafffe, #fff);
+    }
+
+    .tp-plan-card.expanded .tp-plan-body {
+        display: block;
+        animation: fadeInUp .3s ease;
+    }
+
+    .tp-plan-notes {
+        font-size: .84rem;
+        color: #475569;
+        line-height: 1.6;
+        margin-bottom: 14px;
+    }
+
+    /* ── Steps Timeline ── */
+    .tp-steps-timeline {
+        position: relative;
+        padding-inline-start: 26px;
+    }
+
+        .tp-steps-timeline::before {
+            content: '';
+            position: absolute;
+            inset-inline-start: 9px;
+            top: 6px;
+            bottom: 6px;
+            width: 2px;
+            background: var(--dc-teal-100);
+        }
+
+    .tp-step-node {
+        position: relative;
+        padding-bottom: 16px;
+    }
+
+        .tp-step-node:last-child {
+            padding-bottom: 0;
+        }
+
+        .tp-step-node::before {
+            content: '';
+            position: absolute;
+            inset-inline-start: -22px;
+            top: 3px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid var(--dc-ink-400);
+        }
+
+        .tp-step-node.done::before {
+            border-color: #16a34a;
+            background: #16a34a;
+        }
+
+        .tp-step-node.progress::before {
+            border-color: #d97706;
+            background: #d97706;
+        }
+
+        .tp-step-node.skipped::before {
+            border-color: #dc2626;
+            background: #fff;
+        }
+
+    .tp-step-card {
+        background: #fff;
+        border: 1px solid #f1f5f9;
+        border-radius: 12px;
+        padding: 12px 14px;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .tp-step-main {
+        flex: 1 1 260px;
+        min-width: 0;
+    }
+
+    .tp-step-desc {
+        font-weight: 800;
+        font-size: .87rem;
+        color: var(--dc-ink-900);
+    }
+
+    .tp-step-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 6px;
+    }
+
+    .tp-step-tag {
+        font-size: .68rem;
+        font-weight: 700;
+        color: var(--dc-ink-600);
+        background: #f8fafc;
+        padding: 2px 9px;
+        border-radius: 7px;
+    }
+
+    .tp-step-notes {
+        font-size: .76rem;
+        color: #94a3b8;
+        margin-top: 6px;
+    }
+
+    .tp-step-side {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .tp-step-cost {
+        font-weight: 800;
+        color: var(--dc-teal-700);
+        font-size: .9rem;
+    }
+
+    .step-badge-planned {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .step-badge-progress {
+        background: #fff7ed;
+        color: #c2410c;
+    }
+
+    .step-badge-done {
+        background: #ecfdf5;
+        color: #047857;
+    }
+
+    .step-badge-skipped {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .tp-step-badge {
+        font-size: .68rem;
+        font-weight: 800;
+        padding: 3px 10px;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+
+    .tp-step-actions {
+        display: flex;
+        gap: 6px;
+    }
+
+    .tp-add-step-inline {
+        margin-top: 14px;
+        border: 1.5px dashed #cbd5e1;
+        border-radius: 12px;
+        padding: 10px;
+        text-align: center;
+        color: var(--dc-teal-600);
+        font-weight: 700;
+        font-size: .82rem;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .tp-add-step-inline:hover {
+            background: var(--dc-teal-50);
+            border-color: var(--dc-teal-500);
+        }
+
+    /* ── Steps Editor (create modal) ── */
+    .tp-steps-editor-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 8px;
+        margin-bottom: 10px;
+    }
+
+    .tp-add-step-btn {
+        border: none;
+        background: var(--dc-teal-50);
+        color: var(--dc-teal-700);
+        font-weight: 800;
+        font-size: .78rem;
+        padding: 6px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all .2s;
+    }
+
+        .tp-add-step-btn:hover {
+            background: var(--dc-teal-100);
+        }
+
+    .tp-steps-editor {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: 320px;
+        overflow-y: auto;
+    }
+
+    .tp-step-editor-row {
+        border: 1px solid #f1f5f9;
+        border-radius: 12px;
+        padding: 12px;
+        background: #fafcfd;
+        position: relative;
+    }
+
+        .tp-step-editor-row .tp-remove-step {
+            position: absolute;
+            top: 8px;
+            inset-inline-end: 8px;
+            border: none;
+            background: #fee2e2;
+            color: #dc2626;
+            width: 26px;
+            height: 26px;
+            border-radius: 7px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+    .tp-field-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 8px;
+    }
+
+        .tp-field-grid.full {
+            grid-template-columns: 1fr;
+        }
+
+    .tp-modal-lg {
+        max-width: 640px;
+    }
+
+    .tp-hint-text {
+        font-size: .78rem;
+        color: var(--dc-ink-400);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0;
+    }
+
+    .tp-empty-steps {
+        text-align: center;
+        color: #94a3b8;
+        font-size: .82rem;
+        padding: 20px;
+    }
+</style>
+
+<script>
+    window.TreatmentPlans = (function() {
+        const patientId = document.querySelector('.tp-wrap')?.dataset.patientId;
+        let plansCache = [];
+        let procedureOptions = [];
+        let stepEditorCounter = 0;
+
+        function money(v) { return Number(v || 0).toLocaleString('en-US'); }
+
+        function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-GB') : '—'; }
+
+        async function loadPlans() {
+            const skeleton = document.getElementById('tpSkeleton');
+            const list = document.getElementById('tpPlansList');
+            const empty = document.getElementById('tpEmptyState');
+            skeleton.style.display = 'flex';
+            list.style.display = 'none';
+            empty.style.display = 'none';
+
+            try {
+                const res = await fetch(`/TreatmentPlans/GetPlans?patientId=${patientId}`);
+                const result = await res.json();
+                plansCache = result.success ? result.data : [];
+                renderPlans();
+            } catch (e) {
+                console.error(e);
+                plansCache = [];
+                renderPlans();
+            } finally {
+                skeleton.style.display = 'none';
+            }
+        }
+
+        function renderPlans() {
+            const list = document.getElementById('tpPlansList');
+            const empty = document.getElementById('tpEmptyState');
+
+            if (!plansCache.length) {
+                list.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+
+            empty.style.display = 'none';
+            list.style.display = 'flex';
+            list.innerHTML = plansCache.map(p => planCardHtml(p)).join('');
+        }
+
+        function planCardHtml(p) {
+            const stepsHtml = p.steps.length
+                ? `<div class="tp-steps-timeline">${p.steps.map(s => stepNodeHtml(p, s)).join('')}</div>`
+                : `<div class="tp-empty-steps">No steps added yet.</div>`;
+
+            return `
+                    <div class="tp-plan-card" id="tpPlan_${p.id}">
+                        <div class="tp-plan-head" onclick="TreatmentPlans.toggleExpand(${p.id})">
+                            <div>
+                                <div class="tp-plan-title-row">
+                                    <span class="tp-plan-title">${escapeHtml(p.title)}</span>
+                                    <span class="tp-plan-badge ${p.statusColorClass}">${p.statusText}</span>
+                                </div>
+                                <div class="tp-plan-meta">
+                                    <span><i class="bi bi-calendar3"></i> ${fmtDate(p.createdDate)}</span>
+                                    <span><i class="bi bi-list-check"></i> ${p.completedSteps}/${p.totalSteps} steps</span>
+                                    <span><i class="bi bi-cash-stack"></i> ${money(p.totalEstimatedCost)} EGP</span>
+                                </div>
+                            </div>
+                            <div class="tp-plan-actions">
+                                ${p.status === 1 ? `<button class="tp-icon-btn" title="Approve" onclick="event.stopPropagation(); TreatmentPlans.setPlanStatus(${p.id}, 2)"><i class="bi bi-check2"></i></button>` : ''}
+                                <button class="tp-icon-btn danger" title="Delete plan" onclick="event.stopPropagation(); TreatmentPlans.deletePlan(${p.id})"><i class="bi bi-trash3"></i></button>
+                                <i class="bi bi-chevron-down tp-chevron"></i>
+                            </div>
+                        </div>
+                        <div class="tp-progress-row">
+                            <div class="tp-progress-track"><div class="tp-progress-fill" style="width:${p.progressPercent}%;"></div></div>
+                            <div class="tp-progress-label"><span>Progress</span><span>${p.progressPercent}%</span></div>
+                        </div>
+                        <div class="tp-plan-body">
+                            ${p.notes ? `<div class="tp-plan-notes"><i class="bi bi-quote"></i> ${escapeHtml(p.notes)}</div>` : ''}
+                            ${stepsHtml}
+                            <div class="tp-add-step-inline" onclick="TreatmentPlans.openAddStepModal(${p.id})">
+                                <i class="bi bi-plus-lg"></i> Add another step
+                            </div>
+                        </div>
+                    </div>`;
+        }
+
+        function stepNodeHtml(plan, s) {
+            const nodeClass = s.status === 3 ? 'done' : s.status === 2 ? 'progress' : s.status === 4 ? 'skipped' : '';
+            const tags = [];
+            if (s.toothNumber) tags.push(`Tooth ${s.toothNumber}`);
+            if (s.procedureName) tags.push(s.procedureName);
+            if (s.targetDate) tags.push(`Target: ${fmtDate(s.targetDate)}`);
+            if (s.completedDate) tags.push(`Done: ${fmtDate(s.completedDate)}`);
+
+            return `
+                    <div class="tp-step-node ${nodeClass}">
+                        <div class="tp-step-card">
+                            <div class="tp-step-main">
+                                <div class="tp-step-desc">${s.stepOrder}. ${escapeHtml(s.description)}</div>
+                                ${tags.length ? `<div class="tp-step-tags">${tags.map(t => `<span class="tp-step-tag">${t}</span>`).join('')}</div>` : ''}
+                                ${s.notes ? `<div class="tp-step-notes">${escapeHtml(s.notes)}</div>` : ''}
+                            </div>
+                            <div class="tp-step-side">
+                                <span class="tp-step-cost">${money(s.estimatedCost)} EGP</span>
+                                <span class="tp-step-badge ${s.statusColorClass}">${s.statusText}</span>
+                                <div class="tp-step-actions">
+                                    ${s.status !== 3 ? `<button class="tp-icon-btn" title="Mark Done" onclick="TreatmentPlans.openLinkVisitModal(${s.id})"><i class="bi bi-check2-circle"></i></button>` : ''}
+                                    ${s.status === 1 ? `<button class="tp-icon-btn" title="In Progress" onclick="TreatmentPlans.quickStatus(${s.id}, 2)"><i class="bi bi-play-circle"></i></button>` : ''}
+                                    <button class="tp-icon-btn danger" title="Delete step" onclick="TreatmentPlans.deleteStep(${s.id})"><i class="bi bi-trash3"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+        }
+
+        function toggleExpand(id) {
+            document.getElementById(`tpPlan_${id}`)?.classList.toggle('expanded');
+        }
+
+        // ── Create Plan Modal ──
+        async function openCreateModal() {
+            document.getElementById('tpPlanTitle').value = '';
+            document.getElementById('tpPlanNotes').value = '';
+            document.getElementById('tpStepsEditor').innerHTML = '';
+            stepEditorCounter = 0;
+            if (!procedureOptions.length) await loadProcedureOptions();
+            addStepRow();
+            document.getElementById('tpCreateModal').classList.add('show');
+        }
+        function closeCreateModal() {
+            document.getElementById('tpCreateModal').classList.remove('show');
+        }
+
+        async function loadProcedureOptions() {
+            try {
+                const res = await fetch('/TreatmentPlans/GetProcedureOptions');
+                const result = await res.json();
+                procedureOptions = result.success ? result.data : [];
+            } catch (e) { procedureOptions = []; }
+        }
+
+        function procedureOptionsHtml() {
+            return `<option value="">— No linked procedure —</option>` +
+                procedureOptions.map(p => `<option value="${p.id}" data-price="${p.price}">${p.name}</option>`).join('');
+        }
+
+        function addStepRow() {
+            stepEditorCounter++;
+            const rowId = `tpStepRow_${stepEditorCounter}`;
+            const wrap = document.getElementById('tpStepsEditor');
+            const div = document.createElement('div');
+            div.className = 'tp-step-editor-row';
+            div.id = rowId;
+            div.innerHTML = `
+                    <button type="button" class="tp-remove-step" onclick="document.getElementById('${rowId}').remove()"><i class="bi bi-x"></i></button>
+                    <label class="form-label-custom-new">Step Description <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control-custom-new tp-f-desc" placeholder="e.g. Fit upper braces" />
+                    <div class="tp-field-grid">
+                        <div>
+                            <label class="form-label-custom-new">Linked Procedure</label>
+                            <select class="form-control-custom-new tp-f-proc" onchange="TreatmentPlans.onProcedurePick(this)">
+                                ${procedureOptionsHtml()}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label-custom-new">Tooth # (optional)</label>
+                            <input type="number" class="form-control-custom-new tp-f-tooth" min="11" max="48" />
+                        </div>
+                    </div>
+                    <div class="tp-field-grid">
+                        <div>
+                            <label class="form-label-custom-new">Estimated Cost</label>
+                            <input type="number" step="0.01" class="form-control-custom-new tp-f-cost" value="0" />
+                        </div>
+                        <div>
+                            <label class="form-label-custom-new">Target Date</label>
+                            <input type="date" class="form-control-custom-new tp-f-date" />
+                        </div>
+                    </div>
+                    <div class="tp-field-grid full">
+                        <div>
+                            <label class="form-label-custom-new">Notes</label>
+                            <input type="text" class="form-control-custom-new tp-f-notes" placeholder="Optional notes..." />
+                        </div>
+                    </div>`;
+            wrap.appendChild(div);
+        }
+
+        function onProcedurePick(selectEl) {
+            const opt = selectEl.options[selectEl.selectedIndex];
+            const price = opt?.dataset?.price;
+            if (price) {
+                const row = selectEl.closest('.tp-step-editor-row');
+                row.querySelector('.tp-f-cost').value = price;
+            }
+        }
+
+        async function savePlan() {
+            const title = document.getElementById('tpPlanTitle').value.trim();
+            if (!title) {
+                Swal.fire({ title: 'Required', text: 'Enter a plan title', icon: 'warning', confirmButtonColor: '#0d9488' });
+                return;
+            }
+
+            const steps = Array.from(document.querySelectorAll('.tp-step-editor-row')).map(row => ({
+                Description: row.querySelector('.tp-f-desc').value.trim(),
+                ProcedureCatalogId: row.querySelector('.tp-f-proc').value ? parseInt(row.querySelector('.tp-f-proc').value) : null,
+                ToothNumber: row.querySelector('.tp-f-tooth').value ? parseInt(row.querySelector('.tp-f-tooth').value) : null,
+                EstimatedCost: parseFloat(row.querySelector('.tp-f-cost').value || 0),
+                TargetDate: row.querySelector('.tp-f-date').value || null,
+                Notes: row.querySelector('.tp-f-notes').value.trim()
+            })).filter(s => s.Description);
+
+            const btn = document.getElementById('tpBtnSavePlan');
+            const btnText = document.getElementById('tpBtnSavePlanText');
+            btn.disabled = true;
+            btnText.textContent = 'Saving...';
+
+            try {
+                const res = await fetch('/TreatmentPlans/CreatePlan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        PatientId: parseInt(patientId),
+                        Title: title,
+                        Notes: document.getElementById('tpPlanNotes').value.trim(),
+                        Steps: steps
+                    })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    closeCreateModal();
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Plan created', showConfirmButton: false, timer: 1800 });
+                    loadPlans();
+                } else {
+                    Swal.fire({ title: 'Error', text: result.message || 'Could not save plan', icon: 'error' });
+                }
+            } catch (e) {
+                Swal.fire({ title: 'Error', text: 'Server connection failed', icon: 'error' });
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = 'Save Plan';
+            }
+        }
+
+        // ── Add step to an existing plan ──
+        async function openAddStepModal(planId) {
+            if (!procedureOptions.length) await loadProcedureOptions();
+            document.getElementById('tpAddStepPlanId').value = planId;
+            const wrap = document.querySelector('#tpAddStepModal .tp-step-row-fields');
+            wrap.innerHTML = `
+                    <label class="form-label-custom-new">Step Description <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control-custom-new" id="tpSoloDesc" placeholder="e.g. Adjust braces wire" />
+                    <div class="tp-field-grid">
+                        <div>
+                            <label class="form-label-custom-new">Linked Procedure</label>
+                            <select class="form-control-custom-new" id="tpSoloProc" onchange="TreatmentPlans.onProcedurePick(this)">
+                                ${procedureOptionsHtml()}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label-custom-new">Tooth # (optional)</label>
+                            <input type="number" class="form-control-custom-new" id="tpSoloTooth" min="11" max="48" />
+                        </div>
+                    </div>
+                    <div class="tp-field-grid">
+                        <div>
+                            <label class="form-label-custom-new">Estimated Cost</label>
+                            <input type="number" step="0.01" class="form-control-custom-new" id="tpSoloCost" value="0" />
+                        </div>
+                        <div>
+                            <label class="form-label-custom-new">Target Date</label>
+                            <input type="date" class="form-control-custom-new" id="tpSoloDate" />
+                        </div>
+                    </div>
+                    <div class="tp-field-grid full">
+                        <div>
+                            <label class="form-label-custom-new">Notes</label>
+                            <input type="text" class="form-control-custom-new" id="tpSoloNotes" placeholder="Optional notes..." />
+                        </div>
+                    </div>`;
+            document.getElementById('tpAddStepModal').classList.add('show');
+        }
+        function closeAddStepModal() {
+            document.getElementById('tpAddStepModal').classList.remove('show');
+        }
+
+        async function saveNewStep() {
+            const planId = parseInt(document.getElementById('tpAddStepPlanId').value);
+            const desc = document.getElementById('tpSoloDesc').value.trim();
+            if (!desc) {
+                Swal.fire({ title: 'Required', text: 'Enter a step description', icon: 'warning', confirmButtonColor: '#0d9488' });
+                return;
+            }
+            try {
+                const res = await fetch('/TreatmentPlans/AddStep', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        TreatmentPlanId: planId,
+                        Description: desc,
+                        ProcedureCatalogId: document.getElementById('tpSoloProc').value ? parseInt(document.getElementById('tpSoloProc').value) : null,
+                        ToothNumber: document.getElementById('tpSoloTooth').value ? parseInt(document.getElementById('tpSoloTooth').value) : null,
+                        EstimatedCost: parseFloat(document.getElementById('tpSoloCost').value || 0),
+                        TargetDate: document.getElementById('tpSoloDate').value || null,
+                        Notes: document.getElementById('tpSoloNotes').value.trim()
+                    })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    closeAddStepModal();
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Step added', showConfirmButton: false, timer: 1500 });
+                    loadPlans();
+                } else {
+                    Swal.fire({ title: 'Error', text: result.message, icon: 'error' });
+                }
+            } catch (e) {
+                Swal.fire({ title: 'Error', text: 'Server connection failed', icon: 'error' });
+            }
+        }
+
+        // ── Step status quick actions ──
+        async function quickStatus(stepId, status) {
+            try {
+                const res = await fetch('/TreatmentPlans/UpdateStepStatus', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ StepId: stepId, Status: status })
+                });
+                const result = await res.json();
+                if (result.success) loadPlans();
+            } catch (e) { console.error(e); }
+        }
+
+        let pendingDoneStepId = null;
+        async function openLinkVisitModal(stepId) {
+            pendingDoneStepId = stepId;
+            document.getElementById('tpDoneStepId').value = stepId;
+            const select = document.getElementById('tpDoneVisitId');
+            select.innerHTML = '<option value="">— No specific visit —</option>';
+            try {
+                const res = await fetch(`/TreatmentPlans/GetPatientVisits?patientId=${patientId}`);
+                const result = await res.json();
+                if (result.success) {
+                    result.data.forEach(v => {
+                        const opt = document.createElement('option');
+                        opt.value = v.id;
+                        opt.textContent = `${new Date(v.date).toLocaleDateString('en-GB')} — ${v.status}`;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (e) { /* silent */ }
+            document.getElementById('tpLinkVisitModal').classList.add('show');
+        }
+        function closeLinkVisitModal() {
+            document.getElementById('tpLinkVisitModal').classList.remove('show');
+            pendingDoneStepId = null;
+        }
+        async function confirmStepDone() {
+            const stepId = parseInt(document.getElementById('tpDoneStepId').value);
+            const visitId = document.getElementById('tpDoneVisitId').value;
+            try {
+                const res = await fetch('/TreatmentPlans/UpdateStepStatus', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ StepId: stepId, Status: 3, CompletedVisitId: visitId ? parseInt(visitId) : null })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    closeLinkVisitModal();
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Step marked done', showConfirmButton: false, timer: 1500 });
+                    loadPlans();
+                } else {
+                    Swal.fire({ title: 'Error', text: result.message, icon: 'error' });
+                }
+            } catch (e) {
+                Swal.fire({ title: 'Error', text: 'Server connection failed', icon: 'error' });
+            }
+        }
+
+        async function deleteStep(stepId) {
+            const confirm = await Swal.fire({
+                title: 'Delete step?', text: 'This cannot be undone.', icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: 'Delete', reverseButtons: true
+            });
+            if (!confirm.isConfirmed) return;
+            try {
+                const res = await fetch(`/TreatmentPlans/DeleteStep?id=${stepId}`, { method: 'POST' });
+                const result = await res.json();
+                if (result.success) loadPlans();
+            } catch (e) { console.error(e); }
+        }
+
+        async function deletePlan(planId) {
+            const confirm = await Swal.fire({
+                title: 'Delete entire plan?', text: 'All steps in this plan will be removed too.', icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: 'Delete Plan', reverseButtons: true
+            });
+            if (!confirm.isConfirmed) return;
+            try {
+                const res = await fetch(`/TreatmentPlans/DeletePlan?id=${planId}`, { method: 'POST' });
+                const result = await res.json();
+                if (result.success) {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Plan deleted', showConfirmButton: false, timer: 1500 });
+                    loadPlans();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function setPlanStatus(planId, status) {
+            try {
+                const res = await fetch('/TreatmentPlans/UpdatePlanStatus', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ PlanId: planId, Status: status })
+                });
+                const result = await res.json();
+                if (result.success) loadPlans();
+            } catch (e) { console.error(e); }
+        }
+
+        return {
+            loadPlans, toggleExpand, openCreateModal, closeCreateModal, addStepRow, onProcedurePick, savePlan,
+            openAddStepModal, closeAddStepModal, saveNewStep, quickStatus,
+            openLinkVisitModal, closeLinkVisitModal, confirmStepDone,
+            deleteStep, deletePlan, setPlanStatus
+        };
+    })();
+</script>
