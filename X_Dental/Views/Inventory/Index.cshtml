@@ -1,0 +1,976 @@
+﻿@{
+    ViewData["Title"] = "Inventory";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        :root {
+            --dc-teal-50: #eafbfc;
+            --dc-teal-100: #c7f2ea;
+            --dc-teal-500: #14b8a6;
+            --dc-teal-600: #0d9488;
+            --dc-teal-700: #0d7377;
+            --dc-teal-900: #0a4d4f;
+            --dc-ink-900: #0b2e30;
+            --dc-ink-600: #4b6b6c;
+            --dc-ink-400: #94a3b8;
+            --dc-shadow-sm: 0 2px 8px rgba(10,77,79,0.04);
+            --dc-shadow: 0 8px 32px rgba(10,77,79,0.08);
+            --dc-shadow-lg: 0 20px 60px rgba(10,77,79,0.12);
+        }
+
+        .inventory-page {
+            padding: 16px 20px 60px;
+            font-family: 'Segoe UI','IBM Plex Sans Arabic',system-ui,sans-serif;
+            color: var(--dc-ink-900);
+        }
+
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .anim-fade-up {
+            animation: fadeInUp .5s cubic-bezier(.2,.8,.3,1) forwards;
+            opacity: 0;
+        }
+
+        .anim-d1 {
+            animation-delay: .05s;
+        }
+
+        .anim-d2 {
+            animation-delay: .1s;
+        }
+
+        .anim-d3 {
+            animation-delay: .15s;
+        }
+
+        .anim-d4 {
+            animation-delay: .2s;
+        }
+
+        .anim-d5 {
+            animation-delay: .25s;
+        }
+
+        .anim-d6 {
+            animation-delay: .3s;
+        }
+
+        .inv-hero {
+            background: linear-gradient(135deg,#0d7377 0%,#0f9b8e 50%,#14b8a6 100%);
+            border-radius: 24px;
+            padding: 22px 28px;
+            color: #fff;
+            box-shadow: var(--dc-shadow-lg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+            .inv-hero h1 {
+                margin: 0;
+                font-size: 1.35rem;
+                font-weight: 800;
+            }
+
+            .inv-hero p {
+                margin: 4px 0 0;
+                font-size: .85rem;
+                opacity: .9;
+            }
+
+        .btn-inv-primary {
+            background: #fff;
+            color: var(--dc-teal-700);
+            border: none;
+            padding: 11px 20px;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: .85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 10px 26px rgba(0,0,0,.15);
+            transition: all .2s ease;
+        }
+
+            .btn-inv-primary:hover {
+                transform: translateY(-2px);
+            }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(6,1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: rgba(255,255,255,.9);
+            border: 1px solid rgba(255,255,255,.6);
+            border-radius: 16px;
+            padding: 14px 16px;
+            box-shadow: var(--dc-shadow-sm);
+            transition: all .2s ease;
+        }
+
+            .kpi-card:hover {
+                transform: translateY(-3px);
+                box-shadow: var(--dc-shadow);
+            }
+
+            .kpi-card .kpi-val {
+                font-size: 1.3rem;
+                font-weight: 800;
+                color: var(--dc-ink-900);
+                display: block;
+            }
+
+            .kpi-card .kpi-lbl {
+                font-size: .72rem;
+                color: var(--dc-ink-600);
+                font-weight: 700;
+            }
+
+            .kpi-card.warn .kpi-val {
+                color: #d97706;
+            }
+
+            .kpi-card.danger .kpi-val {
+                color: #dc2626;
+            }
+
+        .inv-card {
+            background: rgba(255,255,255,.9);
+            border-radius: 22px;
+            border: 1px solid rgba(255,255,255,.6);
+            box-shadow: var(--dc-shadow);
+            overflow: hidden;
+        }
+
+        .inv-filter-bar {
+            display: flex;
+            gap: 10px;
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--dc-teal-50);
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .inv-filter-pills {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .inv-pill {
+            border: 1.5px solid var(--dc-teal-100);
+            background: #fff;
+            color: var(--dc-ink-600);
+            font-weight: 700;
+            font-size: .78rem;
+            padding: 7px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all .2s ease;
+            white-space: nowrap;
+        }
+
+            .inv-pill.active {
+                background: linear-gradient(135deg,var(--dc-teal-600),var(--dc-teal-700));
+                color: #fff;
+                border-color: transparent;
+            }
+
+        .inv-search-box {
+            position: relative;
+        }
+
+            .inv-search-box input {
+                padding: 9px 14px 9px 34px;
+                border: 1.5px solid var(--dc-teal-100);
+                border-radius: 999px;
+                font-size: .85rem;
+                width: 230px;
+                outline: none;
+            }
+
+            .inv-search-box i {
+                position: absolute;
+                left: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--dc-teal-600);
+            }
+
+        table.inv-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: .85rem;
+        }
+
+            table.inv-table th {
+                text-align: right;
+                padding: 12px 14px;
+                color: var(--dc-ink-400);
+                font-weight: 700;
+                font-size: .72rem;
+                text-transform: uppercase;
+                border-bottom: 2px solid #f1f5f9;
+                white-space: nowrap;
+            }
+
+            table.inv-table td {
+                padding: 12px 14px;
+                border-bottom: 1px solid #f8fafc;
+                vertical-align: middle;
+            }
+
+            table.inv-table tbody tr:hover td {
+                background: rgba(13,148,136,.03);
+            }
+
+        .mat-code-badge {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 2px 10px;
+            border-radius: 8px;
+            font-size: .72rem;
+            font-weight: 700;
+            font-family: monospace;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: .7rem;
+            font-weight: 800;
+        }
+
+        .status-ok {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-low {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .status-out {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .status-expired {
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+
+        .status-near {
+            background: #ffedd5;
+            color: #c2410c;
+        }
+
+        .row-actions {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            flex-wrap: nowrap;
+        }
+
+        .act-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            color: var(--dc-ink-600);
+            transition: all .2s ease;
+            cursor: pointer;
+        }
+
+            .act-btn:hover {
+                background: #f0fdfa;
+                color: var(--dc-teal-700);
+            }
+
+            .act-btn.danger:hover {
+                background: #fee2e2;
+                color: #dc2626;
+            }
+
+            .act-btn.in:hover {
+                background: #dcfce7;
+                color: #166534;
+            }
+
+            .act-btn.out:hover {
+                background: #fef3c7;
+                color: #b45309;
+            }
+
+        .inv-empty {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--dc-ink-400);
+        }
+
+            .inv-empty i {
+                font-size: 2.4rem;
+                opacity: .4;
+                display: block;
+                margin-bottom: 10px;
+            }
+
+        .inv-skel-row {
+            height: 44px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 37%,#f1f5f9 63%);
+            background-size: 400% 100%;
+            animation: skShine 1.3s ease infinite;
+        }
+
+        @@keyframes skShine {
+            0% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Modal generic (شبه اللي مستخدم في patient details) */
+        .inv-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .inv-modal.show {
+                display: flex;
+            }
+
+        .inv-modal-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(15,23,42,.45);
+            backdrop-filter: blur(4px);
+        }
+
+        .inv-modal-box {
+            position: relative;
+            z-index: 1;
+            width: 92%;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 25px 60px rgba(0,0,0,.2);
+            animation: fadeInUp .25s ease;
+            overflow: hidden;
+            max-height: 88vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+            .inv-modal-box.sm {
+                max-width: 440px;
+            }
+
+            .inv-modal-box.md {
+                max-width: 640px;
+            }
+
+        .inv-modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 22px;
+            background: linear-gradient(135deg,var(--dc-teal-600),var(--dc-teal-700));
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+            .inv-modal-head h5 {
+                margin: 0;
+                font-weight: 800;
+                font-size: 1.05rem;
+            }
+
+        .inv-modal-body {
+            padding: 20px 22px;
+            overflow-y: auto;
+        }
+
+        .inv-modal-foot {
+            padding: 14px 22px;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .inv-form-section {
+            margin-bottom: 18px;
+        }
+
+            .inv-form-section h6 {
+                font-size: .78rem;
+                font-weight: 800;
+                color: var(--dc-teal-700);
+                text-transform: uppercase;
+                letter-spacing: .4px;
+                margin-bottom: 10px;
+                padding-bottom: 6px;
+                border-bottom: 1px solid var(--dc-teal-50);
+            }
+
+        .inv-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+            .inv-form-grid.cols-3 {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+
+        .inv-label {
+            display: block;
+            font-size: .78rem;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 5px;
+        }
+
+        .inv-input, .inv-select, .inv-textarea {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1.5px solid var(--dc-teal-50);
+            border-radius: 10px;
+            font-size: .88rem;
+            outline: none;
+            transition: all .2s;
+        }
+
+            .inv-input:focus, .inv-select:focus, .inv-textarea:focus {
+                border-color: var(--dc-teal-500);
+                box-shadow: 0 0 0 3px rgba(20,184,166,.1);
+            }
+
+        .inv-btn {
+            padding: 9px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: .85rem;
+            border: none;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .inv-btn-cancel {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .inv-btn-save {
+            background: linear-gradient(135deg,var(--dc-teal-600),var(--dc-teal-700));
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .inv-btn-save:disabled {
+                opacity: .6;
+                cursor: not-allowed;
+            }
+
+        @@media (max-width:1200px) {
+            .kpi-grid {
+                grid-template-columns: repeat(3,1fr);
+            }
+
+            .inv-form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width:768px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2,1fr);
+            }
+
+            .inv-filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .inv-search-box input {
+                width: 100%;
+            }
+        }
+    </style>
+}
+
+<div class="inventory-page" dir="rtl">
+
+    <div class="inv-hero anim-fade-up">
+        <div>
+            <h1><i class="bi bi-box-seam-fill"></i> مخزن العيادة</h1>
+            <p>إدارة الخامات والمواد الطبية والحركات المخزنية</p>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button type="button" class="btn-inv-primary" style="background:rgba(255,255,255,.16); color:#fff;" onclick="openSupplierQuickModal()">
+                <i class="bi bi-truck"></i> مورد جديد
+            </button>
+            <button type="button" class="btn-inv-primary" onclick="openMaterialModal()">
+                <i class="bi bi-plus-circle"></i> إضافة خامة
+            </button>
+        </div>
+    </div>
+
+    <div class="kpi-grid" id="kpiGrid">
+        <div class="kpi-card anim-fade-up anim-d1"><span class="kpi-val" id="kpiTotal">—</span><span class="kpi-lbl">إجمالي الخامات</span></div>
+        <div class="kpi-card anim-fade-up anim-d2"><span class="kpi-val" id="kpiValue">—</span><span class="kpi-lbl">قيمة المخزون (ج.م)</span></div>
+        <div class="kpi-card warn anim-fade-up anim-d3"><span class="kpi-val" id="kpiLow">—</span><span class="kpi-lbl">مخزون منخفض</span></div>
+        <div class="kpi-card warn anim-fade-up anim-d4"><span class="kpi-val" id="kpiNear">—</span><span class="kpi-lbl">قرب انتهاء الصلاحية</span></div>
+        <div class="kpi-card danger anim-fade-up anim-d5"><span class="kpi-val" id="kpiExpired">—</span><span class="kpi-lbl">منتهية الصلاحية</span></div>
+        <div class="kpi-card danger anim-fade-up anim-d6"><span class="kpi-val" id="kpiOut">—</span><span class="kpi-lbl">نفذ من المخزون</span></div>
+    </div>
+
+    <div class="inv-card anim-fade-up anim-d2">
+        <div class="inv-filter-bar">
+            <div class="inv-filter-pills" id="statusPills">
+                <button class="inv-pill active" data-status="">الكل</button>
+                <button class="inv-pill" data-status="LowStock">مخزون منخفض</button>
+                <button class="inv-pill" data-status="OutOfStock">نفذ</button>
+                <button class="inv-pill" data-status="NearExpiry">قرب الانتهاء</button>
+                <button class="inv-pill" data-status="Expired">منتهي</button>
+                <button class="inv-pill" data-status="Available">متاح</button>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                <select class="inv-select" id="filterCategory" style="width:170px;">
+                    <option value="">كل الفئات</option>
+                </select>
+                <div class="inv-search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="searchBox" placeholder="بحث بالاسم أو الكود..." />
+                </div>
+            </div>
+        </div>
+
+        <div style="overflow-x:auto; padding: 0 8px 8px;">
+            <table class="inv-table">
+                <thead>
+                    <tr>
+                        <th>الكود</th>
+                        <th>اسم الخامة</th>
+                        <th>الفئة</th>
+                        <th class="text-center">الكمية</th>
+                        <th class="text-center">الحد الأدنى</th>
+                        <th class="text-center">السعر الحالي</th>
+                        <th>المورد</th>
+                        <th class="text-center">الحالة</th>
+                        <th class="text-center">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="materialsBody">
+                    <tr><td colspan="9"><div class="inv-skel-row"></div><div class="inv-skel-row"></div><div class="inv-skel-row"></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Material Form Modal Container -->
+<div id="materialModalContainer"></div>
+
+<!-- Stock In Modal -->
+<div class="inv-modal" id="stockInModal">
+    <div class="inv-modal-overlay" onclick="closeStockModal('stockInModal')"></div>
+    <div class="inv-modal-box sm">
+        <div class="inv-modal-head">
+            <h5><i class="bi bi-box-arrow-in-down me-2"></i> توريد للمخزن</h5>
+            <button class="btn-close btn-close-white" onclick="closeStockModal('stockInModal')"></button>
+        </div>
+        <div class="inv-modal-body">
+            <input type="hidden" id="siMaterialId" />
+            <div class="mb-2"><label class="inv-label">الكمية *</label><input type="number" step="0.001" class="inv-input" id="siQuantity" /></div>
+            <div class="mb-2"><label class="inv-label">سعر الوحدة</label><input type="number" step="0.01" class="inv-input" id="siUnitPrice" /></div>
+            <div class="mb-2"><label class="inv-label">رقم الباتش/التشغيلة</label><input type="text" class="inv-input" id="siBatch" /></div>
+            <div class="mb-2"><label class="inv-label">تاريخ الصلاحية</label><input type="date" class="inv-input" id="siExpiry" /></div>
+            <div class="mb-2"><label class="inv-label">المورد</label><select class="inv-select" id="siSupplier"><option value="">—</option></select></div>
+            <div class="mb-2"><label class="inv-label">ملاحظات</label><textarea class="inv-textarea" id="siNotes" rows="2"></textarea></div>
+        </div>
+        <div class="inv-modal-foot">
+            <button class="inv-btn inv-btn-cancel" onclick="closeStockModal('stockInModal')">إلغاء</button>
+            <button class="inv-btn inv-btn-save" id="btnSaveStockIn" onclick="submitStockIn()"><i class="bi bi-check-lg"></i> حفظ</button>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Out Modal -->
+<div class="inv-modal" id="stockOutModal">
+    <div class="inv-modal-overlay" onclick="closeStockModal('stockOutModal')"></div>
+    <div class="inv-modal-box sm">
+        <div class="inv-modal-head">
+            <h5><i class="bi bi-box-arrow-up me-2"></i> صرف من المخزن</h5>
+            <button class="btn-close btn-close-white" onclick="closeStockModal('stockOutModal')"></button>
+        </div>
+        <div class="inv-modal-body">
+            <input type="hidden" id="soMaterialId" />
+            <div class="mb-2" id="soAvailableHint" style="font-size:.8rem; color:#64748b;"></div>
+            <div class="mb-2"><label class="inv-label">الكمية *</label><input type="number" step="0.001" class="inv-input" id="soQuantity" /></div>
+            <div class="mb-2"><label class="inv-label">السبب / الجهة</label><input type="text" class="inv-input" id="soReason" placeholder="مثال: استخدام في سيشن" /></div>
+            <div class="mb-2"><label class="inv-label">ملاحظات</label><textarea class="inv-textarea" id="soNotes" rows="2"></textarea></div>
+        </div>
+        <div class="inv-modal-foot">
+            <button class="inv-btn inv-btn-cancel" onclick="closeStockModal('stockOutModal')">إلغاء</button>
+            <button class="inv-btn inv-btn-save" id="btnSaveStockOut" onclick="submitStockOut()"><i class="bi bi-check-lg"></i> حفظ</button>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Supplier Modal -->
+<div class="inv-modal" id="supplierQuickModal">
+    <div class="inv-modal-overlay" onclick="closeStockModal('supplierQuickModal')"></div>
+    <div class="inv-modal-box sm">
+        <div class="inv-modal-head">
+            <h5><i class="bi bi-truck me-2"></i> مورد جديد</h5>
+            <button class="btn-close btn-close-white" onclick="closeStockModal('supplierQuickModal')"></button>
+        </div>
+        <div class="inv-modal-body">
+            <div class="mb-2"><label class="inv-label">اسم المورد *</label><input type="text" class="inv-input" id="supName" /></div>
+            <div class="mb-2"><label class="inv-label">تليفون</label><input type="text" class="inv-input" id="supPhone" /></div>
+        </div>
+        <div class="inv-modal-foot">
+            <button class="inv-btn inv-btn-cancel" onclick="closeStockModal('supplierQuickModal')">إلغاء</button>
+            <button class="inv-btn inv-btn-save" onclick="submitSupplierQuick()"><i class="bi bi-check-lg"></i> حفظ</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const CATEGORY_LABELS = {
+            Consumables: 'مستهلكات', Restorative: 'حشو وترميم', Anesthesia: 'بنج', Impression: 'طبعة',
+            Orthodontic: 'تقويم', Endodontic: 'عصب', Surgical: 'جراحة', PPE: 'أدوات وقاية', Sterilization: 'تعقيم', Other: 'أخرى'
+        };
+        let currentStatus = '';
+        let currentCategory = '';
+        let searchDebounce = null;
+        let supplierOptionsCache = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCategories();
+            loadSuppliers();
+            loadDashboard();
+            loadMaterials();
+
+            document.querySelectorAll('#statusPills .inv-pill').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#statusPills .inv-pill').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentStatus = btn.dataset.status;
+                    loadMaterials();
+                });
+            });
+
+            document.getElementById('filterCategory').addEventListener('change', function() {
+                currentCategory = this.value;
+                loadMaterials();
+            });
+
+            document.getElementById('searchBox').addEventListener('input', function() {
+                clearTimeout(searchDebounce);
+                searchDebounce = setTimeout(loadMaterials, 350);
+            });
+        });
+
+        function loadCategories() {
+            const sel = document.getElementById('filterCategory');
+            Object.keys(CATEGORY_LABELS).forEach((key, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx + 1; // enum values start at 1 in same declaration order
+                opt.textContent = CATEGORY_LABELS[key];
+                sel.appendChild(opt);
+            });
+        }
+
+        async function loadSuppliers() {
+            const res = await fetch('/Inventory/GetSuppliersLookup');
+            const result = await res.json();
+            supplierOptionsCache = result.data || [];
+            const siSel = document.getElementById('siSupplier');
+            siSel.innerHTML = '<option value="">—</option>' + supplierOptionsCache.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        }
+
+        async function loadDashboard() {
+            const res = await fetch('/Inventory/GetDashboard');
+            const result = await res.json();
+            const d = result.data;
+            document.getElementById('kpiTotal').textContent = d.totalMaterials.toLocaleString('en-EG');
+            document.getElementById('kpiValue').textContent = Number(d.totalStockValue).toLocaleString('en-EG', { maximumFractionDigits: 0 });
+            document.getElementById('kpiLow').textContent = d.lowStockCount;
+            document.getElementById('kpiNear').textContent = d.expiringSoonCount;
+            document.getElementById('kpiExpired').textContent = d.expiredCount;
+            document.getElementById('kpiOut').textContent = d.outOfStockCount;
+        }
+
+        function statusBadge(m) {
+            if (m.isExpired) return '<span class="status-badge status-expired"><i class="bi bi-x-circle"></i> منتهي</span>';
+            if (m.isOutOfStock) return '<span class="status-badge status-out"><i class="bi bi-slash-circle"></i> نفذ</span>';
+            if (m.isNearExpiry) return '<span class="status-badge status-near"><i class="bi bi-clock-history"></i> قرب الانتهاء</span>';
+            if (m.isLowStock) return '<span class="status-badge status-low"><i class="bi bi-exclamation-triangle"></i> منخفض</span>';
+            return '<span class="status-badge status-ok"><i class="bi bi-check-circle"></i> متاح</span>';
+        }
+
+        async function loadMaterials() {
+            const tbody = document.getElementById('materialsBody');
+            tbody.innerHTML = '<tr><td colspan="9"><div class="inv-skel-row"></div><div class="inv-skel-row"></div></td></tr>';
+
+            const params = new URLSearchParams();
+            const search = document.getElementById('searchBox').value.trim();
+            if (search) params.append('Search', search);
+            if (currentCategory) params.append('Category', currentCategory);
+            if (currentStatus === 'LowStock') params.append('LowStock', 'true');
+            if (currentStatus === 'OutOfStock') params.append('OutOfStock', 'true');
+            if (currentStatus === 'Expired') params.append('Expired', 'true');
+            if (currentStatus === 'NearExpiry') params.append('NearExpiry', 'true');
+            if (currentStatus === 'Available') params.append('Available', 'true');
+
+            try {
+                const res = await fetch(`/Inventory/GetMaterials?${params.toString()}`);
+                const result = await res.json();
+                const data = result.data || [];
+
+                if (!data.length) {
+                    tbody.innerHTML = `<tr><td colspan="9"><div class="inv-empty"><i class="bi bi-inbox"></i><p>لا توجد خامات مطابقة</p></div></td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = data.map(m => `
+                        <tr>
+                            <td><span class="mat-code-badge">${m.code}</span></td>
+                            <td><b>${m.name}</b></td>
+                            <td>${CATEGORY_LABELS[m.categoryName] || m.categoryName}</td>
+                            <td class="text-center">${Number(m.quantity)} <small class="text-muted">${m.unitName}</small></td>
+                            <td class="text-center">${Number(m.minimumStockLevel)}</td>
+                            <td class="text-center">${Number(m.currentPrice).toLocaleString('en-EG')}</td>
+                            <td>${m.supplierName || '—'}</td>
+                            <td class="text-center">${statusBadge(m)}</td>
+                            <td>
+                                <div class="row-actions">
+                                    <button class="act-btn in" title="توريد" onclick="openStockIn(${m.id}, '${m.name}')"><i class="bi bi-box-arrow-in-down"></i></button>
+                                    <button class="act-btn out" title="صرف" onclick="openStockOut(${m.id}, '${m.name}', ${m.quantity})"><i class="bi bi-box-arrow-up"></i></button>
+                                    <a class="act-btn" title="التفاصيل والتاريخ" href="/Inventory/Details/${m.id}"><i class="bi bi-clock-history"></i></a>
+                                    <button class="act-btn" title="تعديل" onclick="openMaterialModal(${m.id})"><i class="bi bi-pencil-square"></i></button>
+                                    <button class="act-btn danger" title="حذف" onclick="deleteMaterial(${m.id})"><i class="bi bi-trash3"></i></button>
+                                </div>
+                            </td>
+                        </tr>`).join('');
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="9"><div class="inv-empty"><i class="bi bi-wifi-off"></i><p>تعذر تحميل البيانات</p></div></td></tr>`;
+            }
+        }
+
+        // ── Material Modal ──
+        let materialModalBackdrop = null;
+        async function openMaterialModal(id) {
+            const url = id ? `/Inventory/Modal?id=${id}` : '/Inventory/Modal';
+            const box = document.getElementById('materialModalContainer');
+            box.innerHTML = `<div class="inv-modal show" id="tempMatModal"><div class="inv-modal-overlay"></div>
+                    <div class="inv-modal-box sm" style="min-height:200px; display:flex; align-items:center; justify-content:center;">
+                        <div class="spinner-border" style="color:#0d9488"></div></div></div>`;
+
+            try {
+                const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const html = await res.text();
+                box.innerHTML = html;
+                materialModalBackdrop = document.getElementById('materialFormModal');
+                requestAnimationFrame(() => materialModalBackdrop.classList.add('show'));
+                initMaterialForm();
+            } catch (err) {
+                box.innerHTML = '';
+                Swal.fire({ icon: 'error', title: 'خطأ', text: 'تعذر تحميل الفورم' });
+            }
+        }
+
+        function closeMaterialModal() {
+            if (!materialModalBackdrop) return;
+            materialModalBackdrop.classList.remove('show');
+            setTimeout(() => { document.getElementById('materialModalContainer').innerHTML = ''; materialModalBackdrop = null; }, 200);
+        }
+
+        function initMaterialForm() {
+            const form = document.getElementById('materialForm');
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const btn = document.getElementById('btnSaveMaterial');
+                const original = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> جاري الحفظ...';
+
+                const fd = new FormData(form);
+                try {
+                    const res = await fetch(form.action, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    const result = await res.json();
+                    if (result.success) {
+                        closeMaterialModal();
+                        Swal.fire({ icon: 'success', title: result.message, timer: 1400, showConfirmButton: false });
+                        loadMaterials(); loadDashboard();
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'خطأ', text: result.message });
+                    }
+                } catch (err) {
+                    Swal.fire({ icon: 'error', title: 'خطأ', text: 'تعذر الاتصال بالسيرفر' });
+                } finally {
+                    btn.disabled = false; btn.innerHTML = original;
+                }
+            });
+        }
+
+        async function deleteMaterial(id) {
+            const confirmResult = await Swal.fire({
+                title: 'تأكيد الحذف', text: 'سيتم إخفاء الخامة من القوائم مع الاحتفاظ بسجلها التاريخي.',
+                icon: 'warning', showCancelButton: true, confirmButtonText: 'نعم، احذف', cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#dc2626', reverseButtons: true
+            });
+            if (!confirmResult.isConfirmed) return;
+
+            const res = await fetch('/Inventory/Delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `id=${id}`
+            });
+            const result = await res.json();
+            if (result.success) {
+                Swal.fire({ icon: 'success', title: result.message, timer: 1400, showConfirmButton: false });
+                loadMaterials(); loadDashboard();
+            } else {
+                Swal.fire({ icon: 'error', title: 'خطأ', text: result.message });
+            }
+        }
+
+        // ── Stock In/Out ──
+        function closeStockModal(id) { document.getElementById(id).classList.remove('show'); }
+
+        function openStockIn(materialId, name) {
+            document.getElementById('siMaterialId').value = materialId;
+            document.getElementById('siQuantity').value = '';
+            document.getElementById('siUnitPrice').value = '';
+            document.getElementById('siBatch').value = '';
+            document.getElementById('siExpiry').value = '';
+            document.getElementById('siNotes').value = '';
+            document.getElementById('stockInModal').classList.add('show');
+        }
+
+        async function submitStockIn() {
+            const req = {
+                materialId: parseInt(document.getElementById('siMaterialId').value),
+                quantity: parseFloat(document.getElementById('siQuantity').value),
+                unitPrice: document.getElementById('siUnitPrice').value ? parseFloat(document.getElementById('siUnitPrice').value) : null,
+                batchNumber: document.getElementById('siBatch').value,
+                expiryDate: document.getElementById('siExpiry').value || null,
+                supplierId: document.getElementById('siSupplier').value ? parseInt(document.getElementById('siSupplier').value) : null,
+                notes: document.getElementById('siNotes').value
+            };
+            if (!req.quantity || req.quantity <= 0) {
+                Swal.fire({ icon: 'warning', title: 'الكمية مطلوبة' }); return;
+            }
+            const res = await fetch('/Inventory/StockIn', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req) });
+            const result = await res.json();
+            if (result.success) {
+                closeStockModal('stockInModal');
+                Swal.fire({ icon: 'success', title: result.message, timer: 1400, showConfirmButton: false });
+                loadMaterials(); loadDashboard();
+            } else {
+                Swal.fire({ icon: 'error', title: 'خطأ', text: result.message });
+            }
+        }
+
+        function openStockOut(materialId, name, available) {
+            document.getElementById('soMaterialId').value = materialId;
+            document.getElementById('soAvailableHint').textContent = `المتاح حاليًا: ${available}`;
+            document.getElementById('soQuantity').value = '';
+            document.getElementById('soReason').value = '';
+            document.getElementById('soNotes').value = '';
+            document.getElementById('stockOutModal').classList.add('show');
+        }
+
+        async function submitStockOut() {
+            const req = {
+                materialId: parseInt(document.getElementById('soMaterialId').value),
+                quantity: parseFloat(document.getElementById('soQuantity').value),
+                destinationOrReason: document.getElementById('soReason').value,
+                notes: document.getElementById('soNotes').value
+            };
+            if (!req.quantity || req.quantity <= 0) {
+                Swal.fire({ icon: 'warning', title: 'الكمية مطلوبة' }); return;
+            }
+            const res = await fetch('/Inventory/StockOut', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req) });
+            const result = await res.json();
+            if (result.success) {
+                closeStockModal('stockOutModal');
+                Swal.fire({ icon: 'success', title: result.message, timer: 1400, showConfirmButton: false });
+                loadMaterials(); loadDashboard();
+            } else {
+                Swal.fire({ icon: 'error', title: 'خطأ', text: result.message });
+            }
+        }
+
+        // ── Quick Supplier ──
+        function openSupplierQuickModal() {
+            document.getElementById('supName').value = '';
+            document.getElementById('supPhone').value = '';
+            document.getElementById('supplierQuickModal').classList.add('show');
+        }
+
+        async function submitSupplierQuick() {
+            const name = document.getElementById('supName').value.trim();
+            if (!name) { Swal.fire({ icon: 'warning', title: 'اسم المورد مطلوب' }); return; }
+
+            const res = await fetch('/Inventory/CreateSupplier', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone: document.getElementById('supPhone').value })
+            });
+            const result = await res.json();
+            if (result.success) {
+                closeStockModal('supplierQuickModal');
+                Swal.fire({ icon: 'success', title: 'تم إضافة المورد', timer: 1200, showConfirmButton: false });
+                loadSuppliers();
+            } else {
+                Swal.fire({ icon: 'error', title: 'خطأ', text: result.message });
+            }
+        }
+    </script>
+}

@@ -3,6 +3,10 @@ using Dental.Modules.Appointments.InterfacesAppointments;
 using Dental.Modules.Appointments.ServicesAppointments;
 using Dental.Modules.Diagnosis.InterfacesDiagnosis;
 using Dental.Modules.Diagnosis.ServicesDiagnosis;
+using Dental.Modules.Inventory.InterfacesInventory;
+using Dental.Modules.Inventory.ServicesInventory;
+using Dental.Modules.Laboratory.InterfacesLaboratory;
+using Dental.Modules.Laboratory.ServicesLaboratory;
 using Dental.Modules.Patients.InterfacesPatients;
 using Dental.Modules.Patients.ServicesPatients;
 using Dental.Modules.Payments.InterfacesPayments;
@@ -97,6 +101,8 @@ builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IDiagnosisService, DiagnosisService>();
+builder.Services.AddScoped<ILaboratoryService, LaboratoryService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
 #endregion
 builder.Services.AddHttpClient();
 

@@ -1,0 +1,289 @@
+﻿@using Dental.Modules.Inventory.DTOs
+@model MaterialDetailsDto
+@{
+    ViewData["Title"] = $"Material — {Model.Name}";
+    var history = ViewBag.History as List<MaterialHistoryDto> ?? new List<MaterialHistoryDto>();
+}
+
+@section Styles {
+    <style>
+        :root {
+            --dc-teal-50: #eafbfc;
+            --dc-teal-100: #c7f2ea;
+            --dc-teal-600: #0d9488;
+            --dc-teal-700: #0d7377;
+            --dc-ink-900: #0b2e30;
+            --dc-ink-600: #4b6b6c;
+            --dc-shadow: 0 8px 32px rgba(10,77,79,.08);
+        }
+
+        .mdet-page {
+            padding: 16px 20px 60px;
+            font-family: 'Segoe UI','IBM Plex Sans Arabic',system-ui,sans-serif;
+            color: var(--dc-ink-900);
+        }
+
+        .mdet-hero {
+            background: linear-gradient(135deg,#0d7377,#14b8a6);
+            border-radius: 22px;
+            padding: 20px 26px;
+            color: #fff;
+            margin-bottom: 18px;
+            box-shadow: var(--dc-shadow);
+        }
+
+            .mdet-hero h1 {
+                margin: 0 0 6px;
+                font-size: 1.3rem;
+                font-weight: 800;
+            }
+
+        .mdet-tags span {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,255,255,.15);
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: .75rem;
+            font-weight: 700;
+            margin-left: 6px;
+        }
+
+        .mdet-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 18px;
+            align-items: start;
+        }
+
+        .mdet-card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: var(--dc-shadow);
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .mdet-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--dc-teal-50);
+            font-size: .86rem;
+        }
+
+            .mdet-row:last-child {
+                border-bottom: none;
+            }
+
+            .mdet-row b {
+                color: var(--dc-ink-900);
+            }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-right: 32px;
+        }
+
+            .timeline::before {
+                content: '';
+                position: absolute;
+                right: 13px;
+                top: 6px;
+                bottom: 6px;
+                width: 2px;
+                background: var(--dc-teal-100);
+            }
+
+        .tl-item {
+            position: relative;
+            padding-bottom: 22px;
+        }
+
+            .tl-item:last-child {
+                padding-bottom: 0;
+            }
+
+        .tl-dot {
+            position: absolute;
+            right: -32px;
+            top: 0;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: .85rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,.15);
+        }
+
+        .hist-created .tl-dot, .hist-created {
+            --c: #0d9488;
+        }
+
+        .tl-dot.hist-created {
+            background: #0d9488;
+        }
+
+        .tl-dot.hist-edited {
+            background: #3b82f6;
+        }
+
+        .tl-dot.hist-in {
+            background: #16a34a;
+        }
+
+        .tl-dot.hist-out {
+            background: #f59e0b;
+        }
+
+        .tl-dot.hist-price {
+            background: #a855f7;
+        }
+
+        .tl-dot.hist-expiry {
+            background: #f97316;
+        }
+
+        .tl-dot.hist-deleted {
+            background: #dc2626;
+        }
+
+        .tl-content {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 12px 16px;
+        }
+
+        .tl-title {
+            font-weight: 800;
+            font-size: .9rem;
+            color: var(--dc-ink-900);
+        }
+
+        .tl-date {
+            font-size: .72rem;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .tl-detail {
+            font-size: .8rem;
+            color: #475569;
+            margin-top: 4px;
+        }
+    </style>
+}
+
+<div class="mdet-page" dir="rtl">
+
+    <div class="mdet-hero">
+        <h1><i class="bi bi-box-seam-fill"></i> @Model.Name</h1>
+        <div class="mdet-tags">
+            <span><i class="bi bi-hash"></i> @Model.Code</span>
+            <span><i class="bi bi-tag"></i> @Model.CategoryName</span>
+            @if (Model.IsExpired)
+            {
+                <span style="background:#dc2626;"><i class="bi bi-x-circle"></i> منتهي الصلاحية</span>
+            }
+            else if (Model.IsOutOfStock)
+            {
+
+                <span style="background:#dc2626;"><i class="bi bi-slash-circle"></i> نفذ من المخزون</span>
+            }
+            else if (Model.IsNearExpiry)
+            {
+
+                <span style="background:#f97316;"><i class="bi bi-clock-history"></i> قرب الانتهاء</span>
+            }
+            else if (Model.IsLowStock)
+            {
+
+                <span style="background:#f59e0b;"><i class="bi bi-exclamation-triangle"></i> مخزون منخفض</span>
+            }
+            else
+            {
+
+                <span style="background:#16a34a;"><i class="bi bi-check-circle"></i> متاح</span>
+            }
+        </div>
+    </div>
+
+    <div class="mdet-grid">
+        <div>
+            <div class="mdet-card">
+                <h6 class="fw-bold mb-3">بيانات المخزون</h6>
+                <div class="mdet-row"><span>الكمية الحالية</span><b>@Model.Quantity @Model.UnitName</b></div>
+                <div class="mdet-row"><span>الحد الأدنى</span><b>@Model.MinimumStockLevel</b></div>
+                <div class="mdet-row"><span>موقع التخزين</span><b>@(Model.StorageLocation ?? "—")</b></div>
+                <div class="mdet-row"><span>رقم الباتش</span><b>@(Model.BatchNumber ?? "—")</b></div>
+                <div class="mdet-row"><span>تاريخ الصلاحية</span><b>@(Model.ExpiryDate?.ToString("dd/MM/yyyy") ?? "—")</b></div>
+            </div>
+
+            <div class="mdet-card">
+                <h6 class="fw-bold mb-3">البيانات التجارية</h6>
+                <div class="mdet-row"><span>سعر الشراء</span><b>@Model.PurchasePrice.ToString("N2")</b></div>
+                <div class="mdet-row"><span>السعر الحالي</span><b>@Model.CurrentPrice.ToString("N2")</b></div>
+                <div class="mdet-row"><span>المورد</span><b>@(Model.SupplierName ?? "—")</b></div>
+                <div class="mdet-row"><span>الشركة المصنعة</span><b>@(Model.Manufacturer ?? "—")</b></div>
+            </div>
+
+            <div class="mdet-card">
+                <h6 class="fw-bold mb-3">ملاحظات</h6>
+                <p style="font-size:.85rem; color:#475569; margin:0;">@(Model.Notes ?? "لا توجد ملاحظات.")</p>
+            </div>
+
+            <a href="/Inventory" class="btn btn-outline-secondary w-100"><i class="bi bi-arrow-right"></i> رجوع للمخزن</a>
+        </div>
+
+        <div class="mdet-card">
+            <h6 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> السجل الزمني الكامل</h6>
+
+            @if (!history.Any())
+            {
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-inbox fs-1 d-block mb-2" style="opacity:.4;"></i>
+                    لا يوجد سجل حركات بعد.
+                </div>
+            }
+            else
+            {
+                <div class="timeline">
+                    @foreach (var h in history)
+                    {
+                        <div class="tl-item">
+                            <div class="tl-dot @h.ColorClass"><i class="bi @h.Icon"></i></div>
+                            <div class="tl-content">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="tl-title">@h.ActionText</span>
+                                    <span class="tl-date">@h.ActionDate.ToString("dd/MM/yyyy hh:mm tt")</span>
+                                </div>
+                                <div class="tl-detail">
+                                    @if (h.QuantityBefore.HasValue || h.QuantityAfter.HasValue)
+                                    {
+                                        <span>الكمية: @h.QuantityBefore → <b>@h.QuantityAfter</b></span>
+                                    }
+                                    @if (h.PriceBefore.HasValue || h.PriceAfter.HasValue)
+                                    {
+                                        <span class="ms-2">السعر: @h.PriceBefore → <b>@h.PriceAfter</b></span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(h.Notes))
+                                    {
+                                        <div class="mt-1">@h.Notes</div>
+                                    }
+                                </div>
+                                <div class="tl-date mt-1">
+                                    <i class="bi bi-person"></i> @(h.UserName ?? "System")
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

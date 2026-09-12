@@ -18,6 +18,7 @@ namespace Dental.Modules.Diagnosis.DTOs
         public string? Description { get; set; }
         public string? Notes { get; set; }
         public bool IsActive { get; set; }
+        public bool IsLaboratoryRelated { get; set; }
     }
 
     // ── فورم موحّد للإضافة والتعديل (Id = 0 => إضافة، Id > 0 => تعديل) ──
@@ -32,6 +33,7 @@ namespace Dental.Modules.Diagnosis.DTOs
         public string? Description { get; set; }
         public string? Notes { get; set; }
         public bool IsActive { get; set; } = true;
+        public bool IsLaboratoryRelated { get; set; }
     }
 
     // ── نسخة خفيفة تتبعت للـ JS في صفحة السيشن (تحتوي على السعر) ──

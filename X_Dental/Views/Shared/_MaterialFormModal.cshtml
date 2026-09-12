@@ -1,0 +1,144 @@
+@using static Dental.Constants.EnumHelper
+@model Dental.Modules.Inventory.DTOs.MaterialDetailsDto
+
+@{
+    bool isEdit = ViewBag.IsEdit ?? false;
+    var suppliers = ViewBag.Suppliers as SelectList;
+    var categories = ViewBag.Categories as List<SelectListItem>;
+    var units = ViewBag.Units as List<SelectListItem>;
+}
+
+<div class="inv-modal show" id="materialFormModal">
+    <div class="inv-modal-overlay" onclick="closeMaterialModal()"></div>
+    <div class="inv-modal-box md">
+        <div class="inv-modal-head">
+            <h5><i class="bi bi-box-seam me-2"></i> @(isEdit ? "تعديل الخامة" : "إضافة خامة جديدة")</h5>
+            <button type="button" class="btn-close btn-close-white" onclick="closeMaterialModal()"></button>
+        </div>
+
+        <form id="materialForm" action="@(isEdit ? "/Inventory/Save" : "/Inventory/Save")" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" value="@Model.Id" />
+
+            <div class="inv-modal-body">
+
+                <div class="inv-form-section">
+                    <h6><i class="bi bi-info-circle"></i> البيانات الأساسية</h6>
+                    <div class="inv-form-grid">
+                        <div>
+                            <label class="inv-label">اسم الخامة *</label>
+                            <input type="text" name="Name" class="inv-input" value="@Model.Name" required />
+                        </div>
+                        <div>
+                            <label class="inv-label">كود الخامة *</label>
+                            <input type="text" name="Code" class="inv-input" value="@Model.Code" required @(isEdit ? "" : "") />
+                        </div>
+                        <div>
+                            <label class="inv-label">الفئة *</label>
+                            <select name="Category" class="inv-select" asp-items="categories"></select>
+                        </div>
+                        <div>
+                            <label class="inv-label">الوصف</label>
+                            <input type="text" name="Description" class="inv-input" value="@Model.Description" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="inv-form-section">
+                    <h6><i class="bi bi-boxes"></i> بيانات المخزون</h6>
+                    <div class="inv-form-grid cols-3">
+                        <div>
+                            <label class="inv-label">الوحدة *</label>
+                            <select name="Unit" class="inv-select" asp-items="units"></select>
+                        </div>
+                        <div>
+                            <label class="inv-label">
+                                الكمية الحالية
+                                @if (isEdit)
+                                {
+                                    <small class="text-muted">(عدّل عن طريق توريد/صرف)</small>
+                                }
+                            </label>
+                            <input type="number" step="0.001" name="Quantity" class="inv-input"
+                                   value="@Model.Quantity" @(isEdit ? "readonly style=background:#f8fafc;" : "") />
+                        </div>
+                        <div>
+                            <label class="inv-label">الحد الأدنى للمخزون *</label>
+                            <input type="number" step="0.001" name="MinimumStockLevel" class="inv-input" value="@Model.MinimumStockLevel" required />
+                        </div>
+                    </div>
+                    <div class="inv-form-grid" style="margin-top:12px;">
+                        <div>
+                            <label class="inv-label">موقع التخزين</label>
+                            <input type="text" name="StorageLocation" class="inv-input" value="@Model.StorageLocation" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="inv-form-section">
+                    <h6><i class="bi bi-cash-coin"></i> البيانات التجارية</h6>
+                    <div class="inv-form-grid cols-3">
+                        <div>
+                            <label class="inv-label">سعر الشراء</label>
+                            <input type="number" step="0.01" name="PurchasePrice" class="inv-input" value="@Model.PurchasePrice" />
+                        </div>
+                        <div>
+                            <label class="inv-label">السعر الحالي *</label>
+                            <input type="number" step="0.01" name="CurrentPrice" class="inv-input" value="@Model.CurrentPrice" required />
+                        </div>
+                        <div>
+                            <label class="inv-label">المورد</label>
+                            <select name="SupplierId" class="inv-select" asp-items="suppliers">
+                                <option value="">— بدون —</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="inv-form-section">
+                    <h6><i class="bi bi-calendar-x"></i> بيانات الصلاحية</h6>
+                    <div class="inv-form-grid">
+                        <div>
+                            <label class="inv-label">رقم الباتش / التشغيلة</label>
+                            <input type="text" name="BatchNumber" class="inv-input" value="@Model.BatchNumber" />
+                        </div>
+                        <div>
+                            <label class="inv-label">تاريخ الصلاحية</label>
+                            <input type="date" name="ExpiryDate" class="inv-input"
+                                   value="@(Model.ExpiryDate?.ToString("yyyy-MM-dd"))" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="inv-form-section" style="margin-bottom:0;">
+                    <h6><i class="bi bi-three-dots"></i> بيانات إضافية</h6>
+                    <div class="inv-form-grid">
+                        <div>
+                            <label class="inv-label">الشركة المصنعة</label>
+                            <input type="text" name="Manufacturer" class="inv-input" value="@Model.Manufacturer" />
+                        </div>
+                        <div>
+                            <label class="inv-label">الحالة</label>
+                            <select name="IsActive" class="inv-select">
+                                <option value="true" selected="@(Model.IsActive)">نشط</option>
+                                <option value="false" selected="@(!Model.IsActive)">غير نشط</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-top:12px;">
+                        <label class="inv-label">ملاحظات</label>
+                        <textarea name="Notes" class="inv-textarea" rows="2">@Model.Notes</textarea>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="inv-modal-foot">
+                <button type="button" class="inv-btn inv-btn-cancel" onclick="closeMaterialModal()">إلغاء</button>
+                <button type="submit" class="inv-btn inv-btn-save" id="btnSaveMaterial">
+                    <i class="bi bi-check-lg"></i> حفظ
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

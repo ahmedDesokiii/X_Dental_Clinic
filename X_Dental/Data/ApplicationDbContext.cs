@@ -1,6 +1,7 @@
 ﻿
 using Dental.Models;
 using Dental.Models.Clinic;
+using Dental.Models.Inventory;
 using Dental.Models.Patient;
 using Dental.Models.User;
 using Dental.Models.User;
@@ -55,6 +56,24 @@ namespace Dental.Data
                 .Property(p => p.DefaultPrice)
                 .HasPrecision(18, 2);
 
+            builder.Entity<LaboratoryPriceHistory>()
+                .Property(h => h.Price)
+                .HasPrecision(18, 2);
+
+            builder.Entity<LaboratoryPriceHistory>()
+                .HasOne(h => h.DiagnosisCatalog)
+                .WithMany()
+                .HasForeignKey(h => h.DiagnosisCatalogId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<DiagnosisCatalog>()
+                .Property(d => d.Price)
+                .HasPrecision(18, 2);   // ⭐ لو مش متحدد بالفعل عندك — لو موجود امسح السطر ده
+
+            builder.Entity<VisitDiagnosis>()
+                .Property(v => v.LabPriceSnapshot)
+                .HasPrecision(18, 2);
+
 
             builder.Entity<TreatmentPlanStep>()
                 .HasOne(s => s.TreatmentPlan)
@@ -67,6 +86,57 @@ namespace Dental.Data
                 .WithMany()
                 .HasForeignKey(s => s.ProcedureCatalogId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<Material>()
+    .Property(m => m.PurchasePrice).HasPrecision(18, 2);
+            builder.Entity<Material>()
+                .Property(m => m.CurrentPrice).HasPrecision(18, 2);
+            builder.Entity<Material>()
+                .Property(m => m.Quantity).HasPrecision(18, 3);
+            builder.Entity<Material>()
+                .Property(m => m.MinimumStockLevel).HasPrecision(18, 3);
+
+            builder.Entity<Material>()
+                .HasIndex(m => m.Code)
+                .IsUnique();
+
+            builder.Entity<Material>()
+                .HasOne(m => m.Supplier)
+                .WithMany()
+                .HasForeignKey(m => m.SupplierId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<StockTransaction>()
+                .Property(t => t.Quantity).HasPrecision(18, 3);
+            builder.Entity<StockTransaction>()
+                .Property(t => t.UnitPrice).HasPrecision(18, 2);
+
+            builder.Entity<StockTransaction>()
+                .HasOne(t => t.Material)
+                .WithMany(m => m.Transactions)
+                .HasForeignKey(t => t.MaterialId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<StockTransaction>()
+                .HasOne(t => t.Supplier)
+                .WithMany()
+                .HasForeignKey(t => t.SupplierId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<MaterialHistory>()
+                .Property(h => h.QuantityBefore).HasPrecision(18, 3);
+            builder.Entity<MaterialHistory>()
+                .Property(h => h.QuantityAfter).HasPrecision(18, 3);
+            builder.Entity<MaterialHistory>()
+                .Property(h => h.PriceBefore).HasPrecision(18, 2);
+            builder.Entity<MaterialHistory>()
+                .Property(h => h.PriceAfter).HasPrecision(18, 2);
+
+            builder.Entity<MaterialHistory>()
+                .HasOne(h => h.Material)
+                .WithMany(m => m.History)
+                .HasForeignKey(h => h.MaterialId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<MedicationCatalog>()
                 .HasIndex(m => m.NameAr);
@@ -107,9 +177,17 @@ namespace Dental.Data
         public DbSet<TreatmentPlan> TreatmentPlans { get; set; }
         public DbSet<TreatmentPlanStep> TreatmentPlanSteps { get; set; }
         public DbSet<Visit> Visits { get; set; }
+        public DbSet<LaboratoryPriceHistory> LaboratoryPriceHistories { get; set; }
 
-        // ⭐ NEW
-        public DbSet<Appointment> Appointments { get; set; }
+    // ⭐ NEW using
+
+    public DbSet<Supplier> Suppliers { get; set; }
+    public DbSet<Material> Materials { get; set; }
+    public DbSet<StockTransaction> StockTransactions { get; set; }
+    public DbSet<MaterialHistory> MaterialHistories { get; set; }
+
+    // ⭐ NEW
+    public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Prescription> Prescriptions { get; set; }
         public DbSet<PrescriptionItem> PrescriptionItems { get; set; }
         public DbSet<DiagnosisCatalog> DiagnosisCatalogs { get; set; }

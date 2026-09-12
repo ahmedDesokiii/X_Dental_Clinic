@@ -1,0 +1,147 @@
+﻿@{
+    ViewData["Title"] = "Laboratory";
+}
+
+<div dir="rtl" class="container-fluid p-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold">تشخيصات المعمل</h4>
+        <div class="d-flex gap-2">
+            <input type="date" id="filterFrom" class="form-control form-control-sm" />
+            <input type="date" id="filterTo" class="form-control form-control-sm" />
+            <button class="btn btn-sm btn-teal" onclick="loadSummary()">فلترة</button>
+        </div>
+    </div>
+
+    <div class="row mb-3" id="summaryCards"></div>
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-hover" id="labTable">
+                <thead>
+                    <tr>
+                        <th>Diagnosis</th>
+                        <th>Current Price</th>
+                        <th>Last Updated</th>
+                        <th>Updated By</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Price Edit Modal -->
+<div class="modal fade" id="priceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تعديل سعر المعمل</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="pmDiagnosisId" />
+                <div class="mb-3">
+                    <label class="form-label">السعر الجديد</label>
+                    <input type="number" step="0.01" class="form-control" id="pmNewPrice" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">ملاحظات</label>
+                    <textarea class="form-control" id="pmNotes"></textarea>
+                </div>
+                <hr />
+                <h6>تاريخ الأسعار</h6>
+                <ul class="list-group" id="pmHistoryList" style="max-height:200px; overflow-y:auto;"></ul>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button class="btn btn-teal" onclick="submitPrice()">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let priceModal;
+        document.addEventListener('DOMContentLoaded', () => {
+            priceModal = new bootstrap.Modal(document.getElementById('priceModal'));
+            loadDiagnoses();
+            loadSummary();
+        });
+
+        async function loadDiagnoses() {
+            const res = await fetch('/Laboratory/GetDiagnoses');
+            const result = await res.json();
+            const tbody = document.querySelector('#labTable tbody');
+            tbody.innerHTML = result.data.map(d => `
+                    <tr>
+                        <td>${d.nameAr}</td>
+                        <td>${Number(d.currentPrice).toLocaleString()}</td>
+                        <td>${d.lastUpdated ? new Date(d.lastUpdated).toLocaleDateString('en-GB') : '—'}</td>
+                        <td>${d.updatedBy || '—'}</td>
+                        <td><button class="btn btn-sm btn-outline-primary" onclick="openPriceModal(${d.id}, ${d.currentPrice})">Edit Price</button></td>
+                    </tr>`).join('');
+        }
+
+        async function openPriceModal(id, currentPrice) {
+            document.getElementById('pmDiagnosisId').value = id;
+            document.getElementById('pmNewPrice').value = currentPrice;
+            document.getElementById('pmNotes').value = '';
+
+            const res = await fetch(`/Laboratory/GetPriceHistory?diagnosisCatalogId=${id}`);
+            const result = await res.json();
+            document.getElementById('pmHistoryList').innerHTML = result.data.map(h => `
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>${new Date(h.effectiveDate).toLocaleDateString('en-GB')}</span>
+                        <b>${Number(h.price).toLocaleString()}</b>
+                    </li>`).join('') || '<li class="list-group-item text-muted">لا يوجد سجل بعد</li>';
+
+            priceModal.show();
+        }
+
+        async function submitPrice() {
+            const req = {
+                diagnosisCatalogId: parseInt(document.getElementById('pmDiagnosisId').value),
+                newPrice: parseFloat(document.getElementById('pmNewPrice').value),
+                notes: document.getElementById('pmNotes').value
+            };
+            const res = await fetch('/Laboratory/UpdatePrice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(req)
+            });
+            const result = await res.json();
+            if (result.success) {
+                priceModal.hide();
+                loadDiagnoses();
+                loadSummary();
+                Swal.fire({ icon: 'success', title: result.message, timer: 1500, showConfirmButton: false });
+            } else {
+                Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+            }
+        }
+
+        async function loadSummary() {
+            const from = document.getElementById('filterFrom').value;
+            const to = document.getElementById('filterTo').value;
+            const params = new URLSearchParams();
+            if (from) params.append('DateFrom', from);
+            if (to) params.append('DateTo', to);
+
+            const res = await fetch(`/Laboratory/GetSummary?${params.toString()}`);
+            const result = await res.json();
+            const s = result.data;
+
+            document.getElementById('summaryCards').innerHTML = `
+                    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Total Count</div><div class="fs-4 fw-bold">${s.totalCount}</div></div></div>
+                    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Total Amount</div><div class="fs-4 fw-bold">${Number(s.totalAmount).toLocaleString()}</div></div></div>
+                ` + s.items.map(i => `
+                    <div class="col-md-3"><div class="card p-3">
+                        <div class="text-muted small">${i.nameAr}</div>
+                        <div class="fs-5 fw-bold">${i.count} × ${Number(i.currentPrice).toLocaleString()} = ${Number(i.total).toLocaleString()}</div>
+                    </div></div>`).join('');
+        }
+    </script>
+}

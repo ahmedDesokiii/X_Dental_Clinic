@@ -62,8 +62,46 @@ namespace Dental.Constants
                 Done = 3,        // خلصت
                 Skipped = 4      // اتلغت/اتخطت
             }
-        
 
 
-}
+        public enum MaterialCategory
+        {
+            Consumables = 1,      // مستهلكات عامة
+            Restorative = 2,       // مواد حشو وترميم
+            Anesthesia = 3,         // بنج
+            Impression = 4,        // مواد طبعة
+            Orthodontic = 5,        // تقويم
+            Endodontic = 6,          // عصب
+            Surgical = 7,             // جراحة
+            PPE = 8,                  // أدوات وقاية
+            Sterilization = 9,        // تعقيم
+            Other = 99
+        }
+
+        public enum MaterialUnit
+        {
+            Piece = 1, Box = 2, Bottle = 3, Pack = 4,
+            Gram = 5, Kilogram = 6, Milliliter = 7, Liter = 8, Roll = 9, Set = 10
+        }
+
+        public enum StockTransactionType
+        {
+            StockIn = 1,
+            StockOut = 2
+        }
+
+        public enum MaterialHistoryAction
+        {
+            Created = 1,
+            Edited = 2,
+            StockIn = 3,
+            StockOut = 4,
+            PriceChanged = 5,
+            QuantityAdjusted = 6,
+            ExpiryUpdated = 7,
+            Deleted = 8
+        }
+
+
+    }
 }

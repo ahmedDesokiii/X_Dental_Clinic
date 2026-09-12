@@ -16,5 +16,8 @@ namespace Dental.Models.Clinic
         public string? Notes { get; set; }
 
         public bool IsActive { get; set; } = true;
+
+        // ⭐ NEW — Feature 2: Laboratory
+        public bool IsLaboratoryRelated { get; set; } = false;
     }
 }

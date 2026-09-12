@@ -13,5 +13,8 @@ namespace Dental.Models.Clinic
         public string? Surface { get; set; } // M, D, B, L, O
         public string? Notes { get; set; }
         public bool IsPrimary { get; set; } = false;
+        // ⭐ NEW — snapshot لسعر التشخيص وقت تسجيله فعليًا في السيشن
+        // (بيتسجل مرة واحدة وقت الإنشاء ومبيتغيرش لو سعر الكتالوج اتغير بعدين)
+        public decimal? LabPriceSnapshot { get; set; }
     }
 }

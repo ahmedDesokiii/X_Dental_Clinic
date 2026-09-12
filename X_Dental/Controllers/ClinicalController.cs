@@ -349,8 +349,10 @@ namespace Dental.Controllers
                 // 2) التشخيص — لو المستخدم اختار تشخيص لهذه السنة
                 if (tooth.DiagnosisCatalogId.HasValue && tooth.DiagnosisCatalogId.Value > 0)
                 {
-                    var diagExists = await _context.DiagnosisCatalogs.AnyAsync(d => d.Id == tooth.DiagnosisCatalogId.Value);
-                    if (diagExists)
+                    var diagEntity = await _context.DiagnosisCatalogs
+                        .FirstOrDefaultAsync(d => d.Id == tooth.DiagnosisCatalogId.Value);
+
+                    if (diagEntity != null)
                     {
                         var vd = new VisitDiagnosis
                         {
@@ -359,7 +361,8 @@ namespace Dental.Controllers
                             ToothNumber = tooth.ToothNumber,
                             Surface = tooth.DiagnosisSurface,
                             Notes = tooth.DiagnosisNotes,
-                            IsPrimary = tooth.DiagnosisIsPrimary
+                            IsPrimary = tooth.DiagnosisIsPrimary,
+                            LabPriceSnapshot = diagEntity.Price   // ⭐ NEW
                         };
                         _context.VisitDiagnoses.Add(vd);
                     }
@@ -606,7 +609,8 @@ namespace Dental.Controllers
                                 ToothNumber = tooth.ToothNumber,
                                 Surface = tooth.DiagnosisSurface,
                                 Notes = tooth.DiagnosisNotes,
-                                IsPrimary = tooth.DiagnosisIsPrimary
+                                IsPrimary = tooth.DiagnosisIsPrimary,
+                                LabPriceSnapshot = diag.Price
                             });
 
                             visit.TotalAmount += diag.Price; // ⭐ الربط بالمدفوعات
