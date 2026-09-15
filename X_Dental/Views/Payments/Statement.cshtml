@@ -30,8 +30,9 @@
         background: radial-gradient(circle at 6% 4%, var(--sc-teal-100) 0%, transparent 38%), radial-gradient(circle at 97% 92%, var(--sc-coral-300) 0%, transparent 26%), var(--sc-sky-50);
     }
 
-    /* ── Hero ── */
+    /* ── Hero (ناحية الشمال، بنفس نمط صفحة الفواتير الرئيسية) ── */
     .statement-hero {
+        direction: ltr;
         background: linear-gradient(135deg, var(--sc-teal-700), var(--sc-teal-500));
         border-radius: var(--radius-lg);
         padding: 24px 28px;
@@ -44,13 +45,14 @@
         gap: 16px;
         position: relative;
         overflow: hidden;
+        contain: content;
     }
 
         .statement-hero::after {
             content: '';
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at 92% -20%, rgba(255,255,255,.32), transparent 55%);
+            background: radial-gradient(circle at 8% -20%, rgba(255,255,255,.32), transparent 55%);
             pointer-events: none;
         }
 
@@ -60,6 +62,7 @@
             gap: 18px;
             position: relative;
             z-index: 1;
+            direction: rtl; /* النص العربي جوه البلوك يفضل بيتقرأ صح */
         }
 
         .statement-hero .hero-avatar {
@@ -112,6 +115,7 @@
         position: relative;
         z-index: 1;
         flex-wrap: wrap;
+        direction: rtl;
     }
 
     .btn-hero {
@@ -124,7 +128,7 @@
         font-size: 0.88rem;
         border: none;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease;
         text-decoration: none;
         white-space: nowrap;
     }
@@ -170,10 +174,11 @@
         text-align: center;
         border: 1px solid rgba(255,255,255,.6);
         box-shadow: var(--shadow-soft);
-        transition: all .25s ease;
-        animation: cardPopIn 0.5s ease forwards;
+        transition: transform .2s ease, box-shadow .2s ease;
+        animation: cardPopIn 0.45s ease forwards;
         opacity: 0;
         transform: translateY(15px);
+        will-change: transform, opacity;
     }
 
         .stat-card-glass:hover {
@@ -234,17 +239,18 @@
         box-shadow: var(--shadow-card);
         overflow: hidden;
         margin-bottom: 20px;
-        animation: sectionFadeIn 0.5s ease forwards;
+        animation: sectionFadeIn 0.45s ease forwards;
         opacity: 0;
         transform: translateY(12px);
+        will-change: transform, opacity;
     }
 
         .section-shell:nth-of-type(1) {
-            animation-delay: .25s;
+            animation-delay: .2s;
         }
 
         .section-shell:nth-of-type(2) {
-            animation-delay: .35s;
+            animation-delay: .28s;
         }
 
     @@keyframes sectionFadeIn {
@@ -301,11 +307,14 @@
             font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 0.4px;
+            position: sticky;
+            top: 0;
+            z-index: 1;
         }
 
         .stmt-table tbody tr {
-            transition: background-color .2s ease;
-            animation: rowFadeIn 0.4s ease forwards;
+            transition: background-color .15s ease;
+            animation: rowFadeIn 0.3s ease forwards;
             opacity: 0;
         }
 
@@ -361,7 +370,7 @@
         cursor: pointer;
         font-size: .8rem;
         font-weight: 700;
-        transition: all .2s;
+        transition: background-color .2s ease, transform .2s ease;
         padding: 4px 8px;
         border-radius: 6px;
     }
@@ -384,7 +393,7 @@
         font-size: 0.85rem;
         cursor: pointer;
         box-shadow: 0 4px 12px rgba(13,148,136,0.25);
-        transition: all .2s ease;
+        transition: transform .2s ease, box-shadow .2s ease;
     }
 
         .btn-add-payment:hover {
@@ -392,7 +401,26 @@
             box-shadow: 0 8px 20px rgba(13,148,136,0.35);
         }
 
-    /* ── Empty State ── */
+    .btn-load-more {
+        display: block;
+        margin: 14px auto;
+        background: var(--sc-sky-50);
+        color: var(--sc-teal-700);
+        border: 1.5px dashed var(--sc-teal-500);
+        padding: 8px 22px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.82rem;
+        cursor: pointer;
+        transition: background-color .2s ease, transform .2s ease;
+    }
+
+        .btn-load-more:hover {
+            background: var(--brand-light);
+            transform: translateY(-1px);
+        }
+
+    /* ── Empty / Skeleton State ── */
     .empty-state {
         text-align: center;
         padding: 40px;
@@ -406,6 +434,24 @@
             margin-bottom: 12px;
             color: var(--sc-sky-100);
         }
+
+    .skeleton-cell {
+        height: 14px;
+        border-radius: 6px;
+        background: linear-gradient(90deg, var(--sc-sky-100) 25%, #f1fbfb 37%, var(--sc-sky-100) 63%);
+        background-size: 400% 100%;
+        animation: skeletonShine 1.4s ease infinite;
+    }
+
+    @@keyframes skeletonShine {
+        0% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0 50%;
+        }
+    }
 
     /* ── Modal ── */
     .custom-modal {
@@ -437,7 +483,7 @@
         border-radius: 20px;
         box-shadow: 0 25px 60px rgba(0,0,0,0.2);
         overflow: hidden;
-        animation: modalSlide 0.25s ease;
+        animation: modalSlide 0.22s ease;
     }
 
     @@keyframes modalSlide {
@@ -494,7 +540,7 @@
         font-size: 0.95rem;
         color: var(--sc-ink-900);
         background: #fff;
-        transition: all 0.2s;
+        transition: border-color .2s ease, box-shadow .2s ease;
         outline: none;
     }
 
@@ -510,7 +556,7 @@
         font-size: 0.9rem;
         border: none;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease;
     }
 
     .btn-modal-cancel {
@@ -532,40 +578,18 @@
             box-shadow: 0 6px 16px rgba(13,148,136,0.3);
         }
 
-    /* ── Loading Overlay ── */
-    .loading-overlay {
-        position: absolute;
-        inset: 0;
-        background: rgba(255,255,255,0.85);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10;
-        backdrop-filter: blur(4px);
-        border-radius: var(--radius-lg);
+    /* ── Page fade-in ── */
+    #stmtRoot {
+        animation: rootFadeIn .3s ease;
     }
 
-    .loading-pulse {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: var(--brand-dark);
-        font-weight: 700;
-        font-size: 0.9rem;
-    }
-
-        .loading-pulse i {
-            animation: spin 0.9s linear infinite;
-            font-size: 1.3rem;
-        }
-
-    @@keyframes spin {
+    @@keyframes rootFadeIn {
         from {
-            transform: rotate(0deg);
+            opacity: 0;
         }
 
         to {
-            transform: rotate(360deg);
+            opacity: 1;
         }
     }
 
@@ -578,6 +602,7 @@
 
     @@media (max-width: 768px) {
         .statement-hero {
+            direction: rtl;
             flex-direction: column;
             text-align: center;
             padding: 20px;
@@ -617,8 +642,16 @@
         }
     }
 
+    @@media (prefers-reduced-motion: reduce) {
+        .stat-card-glass, .section-shell, .stmt-table tbody tr, #stmtRoot {
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+        }
+    }
+
     @@media print {
-        .statement-hero, .btn-hero, .btn-add-payment, .btn-void, .custom-modal {
+        .statement-hero, .btn-hero, .btn-add-payment, .btn-void, .custom-modal, .btn-load-more {
             display: none !important;
         }
 
@@ -633,26 +666,19 @@
     }
 </style>
 
-<div class="container-fluid" dir="rtl" style="padding: 12px; position: relative;">
-
-    <!-- 🔷 Loading Overlay -->
-    <div class="loading-overlay" id="pageLoading">
-        <div class="loading-pulse">
-            <i class="bi bi-arrow-repeat"></i> جاري تحميل كشف الحساب...
-        </div>
-    </div>
+<div class="container-fluid" id="stmtRoot" dir="rtl" style="padding: 12px;">
 
     <!-- 🔷 Hero -->
     <div class="statement-hero">
         <div class="hero-content">
-            <div class="hero-avatar"><i class="bi bi-receipt-cutoff"></i></div>
             <div>
-                <h1 id="stmtPatientName">جاري التحميل...</h1>
+                <h1 id="stmtPatientName" dir="ltr">جاري التحميل...</h1>
                 <div class="hero-meta">
                     <span class="hero-meta-tag" id="stmtPatientCode"><i class="bi bi-hash"></i> —</span>
                     <span class="hero-meta-tag" id="stmtPatientMobile"><i class="bi bi-telephone"></i> —</span>
                 </div>
             </div>
+            <div class="hero-avatar"><i class="bi bi-receipt-cutoff"></i></div>
         </div>
         <div class="hero-actions">
             <a href="/Payments" class="btn-hero btn-hero-back">
@@ -683,6 +709,7 @@
             <div class="stat-value" id="sumRemaining">—</div>
         </div>
     </div>
+
     <!-- 🔷 Payments Section -->
     <div class="section-shell">
         <div class="section-head">
@@ -704,12 +731,14 @@
                         <th></th>
                     </tr>
                 </thead>
-                <tbody id="paymentsBody">
-                    <tr><td colspan="7" class="empty-state"><i class="bi bi-hourglass-split"></i>جاري التحميل...</td></tr>
-                </tbody>
+                <tbody id="paymentsBody"></tbody>
             </table>
+            <button class="btn-load-more" id="paymentsLoadMore" style="display:none;" onclick="loadMorePayments()">
+                عرض المزيد <i class="bi bi-chevron-down"></i>
+            </button>
         </div>
     </div>
+
     <!-- 🔷 Visits Section -->
     <div class="section-shell">
         <div class="section-head">
@@ -728,14 +757,13 @@
                         <th>الحالة</th>
                     </tr>
                 </thead>
-                <tbody id="visitsBody">
-                    <tr><td colspan="7" class="empty-state"><i class="bi bi-hourglass-split"></i>جاري التحميل...</td></tr>
-                </tbody>
+                <tbody id="visitsBody"></tbody>
             </table>
+            <button class="btn-load-more" id="visitsLoadMore" style="display:none;" onclick="loadMoreVisits()">
+                عرض المزيد <i class="bi bi-chevron-down"></i>
+            </button>
         </div>
     </div>
-
-
 
     <!-- 🔷 Add Payment Modal -->
     <div class="custom-modal" id="payModal">
@@ -782,16 +810,28 @@
 @section Scripts {
     <script>
         const patientId = @patientId;
-        let currentVisits = [];
 
-        document.addEventListener('DOMContentLoaded', loadStatement);
+        const PAGE_SIZE = 10;
+        let allPayments = [];
+        let allVisits = [];
+        let paymentsShown = 0;
+        let visitsShown = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSkeletonTables();
+            loadStatement();
+        });
+
+        function renderSkeletonTables() {
+            const skeletonRow = (cols) => `<tr>${Array.from({ length: cols }).map(() => `<td><div class="skeleton-cell"></div></td>`).join('')}</tr>`;
+            document.getElementById('paymentsBody').innerHTML = Array.from({ length: 4 }).map(() => skeletonRow(7)).join('');
+            document.getElementById('visitsBody').innerHTML = Array.from({ length: 4 }).map(() => skeletonRow(7)).join('');
+        }
 
         async function loadStatement() {
             try {
                 const res = await fetch(`/Payments/GetStatement?patientId=${patientId}`);
                 const result = await res.json();
-
-                document.getElementById('pageLoading').style.display = 'none';
 
                 if (!result.success) {
                     Swal.fire({ title: 'خطأ', text: result.message, icon: 'error' });
@@ -799,7 +839,6 @@
                 }
                 renderStatement(result.data);
             } catch (err) {
-                document.getElementById('pageLoading').style.display = 'none';
                 console.error('Failed to load statement', err);
                 Swal.fire({ title: 'خطأ', text: 'فشل تحميل البيانات من الخادم', icon: 'error' });
             }
@@ -810,15 +849,14 @@
         }
 
         function animateCount(el, target) {
-            const start = 0;
-            const duration = 800;
+            const duration = 700;
             const startTime = performance.now();
 
             function step(currentTime) {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
                 const easeProgress = 1 - Math.pow(1 - progress, 3);
-                el.textContent = money(start + (target * easeProgress));
+                el.textContent = money(target * easeProgress);
                 if (progress < 1) requestAnimationFrame(step);
                 else el.textContent = money(target);
             }
@@ -826,7 +864,10 @@
         }
 
         function renderStatement(data) {
-            currentVisits = data.visits;
+            allVisits = data.visits || [];
+            allPayments = data.payments || [];
+            paymentsShown = 0;
+            visitsShown = 0;
 
             document.getElementById('stmtPatientName').textContent = data.patientName;
             document.getElementById('stmtPatientCode').innerHTML = `<i class="bi bi-hash"></i> ${data.patientCode}`;
@@ -837,35 +878,81 @@
             animateCount(document.getElementById('sumPaid'), data.totalPaid);
             animateCount(document.getElementById('sumRemaining'), data.totalRemaining);
 
-            const visitsBody = document.getElementById('visitsBody');
-            visitsBody.innerHTML = data.visits.length ? data.visits.map((v, i) => `
-                <tr style="animation-delay: ${i * 0.04}s">
-                    <td>${new Date(v.visitDate).toLocaleDateString('ar-EG')}</td>
-                    <td>${v.category === 2 ? 'تقويم' : 'عام'}</td>
-                    <td>${money(v.totalAmount)}</td>
-                    <td>${money(v.discount)}</td>
-                    <td>${money(v.paidAmount)}</td>
-                    <td>${money(v.remaining)}</td>
-                    <td>${v.isFullyPaid ? '<span class="badge-paid">مسدد</span>' : '<span class="badge-due">متبقي</span>'}</td>
-                </tr>`).join('') : '<tr><td colspan="7" class="empty-state"><i class="bi bi-inbox"></i>لا توجد زيارات مسجلة</td></tr>';
+            renderVisitsChunk(true);
+            renderPaymentsChunk(true);
 
-            const paymentsBody = document.getElementById('paymentsBody');
-            paymentsBody.innerHTML = data.payments.length ? data.payments.map((p, i) => `
-                <tr style="animation-delay: ${i * 0.04}s">
-                    <td>${new Date(p.paymentDate).toLocaleDateString('ar-EG')}</td>
-                    <td>${new Date(p.visitDate).toLocaleDateString('ar-EG')}</td>
-                    <td style="font-weight:800; color:#047857;">${money(p.amount)}</td>
-                    <td>${p.methodText}</td>
-                    <td style="direction:ltr; text-align:right;">${p.receiptNo || '—'}</td>
-                    <td>${p.description || ''}</td>
-                    <td><button class="btn-void" onclick="voidPayment(${p.id})"><i class="bi bi-x-circle"></i> إلغاء</button></td>
-                </tr>`).join('') : '<tr><td colspan="7" class="empty-state"><i class="bi bi-inbox"></i>لا توجد دفعات مسجلة</td></tr>';
-
-            const dueVisits = data.visits.filter(v => v.remaining > 0);
+            const dueVisits = allVisits.filter(v => v.remaining > 0);
             document.getElementById('payVisitId').innerHTML = dueVisits.length
                 ? dueVisits.map(v => `<option value="${v.visitId}">${new Date(v.visitDate).toLocaleDateString('ar-EG')} — متبقي ${money(v.remaining)}</option>`).join('')
                 : '<option value="">لا توجد زيارات عليها مبلغ متبقي</option>';
         }
+
+        function visitRowHtml(v, i) {
+            return `
+                        <tr style="animation-delay: ${Math.min(i * 0.04, 0.3)}s">
+                            <td>${new Date(v.visitDate).toLocaleDateString('ar-EG')}</td>
+                            <td>${v.category === 2 ? 'تقويم' : 'عام'}</td>
+                            <td>${money(v.totalAmount)}</td>
+                            <td>${money(v.discount)}</td>
+                            <td>${money(v.paidAmount)}</td>
+                            <td>${money(v.remaining)}</td>
+                            <td>${v.isFullyPaid ? '<span class="badge-paid">مسدد</span>' : '<span class="badge-due">متبقي</span>'}</td>
+                        </tr>`;
+        }
+
+        function paymentRowHtml(p, i) {
+            return `
+                        <tr style="animation-delay: ${Math.min(i * 0.04, 0.3)}s">
+                            <td>${new Date(p.paymentDate).toLocaleDateString('ar-EG')}</td>
+                            <td>${new Date(p.visitDate).toLocaleDateString('ar-EG')}</td>
+                            <td style="font-weight:800; color:#047857;">${money(p.amount)}</td>
+                            <td>${p.methodText}</td>
+                            <td style="direction:ltr; text-align:right;">${p.receiptNo || '—'}</td>
+                            <td>${p.description || ''}</td>
+                            <td><button class="btn-void" onclick="voidPayment(${p.id})"><i class="bi bi-x-circle"></i> إلغاء</button></td>
+                        </tr>`;
+        }
+
+        function renderVisitsChunk(reset) {
+            const body = document.getElementById('visitsBody');
+            if (!allVisits.length) {
+                body.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="bi bi-inbox"></i>لا توجد زيارات مسجلة</td></tr>';
+                document.getElementById('visitsLoadMore').style.display = 'none';
+                return;
+            }
+
+            if (reset) { body.innerHTML = ''; visitsShown = 0; }
+
+            const nextChunk = allVisits.slice(visitsShown, visitsShown + PAGE_SIZE);
+            const frag = document.createElement('tbody');
+            frag.innerHTML = nextChunk.map((v, i) => visitRowHtml(v, i)).join('');
+            while (frag.firstChild) body.appendChild(frag.firstChild);
+
+            visitsShown += nextChunk.length;
+            document.getElementById('visitsLoadMore').style.display = visitsShown < allVisits.length ? 'block' : 'none';
+        }
+
+        function renderPaymentsChunk(reset) {
+            const body = document.getElementById('paymentsBody');
+            if (!allPayments.length) {
+                body.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="bi bi-inbox"></i>لا توجد دفعات مسجلة</td></tr>';
+                document.getElementById('paymentsLoadMore').style.display = 'none';
+                return;
+            }
+
+            if (reset) { body.innerHTML = ''; paymentsShown = 0; }
+
+            const nextChunk = allPayments.slice(paymentsShown, paymentsShown + PAGE_SIZE);
+            const frag = document.createElement('tbody');
+            frag.innerHTML = nextChunk.map((p, i) => paymentRowHtml(p, i)).join('');
+            while (frag.firstChild) body.appendChild(frag.firstChild);
+
+            paymentsShown += nextChunk.length;
+            document.getElementById('paymentsLoadMore').style.display = paymentsShown < allPayments.length ? 'block' : 'none';
+        }
+
+        function loadMoreVisits() { renderVisitsChunk(false); }
+        function loadMorePayments() { renderPaymentsChunk(false); }
 
         function openAddPaymentModal() {
             document.getElementById('payAmount').value = '';

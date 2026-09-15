@@ -1177,7 +1177,7 @@
                 </div>
             </div>
             <div class="hero-actions">
-                <button type="button" class="btn-hero primary" onclick="AppointmentModal.open(@patient.Id, '@patient.FullNameAr')">
+                <button type="button" class="btn-hero glass" onclick="AppointmentModal.open(@patient.Id, '@patient.FullNameAr')">
                     <i class="bi bi-calendar-plus"></i> New Appointment
                 </button>
 
@@ -1204,7 +1204,7 @@
     </div>
 
     <!-- Stats Bar -->
-    <div class="stats-grid">
+    <div class="stats-grid" hidden>
         <div class="stat-card-glass">
             <div class="stat-icon-box teal"><i class="bi bi-calendar-check"></i></div>
             <div>
@@ -1239,15 +1239,15 @@
     <div class="kpi-secondary-row">
         <div class="kpi-progress-card">
             <div class="kpi-progress-head">
-                <span><i class="bi bi-graph-up-arrow"></i> Collection Rate</span>
+                <span class="fs-5"><i class="bi bi-graph-up-arrow mx-1"></i> Collection Rate</span>
                 <b class="kpi-progress-pct @progressColor">@paidPercentKpi%</b>
             </div>
             <div class="kpi-progress-track">
                 <div class="kpi-progress-fill @progressColor" style="width:@(paidPercentKpi)%;"></div>
             </div>
             <div class="kpi-progress-legend">
-                <span><i class="bi bi-circle-fill" style="color:#16a34a;"></i> Paid @Model.TotalPaid.ToString("N0")</span>
-                <span><i class="bi bi-circle-fill" style="color:#dc2626;"></i> Due @Model.TotalDue.ToString("N0")</span>
+                <span class="fs-6"><i class="bi bi-circle-fill" style="color:#16a34a;"></i> Paid : @Model.TotalPaid.ToString("N0")</span>
+                <span class="fs-6"><i class="bi bi-circle-fill" style="color:#dc2626;"></i> Due : @Model.TotalDue.ToString("N0")</span>
             </div>
         </div>
 
@@ -1255,29 +1255,29 @@
             <div class="kpi-fact-chip">
                 <i class="bi bi-clock-history"></i>
                 <div>
-                    <b>@(patient.LastVisit?.ToString("dd/MM/yyyy") ?? "None")</b>
-                    <span>Last Visit</span>
+                    <b class="fs-6">@(patient.LastVisit?.ToString("dd/MM/yyyy") ?? "None")</b>
+                    <span style="font-size:13px">Last Visit</span>
                 </div>
             </div>
             <div class="kpi-fact-chip">
                 <i class="bi bi-grid-3x3-gap"></i>
                 <div>
-                    <b>@teethRecorded</b>
-                    <span>Teeth Recorded</span>
+                    <b class="fs-6">@teethRecorded</b>
+                    <span style="font-size:13px">Teeth Recorded</span>
                 </div>
             </div>
             <div class="kpi-fact-chip">
                 <i class="bi bi-image"></i>
                 <div>
-                    <b>@xraysCount</b>
-                    <span>X-Rays</span>
+                    <b class="fs-6">@xraysCount</b>
+                    <span style="font-size:13px">X-Rays</span>
                 </div>
             </div>
             <div class="kpi-fact-chip">
                 <i class="bi bi-calendar-week"></i>
                 <div>
-                    <b>@Model.AppointmentsCount</b>
-                    <span>Upcoming Appointments</span>
+                    <b class="fs-6">@Model.AppointmentsCount</b>
+                    <span style="font-size:13px">Upcoming Appointments</span>
                 </div>
             </div>
         </div>
@@ -1427,7 +1427,7 @@
                 <div class="info-card-glass full-width">
                     <div class="card-header-glass" style="display:flex; justify-content:space-between; align-items:center;">
                         <span><i class="bi bi-cash-stack"></i> Payment History</span>
-                        <button class="btn-hero glass" style="display:inline-flex; padding:8px 16px; font-size:0.8rem;" onclick="openTabPaymentModal()">
+                        <button class="btn-hero primary" style="display:inline-flex; padding:8px 16px; font-size:0.8rem;" onclick="openTabPaymentModal()">
                             <i class="bi bi-plus-lg"></i> New Payment
                         </button>
                     </div>

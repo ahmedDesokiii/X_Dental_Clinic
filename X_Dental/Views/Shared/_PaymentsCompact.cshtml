@@ -75,7 +75,7 @@
         <div class="section-head">
             <h4><i class="bi bi-credit-card-2-front"></i> مدفوعات السيشن الحالية</h4>
             <button class="btn-add-payment" onclick="openPaymentModal()">
-                <i class="bi bi-plus-lg"></i> تسجيل دفعة
+                <i class="bi bi-plus-lg"></i> New Payment
             </button>
         </div>
         <div class="pay-summary-grid">
@@ -144,12 +144,12 @@
                 <table class="dc-table">
                     <thead>
                         <tr>
-                            <th>التاريخ</th>
-                            <th>طريقة الدفع</th>
-                            <th>إجمالي السيشن</th>
-                            <th>المدفوع</th>
-                            <th>الخصم</th>
-                            <th>الباقي</th>
+                            <th class="text-start">التاريخ</th>
+                            <th class="text-start">طريقة الدفع</th>
+                            <th class="text-start">إجمالي السيشن</th>
+                            <th class="text-start">المدفوع</th>
+                            <th class="text-start">الخصم</th>
+                            <th class="text-start">الباقي</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -232,9 +232,9 @@
             <input type="text" class="dc-input-line" id="payDesc" placeholder="ملاحظة (اختياري)..." />
         </div>
         <div class="dc-modal-foot">
-            <button class="dc-btn dc-btn-secondary" onclick="closePaymentModal()">إلغاء</button>
+            <button class="dc-btn dc-btn-secondary" onclick="closePaymentModal()">Cancel</button>
             <button class="dc-btn dc-btn-primary" onclick="submitPayment()">
-                <i class="bi bi-check-lg"></i> إضافة الدفعة
+                <i class="bi bi-check-lg"></i> Add Payment
             </button>
         </div>
     </div>

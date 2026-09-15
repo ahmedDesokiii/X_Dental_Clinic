@@ -9,8 +9,7 @@
         (Model.Patient.FullNameAr ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(x => x[0]));
 
     var sessionStatusClass = Model.Visit.Status switch
-    {
-        VisitStatus.Completed => "success",
+    {        VisitStatus.Completed => "success",
         VisitStatus.Cancelled => "danger",
         _ => "warning"
     };
@@ -1002,15 +1001,12 @@
                 </div>
             </div>
             <div class="hero-actions">
-                <button type="button" id="btnFinishSession" class="btn-hero primary">
-                    <i class="bi bi-check2-circle"></i> إنهاء السيشن
-                </button>
                 <button type="button" id="btnPrintSession" class="btn-hero glass">
-                    طباعة
+                    Print
                     <i class="bi bi-printer"></i>
                 </button>
                 <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.Patient.Id" class="btn-hero glass">
-                    رجوع
+                    Back
                     <i class="bi bi-arrow-right"></i>
 
                 </a>
@@ -1110,19 +1106,23 @@
     <div class="bottom-stats">
         <div class="bottom-stat">
             <span class="bottom-stat-value" id="barTotal">@Model.Visit.TotalAmount.ToString("N0")</span>
-            <span class="bottom-stat-label">الإجمالي</span>
+            <span class="bottom-stat-label">Total Amount</span>
         </div>
         <div class="bottom-stat paid">
             <span class="bottom-stat-value" id="barPaid">@Model.Visit.PaidAmount.ToString("N0")</span>
-            <span class="bottom-stat-label">المدفوع</span>
+            <span class="bottom-stat-label">Paid Amount</span>
+        </div>
+        <div class="bottom-stat ">
+            <span class="bottom-stat-value text-warning">@Model.Visit.Discount.ToString("N0")</span>
+            <span class="bottom-stat-label"> Discount</span>
         </div>
         <div class="bottom-stat remaining">
             <span class="bottom-stat-value" id="barRemaining">@Model.Visit.Remaining.ToString("N0")</span>
-            <span class="bottom-stat-label">المتبقي</span>
+            <span class="bottom-stat-label">Remaining</span>
         </div>
     </div>
     <button type="button" class="btn-finish" onclick="window.saveAndEndSession()">
-        <i class="bi bi-check2-circle"></i> إنهاء وحفظ السيشن
+        <i class="bi bi-check2-circle"></i> Save Session
     </button>
 </div>
 

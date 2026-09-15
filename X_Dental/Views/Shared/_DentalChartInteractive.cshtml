@@ -332,7 +332,8 @@
         z-index: 1500;
         pointer-events: none;
         padding-top: 10px; /* ⭐ المسافة من أعلى الشاشة */
-    }   
+    }
+
         .tooth-modal.dc-show {
             display: flex;
             pointer-events: auto;
@@ -584,7 +585,7 @@
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
                 <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((i % 10) * 45)ms" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
-                        <span class="tooth-num">@(i-10)</span>
+                        <span class="tooth-num">@(i - 10)</span>
                         <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                     <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
@@ -596,7 +597,7 @@
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
                 <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((i % 10) * 45 + 360)ms" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
-                        <span class="tooth-num">@(i-20)</span>
+                        <span class="tooth-num">@(i - 20)</span>
                         <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                     <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
@@ -612,7 +613,7 @@
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
                 <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((i % 10) * 45 + 720)ms" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
-                        <span class="tooth-num">@(i-40)</span>
+                        <span class="tooth-num">@(i - 40)</span>
                         <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                     <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
@@ -624,7 +625,7 @@
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
                 <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((i % 10) * 45 + 1080)ms" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
-                        <span class="tooth-num">@(i-30)</span>
+                        <span class="tooth-num">@(i - 30)</span>
                         <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                     <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
@@ -643,9 +644,11 @@
             </div>
             <div class="tooth-modal-body pb-0 mb-0">
                 <div class="modal-body-row">
-                    @* Column 1: Status *@
+                    @* Column 1: Status + Diagnosis + Notes *@
                     <div class="modal-col">
-                        <div class="form-group-v4 mb-3">
+                        @* ⭐ Status ليه div مستقل عشان نقدر نخفيه لوحده في وضع تعديل الـ Previous Session
+                           من غير ما نأثر على الـ Diagnosis / Price / Notes *@
+                        <div class="form-group-v4 mb-3" id="statusFieldGroup">
                             <label>Tooth Status</label>
                             <select class="form-glass-v4 mb-2" id="toothStatus">
                                 <option value="1">Healthy</option>
@@ -661,7 +664,10 @@
                                 <option value="11">Root Canal</option>
                                 <option value="12">Filling</option>
                             </select>
+                        </div>
 
+                        @* ⭐ ده الجزء اللي المفروض يفضل ظاهر دايمًا (Diagnosis + Price + Notes) *@
+                        <div class="form-group-v4 mb-3" id="diagnosisFieldGroup">
                             <label>Diagnosis</label>
                             <div class="diagnosis-row mb-2">
                                 <select class="form-glass-v4" id="toothDiagnosis" onchange="onDiagnosisChange()">
@@ -680,6 +686,7 @@
                             <label>Condition Notes</label>
                             <textarea class="form-glass-v4" id="diagnosisNotes" rows="2" placeholder="Notes about the diagnosis / condition..."></textarea>
                         </div>
+
                         <div class="form-group-v4 mb-3" hidden>
                             <label>Affected Surfaces</label>
                             <div class="surface-picker-v4">
@@ -696,17 +703,6 @@
                         </div>
                     </div>
 
-   @*                  <div class="modal-col-divider"></div>
- *@
-                    @* Column 2: Diagnosis + Notes *@
-@*                     <div class="modal-col">
-                        <div class="form-group-v4 mb-3">
-                        </div>
-                        <div class="form-group-v4 mb-0">
-
-                        </div>
-                    </div>
- *@
                     <div class="modal-col-divider"></div>
 
                     @* Column 3: X-Rays *@
@@ -725,10 +721,10 @@
                 </div>
             </div>
             <div class="tooth-modal-foot pt-0 mt-0">
+                <button type="button" class="btn-glass-v4 btn-cancel-v4" onclick="closeToothModal()">Cancel</button>
                 <button type="button" class="btn-glass-v4 btn-save-v4" id="btnApplyTooth" onclick="applyToothChanges()">
                     <i class="bi bi-check-lg"></i> <span id="btnApplyToothText">Add to Session</span>
                 </button>
-                <button type="button" class="btn-glass-v4 btn-cancel-v4" onclick="closeToothModal()">Cancel</button>
             </div>
         </div>
     </div>
@@ -812,8 +808,9 @@
         else if (uid) btnText.textContent = 'Save Changes';
         else btnText.textContent = 'Add to Session';
 
-        // في وضع تعديل التاريخ: خبي الأقسام اللي ملهاش لازمة
-        document.getElementById('toothStatus').closest('.form-group-v4').style.display = hist ? 'none' : '';
+        // ⭐ في وضع تعديل التاريخ (Previous Sessions): خبي بس الـ Status
+        // والـ X-Rays — واسيب الـ Diagnosis/Price/Notes ظاهرين عشان دي أساس التعديل
+        document.getElementById('statusFieldGroup').style.display = hist ? 'none' : '';
         document.getElementById('colXray').style.display = hist ? 'none' : '';
 
         document.querySelectorAll('#chartCanvas .tooth-box').forEach(t => t.classList.remove('selected'));
@@ -872,10 +869,10 @@
             const row = document.createElement('div');
             row.className = 'xray-file-row';
             row.innerHTML = `
-                    <img src="${xr.base64}" class="xray-thumb" />
-                    <input type="text" class="form-glass-v4 xray-note-input" placeholder="Note..." value="${xr.notes || ''}" />
-                    <button type="button" class="xray-remove-btn"><i class="bi bi-x"></i></button>
-                `;
+                        <img src="${xr.base64}" class="xray-thumb" />
+                        <input type="text" class="form-glass-v4 xray-note-input" placeholder="Note..." value="${xr.notes || ''}" />
+                        <button type="button" class="xray-remove-btn"><i class="bi bi-x"></i></button>
+                    `;
             row.querySelector('.xray-note-input').addEventListener('input', function() {
                 currentXrayFiles[idx].notes = this.value;
             });

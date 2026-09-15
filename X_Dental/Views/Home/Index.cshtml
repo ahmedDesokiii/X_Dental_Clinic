@@ -1,12 +1,11 @@
 ﻿@using System.Text.Json
 @model Dental.ViewModels.Dashboards.DashboardViewModel
 @{
-    ViewData["Title"] = "لوحة التحكم";
+    ViewData["Title"] = "Dashboard";
 }
-
 @section Styles {
     <style>
-        /* =========== ديزاين النظام (متوافق مع التصميم الحالي) =========== */
+/* =========== Design system (aligned with the current design) =========== */
         :root {
             --sc-teal-900: #0a4d4f;
             --sc-teal-700: #0d7377;
@@ -24,7 +23,6 @@
             --card-grad: linear-gradient(160deg, rgba(255,255,255,.9), rgba(255,255,255,.65));
             --shadow-card: 0 20px 50px rgba(10, 77, 79, .08);
         }
-
         .dashboard-body {
             background: radial-gradient(circle at 5% 5%, var(--sc-teal-100) 0%, transparent 38%), radial-gradient(circle at 95% 90%, var(--sc-coral-300) 0%, transparent 28%), var(--sc-sky-50);
             min-height: 100vh;
@@ -36,6 +34,8 @@
             overflow: hidden;
             border-radius: 22px;
             background: linear-gradient(135deg, #0d7377, #119e91, #0f9b8e);
+            background-size: 200% 200%;
+            animation: heroGradientShift 10s ease infinite;
             padding: 26px 30px;
             color: #fff;
             display: flex;
@@ -47,14 +47,17 @@
             margin-bottom: 24px;
             isolation: isolate;
         }
-
+            @@keyframes heroGradientShift {
+                0% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+                100% { background-position: 0% 50%; }
+            }
             .dash-hero .brand-icons {
                 position: absolute;
                 inset: 0;
                 z-index: -1;
                 pointer-events: none;
             }
-
                 .dash-hero .brand-icons .float-ic {
                     position: absolute;
                     display: flex;
@@ -69,13 +72,11 @@
                     backdrop-filter: blur(6px);
                     animation: floatIcon 8s infinite ease-in-out;
                 }
-
                     .dash-hero .brand-icons .float-ic:nth-child(1) {
                         top: 10px;
                         right: 28%;
                         animation-delay: 0s;
                     }
-
                     .dash-hero .brand-icons .float-ic:nth-child(2) {
                         bottom: -20px;
                         left: 8%;
@@ -84,25 +85,21 @@
                         width: 60px;
                         height: 60px;
                     }
-
             .dash-hero h1 {
                 font-size: 1.4rem;
                 font-weight: 800;
                 margin: 0;
             }
-
             .dash-hero p {
                 font-size: 0.85rem;
                 margin: 5px 0 0;
                 opacity: .9;
             }
-
         .dash-actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
-
             .dash-actions .btn-hero-dash {
                 border: none;
                 padding: 10px 20px;
@@ -116,44 +113,36 @@
                 transition: all .2s;
                 box-shadow: 0 8px 22px rgba(0,0,0,.12);
             }
-
         .btn-hero-dash.white {
             background: #fff;
             color: var(--sc-teal-700);
         }
-
         .btn-hero-dash.glass {
             background: rgba(255,255,255,.14);
             color: #fff;
             border: 1px solid rgba(255,255,255,.3);
         }
-
         .btn-hero-dash:hover {
             transform: translateY(-2px);
         }
-
         @@keyframes float {
             0%, 100% {
                 transform: translateY(0) rotate(0deg);
             }
-
             50% {
                 transform: translateY(-16px) rotate(8deg);
             }
         }
-
         .dash-hero .brand-icons .float-ic {
             animation-name: float;
         }
-
-        /* ============ بطاقات الإحصائيات ============ */
+/* ============ Stat cards ============ */
         .stats-grid-dash {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 16px;
             margin-bottom: 24px;
         }
-
         .stat-glass {
             background: var(--card-grad);
             backdrop-filter: blur(14px);
@@ -168,24 +157,19 @@
             opacity: 0;
             animation: riseItem .6s ease forwards;
         }
-
             .stat-glass:hover {
                 transform: translateY(-5px);
                 box-shadow: 0 18px 40px rgba(10,77,79,.15);
             }
-
             .stat-glass:nth-child(2) {
                 animation-delay: .08s;
             }
-
             .stat-glass:nth-child(3) {
                 animation-delay: .16s;
             }
-
             .stat-glass:nth-child(4) {
                 animation-delay: .24s;
             }
-
         .stat-icon-wrap {
             width: 56px;
             height: 56px;
@@ -196,80 +180,73 @@
             font-size: 1.5rem;
             flex-shrink: 0;
         }
-
         .icon-teal {
             background: #f0fdfa;
             color: #0f766e;
         }
-
         .icon-blue {
             background: #eff6ff;
             color: #1d4ed8;
         }
-
         .icon-green {
             background: #f0fdf4;
             color: #166534;
         }
-
         .icon-red {
             background: #fef2f2;
             color: #dc2626;
         }
-
         .stat-number {
             font-size: 1.7rem;
             font-weight: 800;
             color: var(--sc-ink-900);
             line-height: 1;
         }
-
         .stat-label {
             font-size: .78rem;
             color: var(--sc-ink-600);
             font-weight: 600;
             margin-top: 4px;
         }
-
-        /* ============ عناصر reveal أنيميشن ============ */
+/* ============ Reveal-on-scroll animation ============ */
         .reveal {
             opacity: 0;
             transform: translateY(30px);
             transition: opacity .7s cubic-bezier(.2,.8,.3,1), transform .7s cubic-bezier(.2,.8,.3,1);
         }
-
             .reveal.is-visible {
-                opacity: 1;آخر الزيارات
+                opacity: 1;
                 transform: translateY(0);
             }
-
         @@keyframes riseItem {
             from {
                 opacity: 0;
                 transform: translateY(20px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-
-        /* ============ الجرافات - حاويات ============ */
+/* ============ Chart containers ============ */
         .charts-row1 {
             display: grid;
             grid-template-columns: 1.6fr 1fr;
             gap: 16px;
             margin-bottom: 16px;
         }
-
         .charts-row2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
             margin-bottom: 24px;
         }
-
+        .charts-row3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
         .chart-glass {
             background: var(--card-grad);
             backdrop-filter: blur(14px);
@@ -279,8 +256,12 @@
             box-shadow: var(--shadow-card);
             overflow: hidden;
             min-height: 280px;
+            transition: transform .25s ease, box-shadow .25s ease;
         }
-
+            .chart-glass:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 24px 50px rgba(10,77,79,.18);
+            }
             .chart-glass h5 {
                 font-size: .9rem;
                 font-weight: 800;
@@ -290,35 +271,69 @@
                 color: var(--sc-ink-900);
                 margin-bottom: 12px;
             }
-
                 .chart-glass h5 i {
                     color: var(--sc-teal-600);
                 }
-
-        /* ============ الجداول داخل الصفحة ============ */
+        .alert-panel { min-height: 200px; }
+        .alert-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+            .alert-list li {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                padding: 8px 10px;
+                border-radius: 10px;
+                background: rgba(255,255,255,.6);
+                border: 1px solid var(--sc-sky-100);
+                font-size: .82rem;
+                font-weight: 600;
+                color: var(--sc-ink-900);
+            }
+        .alert-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .alert-badge {
+            flex-shrink: 0;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: .72rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .alert-badge.low { background: #fef3c7; color: #92400e; }
+        .alert-badge.expiry { background: #fee2e2; color: #b91c1c; }
+        .alert-badge.due { background: #fee2e2; color: #b91c1c; }
+/* ============ Tables ============ */
         .info-table {
             width: 100%;
             border-collapse: collapse;
             font-size: .85rem;
         }
-
             .info-table th {
                 background: var(--sc-sky-50);
-                text-align: right !important;
+                text-align: left !important;
                 font-size: .78rem;
                 font-weight: 700;
                 color: var(--sc-ink-600);
                 padding: 10px 8px;
                 border-bottom: 2px solid var(--sc-sky-100);
             }
-
             .info-table td {
                 padding: 10px 8px;
                 border-bottom: 1px solid var(--sc-sky-100);
                 color: var(--sc-ink-900);
                 font-weight: 600;
             }
-
+        .info-table td a.mobile-link {
+            color: var(--sc-teal-700);
+            text-decoration: none;
+        }
+        .info-table td a.mobile-link:hover { text-decoration: underline; }
         .tab-badge {
             display: inline-block;
             padding: 3px 12px;
@@ -326,56 +341,46 @@
             font-size: .72rem;
             font-weight: 800;
         }
-
         .tab-in-progress {
             background: #fef3c7;
             color: #92400e;
         }
-
         .tab-completed {
             background: #d1fae5;
             color: #047857;
         }
-
         .tab-cancelled {
             background: #fee2e2;
             color: #b91c1c;
         }
-
         .tab-scheduled {
             background: #dbeafe;
             color: #1e40af;
         }
-
         .tab-confirmed {
             background: #cffafe;
             color: #0e7490;
         }
-
-        /* ============ موبايل ============ */
+/* ============ Mobile ============ */
         @@media (max-width: 1100px) {
             .stats-grid-dash {
                 grid-template-columns: repeat(2, 1fr);
             }
-
-            .charts-row1, .charts-row2 {
+            .charts-row1, .charts-row2, .charts-row3 {
                 grid-template-columns: 1fr;
             }
         }
-
         @@media (max-width: 640px) {
             .stats-grid-dash {
                 grid-template-columns: 1fr;
             }
-
             .chart-glass {
                 padding: 12px;
             }
         }
     </style>
 }
-
-<div class="dashboard dash-body" dir="rtl">
+<div class="dashboard dash-body" dir="ltr">
 
     <!-- ===== Hero ===== -->
     <div class="dash-hero">
@@ -384,85 +389,80 @@
             <div class="float-ic"><i class="bi bi-calendar2-week"></i></div>
         </div>
         <div>
-            <h1><i class="bi bi-grid-1x2-fill me-2"></i> لوحة التحكم</h1>
-            <p>نظرة شاملة على نشاط العيادة اليوم والأسبوع</p>
+            <h1><i class="bi bi-grid-1x2-fill me-2"></i> Dashboard</h1>
+            <p>A complete overview of today's and this week's clinic activity</p>
         </div>
         <div class="dash-actions">
-            <a asp-controller="Patients" asp-action="Create" class="btn-hero-dash white">
-                <i class="bi bi-person-plus-fill"></i> مريض
-            </a>
+            <button type="button" class="btn-hero-dash white" onclick="openPatientModal()">
+                <i class="bi bi-person-plus-fill"></i> New Patient
+            </button>
             <a asp-controller="Appointments" asp-action="Index" class="btn-hero-dash glass">
-                <i class="bi bi-calendar2-plus"></i> موعد
+                <i class="bi bi-calendar2-plus"></i> Appointment
             </a>
         </div>
     </div>
-
     <!-- ===== Static: 4 Cards ===== -->
     <div class="stats-grid-dash">
         <div class="stat-glass">
             <div class="stat-icon-wrap icon-teal"><i class="bi bi-people-fill"></i></div>
             <div>
                 <span class="stat-number" data-target="@Model.TotalPatients">0</span>
-                <span class="stat-label">إجمالي المرضي</span>
+                <span class="stat-label">Total Patients</span>
             </div>
         </div>
         <div class="stat-glass">
             <div class="stat-icon-wrap icon-blue"><i class="bi bi-calendar-day"></i></div>
             <div>
                 <span class="stat-number" data-target="@Model.TodayAppointments">0</span>
-                <span class="stat-label">زيارة اليوم</span>
+                <span class="stat-label">Today's Appointments</span>
             </div>
         </div>
         <div class="stat-glass">
             <div class="stat-icon-wrap icon-green"><i class="bi bi-cash-stack"></i></div>
             <div>
                 <span class="stat-number" data-target="@Model.TotalRevenue" data-mony="true">0</span>
-                <span class="stat-label">إجمالي الإيرادات</span>
+                <span class="stat-label">Total Revenue</span>
             </div>
         </div>
         <div class="stat-glass">
             <div class="stat-icon-wrap icon-red"><i class="bi bi-credit-card-2-front"></i></div>
             <div>
                 <span class="stat-number" data-target="@Model.TotalDue" data-mony="true">0</span>
-                <span class="stat-label">متأخرات المرضى</span>
+                <span class="stat-label">Outstanding Balances</span>
             </div>
         </div>
     </div>
 
-    <!-- ===== Grass Graphs ===== -->
+    <!-- ===== Graphs ===== -->
     <div class="charts-row1 reveal">
         <div class="chart-glass">
-            <h5><i class="bi bi-graph-up"></i> المواعيد القادمة 7 أيام</h5>
+            <h5><i class="bi bi-graph-up"></i> Appointments — Next 7 Days</h5>
             <div id="chartAppointments" style="height: 250px;"></div>
         </div>
         <div class="chart-glass">
-            <h5><i class="bi bi-pie-chart-fill"></i> توزيع المرضى حسب نوع الملف</h5>
+            <h5><i class="bi bi-pie-chart-fill"></i> Patients by File Type</h5>
             <div id="chartPatientsTypePie" style="height: 250px;"></div>
         </div>
-
     </div>
-
-
-
 
     <div class="charts-row2 reveal">
         <div class="chart-glass">
-            <h5><i class="bi bi-bar-chart-fill"></i> الإيرادات آخر 6 شهور</h5>
+            <h5><i class="bi bi-bar-chart-fill"></i> Revenue — Last 6 Months</h5>
             <div id="chartRevenueBar" style="height: 240px;"></div>
         </div>
         <div class="chart-glass">
-            <h5><i class="bi bi-list-check"></i> آخر الزيارات</h5>
+            <h5><i class="bi bi-list-check"></i> Recent Visits</h5>
             @if (Model.RecentVisits.Any())
             {
                 <table class="info-table">
-                    <thead><tr><th>المريض</th><th>النوع</th><th>المبلغ</th></tr></thead>
+                    <thead><tr><th>Patient</th><th>Type</th><th>Amount</th></tr></thead>
                     <tbody>
                         @foreach (var v in Model.RecentVisits)
                         {
                             <tr>
                                 <td>@v.PatientName</td>
-                                <td>@(v.Category == "General" ? "عام" : "تقويم")</td>
-                                <td>@v.TotalAmount.ToString("N0") ج.م</td>
+                                <td>@(v.Category == "General" ? "General" : "Orthodontics")</td>
+                                <td>@v.TotalAmount.ToString("N0") EGP</td>
                             </tr>
                         }
                     </tbody>
@@ -470,32 +470,92 @@
             }
             else
             {
-                <p class="empty-state"><i class="bi bi-clipboard"></i> لا توجد زيارات حديثة</p>
+                <p class="empty-state"><i class="bi bi-clipboard"></i> No recent visits</p>
             }
         </div>
     </div>
-    <div class="charts-row2 reveal">
-        <div class="chart-glass">
-            <h5><i class="bi bi-hospital"></i> أعلى الإجراءات تنفيذًا</h5>
-            <div id="chartTopProcedures" style="height: 240px;"></div>
-        </div>
 
-        <div class="chart-glass">
-            <h5><i class="bi bi-pie-chart-fill"></i> توزيع الزيارات</h5>
-            <div id="chartVisitsPie" style="height: 250px;"></div>
+    <!-- ===== Smart Alerts ===== -->
+    <div class="charts-row3 reveal">
+        <div class="chart-glass alert-panel">
+            <h5><i class="bi bi-exclamation-triangle-fill"></i> Low Stock Alerts</h5>
+            @if (Model.LowStockMaterials.Any())
+            {
+                <ul class="alert-list">
+                    @foreach (var m in Model.LowStockMaterials)
+                    {
+                        <li>
+                            <span class="alert-name">@m.Name</span>
+                            <span class="alert-badge low">@m.Quantity.ToString("0.##") / @m.MinimumStockLevel.ToString("0.##")</span>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="empty-dash"><i class="bi bi-check2-circle"></i> Stock levels look fine</p>
+            }
+        </div>
+        <div class="chart-glass alert-panel">
+            <h5><i class="bi bi-hourglass-split"></i> Expiring Soon</h5>
+            @if (Model.NearExpiryMaterials.Any())
+            {
+                <ul class="alert-list">
+                    @foreach (var m in Model.NearExpiryMaterials)
+                    {
+                        <li>
+                            <span class="alert-name">@m.Name</span>
+                            <span class="alert-badge expiry">@m.DaysLeft d — @m.ExpiryDate.ToString("dd/MM/yyyy")</span>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="empty-dash"><i class="bi bi-check2-circle"></i> Nothing expiring within 30 days</p>
+            }
+        </div>
+        <div class="chart-glass alert-panel">
+            <h5><i class="bi bi-cash-coin"></i> Top Overdue Patients</h5>
+            @if (Model.TopOverduePatients.Any())
+            {
+                <ul class="alert-list">
+                    @foreach (var p in Model.TopOverduePatients)
+                    {
+                        <li>
+                            <span class="alert-name">@p.PatientName</span>
+                            <span class="alert-badge due">@p.AmountDue.ToString("N0") EGP</span>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="empty-dash"><i class="bi bi-check2-circle"></i> No outstanding balances</p>
+            }
         </div>
     </div>
 
-
-    <!-- ====== Famous Tables + Lists ===== -->
+    
+    <div class="charts-row2 reveal">
+        <div class="chart-glass">
+            <h5><i class="bi bi-hospital"></i> Top Procedures</h5>
+            <div id="chartTopProcedures" style="height: 240px;"></div>
+        </div>
+        <div class="chart-glass">
+            <h5><i class="bi bi-pie-chart-fill"></i> Visit Distribution</h5>
+            <div id="chartVisitsPie" style="height: 250px;"></div>
+        </div>
+    </div>
+    <!-- ====== Recent Appointments ===== -->
     <div class="charts-row1 reveal">
         <div class="chart-glass">
-            <h5><i class="bi bi-clock-history"></i> أحدث المواعيد</h5>
+            <h5><i class="bi bi-clock-history"></i> Recent Appointments</h5>
             @if (Model.RecentAppointments.Any())
             {
                 <table class="info-table">
                     <thead>
-                        <tr><th>المريض</th><th>التوقيت</th><th>السبب</th><th>الحالة</th></tr>
+                        <tr><th>Patient</th><th>Mobile</th><th>Time</th><th>Reason</th><th>Status</th></tr>
                     </thead>
                     <tbody>
                         @foreach (var ap in Model.RecentAppointments)
@@ -503,6 +563,16 @@
                             var cls = ap.Status.ToString().ToLower();
                             <tr>
                                 <td>@ap.PatientName</td>
+                                <td dir="ltr">
+                                    @if (!string.IsNullOrWhiteSpace(ap.Mobile))
+                                    {
+                                        <a class="mobile-link" href="tel:@ap.Mobile">@ap.Mobile</a>
+                                    }
+                                    else
+                                    {
+                                        <span>-</span>
+                                    }
+                                </td>
                                 <td>@ap.AppointmentDate.ToString("HH:mm")</td>
                                 <td>@(ap.Reason ?? "-")</td>
                                 <td><span class="tab-badge tab-@cls">@ap.Status</span></td>
@@ -513,19 +583,15 @@
             }
             else
             {
-                <p class="empty-dash"><i class="bi bi-inbox"></i> لا توجد مواعيد قادمة</p>
+                <p class="empty-dash"><i class="bi bi-inbox"></i> No upcoming appointments</p>
             }
         </div>
-
-
     </div>
 </div>
-
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-
-            // ===== 1) عدّاد متحرك =====
+            // ===== 1) Animated counters =====
             const counters = document.querySelectorAll('.stat-number');
             counters.forEach(el => {
                 const target = parseFloat(el.dataset.target || '0');
@@ -533,22 +599,20 @@
                 let start = 0;
                 const duration = 900;
                 const startTime = performance.now();
-
                 function step(now) {
                     const p = Math.min((now - startTime) / duration, 1);
                     const eased = 1 - Math.pow(1 - p, 3);
                     const val = Math.floor(target * eased);
                     el.textContent = isMoney
-                        ? val.toLocaleString('en-EG') + ' ج.م'
+                        ? val.toLocaleString('en-EG') + ' EGP'
                         : val.toLocaleString('en-EG');
                     if (p < 1) requestAnimationFrame(step);
                     else el.textContent = isMoney
-                        ? target.toLocaleString('en-EG') + ' ج.م'
+                        ? target.toLocaleString('en-EG') + ' EGP'
                         : target.toLocaleString('en-EG');
                 }
                 requestAnimationFrame(step);
             });
-
             // ===== 2) Reveal on Scroll =====
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(e => {
@@ -559,57 +623,52 @@
                 });
             }, { threshold: 0.15 });
             document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
             // ============ 3) Highcharts Graphs ============
-
-            // Vue: Appointments Coming
+            // Appointments — next 7 days
             Highcharts.chart('chartAppointments', {
-                    chart: {
-                        type: 'areaspline',
-                        backgroundColor: 'transparent',
-                        style: { fontFamily: 'Beiruti, sans-serif' }
-                    },
-                    title: { text: null },
-                    credits: { enabled: false },
-                    xAxis: {
-                        categories: @Html.Raw(JsonSerializer.Serialize(Model.AppointmentNext7Days.Select(x => x.Label))),
-                        lineColor: '#dcf5f7'
-                    },
-                    yAxis: {
-                        title: null,
-                        gridLineColor: '#eefdfa',
-                        min: 0,
-                    },
-                    legend: { enabled: false },
-                    plotOptions: {
-                        areaspline: {
-                            fillOpacity: .3,
-                            lineWidth: 3,
-                            marker: { enabled: true, radius: 4, fillColor: '#0d9488' },
-                        }
-                    },
-                    series: [{
-                        name: 'المواعيد',
-                        data: @Html.Raw(JsonSerializer.Serialize(Model.AppointmentNext7Days.Select(x => x.Count))),
-                        color: '#0d9488'
-                    }]
-                });
-
-                // Pie visits
-                Highcharts.chart('chartVisitsPie', {
-                    chart: {
-                        type: 'pie',
-                        backgroundColor: 'transparent',
-                    },
+                chart: {
+                    type: 'areaspline',
+                    backgroundColor: 'transparent',
+                    style: { fontFamily: 'Beiruti, sans-serif' }
+                },
+                title: { text: null },
+                credits: { enabled: false },
+                xAxis: {
+                    categories: @Html.Raw(JsonSerializer.Serialize(Model.AppointmentNext7Days.Select(x => x.Label))),
+                    lineColor: '#dcf5f7'
+                },
+                yAxis: {
+                    title: null,
+                    gridLineColor: '#eefdfa',
+                    min: 0,
+                },
+                legend: { enabled: false },
+                plotOptions: {
+                    areaspline: {
+                        fillOpacity: .3,
+                        lineWidth: 3,
+                        marker: { enabled: true, radius: 4, fillColor: '#0d9488' },
+                    }
+                },
+                series: [{
+                    name: 'Appointments',
+                    data: @Html.Raw(JsonSerializer.Serialize(Model.AppointmentNext7Days.Select(x => x.Count))),
+                    color: '#0d9488'
+                }]
+            });
+            // Pie: Visit distribution
+            Highcharts.chart('chartVisitsPie', {
+                chart: {
+                    type: 'pie',
+                    backgroundColor: 'transparent',
+                },
                 title: { text: null },
                 credits: { enabled: false },
                 plotOptions: {
                     pie: {
                         innerSize: '55%',
                         borderWidth: 0,
-                        dataLabels: {
-                            enabled: false,
-                        },
+                        dataLabels: { enabled: false },
                         showInLegend: true,
                     }
                 },
@@ -621,41 +680,41 @@
                 },
                 series: [{
                     data: [
-                        ['عام', @Model.GeneralVisits],
-                        ['تقويم', @Model.OrthoVisits]
+                        ['General', @Model.GeneralVisits],
+                        ['Orthodontics', @Model.OrthoVisits]
                     ],
-                colors: ['#14b8a6', '#f59e0b']
+                    colors: ['#14b8a6', '#f59e0b']
                 }]
             });
-                        Highcharts.chart('chartPatientsTypePie', {
-            chart: { type: 'pie', backgroundColor: 'transparent' },
-            title: { text: null },
-            credits: { enabled: false },
-            plotOptions: {
-                pie: {
-                    innerSize: '55%',
-                    borderWidth: 0,
-                    dataLabels: { enabled: false },
-                    showInLegend: true,
-                }
-            },
-            legend: {
-                layout: 'horizontal',
-                align: 'center',
-                verticalAlign: 'bottom',
-                itemStyle: { fontWeight: '700', fontSize: '12px' }
-            },
-            series: [{
-                data: [
-                    ['عام', @Model.GeneralPatients],
-                    ['تقويم', @Model.OrthoPatients],
-                    ['كلا الملفين', @Model.BothPatients]
-                ],
-                colors: ['#14b8a6', '#f59e0b', '#6366f1']
-            }]
-        });
-
-            // Bar: Earnings
+            // Pie: Patients by file type
+            Highcharts.chart('chartPatientsTypePie', {
+                chart: { type: 'pie', backgroundColor: 'transparent' },
+                title: { text: null },
+                credits: { enabled: false },
+                plotOptions: {
+                    pie: {
+                        innerSize: '55%',
+                        borderWidth: 0,
+                        dataLabels: { enabled: false },
+                        showInLegend: true,
+                    }
+                },
+                legend: {
+                    layout: 'horizontal',
+                    align: 'center',
+                    verticalAlign: 'bottom',
+                    itemStyle: { fontWeight: '700', fontSize: '12px' }
+                },
+                series: [{
+                    data: [
+                        ['General', @Model.GeneralPatients],
+                        ['Orthodontics', @Model.OrthoPatients],
+                        ['Both Files', @Model.BothPatients]
+                    ],
+                    colors: ['#14b8a6', '#f59e0b', '#6366f1']
+                }]
+            });
+            // Bar: Revenue
             Highcharts.chart('chartRevenueBar', {
                 chart: { type: 'column', backgroundColor: 'transparent' },
                 title: { text: null },
@@ -663,24 +722,23 @@
                 xAxis: { categories: @Html.Raw(JsonSerializer.Serialize(Model.RevenueLast6Months.Select(x => x.Label))), },
                 yAxis: { title: null },
                 series: [{
-                    name: 'الإيرادات',
+                    name: 'Revenue',
                     data: @Html.Raw(JsonSerializer.Serialize(Model.RevenueLast6Months.Select(x => x.Amount))),
                     color: '#0d9488',
                 }]
             });
-
-            // Hbar: Top Procedures
+            // Hbar: Top procedures
             Highcharts.chart('chartTopProcedures', {
                 chart: { type: 'bar', backgroundColor: 'transparent' },
                 title: { text: null },
                 credits: { enabled: false },
                 xAxis: {
                     categories: @Html.Raw(JsonSerializer.Serialize(Model.TopProcedures.Select(x => x.Name))),
-                title: { text: null }
+                    title: { text: null }
                 },
-                yAxis: { title: { text: 'Number' } },
+                yAxis: { title: { text: 'Count' } },
                 series: [{
-                    name: 'عدد المرات',
+                    name: 'Count',
                     data: @Html.Raw(JsonSerializer.Serialize(Model.TopProcedures.Select(x => x.Count))),
                     color: '#0f9b8e'
                 }]

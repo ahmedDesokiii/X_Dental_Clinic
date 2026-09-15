@@ -1,5 +1,5 @@
 ﻿@{
-    ViewData["Title"] = "المواعيد";
+    ViewData["Title"] = "Appointments";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -32,6 +32,8 @@
     /* ── Hero ── */
     .calendar-hero {
         background: linear-gradient(135deg, var(--sc-teal-700), var(--sc-teal-500));
+        background-size: 200% 200%;
+        animation: heroGradientShift 8s ease-in-out infinite;
         border-radius: var(--radius-lg);
         padding: 22px 28px;
         display: flex;
@@ -45,50 +47,94 @@
         overflow: hidden;
     }
 
-        .calendar-hero::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at 92% -20%, rgba(255,255,255,.32), transparent 55%);
-            pointer-events: none;
+    @@keyframes heroGradientShift {
+        0%, 100% {
+            background-position: 0% 50%;
         }
 
-        .calendar-hero .hero-content {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            position: relative;
-            z-index: 1;
+        50% {
+            background-position: 100% 50%;
+        }
+    }
+
+    .calendar-hero::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 92% -20%, rgba(255,255,255,.32), transparent 55%);
+        pointer-events: none;
+    }
+
+    .calendar-hero::before {
+        content: '';
+        position: absolute;
+        top: -60%;
+        left: -30%;
+        width: 55%;
+        height: 220%;
+        background: linear-gradient(105deg, transparent, rgba(255,255,255,.14), transparent);
+        transform: rotate(12deg);
+        animation: heroShineCal 6s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    @@keyframes heroShineCal {
+        0%, 100% {
+            left: -40%;
         }
 
-        .calendar-hero .hero-icon {
-            width: 52px;
-            height: 52px;
-            background: rgba(255,255,255,.18);
-            color: #fff;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            flex-shrink: 0;
-            backdrop-filter: blur(6px);
-            border: 1px solid rgba(255,255,255,.15);
+        50% {
+            left: 110%;
+        }
+    }
+
+    .calendar-hero .hero-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .calendar-hero .hero-icon {
+        width: 52px;
+        height: 52px;
+        background: rgba(255,255,255,.18);
+        color: #fff;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        flex-shrink: 0;
+        backdrop-filter: blur(6px);
+        border: 1px solid rgba(255,255,255,.15);
+        animation: heroIconFloat 4s ease-in-out infinite;
+    }
+
+    @@keyframes heroIconFloat {
+        0%, 100% {
+            transform: translateY(0) rotate(0deg);
         }
 
-        .calendar-hero h1 {
-            font-size: 1.25rem;
-            font-weight: 800;
-            margin: 0;
-            color: #fff;
+        50% {
+            transform: translateY(-4px) rotate(-4deg);
         }
+    }
 
-        .calendar-hero p {
-            font-size: 0.85rem;
-            margin: 4px 0 0;
-            color: rgba(255,255,255,.9);
-            font-weight: 600;
-        }
+    .calendar-hero h1 {
+        font-size: 1.25rem;
+        font-weight: 800;
+        margin: 0;
+        color: #fff;
+    }
+
+    .calendar-hero p {
+        font-size: 0.85rem;
+        margin: 4px 0 0;
+        color: rgba(255,255,255,.9);
+        font-weight: 600;
+    }
 
     .btn-hero-new {
         background: #fff;
@@ -107,18 +153,38 @@
         position: relative;
         z-index: 1;
         cursor: pointer;
+        overflow: hidden;
+        animation: heroBtnPulse 3s ease-in-out infinite;
     }
 
-        .btn-hero-new:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 26px rgba(10, 40, 42, .24);
-            color: var(--sc-teal-700);
+    @@keyframes heroBtnPulse {
+        0%, 100% {
+            box-shadow: 0 8px 20px rgba(10, 40, 42, .18);
         }
+
+        50% {
+            box-shadow: 0 8px 26px rgba(10, 40, 42, .3), 0 0 0 4px rgba(255,255,255,.15);
+        }
+    }
+
+    .btn-hero-new:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 26px rgba(10, 40, 42, .24);
+        color: var(--sc-teal-700);
+    }
+
+    .btn-hero-new i {
+        transition: transform .3s ease;
+    }
+
+    .btn-hero-new:hover i {
+        transform: rotate(90deg);
+    }
 
     /* ── Stats Bar ── */
     .stats-bar {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(8, 1fr);
         gap: 14px;
         margin-bottom: 20px;
     }
@@ -134,11 +200,60 @@
         border: 1px solid rgba(255,255,255,.6);
         box-shadow: var(--shadow-soft);
         transition: all .25s ease;
+        animation: statCardIn .5s cubic-bezier(.2,.8,.3,1) backwards;
     }
 
-        .stat-card-glass:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-hover);
+        .stat-card-glass:nth-child(1) {
+            animation-delay: .03s;
+        }
+
+        .stat-card-glass:nth-child(2) {
+            animation-delay: .06s;
+        }
+
+        .stat-card-glass:nth-child(3) {
+            animation-delay: .09s;
+        }
+
+        .stat-card-glass:nth-child(4) {
+            animation-delay: .12s;
+        }
+
+        .stat-card-glass:nth-child(5) {
+            animation-delay: .15s;
+        }
+
+        .stat-card-glass:nth-child(6) {
+            animation-delay: .18s;
+        }
+
+        .stat-card-glass:nth-child(7) {
+            animation-delay: .21s;
+        }
+
+        .stat-card-glass:nth-child(8) {
+            animation-delay: .24s;
+        }
+
+    @@keyframes statCardIn {
+        from {
+            opacity: 0;
+            transform: translateY(14px) scale(.97);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .stat-card-glass:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-hover);
+    }
+
+        .stat-card-glass:hover .stat-icon-box {
+            transform: scale(1.12) rotate(-6deg);
         }
 
     .stat-icon-box {
@@ -150,6 +265,7 @@
         justify-content: center;
         font-size: 1.15rem;
         flex-shrink: 0;
+        transition: transform .3s cubic-bezier(.2,1.4,.4,1);
     }
 
         .stat-icon-box.teal {
@@ -170,6 +286,26 @@
         .stat-icon-box.orange {
             background: #fffbeb;
             color: #b45309;
+        }
+
+        .stat-icon-box.cyan {
+            background: #ecfeff;
+            color: #0e7490;
+        }
+
+        .stat-icon-box.purple {
+            background: #f5f3ff;
+            color: #6d28d9;
+        }
+
+        .stat-icon-box.slate {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .stat-icon-box.red {
+            background: #fef2f2;
+            color: #b91c1c;
         }
 
     .stat-value-lg {
@@ -195,6 +331,32 @@
         overflow: hidden;
         border: 1px solid rgba(255,255,255,.6);
         padding: 24px;
+        animation: fadeInUpCal .6s ease forwards;
+        opacity: 0;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeInUpCal {
+        from {
+            opacity: 0;
+            transform: translateY(16px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .calendar-header {
@@ -211,6 +373,7 @@
         font-weight: 800;
         color: var(--sc-ink-900);
         margin: 0;
+        transition: opacity .2s ease;
     }
 
     .cal-nav-group {
@@ -240,6 +403,10 @@
             border-color: var(--brand);
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(13,148,136,0.25);
+        }
+
+        .cal-nav:active {
+            transform: translateY(0) scale(.94);
         }
 
     .cal-today-btn {
@@ -351,6 +518,7 @@
         font-weight: 800;
         color: var(--sc-ink-900);
         margin-top: 4px;
+        transition: color .2s ease;
     }
 
     .day-column.is-today .day-number {
@@ -407,6 +575,10 @@
             transform: translateX(-4px) translateY(-2px);
             box-shadow: 0 8px 20px rgba(10, 77, 79, 0.12);
             border-color: var(--sc-teal-500);
+        }
+
+        .patient-slot:active {
+            transform: translateX(-2px) translateY(0) scale(.98);
         }
 
     @@keyframes slotSlideIn {
@@ -617,31 +789,6 @@
         flex-wrap: wrap;
     }
 
-    .form-label-custom {
-        display: block;
-        font-size: 0.82rem;
-        font-weight: 700;
-        color: #475569;
-        margin-bottom: 6px;
-    }
-
-    .form-control-custom {
-        width: 100%;
-        padding: 10px 14px;
-        border: 1.5px solid var(--sc-sky-100);
-        border-radius: 10px;
-        font-size: 0.95rem;
-        color: var(--sc-ink-900);
-        background: #fff;
-        transition: all 0.2s;
-        outline: none;
-    }
-
-        .form-control-custom:focus {
-            border-color: var(--sc-teal-500);
-            box-shadow: 0 0 0 3px rgba(20,184,166,0.1);
-        }
-
     .btn-modal {
         padding: 10px 22px;
         border-radius: 10px;
@@ -651,6 +798,14 @@
         cursor: pointer;
         transition: all 0.2s;
     }
+
+        .btn-modal:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-modal:active {
+            transform: translateY(0) scale(.97);
+        }
 
     .btn-modal-cancel {
         background: #f1f5f9;
@@ -667,7 +822,6 @@
     }
 
         .btn-modal-save:hover {
-            transform: translateY(-1px);
             box-shadow: 0 6px 16px rgba(13,148,136,0.3);
         }
 
@@ -687,50 +841,6 @@
 
         .btn-modal-info:hover {
             background: #bfdbfe;
-        }
-
-    /* ── Search Results Dropdown ── */
-    .search-results-box {
-        border: 1.5px solid var(--sc-sky-100);
-        border-radius: 12px;
-        margin-top: 6px;
-        max-height: 180px;
-        overflow-y: auto;
-        display: none;
-        background: #fff;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        animation: dropdownFade 0.2s ease;
-    }
-
-    @@keyframes dropdownFade {
-        from {
-            opacity: 0;
-            transform: translateY(-5px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .search-result-item {
-        padding: 10px 14px;
-        cursor: pointer;
-        border-bottom: 1px solid var(--sc-sky-100);
-        transition: all 0.15s ease;
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--sc-ink-900);
-    }
-
-        .search-result-item:hover {
-            background: var(--brand-light);
-            color: var(--brand-dark);
-        }
-
-        .search-result-item:last-child {
-            border-bottom: none;
         }
 
     /* ── Responsive ── */
@@ -775,60 +885,89 @@
 </style>
 
 <!-- 🔷 Hero -->
-<div class="calendar-hero">
+<div class="calendar-hero" dir="ltr">
     <div class="hero-content">
         <div class="hero-icon"><i class="bi bi-calendar2-week-fill"></i></div>
         <div>
-            <h1>جدول المواعيد</h1>
-            <p>عرض وحجز وإدارة مواعيد المرضى أسبوعيًا</p>
+            <h1>Appointment Schedule</h1>
+            <p>View, book, and manage patient appointments on a weekly basis.</p>
         </div>
     </div>
-    <button class="btn-hero-new" onclick="openCreateModal()">
-        <i class="bi bi-plus-lg"></i> موعد جديد
+    @* ⭐ بيفتح المودال المشترك من غير patientId → يظهر البحث بالاسم/الكود/الموبايل *@
+    <button class="btn-hero-new" onclick="AppointmentModal.open()">
+        <i class="bi bi-plus-lg"></i> New Appointment
     </button>
 </div>
 
 <!-- 🔷 Stats -->
-<div class="stats-bar" id="statsBar">
-    <div class="stat-card-glass">
+<div class="stats-bar" id="statsBar" dir="ltr">
+    <div class="stat-card">
         <div class="stat-icon-box teal"><i class="bi bi-calendar-check"></i></div>
         <div>
             <span class="stat-value-lg" id="statTotalWeek">0</span>
-            <span class="stat-label-lg d-block">مواعيد الأسبوع</span>
+            <span class="stat-label-lg d-block">This Week</span>
         </div>
     </div>
-    <div class="stat-card-glass">
-        <div class="stat-icon-box green"><i class="bi bi-check-circle"></i></div>
-        <div>
-            <span class="stat-value-lg" id="statConfirmed">0</span>
-            <span class="stat-label-lg d-block">مؤكدة</span>
-        </div>
-    </div>
-    <div class="stat-card-glass">
-        <div class="stat-icon-box orange"><i class="bi bi-clock"></i></div>
-        <div>
-            <span class="stat-value-lg" id="statPending">0</span>
-            <span class="stat-label-lg d-block">قيد الانتظار</span>
-        </div>
-    </div>
-    <div class="stat-card-glass">
+    <div class="stat-card">
         <div class="stat-icon-box blue"><i class="bi bi-calendar-day"></i></div>
         <div>
             <span class="stat-value-lg" id="statToday">0</span>
-            <span class="stat-label-lg d-block">مواعيد اليوم</span>
+            <span class="stat-label-lg d-block">Today</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon-box orange"><i class="bi bi-clock"></i></div>
+        <div>
+            <span class="stat-value-lg" id="statPending">0</span>
+            <span class="stat-label-lg d-block">Pending</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon-box green"><i class="bi bi-check-circle"></i></div>
+        <div>
+            <span class="stat-value-lg" id="statConfirmed">0</span>
+            <span class="stat-label-lg d-block">Confirmed</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon-box cyan"><i class="bi bi-person-check"></i></div>
+        <div>
+            <span class="stat-value-lg" id="statCheckedIn">0</span>
+            <span class="stat-label-lg d-block">Checked In</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon-box purple"><i class="bi bi-activity"></i></div>
+        <div>
+            <span class="stat-value-lg" id="statInProgress">0</span>
+            <span class="stat-label-lg d-block">In Progress</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon-box slate"><i class="bi bi-check2-all"></i></div>
+        <div>
+            <span class="stat-value-lg" id="statCompleted">0</span>
+            <span class="stat-label-lg d-block">Completed</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon-box red"><i class="bi bi-x-circle"></i></div>
+        <div>
+            <span class="stat-value-lg" id="statCancelled">0</span>
+            <span class="stat-label-lg d-block">Cancelled / No-Show</span>
         </div>
     </div>
 </div>
 
 <!-- 🔷 Calendar -->
-<div class="calendar-shell">
+<div class="calendar-shell" dir="ltr">
     <div class="calendar-header">
         <div class="cal-nav-group">
-            <button class="cal-nav" onclick="shiftWeek(-1)" title="الأسبوع السابق"><i class="bi bi-chevron-right"></i></button>
-            <button class="cal-today-btn" onclick="goToToday()">اليوم</button>
-            <button class="cal-nav" onclick="shiftWeek(1)" title="الأسبوع القادم"><i class="bi bi-chevron-left"></i></button>
+            <button class="cal-nav" onclick="shiftWeek(-1)" title="Previous Week"><i class="bi bi-chevron-left"></i></button>
+            <button class="cal-today-btn" onclick="goToToday()">Today</button>
+            <button class="cal-nav" onclick="shiftWeek(1)" title="Next Week"><i class="bi bi-chevron-right"></i></button>
         </div>
-        <h3 class="cal-title" id="weekRange">جاري التحميل...</h3>
+        <h3 class="cal-title" id="weekRange">Loading...</h3>
     </div>
     <div class="week-grid" id="weekGrid">
         <!-- Loading Skeleton -->
@@ -845,50 +984,21 @@
     </div>
 </div>
 
-<!-- 🔷 Create Modal -->
-<div class="custom-modal" id="apptModal">
-    <div class="modal-overlay" onclick="closeCreateModal()"></div>
-    <div class="modal-box">
-        <div class="modal-head">
-            <h5><i class="bi bi-calendar-plus me-2"></i> موعد جديد</h5>
-            <button type="button" class="btn-close btn-close-white" onclick="closeCreateModal()"></button>
-        </div>
-        <div class="modal-body">
-            <div class="mb-3">
-                <label class="form-label-custom">المريض <span class="text-danger">*</span></label>
-                <input type="text" class="form-control-custom" id="apptPatientSearch" placeholder="اكتب اسم المريض أو رقم الموبايل..." autocomplete="off" />
-                <input type="hidden" id="apptPatientId" />
-                <div class="search-results-box" id="apptPatientResults"></div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label-custom">التاريخ <span class="text-danger">*</span></label>
-                <input type="date" class="form-control-custom" id="apptDate" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label-custom">الملاحظات</label>
-                <textarea class="form-control-custom" id="apptReason" rows="3" placeholder="مثال: تركيب تاج، متابعة..."></textarea>
-            </div>
-        </div>
-        <div class="modal-foot">
-            <button type="button" class="btn-modal btn-modal-cancel" onclick="closeCreateModal()">إلغاء</button>
-            <button type="button" class="btn-modal btn-modal-save" onclick="saveAppointment()">
-                <i class="bi bi-check-lg"></i> حفظ الموعد
-            </button>
-        </div>
-    </div>
-</div>
 <!-- 🔷 Details Modal -->
 <div class="custom-modal" id="detailsModal">
     <div class="modal-overlay" onclick="closeDetailsModal()"></div>
     <div class="modal-box">
         <div class="modal-head">
-            <h5><i class="bi bi-calendar-check me-2"></i> تفاصيل الموعد</h5>
+            <h5><i class="bi bi-calendar-check me-2"></i> Appointment Details</h5>
             <button type="button" class="btn-close btn-close-white" onclick="closeDetailsModal()"></button>
         </div>
         <div class="modal-body" id="detailsBody"></div>
         <div class="modal-foot" id="detailsActions"></div>
     </div>
 </div>
+
+@* ⭐ المودال المشترك: بحث عن المريض + مواعيد نفس اليوم *@
+@await Html.PartialAsync("_AppointmentModal")
 
 @section Scripts {
     <script>
@@ -921,15 +1031,20 @@
             loadWeek();
         }
 
-        const dayNames = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
         async function loadWeek() {
             const start = new Date(currentWeekStart);
             const end = new Date(currentWeekStart);
             end.setDate(end.getDate() + 7);
 
-            document.getElementById('weekRange').textContent =
-                `${start.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })} — ${new Date(end - 1).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })}`;
+            const rangeEl = document.getElementById('weekRange');
+            rangeEl.style.opacity = '0';
+            setTimeout(() => {
+                rangeEl.textContent =
+                    `${start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} — ${new Date(end - 1).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`;
+                rangeEl.style.opacity = '1';
+            }, 120);
 
             let events = [];
             try {
@@ -951,13 +1066,24 @@
             const pending = events.filter(e => e.status === 1).length;
             const todayCount = events.filter(e => formatDateOnly(new Date(e.start)) === today).length;
 
+            // ⭐ More KPIs — derived from the status badge class already returned by the server
+            const checkedIn = events.filter(e => e.statusColorClass === 'status-checkedin').length;
+            const inProgress = events.filter(e => e.statusColorClass === 'status-inprogress').length;
+            const completed = events.filter(e => e.statusColorClass === 'status-completed').length;
+            const cancelled = events.filter(e => e.statusColorClass === 'status-cancelled' || e.statusColorClass === 'status-noshow').length;
+
             animateCount(document.getElementById('statTotalWeek'), totalWeek);
             animateCount(document.getElementById('statConfirmed'), confirmed);
             animateCount(document.getElementById('statPending'), pending);
             animateCount(document.getElementById('statToday'), todayCount);
+            animateCount(document.getElementById('statCheckedIn'), checkedIn);
+            animateCount(document.getElementById('statInProgress'), inProgress);
+            animateCount(document.getElementById('statCompleted'), completed);
+            animateCount(document.getElementById('statCancelled'), cancelled);
         }
 
         function animateCount(el, target) {
+            if (!el) return;
             const start = parseInt(el.textContent) || 0;
             const diff = target - start;
             if (diff === 0) return;
@@ -992,132 +1118,22 @@
                 const isToday = dayKey === today;
 
                 col.innerHTML = `
-                    <div class="day-header">
-                        ${isToday ? '<div class="today-indicator"></div>' : ''}
-                        <div class="day-name">${dayNames[day.getDay()]}</div>
-                        <div class="day-number">${day.getDate()}</div>
-                    </div>
-                    <div class="day-slots">
-                        ${dayEvents.length === 0 ? '<div class="empty-day"><i class="bi bi-calendar-x"></i>لا توجد مواعيد</div>' : ''}
-                                ${dayEvents.map((e, idx) => `
-                                    <div class="patient-slot" style="animation-delay: ${idx * 0.05}s" onclick="openDetailsModal(${e.id})">
-                                        <div class="slot-name">${e.patientName}</div>
-                                        <div class="slot-phone"><i class="bi bi-telephone-fill"></i> ${e.patientMobile}</div>
-                                        <span class="slot-status ${e.statusColorClass}">${e.statusText}</span>
-                                    </div>
-                                `).join('')}
-                    </div>`;
+                            <div class="day-header">
+                                ${isToday ? '<div class="today-indicator"></div>' : ''}
+                                <div class="day-name">${dayNames[day.getDay()]}</div>
+                                <div class="day-number">${day.getDate()}</div>
+                            </div>
+                            <div class="day-slots">
+                                ${dayEvents.length === 0 ? '<div class="empty-day"><i class="bi bi-calendar-x"></i>No appointments</div>' : ''}
+                                        ${dayEvents.map((e, idx) => `
+                                            <div class="patient-slot" style="animation-delay: ${idx * 0.05}s" onclick="openDetailsModal(${e.id})">
+                                                <div class="slot-name">${e.patientName}</div>
+                                                <div class="slot-phone"><i class="bi bi-telephone-fill"></i> ${e.patientMobile}</div>
+                                                <span class="slot-status ${e.statusColorClass}">${e.statusText}</span>
+                                            </div>
+                                        `).join('')}
+                            </div>`;
                 grid.appendChild(col);
-            }
-        }
-
-        // ── Create Modal ──
-        function openCreateModal() {
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate());
-            document.getElementById('apptDate').value = formatDateOnly(tomorrow);
-            document.getElementById('apptPatientId').value = '';
-            document.getElementById('apptPatientSearch').value = '';
-            document.getElementById('apptReason').value = '';
-            document.getElementById('apptModal').classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeCreateModal() {
-            document.getElementById('apptModal').classList.remove('show');
-            document.body.style.overflow = '';
-        }
-
-        // ── Patient Search ──
-        let patientSearchTimeout;
-        document.addEventListener('DOMContentLoaded', () => {
-            const searchInput = document.getElementById('apptPatientSearch');
-            if (!searchInput) return;
-            searchInput.addEventListener('input', () => {
-                clearTimeout(patientSearchTimeout);
-                const keyword = searchInput.value.trim();
-                document.getElementById('apptPatientId').value = '';
-                if (keyword.length < 2) {
-                    document.getElementById('apptPatientResults').style.display = 'none';
-                    return;
-                }
-                patientSearchTimeout = setTimeout(() => searchPatients(keyword), 300);
-            });
-            loadWeek();
-        });
-
-        async function searchPatients(keyword) {
-            try {
-                const res = await fetch(`/Patients/Search?term=${encodeURIComponent(keyword)}`);
-                const list = await res.json();
-                const box = document.getElementById('apptPatientResults');
-                if (!list.length) {
-                    box.style.display = 'none';
-                    return;
-                }
-                box.innerHTML = '';
-                list.forEach(function (p) {
-                    const item = document.createElement('div');
-                    item.className = 'search-result-item';
-                    item.dataset.id = p.id;
-                    item.dataset.name = p.fullNameAr || '';
-                    item.textContent = (p.fullNameAr || '') + ' — ' + (p.phone || '');
-                    item.addEventListener('mousedown', function () {
-                        selectPatient(parseInt(item.dataset.id), item.dataset.name);
-                    });
-                    box.appendChild(item);
-                });
-                box.style.display = 'block';
-            } catch (err) {
-                console.error('Patient search failed', err);
-            }
-        }
-
-        function selectPatient(id, name) {
-            document.getElementById('apptPatientId').value = id;
-            document.getElementById('apptPatientSearch').value = name;
-            document.getElementById('apptPatientResults').style.display = 'none';
-        }
-
-        async function saveAppointment() {
-            const patientId = parseInt(document.getElementById('apptPatientId').value);
-            const date = document.getElementById('apptDate').value;
-            const reason = document.getElementById('apptReason').value;
-
-            if (!patientId) {
-                Swal.fire({ title: 'مطلوب', text: 'اختر المريض من نتائج البحث', icon: 'warning', confirmButtonColor: '#14b8a6' });
-                return;
-            }
-            if (!date) {
-                Swal.fire({ title: 'مطلوب', text: 'اختر التاريخ', icon: 'warning', confirmButtonColor: '#14b8a6' });
-                return;
-            }
-
-            // ⭐ بنبعت التاريخ كـ string مباشر من غير new Date().toISOString() اللي كانت بتحوّل للـ UTC
-            //    وبتزوّد/تنقص يوم حسب فرق التوقيت المحلي — وده كان سبب تسجيل الموعد "اليوم التالي".
-            const data = {
-                PatientId: patientId,
-                AppointmentDate: `${date}T12:00:00`,
-                DurationMinutes: 15,
-                Reason: reason
-            };
-
-            try {
-                const res = await fetch('/Appointments/Create', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await res.json();
-                if (result.success) {
-                    closeCreateModal();
-                    Swal.fire({ title: 'تم!', text: result.message, icon: 'success', confirmButtonColor: '#14b8a6', timer: 1800, showConfirmButton: false });
-                    loadWeek();
-                } else {
-                    Swal.fire({ title: 'تعذر الحفظ', text: result.message, icon: 'error', confirmButtonColor: '#14b8a6' });
-                }
-            } catch (err) {
-                Swal.fire({ title: 'خطأ', text: 'مشكلة في الاتصال بالسيرفر', icon: 'error', confirmButtonColor: '#14b8a6' });
             }
         }
 
@@ -1127,31 +1143,31 @@
             const res = await fetch(`/Appointments/GetById?id=${id}`);
             const result = await res.json();
             if (!result.success) {
-                Swal.fire({ title: 'خطأ', text: result.message, icon: 'error' });
+                Swal.fire({ title: 'Error', text: result.message, icon: 'error' });
                 return;
             }
             const a = result.data;
 
             document.getElementById('detailsBody').innerHTML = `
-            <div class="mb-2"><strong style="font-size:1.1rem; color:var(--sc-ink-900);">${a.patientName}</strong> <span class="slot-status ${a.statusColorClass}">${a.statusText}</span></div>
-            <div class="mb-2" style="color:var(--sc-ink-600); font-size:.85rem;"><i class="bi bi-telephone"></i> ${a.patientMobile}</div>
-            <div class="mb-2" style="color:var(--sc-ink-600); font-size:.85rem;"><i class="bi bi-calendar3"></i> ${new Date(a.start).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
-            ${a.reason ? `<div class="mb-2" style="color:var(--sc-ink-900);"><strong>الملاحظات:</strong> ${a.reason}</div>` : ''}
-            ${a.notes ? `<div class="mb-2" style="color:var(--sc-ink-600);"><strong>ملاحظات إضافية:</strong> ${a.notes}</div>` : ''}
-        `;
+                    <div class="mb-2"><strong style="font-size:1.1rem; color:var(--sc-ink-900);">${a.patientName}</strong> <span class="slot-status ${a.statusColorClass}">${a.statusText}</span></div>
+                    <div class="mb-2" style="color:var(--sc-ink-600); font-size:.85rem;"><i class="bi bi-telephone"></i> ${a.patientMobile}</div>
+                    <div class="mb-2" style="color:var(--sc-ink-600); font-size:.85rem;"><i class="bi bi-calendar3"></i> ${new Date(a.start).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                    ${a.reason ? `<div class="mb-2" style="color:var(--sc-ink-900);"><strong>Reason:</strong> ${a.reason}</div>` : ''}
+                    ${a.notes ? `<div class="mb-2" style="color:var(--sc-ink-600);"><strong>Additional Notes:</strong> ${a.notes}</div>` : ''}
+                `;
 
             const actions = [];
             if (a.status === 1) {
-                actions.push(`<button class="btn-modal btn-modal-info" onclick="doAction('Confirm')">تأكيد</button>`);
+                actions.push(`<button class="btn-modal btn-modal-info" onclick="doAction('Confirm')">Confirm</button>`);
             }
             if (a.status === 1 || a.status === 2) {
-                actions.push(`<button class="btn-modal btn-modal-save" onclick="doAction('CheckIn')">تسجيل حضور</button>`);
-                actions.push(`<button class="btn-modal btn-modal-danger" onclick="doAction('Cancel')">إلغاء</button>`);
+                actions.push(`<button class="btn-modal btn-modal-save" onclick="doAction('CheckIn')">Check In</button>`);
+                actions.push(`<button class="btn-modal btn-modal-danger" onclick="doAction('Cancel')">Cancel</button>`);
             }
             if (a.status === 3 || a.status === 4) {
-                actions.push(`<button class="btn-modal btn-modal-save" onclick="convertToVisit()">بدء الزيارة</button>`);
+                actions.push(`<button class="btn-modal btn-modal-save" onclick="convertToVisit()">Start Visit</button>`);
             }
-            actions.push(`<button class="btn-modal btn-modal-cancel" onclick="closeDetailsModal()">إغلاق</button>`);
+            actions.push(`<button class="btn-modal btn-modal-cancel" onclick="closeDetailsModal()">Close</button>`);
 
             document.getElementById('detailsActions').innerHTML = actions.join('');
             document.getElementById('detailsModal').classList.add('show');
@@ -1169,13 +1185,13 @@
                 const result = await res.json();
                 if (result.success) {
                     closeDetailsModal();
-                    Swal.fire({ title: 'تم!', text: result.message, icon: 'success', confirmButtonColor: '#14b8a6', timer: 1500, showConfirmButton: false });
+                    Swal.fire({ title: 'Done!', text: result.message, icon: 'success', confirmButtonColor: '#14b8a6', timer: 1500, showConfirmButton: false });
                     loadWeek();
                 } else {
-                    Swal.fire({ title: 'تعذر التنفيذ', text: result.message, icon: 'error' });
+                    Swal.fire({ title: 'Action Failed', text: result.message, icon: 'error' });
                 }
             } catch (err) {
-                Swal.fire({ title: 'خطأ', text: 'مشكلة في الاتصال بالسيرفر', icon: 'error' });
+                Swal.fire({ title: 'Error', text: 'Server connection failed', icon: 'error' });
             }
         }
 
@@ -1186,19 +1202,25 @@
                 if (result.success) {
                     window.location.href = `/Clinical/Session?patientId=${result.patientId}&visitId=${result.visitId}`;
                 } else {
-                    Swal.fire({ title: 'تعذر التنفيذ', text: result.message, icon: 'error' });
+                    Swal.fire({ title: 'Action Failed', text: result.message, icon: 'error' });
                 }
             } catch (err) {
-                Swal.fire({ title: 'خطأ', text: 'مشكلة في الاتصال بالسيرفر', icon: 'error' });
+                Swal.fire({ title: 'Error', text: 'Server connection failed', icon: 'error' });
             }
         }
+
+        // ⭐ المودال المشترك بينادي دي بعد نجاح الحجز → نعيد تحميل الأسبوع والـ KPIs
+        window.onAppointmentCreated = function() {
+            loadWeek();
+        };
 
         // ── Keyboard Shortcuts ──
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
-                closeCreateModal();
                 closeDetailsModal();
             }
         });
+
+        document.addEventListener('DOMContentLoaded', loadWeek);
     </script>
 }

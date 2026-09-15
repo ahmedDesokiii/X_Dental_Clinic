@@ -1,3 +1,4 @@
+using Dental.Models.Inventory;
 using Dental.Models.Patient;
 using Dental.Modules.Patients.Enums;
 using Dental.ViewModels.Dashboards;
@@ -21,65 +22,56 @@ namespace Dental.Controllers
         public async Task<IActionResult> Index()
         {
             var today = DateTime.Today;
-
             var model = new DashboardViewModel
             {
                 // =========================
                 // KPIs
                 // =========================
-
                 TotalPatients = await _context.Patients
                     .CountAsync(p => p.IsActive),
-
                 TotalVisits = await _context.Visits
                     .CountAsync(v => v.IsActive),
-
                 TodayAppointments = await _context.Appointments
                     .CountAsync(a =>
                         a.AppointmentDate >= today &&
                         a.AppointmentDate < today.AddDays(1) &&
                         a.Status != AppointmentStatus.Cancelled),
-
                 UpcomingAppointments = await _context.Appointments
                     .CountAsync(a =>
                         a.AppointmentDate >= today &&
                         a.Status != AppointmentStatus.Cancelled),
-
                 TotalRevenue = await _context.VisitPayments
                     .Where(p => !p.IsDeleted)
                     .SumAsync(p => (decimal?)p.Amount) ?? 0,
-
                 // Remaining = TotalAmount - PaidAmount
                 TotalDue = await _context.Visits
                     .Where(v => v.IsActive)
                     .SumAsync(v =>
                         (decimal?)(v.TotalAmount - v.PaidAmount)
                     ) ?? 0,
-
                 NewPatientsThisMonth = await _context.Patients
                     .CountAsync(p =>
                         p.CreatedDate.Year == today.Year &&
                         p.CreatedDate.Month == today.Month),
-
                 GeneralVisits = await _context.Visits
                     .CountAsync(v =>
                         v.IsActive &&
                         v.Category == VisitCategory.General),
-
                 OrthoVisits = await _context.Visits
                     .CountAsync(v =>
                         v.IsActive &&
                         v.Category == VisitCategory.Orthodontics),
 
-
-                GeneralPatients = await _context.Patients.CountAsync(p => p.IsActive && p.PatientType == PatientType.General),
-                OrthoPatients = await _context.Patients.CountAsync(p => p.IsActive && p.PatientType == PatientType.Orthodontics),
-                BothPatients = await _context.Patients.CountAsync(p => p.IsActive && p.PatientType == PatientType.Both),
+                GeneralPatients = await _context.Patients.CountAsync(p =>
+                    p.IsActive && p.PatientType == PatientType.General),
+                OrthoPatients = await _context.Patients.CountAsync(p =>
+                    p.IsActive && p.PatientType == PatientType.Orthodontics),
+                BothPatients = await _context.Patients.CountAsync(p =>
+                    p.IsActive && p.PatientType == PatientType.Both),
 
                 // =========================
                 // Recent Appointments
                 // =========================
-
                 RecentAppointments = await _context.Appointments
                     .AsNoTracking()
                     .Include(a => a.Patient)
@@ -92,16 +84,15 @@ namespace Dental.Controllers
                     {
                         Id = a.Id,
                         PatientName = a.Patient.FullNameAr,
+                        Mobile = a.Patient.Mobile,
                         AppointmentDate = a.AppointmentDate,
                         Reason = a.Reason,
                         Status = a.Status
                     })
                     .ToListAsync(),
-
                 // =========================
                 // Recent Visits
                 // =========================
-
                 RecentVisits = await _context.Visits
                     .AsNoTracking()
                     .Include(v => v.Patient)
@@ -119,11 +110,9 @@ namespace Dental.Controllers
                         PaidAmount = v.PaidAmount
                     })
                     .ToListAsync(),
-
                 // =========================
                 // Top Procedures
                 // =========================
-
                 TopProcedures = await _context.VisitProcedures
                     .AsNoTracking()
                     .Where(p =>
@@ -138,15 +127,70 @@ namespace Dental.Controllers
                     })
                     .OrderByDescending(x => x.Count)
                     .Take(5)
+                    .ToListAsync(),
+
+                // =========================
+                // Low Stock Alerts
+                // =========================
+                LowStockMaterials = await _context.Materials
+                    .AsNoTracking()
+                    .Where(m => m.Quantity <= m.MinimumStockLevel)
+                    .OrderBy(m => m.Quantity)
+                    .Take(5)
+                    .Select(m => new LowStockMaterialVM
+                    {
+                        Id = m.Id,
+                        Name = m.Name,
+                        Code = m.Code,
+                        Quantity = m.Quantity,
+                        MinimumStockLevel = m.MinimumStockLevel
+                    })
+                    .ToListAsync(),
+                // =========================
+                // Near-Expiry Alerts (30-day window — adjust if you use a different threshold)
+                // =========================
+                NearExpiryMaterials = await _context.Materials
+                    .AsNoTracking()
+                    .Where(m => m.ExpiryDate != null &&
+                        m.ExpiryDate >= today &&
+                        m.ExpiryDate <= today.AddDays(30))
+                    .OrderBy(m => m.ExpiryDate)
+                    .Take(5)
+                    .Select(m => new NearExpiryMaterialVM
+                    {
+                        Id = m.Id,
+                        Name = m.Name,
+                        Code = m.Code,
+                        ExpiryDate = m.ExpiryDate!.Value
+                    })
+                    .ToListAsync(),
+                // =========================
+                // Top Overdue Patients
+                // =========================
+                TopOverduePatients = await _context.Visits
+                    .AsNoTracking()
+                    .Where(v => v.IsActive && (v.TotalAmount - v.PaidAmount) > 0)
+                    .GroupBy(v => new { v.PatientId, v.Patient.FullNameAr, v.Patient.Mobile })
+                    .Select(g => new OverduePatientVM
+                    {
+                        PatientId = g.Key.PatientId,
+                        PatientName = g.Key.FullNameAr,
+                        Mobile = g.Key.Mobile,
+                        AmountDue = g.Sum(v => v.TotalAmount - v.PaidAmount)
+                    })
+                    .OrderByDescending(x => x.AmountDue)
+                    .Take(5)
                     .ToListAsync()
             };
+
+            // Fill in DaysLeft in-memory (simple date subtraction, no need for SQL translation)
+            foreach (var m in model.NearExpiryMaterials)
+                m.DaysLeft = (m.ExpiryDate.Date - today).Days;
 
             // ==================================================
             // Chart: Visits - Last 7 Days
             // ==================================================
-
             var start7 = today.AddDays(-6);
-
             var visitsGrouped = await _context.Visits
                 .AsNoTracking()
                 .Where(v =>
@@ -160,37 +204,28 @@ namespace Dental.Controllers
                     Count = g.Count()
                 })
                 .ToListAsync();
-
             for (int i = 0; i < 7; i++)
             {
                 var date = start7.AddDays(i);
-
                 model.VisitsLast7Days.Add(
                     new Dental.ViewModels.Dashboards.DateCountPoint
                     {
-                        Label = date.ToString(
-                            "dd MMM",
-                            new CultureInfo("ar-EG")
-                        ),
+                        Label = date.ToString("dd MMM", CultureInfo.InvariantCulture),
                         Count = visitsGrouped
                             .FirstOrDefault(x => x.Date == date)
                             ?.Count ?? 0
                     }
                 );
             }
-
             // ==================================================
             // Chart: Revenue - Last 6 Months
             // ==================================================
-
             var start6 = today.AddMonths(-5);
-
             var startMonth = new DateTime(
                 start6.Year,
                 start6.Month,
                 1
             );
-
             var revenueMonths = await _context.VisitPayments
                 .AsNoTracking()
                 .Where(p =>
@@ -209,17 +244,12 @@ namespace Dental.Controllers
                     Total = g.Sum(p => (decimal?)p.Amount) ?? 0
                 })
                 .ToListAsync();
-
             for (int i = 0; i < 6; i++)
             {
                 var date = startMonth.AddMonths(i);
-
                 model.RevenueLast6Months.Add(new DateAmountPoint
                 {
-                    Label = date.ToString(
-                        "MMM yyyy",
-                        new CultureInfo("ar-EG")
-                    ),
+                    Label = date.ToString("MMM yyyy", CultureInfo.InvariantCulture),
                     Amount = revenueMonths
                         .FirstOrDefault(x =>
                             x.Year == date.Year &&
@@ -227,11 +257,9 @@ namespace Dental.Controllers
                         ?.Total ?? 0
                 });
             }
-
             // ==================================================
             // Chart: Appointments - Next 7 Days
             // ==================================================
-
             var appointmentsGrouped = await _context.Appointments
                 .AsNoTracking()
                 .Where(a =>
@@ -245,25 +273,19 @@ namespace Dental.Controllers
                     Count = g.Count()
                 })
                 .ToListAsync();
-
             for (int i = 0; i < 7; i++)
             {
                 var date = today.AddDays(i);
-
                 model.AppointmentNext7Days.Add(
                     new Dental.ViewModels.Dashboards.DateCountPoint
                     {
-                        Label = date.ToString(
-                            "ddd",
-                            new CultureInfo("ar-EG")
-                        ),
+                        Label = date.ToString("ddd", CultureInfo.InvariantCulture),
                         Count = appointmentsGrouped
                             .FirstOrDefault(x => x.Date == date)
                             ?.Count ?? 0
                     }
                 );
             }
-
             return View(model);
         }
 
@@ -271,7 +293,6 @@ namespace Dental.Controllers
         {
             return View();
         }
-
         [ResponseCache(
             Duration = 0,
             Location = ResponseCacheLocation.None,

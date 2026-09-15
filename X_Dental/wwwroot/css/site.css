@@ -123,6 +123,10 @@ body {
 /* ========================= Custom CSS ==========================*/
 
 /* ========================= Scroll Fix (App Shell) ========================= */
+
+html, body, .app-shell {
+    direction: ltr;
+}
 html, body {
     height: 100%;
     overflow: hidden !important;

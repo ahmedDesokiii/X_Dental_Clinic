@@ -5,8 +5,45 @@ using Dental.Models.Patient;
 
 namespace Dental.ViewModels.Dashboards
 {
+
+    // New small VM classes — add anywhere in the Dental.ViewModels.Dashboards namespace
+    public class LowStockMaterialVM
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public string Code { get; set; } = "";
+        public decimal Quantity { get; set; }
+        public decimal MinimumStockLevel { get; set; }
+    }
+
+    public class NearExpiryMaterialVM
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public string Code { get; set; } = "";
+        public DateTime ExpiryDate { get; set; }
+        public int DaysLeft { get; set; }
+    }
+
+    public class OverduePatientVM
+    {
+        public int PatientId { get; set; }
+        public string PatientName { get; set; } = "";
+        public string? Mobile { get; set; }
+        public decimal AmountDue { get; set; }
+    }
+
     public class DashboardViewModel
     {
+
+        // New properties on DashboardViewModel
+        public List<LowStockMaterialVM> LowStockMaterials { get; set; } = new();
+        public List<NearExpiryMaterialVM> NearExpiryMaterials { get; set; } = new();
+        public List<OverduePatientVM> TopOverduePatients { get; set; } = new();
+
+        // RecentAppointmentVM — add this one property to the existing class
+        public string? Mobile { get; set; }
+
         public int GeneralPatients { get; set; }
         public int OrthoPatients { get; set; }
         public int BothPatients { get; set; }
@@ -40,6 +77,9 @@ namespace Dental.ViewModels.Dashboards
         public DateTime AppointmentDate { get; set; }
         public string? Reason { get; set; }
         public AppointmentStatus Status { get; set; }
+        public string? Mobile { get; set; }
+
+
     }
 
     public class RecentVisitVM

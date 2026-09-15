@@ -62,7 +62,6 @@
 
         <!-- Sidebar Overlay (mobile) -->
         <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-
         <!-- ============ Sidebar ============ -->
         <aside class="app-sidebar" id="appSidebar">
             <div class="sidebar-brand">
@@ -76,116 +75,101 @@
                     <span>Dental Suite</span>
                 </div>
             </div>
-
             <nav class="sidebar-nav">
-                <a asp-controller="Home" asp-action="Index" class="sidebar-link" data-title="لوحة التحكم">
+                <a asp-controller="Home" asp-action="Index" class="sidebar-link" data-title="Dashboard">
                     <i class="bi bi-grid-1x2-fill"></i>
-                    <span>لوحة التحكم</span>
+                    <span>Dashboard</span>
                 </a>
-
                 @if (SignInManager.IsSignedIn(User))
                 {
-                    <div class="sidebar-section-label">العيادة</div>
+                    <div class="sidebar-section-label">Clinic</div>
 
-                    <a asp-controller="Patients" asp-action="Index" class="sidebar-link" data-title="قائمة المرضى">
+                    <a asp-controller="Patients" asp-action="Index" class="sidebar-link" data-title="Patients">
                         <i class="bi bi-people-fill"></i>
-                        <span>قائمة المرضى</span>
+                        <span>Patients</span>
                     </a>
-
-                    <a asp-controller="Appointments" asp-action="index" class="sidebar-link" data-title="المواعيد">
+                    <a asp-controller="Appointments" asp-action="index" class="sidebar-link" data-title="Appointments">
                         <i class="bi bi-calendar2-week-fill"></i>
-                        <span>المواعيد</span>
+                        <span>Appointments</span>
                     </a>
 
-                    <a asp-controller="Payments" asp-action="index" class="sidebar-link" data-title="الفواتير والمدفوعات">
+                    <a asp-controller="Payments" asp-action="index" class="sidebar-link" data-title="Payments & Invoices">
                         <i class="bi bi-cash-coin"></i>
-                        <span>الفواتير والمدفوعات</span>
+                        <span>Payments & Invoices</span>
                     </a>
 
-                    <a asp-controller="Diagnosis" asp-action="Index" class="sidebar-link" data-title="التشخيصات">
+                    <a asp-controller="Diagnosis" asp-action="Index" class="sidebar-link" data-title="Diagnoses">
                         <i class="bi bi-clipboard2-pulse-fill"></i>
-                        <span>التشخيصات</span>
+                        <span>Diagnoses</span>
                     </a>
 
-                    <a asp-controller="Inventory" asp-action="Index" class="sidebar-link" data-title="المخزن">
+                    <a asp-controller="Inventory" asp-action="Index" class="sidebar-link" data-title="Inventory">
                         <i class="bi bi-box-seam-fill"></i>
-                        <span>المخزن</span>
+                        <span>Inventory</span>
                     </a>
-
-                    <a asp-controller="Laboratory" asp-action="Index" class="sidebar-link" data-title="المعمل">
+                    <a asp-controller="Laboratory" asp-action="Index" class="sidebar-link" data-title="Laboratory">
                         <i class="bi bi-droplet"></i>
-                        <span>المعمل</span>
+                        <span>Laboratory</span>
                     </a>
-
                     @if (User.IsInRole(Roles.Admin.ToString()))
                     {
-                        <div class="sidebar-section-label">الإدارة</div>
-
-                        <a asp-controller="Users" asp-action="Index" class="sidebar-link" data-title="المستخدمين">
+                        <div class="sidebar-section-label">Administration</div>
+                        <a asp-controller="Users" asp-action="Index" class="sidebar-link" data-title="Users">
                             <i class="bi bi-person-badge-fill"></i>
-                            <span>المستخدمين</span>
+                            <span>Users</span>
                         </a>
-
-                        <a asp-controller="Roles" asp-action="Index" class="sidebar-link" data-title="المجموعات">
+                        <a asp-controller="Roles" asp-action="Index" class="sidebar-link" data-title="Roles">
                             <i class="bi bi-shield-lock-fill"></i>
-                            <span>المجموعات</span>
+                            <span>Roles</span>
                         </a>
-
-@*                         <a href="#" class="sidebar-link" data-title="التقارير">
+                        @*                         <a href="#" class="sidebar-link" data-title="Reports">
                             <i class="bi bi-bar-chart-line-fill"></i>
-                            <span>التقارير</span>
+                            <span>Reports</span>
                         </a> *@
                     }
                 }
             </nav>
-
             <div class="sidebar-footer">
-                <a class="sidebar-clinic-link" href="https://www.facebook.com/share/1B3xKJX65H/" target="_blank" data-title="صفحة العيادة">
+                <a class="sidebar-clinic-link" href="https://www.facebook.com/share/1B3xKJX65H/" target="_blank" data-title="Clinic Page">
                     <i class="bi bi-facebook"></i>
-                    <span>صفحة العيادة</span>
+                    <span>Clinic Page</span>
                 </a>
             </div>
         </aside>
         <!-- ============ Main Column ============ -->
         <div class="app-main">
-
             <!-- Topbar — Floating Glass -->
             <header class="app-topbar">
                 <div class="topbar-left">
                     <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Toggle menu">
                         <i class="bi bi-list"></i>
                     </button>
-
                     <div class="topbar-search">
                         <i class="bi bi-search"></i>
-                        <input type="text" placeholder="بحث عن مريض، فاتورة، موعد..." />
+                        <input type="text" placeholder="Search patient, invoice, appointment..." />
                     </div>
                 </div>
-
                 <div class="topbar-actions">
                     <!-- Theme Toggle -->
-                    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="تبديل الوضع">
+                    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
                         <i class="bi bi-moon-fill" id="themeIcon"></i>
                     </button>
-
-                    <button class="topbar-btn" title="الإشعارات" id="notificationBtn">
+                    <button class="topbar-btn" title="Notifications" id="notificationBtn">
                         <i class="bi bi-bell-fill"></i>
                         <span class="badge">3</span>
                     </button>
-
-                    <button class="topbar-btn" title="الرسائل">
+                    <button class="topbar-btn" title="Messages">
                         <i class="bi bi-chat-left-text-fill"></i>
                     </button>
-
                     <!-- User Menu -->
                     <div class="user-menu" id="userMenu" onclick="toggleUserDropdown()">
                         <div class="user-avatar">
-                            @(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "م")
+                            @(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "U")
                         </div>
                         <div class="user-info">
-                            <span class="name">@(User.Identity?.Name ?? "مستخدم")</span>
+                            <span class="name">@(User.Identity?.Name ?? "User")</span>
                             <span class="role">
-                                @(User.IsInRole(Roles.Admin.ToString()) ? "مدير النظام" : "طبيب")
+                                @(User.IsInRole(Roles.Admin.ToString()) ? "Admin" : "Staff")
                             </span>
                         </div>
                         <i class="bi bi-chevron-down"></i>
@@ -194,34 +178,32 @@
                         <div class="user-dropdown" id="userDropdown">
                             <a href="#" class="dropdown-item">
                                 <i class="bi bi-person"></i>
-                                <span>الملف الشخصي</span>
+                                <span>Profile</span>
                             </a>
                             <a href="#" class="dropdown-item">
                                 <i class="bi bi-gear"></i>
-                                <span>الإعدادات</span>
+                                <span>Settings</span>
                             </a>
                             <div class="dropdown-divider"></div>
                             <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post" style="margin:0;">
                                 <button type="submit" class="dropdown-item danger">
                                     <i class="bi bi-box-arrow-right"></i>
-                                    <span>تسجيل الخروج</span>
+                                    <span>Logout</span>
                                 </button>
                             </form>
                         </div>
                     </div>
                 </div>
             </header>
-
             <!-- Page Content -->
             <main class="app-content" dir="auto">
                 @RenderBody()
             </main>
         </div>
-
     </div>
 
     <!-- Floating Action Button -->
-    <button class="fab" id="fabBtn" title="إجراء سريع" onclick="showQuickActions()">
+    <button class="fab" id="fabBtn" title="Quick Action" onclick="showQuickActions()">
         <i class="bi bi-plus-lg"></i>
     </button>
 

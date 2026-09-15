@@ -8,6 +8,7 @@ namespace Dental.Modules.Patients.DTOs
         public string? PatientCode { get; set; }
         public string? FullNameAr { get; set; }
         public string? Phone { get; set; }
+        public string? Mobile { get; set; }
         public int? Age { get; set; }
         public string? GenderName { get; set; }
         public bool IsActive { get; set; } = true;

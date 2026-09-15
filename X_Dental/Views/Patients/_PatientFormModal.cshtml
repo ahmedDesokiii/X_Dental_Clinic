@@ -12,6 +12,16 @@
     var mobile = isEdit ? (string)ViewBag.Mobile : "";
     var address = isEdit ? (string)ViewBag.Address : "";
     var medNotes = isEdit ? (string)ViewBag.MedNotes : "";
+
+    // ⭐ Single source of truth: which item in the list is selected —
+    // used for BOTH which radio gets checked/active AND which visual
+    // position (pos-1/pos-2) the thumb takes. No more guessing by Id value.
+    var selectedGenderIndex = 0;
+    if (isEdit)
+    {
+        var idx = genderItems.FindIndex(g => g.Value == genderId.ToString());
+        selectedGenderIndex = idx >= 0 ? idx : 0;
+    }
 }
 
 <style>
@@ -304,7 +314,7 @@
     .pm-seg-thumb {
         position: absolute;
         top: 4px;
-        left: 4px; /* ✅ ضروري جدًا */
+        left: 4px;
         bottom: 4px;
         width: calc(50% - 4px);
         border-radius: 999px;
@@ -315,7 +325,7 @@
     }
 
     .pm-seg.pos-2 .pm-seg-thumb {
-        transform: translateX(100%); /* ✅ كانت -100% وده اللي بيوديها العكس */
+        transform: translateX(100%);
     }
 
     .pm-seg label {
@@ -561,13 +571,13 @@
 
                         <div class="pmf">
                             <label>Gender</label>
-                            <div class="pm-seg @(isEdit && genderId == 2 ? "pos-2" : "pos-1")" id="pmGenderSeg">
+                            <div class="pm-seg @(selectedGenderIndex == 1 ? "pos-2" : "pos-1")" id="pmGenderSeg">
                                 <div class="pm-seg-thumb"></div>
                                 @for (int i = 0; i < genderItems.Count; i++)
                                 {
                                     var g = genderItems[i];
                                     var isMale = g.Text.Contains("ذكر");
-                                    var isSel = isEdit ? genderId.ToString() == g.Value : i == 0;
+                                    var isSel = i == selectedGenderIndex;
                                     <label class="@(isSel ? "active" : "")">
                                         <input type="radio" name="GenderId" value="@g.Value" @(isSel ? "checked" : "") />
                                         <i class="bi bi-gender-@(isMale ? "male" : "female")"></i> @g.Text

@@ -163,6 +163,7 @@ namespace Dental.Controllers
                         PatientCode = p.PatientCode,
                         FullNameAr = p.FullNameAr,
                         Phone = p.Mobile,
+                        Mobile = p.Mobile,
                         Age = p.DateOfBirth.HasValue ? DateTime.Now.Year - p.DateOfBirth.Value.Year : null,
                         GenderName = p.Gender != null ? p.Gender.NameAr : null,
                         IsActive = p.IsActive,
@@ -866,19 +867,25 @@ namespace Dental.Controllers
             if (string.IsNullOrWhiteSpace(term) || term.Length < 2)
                 return Json(new List<object>());
 
+            term = term.Trim();
+
             var patients = await _context.Patients
                 .AsNoTracking()
-                .Where(p =>
+                .Where(p => p.IsActive && (
                     (p.FullNameAr != null && p.FullNameAr.Contains(term)) ||
                     (p.PatientCode != null && p.PatientCode.Contains(term)) ||
-                    (p.Phone != null && p.Phone.Contains(term)))
+                    (p.Phone != null && p.Phone.Contains(term)) ||
+                    (p.Mobile != null && p.Mobile.Contains(term))
+                ))
+                .OrderByDescending(p => p.Id)
                 .Take(20)
                 .Select(p => new
                 {
                     p.Id,
                     p.FullNameAr,
                     p.PatientCode,
-                    p.Phone
+                    // نفس المنطق المستخدم في GetPatientsData: الموبايل هو المصدر الأساسي لرقم التليفون
+                    Phone = p.Mobile ?? p.Phone
                 })
                 .ToListAsync();
 

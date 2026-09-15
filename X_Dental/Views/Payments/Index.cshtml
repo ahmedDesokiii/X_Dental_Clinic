@@ -43,6 +43,7 @@
         gap: 16px;
         position: relative;
         overflow: hidden;
+        contain: content;
     }
 
         .payments-hero::after {
@@ -101,9 +102,10 @@
         padding: 40px;
         box-shadow: var(--shadow-card);
         text-align: center;
-        animation: shellFadeIn 0.6s ease forwards;
+        animation: shellFadeIn 0.5s ease forwards;
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(16px);
+        will-change: transform, opacity;
     }
 
     @@keyframes shellFadeIn {
@@ -125,6 +127,11 @@
         font-size: 2rem;
         margin: 0 auto 20px;
         box-shadow: 0 8px 20px rgba(13,148,136,0.25);
+        transition: transform .3s ease;
+    }
+
+    .search-shell-glass:hover .shell-icon {
+        transform: scale(1.06) rotate(-4deg);
     }
 
     .search-shell-glass h3 {
@@ -155,7 +162,7 @@
         font-size: 1rem;
         color: var(--sc-ink-900);
         background: #fff;
-        transition: all 0.25s ease;
+        transition: border-color .2s ease, box-shadow .2s ease;
         outline: none;
         font-weight: 600;
     }
@@ -190,7 +197,9 @@
         display: none;
         background: #fff;
         box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-        animation: resultsSlideDown 0.25s ease;
+        animation: resultsSlideDown 0.2s ease;
+        max-height: 320px;
+        overflow-y: auto;
     }
 
     @@keyframes resultsSlideDown {
@@ -209,37 +218,51 @@
         padding: 14px 18px;
         cursor: pointer;
         border-bottom: 1px solid var(--sc-sky-100);
-        transition: all 0.15s ease;
+        transition: background-color .15s ease, padding .15s ease;
         display: flex;
         align-items: center;
         justify-content: space-between;
         font-weight: 700;
         color: var(--sc-ink-900);
         font-size: 0.95rem;
+        animation: itemFadeIn .25s ease forwards;
+        opacity: 0;
     }
 
-        .result-item-glass:hover {
-            background: var(--brand-light);
-            color: var(--brand-dark);
-            padding-right: 24px;
+    @@keyframes itemFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
         }
 
-        .result-item-glass:last-child {
-            border-bottom: none;
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
+    }
 
-        .result-item-glass .result-meta {
-            font-size: 0.8rem;
-            color: var(--sc-ink-600);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+    .result-item-glass:hover {
+        background: var(--brand-light);
+        color: var(--brand-dark);
+        padding-right: 24px;
+    }
 
-        .result-item-glass:hover .result-meta {
-            color: var(--sc-teal-600);
-        }
+    .result-item-glass:last-child {
+        border-bottom: none;
+    }
+
+    .result-item-glass .result-meta {
+        font-size: 0.8rem;
+        color: var(--sc-ink-600);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .result-item-glass:hover .result-meta {
+        color: var(--sc-teal-600);
+    }
 
     .result-empty {
         padding: 20px;
@@ -255,38 +278,38 @@
             color: var(--sc-sky-100);
         }
 
-    /* ── Loading State ── */
-    .search-loading {
-        display: none;
+    /* ── Skeleton Loading (بدل نص "جاري البحث") ── */
+    .skeleton-row {
+        display: flex;
+        justify-content: space-between;
         align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding: 16px;
-        color: var(--sc-teal-600);
-        font-weight: 700;
-        font-size: 0.9rem;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--sc-sky-100);
     }
 
-        .search-loading.show {
-            display: flex;
+        .skeleton-row:last-child {
+            border-bottom: none;
         }
 
-        .search-loading i {
-            animation: spin 0.9s linear infinite;
-            font-size: 1.2rem;
+    .skeleton-bar {
+        height: 14px;
+        border-radius: 6px;
+        background: linear-gradient(90deg, var(--sc-sky-100) 25%, #f1fbfb 37%, var(--sc-sky-100) 63%);
+        background-size: 400% 100%;
+        animation: skeletonShine 1.4s ease infinite;
+    }
+
+    @@keyframes skeletonShine {
+        0% {
+            background-position: 100% 50%;
         }
 
-    @@keyframes spin {
-        from {
-            transform: rotate(0deg);
-        }
-
-        to {
-            transform: rotate(360deg);
+        100% {
+            background-position: 0 50%;
         }
     }
 
-    /* ── Quick Stats (Optional decorative) ── */
+    /* ── Quick Stats ── */
     .quick-stats-row {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -303,13 +326,35 @@
         text-align: center;
         border: 1px solid rgba(255,255,255,.6);
         box-shadow: var(--shadow-soft);
-        transition: all .25s ease;
+        transition: transform .2s ease, box-shadow .2s ease;
+        animation: statPop .45s ease forwards;
+        opacity: 0;
+        transform: translateY(10px);
     }
 
-        .quick-stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-hover);
+        .quick-stat-card:nth-child(1) {
+            animation-delay: .05s;
         }
+
+        .quick-stat-card:nth-child(2) {
+            animation-delay: .12s;
+        }
+
+        .quick-stat-card:nth-child(3) {
+            animation-delay: .19s;
+        }
+
+    @@keyframes statPop {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .quick-stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-hover);
+    }
 
     .quick-stat-value {
         font-size: 1.3rem;
@@ -345,20 +390,28 @@
             grid-template-columns: 1fr;
         }
     }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .search-shell-glass, .quick-stat-card, .result-item-glass {
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+        }
+    }
 </style>
 
 <!-- 🔷 Hero -->
-<div class="payments-hero">
+<div class="payments-hero" dir="ltr">
     <div class="hero-content">
         <div class="hero-icon"><i class="bi bi-receipt-cutoff"></i></div>
         <div>
-            <h1>الفواتير والمدفوعات</h1>
-            <p>ابحث عن المريض واستعرض كشف الحساب الكامل والدفعات</p>
+            <h1 fs-1>payments</h1>
+            <p>Look for the patient and review the full account statement and payments</p>
         </div>
     </div>
 </div>
 
-<!-- 🔷 Quick Stats (Placeholder / Static for visual balance) -->
+<!-- 🔷 Quick Stats -->
 <div class="quick-stats-row">
     <div class="quick-stat-card">
         <div class="quick-stat-value"><i class="bi bi-receipt" style="color: var(--sc-teal-600);"></i></div>
@@ -385,33 +438,39 @@
         <input type="text" id="patientSearch" class="search-input-glass" placeholder="اكتب اسم المريض أو رقم التليفون..." autocomplete="off" />
     </div>
 
-    <div class="search-loading" id="searchLoading">
-        <i class="bi bi-arrow-repeat"></i> جاري البحث...
-    </div>
-
     <div class="results-box-glass" id="resultsBox"></div>
 </div>
 
 @section Scripts {
     <script>
         let searchTimeout;
+        let searchAbortController = null;
+        let searchSeq = 0; // نحمي من إجابات قديمة توصل بعد الجديدة (race condition)
+
         const searchInput = document.getElementById('patientSearch');
         const resultsBox = document.getElementById('resultsBox');
-        const searchLoading = document.getElementById('searchLoading');
 
-        searchInput.addEventListener('input', function () {
+        function renderSkeleton() {
+            resultsBox.innerHTML = Array.from({ length: 3 }).map(() => `
+                        <div class="skeleton-row">
+                            <div class="skeleton-bar" style="width: 40%;"></div>
+                            <div class="skeleton-bar" style="width: 25%;"></div>
+                        </div>`).join('');
+            resultsBox.style.display = 'block';
+        }
+
+        searchInput.addEventListener('input', function() {
             clearTimeout(searchTimeout);
             const term = this.value.trim();
 
-            resultsBox.style.display = 'none';
-            searchLoading.classList.remove('show');
-
             if (term.length < 2) {
+                resultsBox.style.display = 'none';
+                if (searchAbortController) searchAbortController.abort();
                 return;
             }
 
-            searchLoading.classList.add('show');
-            searchTimeout = setTimeout(() => doSearch(term), 400);
+            renderSkeleton();
+            searchTimeout = setTimeout(() => doSearch(term), 350);
         });
 
         // إخفاء النتائج لما يدوس بره
@@ -422,46 +481,58 @@
         });
 
         async function doSearch(term) {
+            // إلغاء أي طلب سابق لسه شغال عشان منستناش نتيجة قديمة
+            if (searchAbortController) searchAbortController.abort();
+            searchAbortController = new AbortController();
+
+            const mySeq = ++searchSeq;
+
             try {
-                const res = await fetch(`/Patients/Search?term=${encodeURIComponent(term)}`);
+                const res = await fetch(`/Patients/Search?term=${encodeURIComponent(term)}`, {
+                    signal: searchAbortController.signal
+                });
                 const list = await res.json();
 
-                searchLoading.classList.remove('show');
+                // لو وصلت نتيجة قديمة بعد ما المستخدم كتب حاجة جديدة، اتجاهلها
+                if (mySeq !== searchSeq) return;
 
                 if (!list.length) {
                     resultsBox.innerHTML = `
-                        <div class="result-empty">
-                            <i class="bi bi-inbox"></i>
-                            لا توجد نتائج مطابقة
-                        </div>`;
+                                <div class="result-empty">
+                                    <i class="bi bi-inbox"></i>
+                                    لا توجد نتائج مطابقة
+                                </div>`;
                     resultsBox.style.display = 'block';
                     return;
                 }
 
-                resultsBox.innerHTML = '';
-                list.forEach(function (p, index) {
+                const frag = document.createDocumentFragment();
+                list.forEach(function(p, index) {
                     const item = document.createElement('div');
                     item.className = 'result-item-glass';
-                    item.style.animationDelay = `${index * 0.03}s`;
+                    item.style.animationDelay = `${Math.min(index * 0.03, 0.3)}s`;
                     item.innerHTML = `
-                        <span>${p.fullNameAr}</span>
-                        <span class="result-meta"><i class="bi bi-telephone-fill"></i> ${p.phone || '—'}</span>
-                    `;
-                    item.addEventListener('click', function () {
+                                <span>${p.fullNameAr}</span>
+                                <span class="result-meta"><i class="bi bi-telephone-fill"></i> ${p.phone || '—'}</span>
+                            `;
+                    item.addEventListener('click', function() {
                         window.location.href = `/Payments/Statement?patientId=${p.id}`;
                     });
-                    resultsBox.appendChild(item);
+                    frag.appendChild(item);
                 });
 
+                resultsBox.innerHTML = '';
+                resultsBox.appendChild(frag);
                 resultsBox.style.display = 'block';
             } catch (err) {
-                searchLoading.classList.remove('show');
+                if (err.name === 'AbortError') return; // طلب اتلغى عمدًا، مش خطأ فعلي
                 console.error('Search failed', err);
+                if (mySeq !== searchSeq) return;
                 resultsBox.innerHTML = `
-                    <div class="result-empty">
-                        <i class="bi bi-wifi-off"></i>
-                        حدث خطأ في الاتصال
-                    </div>`;
+                            <div class="result-empty">
+                                <i class="bi bi-wifi-off"></i>
+                                حدث خطأ في الاتصال
+                            </div>`;
                 resultsBox.style.display = 'block';
             }
         }
