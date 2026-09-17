@@ -5,10 +5,20 @@
         public int Id { get; set; }
         public string Code { get; set; } = null!;
         public string NameAr { get; set; } = null!;
+        public string NameEn { get; set; } = string.Empty;
         public decimal CurrentPrice { get; set; }
         public DateTime? LastUpdated { get; set; }
         public string? UpdatedBy { get; set; }
         public bool IsActive { get; set; }
+        /// <summary>
+        /// مجموع أسعار المعمل للحالات داخل الفترة المحددة
+        /// (LabPriceSnapshot إن وُجد، وإلا آخر سعر من Edit Price).
+        /// </summary>
+        public decimal Total { get; set; }
+
+        /// <summary>عدد الحالات داخل الفترة المحددة.</summary>
+        public int CasesCount { get; set; }
+
     }
 
     public class LaboratoryPriceHistoryDto
@@ -31,6 +41,7 @@
     {
         public int DiagnosisCatalogId { get; set; }
         public string NameAr { get; set; } = null!;
+        public string NameEn { get; set; } = string.Empty;
         public int Count { get; set; }
         public decimal CurrentPrice { get; set; }
         public decimal Total { get; set; }

@@ -37,14 +37,21 @@ namespace Dental.Constants
 
             public enum MedicationCategory
             {
-                Antibiotic = 1,      // مضاد حيوي
-                PainKiller = 2,      // مسكن
-                AntiInflammatory = 3,// مضاد التهاب
-                MouthWash = 4,       // غسول فم
-                Vitamin = 5,         // فيتامينات
-                LocalAnesthetic = 6, // بنج موضعي
-                Other = 99           // أخرى
-            }
+            ANALGESIC_SYRP = 1,      
+            ANALGESIC_VIAL = 2,      
+            ANALGESIC_TABLET = 3,    
+            ANTIBIOTIC_SYRP = 4,     
+            ANTIBIOTIC_VIAL = 5,      
+            ANTIBIOTIC_TABLET = 6,
+            Anti_Edematus = 7,
+            MOUTH_WASH = 8,
+            TOOTH_PASTE = 9,      
+            Vitamin = 10,        
+            LocalAnesthetic = 11, 
+            AntiInflammatory = 12,
+            Other = 99
+            
+        }
 
             public enum TreatmentPlanStatus
             {

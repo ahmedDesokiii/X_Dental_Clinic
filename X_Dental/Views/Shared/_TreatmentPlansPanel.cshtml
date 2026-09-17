@@ -1,7 +1,7 @@
 @* _TreatmentPlansPanel.cshtml — لسه صفحة الـ Patients Details هي اللي بتستدعيه في تبويب plans *@
 
 <div class="tp-wrap" data-patient-id="@ViewBag.CurrentPatientId">
-    <div class="tp-header">
+    @* <div class="tp-header">
         <div class="tp-header-info">
             <h4><i class="bi bi-clipboard-check"></i> Treatment Plans</h4>
             <span class="tp-header-sub">Proposed and ongoing treatment roadmaps for this patient</span>
@@ -9,16 +9,16 @@
         <button type="button" class="btn-hero primary" onclick="TreatmentPlans.openCreateModal()">
             <i class="bi bi-plus-lg"></i> New Plan
         </button>
-    </div>
+    </div> *@
 
     <div id="tpSkeleton" class="tp-skeleton">
         <div class="tp-skeleton-card"></div>
         <div class="tp-skeleton-card"></div>
     </div>
 
-    <div id="tpPlansList" class="tp-plans-list" style="display:none;"></div>
+    <div id="tpPlansList" class="tp-plans-list " style="display:none;"></div>
 
-    <div id="tpEmptyState" class="placeholder-glass" style="display:none;">
+    <div id="tpEmptyState" class="placeholder-glass pt-0" style="display:none;">
         <div class="placeholder-icon-glass"><i class="bi bi-clipboard-check"></i></div>
         <h3>No Treatment Plans Yet</h3>
         <p>Create a plan to map out future procedures and track progress step by step.</p>
@@ -37,21 +37,25 @@
             <button type="button" class="btn-close btn-close-white" onclick="TreatmentPlans.closeCreateModal()"></button>
         </div>
         <div class="modal-body-new">
-            <div class="mb-3">
-                <label class="form-label-custom-new">Plan Title <span class="text-danger">*</span></label>
-                <input type="text" class="form-control-custom-new" id="tpPlanTitle" placeholder="e.g. Orthodontic Treatment Plan" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label-custom-new">Notes</label>
-                <textarea class="form-control-custom-new" id="tpPlanNotes" rows="2" placeholder="Overview or patient consent notes..."></textarea>
+
+            <!-- ═══ Row 1: Title + Notes + Add Step (inline) ═══ -->
+            <div class="tp-header-inline-row">
+                <div class="tp-hi-title">
+                    <label class="form-label-custom-new">Plan Title <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control-custom-new" id="tpPlanTitle" placeholder="e.g. Orthodontic Treatment Plan" />
+                </div>
+                <div class="tp-hi-notes">
+                    <label class="form-label-custom-new">Notes</label>
+                    <input type="text" class="form-control-custom-new" id="tpPlanNotes" placeholder="Overview or patient consent notes..." />
+                </div>
+                <div class="tp-hi-btn">
+                    <label class="form-label-custom-new tp-invisible-label">Add</label>
+                    <button type="button" class="tp-add-step-btn" onclick="TreatmentPlans.addStepRow()">
+                        <i class="bi bi-plus-lg"></i> Add Step
+                    </button>
+                </div>
             </div>
 
-            <div class="tp-steps-editor-head">
-                <label class="form-label-custom-new mb-0">Plan Steps</label>
-                <button type="button" class="tp-add-step-btn" onclick="TreatmentPlans.addStepRow()">
-                    <i class="bi bi-plus-lg"></i> Add Step
-                </button>
-            </div>
             <div id="tpStepsEditor" class="tp-steps-editor"></div>
         </div>
         <div class="modal-foot-new">
@@ -62,7 +66,6 @@
         </div>
     </div>
 </div>
-
 @* ══════════ Add Step Modal (for existing plan) ══════════ *@
 <div class="custom-modal-new" id="tpAddStepModal">
     <div class="modal-overlay-new" onclick="TreatmentPlans.closeAddStepModal()"></div>
@@ -498,14 +501,7 @@
         }
 
     /* ── Steps Editor (create modal) ── */
-    .tp-steps-editor-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 8px;
-        margin-bottom: 10px;
-    }
-
+   
     .tp-add-step-btn {
         border: none;
         background: var(--dc-teal-50);
@@ -557,20 +553,160 @@
             justify-content: center;
         }
 
-    .tp-field-grid {
+    /* ── Row 1: Title + Notes + Add Step inline ── */
+    .tp-header-inline-row {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1.3fr 1.3fr auto;
+        gap: 12px;
+        align-items: end;
+        margin-bottom: 18px;
+        animation: fadeInUp .3s ease;
+    }
+
+    .tp-invisible-label {
+        visibility: hidden;
+    }
+
+    .tp-hi-btn .tp-add-step-btn {
+        white-space: nowrap;
+        height: 41px;
+        padding: 0 16px;
+    }
+
+    .tp-add-step-btn {
+        border: none;
+        background: var(--dc-teal-50);
+        color: var(--dc-teal-700);
+        font-weight: 800;
+        font-size: .78rem;
+        padding: 6px 14px;
+        border-radius: 12px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all .2s;
+    }
+
+        .tp-add-step-btn:hover {
+            background: var(--dc-teal-100);
+            transform: translateY(-1px);
+        }
+
+    /* ── Steps Editor (create modal) ── */
+    .tp-steps-editor {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        max-height: 380px;
+        overflow-y: auto;
+        padding-inline-end: 4px;
+    }
+
+        .tp-steps-editor::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .tp-steps-editor::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .tp-steps-editor::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 999px;
+        }
+
+    .tp-step-editor-row {
+        border: 1px solid #f1f5f9;
+        border-radius: 14px;
+        padding: 14px 14px 12px;
+        background: #fafcfd;
+        position: relative;
+        animation: fadeInUp .25s ease;
+        transition: all .2s ease;
+    }
+
+        .tp-step-editor-row:hover {
+            border-color: var(--dc-teal-100);
+            box-shadow: 0 4px 14px rgba(10,77,79,0.06);
+        }
+
+        .tp-step-editor-row .tp-remove-step {
+            position: absolute;
+            top: 10px;
+            inset-inline-end: 10px;
+            border: none;
+            background: #fee2e2;
+            color: #dc2626;
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s;
+        }
+
+            .tp-step-editor-row .tp-remove-step:hover {
+                background: #fecaca;
+                transform: scale(1.08);
+            }
+
+    .tp-step-badge-num {
+        position: absolute;
+        top: -9px;
+        inset-inline-start: 12px;
+        background: linear-gradient(135deg, var(--dc-teal-600), var(--dc-teal-500));
+        color: #fff;
+        font-size: .68rem;
+        font-weight: 800;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(13,148,136,0.35);
+    }
+
+    /* Row A: Description + Procedure + Tooth# — inline */
+    .tp-field-grid-3a {
+        display: grid;
+        grid-template-columns: 2fr 1.3fr 0.7fr;
         gap: 10px;
-        margin-top: 8px;
+        margin-top: 6px;
+    }
+
+    /* Row B: Cost + Date + Notes — inline */
+    .tp-field-grid-3b {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1.4fr;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .tp-modal-lg {
+        max-width: 780px;
+        width: 92%;
+    }
+
+    @@media (max-width: 760px) {
+        .tp-header-inline-row {
+            grid-template-columns: 1fr;
+        }
+
+        .tp-field-grid-3a,
+        .tp-field-grid-3b {
+            grid-template-columns: 1fr;
+        }
     }
 
         .tp-field-grid.full {
             grid-template-columns: 1fr;
         }
 
-    .tp-modal-lg {
-        max-width: 640px;
-    }
+    
 
     .tp-hint-text {
         font-size: .78rem;
@@ -749,37 +885,40 @@
             div.className = 'tp-step-editor-row';
             div.id = rowId;
             div.innerHTML = `
-                    <button type="button" class="tp-remove-step" onclick="document.getElementById('${rowId}').remove()"><i class="bi bi-x"></i></button>
-                    <label class="form-label-custom-new">Step Description <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control-custom-new tp-f-desc" placeholder="e.g. Fit upper braces" />
-                    <div class="tp-field-grid">
-                        <div>
-                            <label class="form-label-custom-new">Linked Procedure</label>
-                            <select class="form-control-custom-new tp-f-proc" onchange="TreatmentPlans.onProcedurePick(this)">
-                                ${procedureOptionsHtml()}
-                            </select>
+                        <span class="tp-step-badge-num mt-3 mb-2" >${stepEditorCounter}</span>
+                        <button type="button" class="tp-remove-step" onclick="document.getElementById('${rowId}').remove()"><i class="bi bi-x"></i></button>
+
+                        <div class="tp-field-grid-3a pt-2">
+                            <div>
+                                <label class="form-label-custom-new">Step Description <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control-custom-new tp-f-desc" placeholder="e.g. Fit upper braces" />
+                            </div>
+                            <div>
+                                <label class="form-label-custom-new">Linked Procedure</label>
+                                <select class="form-control-custom-new tp-f-proc" onchange="TreatmentPlans.onProcedurePick(this)">
+                                    ${procedureOptionsHtml()}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label-custom-new">Tooth #</label>
+                                <input type="text" class="form-control-custom-new tp-f-tooth" placeholder="e.g. UL-4" inputmode="numeric" />
+                            </div>
                         </div>
-                        <div>
-                            <label class="form-label-custom-new">Tooth # (optional)</label>
-                            <input type="number" class="form-control-custom-new tp-f-tooth" min="11" max="48" />
-                        </div>
-                    </div>
-                    <div class="tp-field-grid">
-                        <div>
-                            <label class="form-label-custom-new">Estimated Cost</label>
-                            <input type="number" step="0.01" class="form-control-custom-new tp-f-cost" value="0" />
-                        </div>
-                        <div>
-                            <label class="form-label-custom-new">Target Date</label>
-                            <input type="date" class="form-control-custom-new tp-f-date" />
-                        </div>
-                    </div>
-                    <div class="tp-field-grid full">
-                        <div>
-                            <label class="form-label-custom-new">Notes</label>
-                            <input type="text" class="form-control-custom-new tp-f-notes" placeholder="Optional notes..." />
-                        </div>
-                    </div>`;
+
+                        <div class="tp-field-grid-3b">
+                            <div>
+                                <label class="form-label-custom-new">Estimated Cost</label>
+                                <input type="number" step="0.01" class="form-control-custom-new tp-f-cost" value="0" />
+                            </div>
+                            <div>
+                                <label class="form-label-custom-new">Target Date</label>
+                                <input type="date" class="form-control-custom-new tp-f-date" />
+                            </div>
+                            <div>
+                                <label class="form-label-custom-new">Notes</label>
+                                <input type="text" class="form-control-custom-new tp-f-notes" placeholder="Optional notes..." />
+                            </div>
+                        </div>`;
             wrap.appendChild(div);
         }
 

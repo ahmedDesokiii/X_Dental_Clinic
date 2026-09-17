@@ -1001,6 +1001,10 @@
                 </div>
             </div>
             <div class="hero-actions">
+                <button type="button" id="btnAddRxSession" class="btn-hero glass" onclick="openRxModal()">
+                    Prescription
+                    <i class="bi bi-file-earmark-medical"></i>
+                </button>
                 <button type="button" id="btnPrintSession" class="btn-hero glass">
                     Print
                     <i class="bi bi-printer"></i>
@@ -1008,8 +1012,8 @@
                 <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.Patient.Id" class="btn-hero glass">
                     Back
                     <i class="bi bi-arrow-right"></i>
-
                 </a>
+            </div>
             </div>
         </div>
 
@@ -1097,9 +1101,10 @@
                 @await Html.PartialAsync("_FollowUpPanel", Model)
             </div>
         </div>
+    @await Html.PartialAsync("_SessionPrescription", Model)
     </div>
+  
 
-</div>
 
 @* ====== BOTTOM STICKY ACTION BAR ====== *@
 <div class="bottom-action-bar" id="bottomBar">

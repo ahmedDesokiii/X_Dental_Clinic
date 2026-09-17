@@ -1419,6 +1419,7 @@
                                 if (slot) { slot.textContent = msgs[0]; slot.style.display = 'block'; }
                             });
                         } else {
+                            closePatientModal();
                             btn.disabled = false;
                             btn.innerHTML = originalHtml;
                             Swal.fire({

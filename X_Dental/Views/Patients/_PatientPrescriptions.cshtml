@@ -1,0 +1,884 @@
+<div class="pp-shell" data-patient-id="@ViewBag.CurrentPatientId">
+    <div class="pp-toolbar">
+        <div class="pp-title"><i class="bi bi-file-medical"></i> <span id="ppCount">Prescriptions</span></div>
+        <button class="pp-btn-add" onclick="openPpModal()">
+            <i class="bi bi-plus-lg"></i> Add Prescription
+        </button>
+    </div>
+
+    <div class="pp-skeleton" id="ppSkeleton">
+        <div class="pp-skeleton-row"></div>
+        <div class="pp-skeleton-row"></div>
+        <div class="pp-skeleton-row"></div>
+    </div>
+
+    <div class="pp-list" id="ppList"></div>
+
+    <div class="pp-empty" id="ppEmptyState" style="display:none;">
+        <i class="bi bi-file-medical"></i>
+        <p>There are no registered prescriptions for this patient.</p>
+    </div>
+</div>
+
+<!-- Add Prescription Modal -->
+<div class="pp-modal" id="ppModal" style="display:none;">
+    <div class="pp-modal-glass">
+        <div class="pp-modal-head">
+            <div>
+                <h5><i class="bi bi-file-earmark-medical"></i> New Prescription</h5>
+                <div class="pp-modal-subtitle" id="ppVisitInfo"></div>
+            </div>
+            <button class="pp-btn-close" onclick="closePpModal()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="pp-modal-body">
+            <div class="pp-top-row">
+                <div class="form-group">
+                    <label>Diagnosis</label>
+                    <input type="text" class="pp-input" id="ppDiagnosis" placeholder="Diagnosis..." />
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <input type="text" class="pp-input" id="ppNotes" placeholder="Prescription notes..." />
+                </div>
+            </div>
+
+            <div class="pp-items-editor" id="ppItemsEditor">
+                <div class="pp-item-row" data-index="0">
+                    <span class="pp-item-count">1</span>
+                    <div class="pp-row-5">
+                        <div class="form-group">
+                            <label>Medication <span class="text-danger">*</span></label>
+                            <select class="pp-input pp-drug-select" onchange="onPpDrugSelected(this)">
+                                <option value="">Loading medications...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Dosage</label>
+                            <input type="text" class="pp-input pp-drug-dosage" placeholder="500mg" />
+                        </div>
+                        <div class="form-group">
+                            <label>Frequency</label>
+                            <input type="text" class="pp-input pp-drug-freq" placeholder="3 times daily" />
+                        </div>
+                        <div class="form-group">
+                            <label>Duration</label>
+                            <input type="text" class="pp-input pp-drug-duration" placeholder="7 days" />
+                        </div>
+                        <div class="form-group">
+                            <label>Instructions</label>
+                            <input type="text" class="pp-input pp-drug-instr" placeholder="After meals..." />
+                        </div>
+                    </div>
+                    <button type="button" class="pp-item-remove" onclick="removePpDrugRow(this)" title="Remove">
+                        <i class="bi bi-trash3"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button class="pp-btn-add-drug" onclick="addPpDrugRow()">
+                <i class="bi bi-plus-circle"></i> Add Medication
+            </button>
+        </div>
+        <div class="pp-modal-foot">
+            <button class="pp-btn pp-btn-cancel" onclick="closePpModal()">Cancel</button>
+            <button class="pp-btn pp-btn-save" id="btnSavePp" onclick="submitPpPrescription()">Save Prescription</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .pp-shell {
+        padding: 4px;
+    }
+
+    .pp-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .pp-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        color: #0f172a;
+        font-size: 1.05rem;
+    }
+
+        .pp-title i {
+            color: #0d9488;
+        }
+
+    .pp-btn-add {
+        background: linear-gradient(135deg, #ec4899, #db2777);
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 16px rgba(236,72,153,0.3);
+        transition: all 0.3s;
+    }
+
+        .pp-btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(236,72,153,0.4);
+        }
+
+    .pp-skeleton {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .pp-skeleton-row {
+        height: 70px;
+        border-radius: 14px;
+        background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 37%, #f1f5f9 63%);
+        background-size: 400% 100%;
+        animation: ppShine 1.4s ease infinite;
+    }
+
+    @@keyframes ppShine {
+        0% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
+    .pp-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .pp-card {
+        background: linear-gradient(135deg, #fff 0%, #D4F6FF 100%);
+        border-radius: 18px;
+        padding: 20px;
+        border: 1px solid rgba(226,232,240,0.8);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }
+
+    .pp-card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+
+    .pp-date {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.83rem;
+        color: #64748b;
+        font-weight: 700;
+    }
+
+        .pp-date i {
+            color: #0d9488;
+        }
+
+    .pp-visit-badge {
+        background: #f0fdfa;
+        color: #0f766e;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 999px;
+    }
+
+    .pp-status {
+        padding: 3px 10px;
+        border-radius: 8px;
+        font-size: 0.74rem;
+        font-weight: 700;
+    }
+
+        .pp-status.active {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .pp-status.completed {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .pp-status.cancelled {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+    .pp-diagnosis {
+        background: #fff;
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        color: #1e293b;
+        margin-bottom: 12px;
+        border: 1px solid #f1f5f9;
+    }
+
+    .pp-items {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .pp-item {
+        background: #fff;
+        border-radius: 12px;
+        padding: 12px 16px;
+        border: 1px solid #f1f5f9;
+    }
+
+    .pp-drug-name {
+        font-weight: 800;
+        color: #1e293b;
+        font-size: 0.94rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+
+        .pp-drug-name i {
+            color: #ec4899;
+        }
+
+    .pp-dosage {
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: #64748b;
+        background: #f1f5f9;
+        padding: 2px 8px;
+        border-radius: 6px;
+    }
+
+    .pp-instructions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .pp-chip {
+        padding: 3px 9px;
+        border-radius: 8px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #f0fdfa;
+        color: #0f766e;
+    }
+
+        .pp-chip.info {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+    .pp-footer {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px dashed #e2e8f0;
+        font-size: 0.85rem;
+        color: #64748b;
+        font-style: italic;
+    }
+
+    .pp-actions-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .pp-by {
+        font-size: 0.8rem;
+        color: #64748b;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .pp-btn-print {
+        border: none;
+        background: #f0fdfa;
+        color: #0d9488;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+        .pp-btn-print:hover {
+            background: #ccfbf1;
+        }
+
+    .pp-empty {
+        text-align: center;
+        padding: 48px;
+        color: #64748b;
+    }
+
+        .pp-empty i {
+            font-size: 2.4rem;
+            display: block;
+            margin-bottom: 12px;
+            opacity: .5;
+        }
+
+    /* Modal */
+    .pp-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(15,23,42,0.4);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+    }
+
+    .pp-modal-glass {
+        background: rgba(255,255,255,0.97);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 28px;
+        width: 100%;
+        max-width: 820px;
+        border: 1px solid rgba(255,255,255,0.5);
+        box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .pp-modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+        .pp-modal-head h5 {
+            margin: 0;
+            font-weight: 800;
+            color: #0f172a;
+            font-size: 1.1rem;
+        }
+
+    .pp-modal-subtitle {
+        font-size: 0.78rem;
+        color: #64748b;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    .pp-btn-close {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: none;
+        background: #f1f5f9;
+        color: #64748b;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .pp-modal-body {
+        margin-bottom: 20px;
+    }
+
+    .pp-top-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .pp-items-editor {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .pp-item-row {
+        background: #f8fafc;
+        border-radius: 14px;
+        padding: 14px 16px;
+        border: 1px solid #e2e8f0;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .pp-item-count {
+        flex-shrink: 0;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ec4899, #db2777);
+        color: #fff;
+        font-size: 0.76rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 22px;
+    }
+
+    .pp-row-5 {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 1.3fr;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .pp-item-remove {
+        flex-shrink: 0;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        color: #94a3b8;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 20px;
+        transition: all 0.2s;
+    }
+
+        .pp-item-remove:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+    .pp-modal-body .form-group label {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 5px;
+        white-space: nowrap;
+    }
+
+    .pp-input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.8);
+        font-size: 0.9rem;
+        outline: none;
+        transition: all 0.2s;
+    }
+
+        .pp-input:focus {
+            border-color: #ec4899;
+            box-shadow: 0 0 0 3px rgba(236,72,153,0.1);
+        }
+
+    select.pp-input {
+        cursor: pointer;
+    }
+
+    .pp-btn-add-drug {
+        width: 100%;
+        padding: 12px;
+        border-radius: 12px;
+        border: 2px dashed #e2e8f0;
+        background: transparent;
+        color: #64748b;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+
+        .pp-btn-add-drug:hover {
+            border-color: #ec4899;
+            color: #ec4899;
+            background: #fdf2f8;
+        }
+
+    .pp-modal-foot {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .pp-btn {
+        padding: 10px 22px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .pp-btn-cancel {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .pp-btn-save {
+        background: linear-gradient(135deg, #ec4899, #db2777);
+        color: #fff;
+        box-shadow: 0 4px 16px rgba(236,72,153,0.3);
+    }
+
+        .pp-btn-save:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+    @@media (max-width: 900px) {
+        .pp-row-5 {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .pp-top-row, .pp-row-5 {
+            grid-template-columns: 1fr;
+        }
+
+        .pp-item-count, .pp-item-remove {
+            margin-top: 0;
+        }
+
+        .pp-item-row {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+
+<script>
+    (function() {
+        const patientId = @(ViewBag.CurrentPatientId ?? 0);
+        let ppVisits = [];
+        let ppPrescriptions = [];
+        let ppMedications = [];
+        let ppDrugOptionsHtml = '<option value="">Select medication...</option>';
+        let ppMedicationsLoaded = false;
+        let ppDrugIndex = 1;
+        let ppTargetVisitId = null;
+
+        async function loadPatientPrescriptions() {
+            document.getElementById('ppSkeleton').style.display = 'flex';
+            document.getElementById('ppEmptyState').style.display = 'none';
+            document.getElementById('ppList').innerHTML = '';
+            try {
+                const res = await fetch(`/Patients/GetPrescriptionsData?patientId=${patientId}`);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const result = await res.json();
+                if (result.success) {
+                    ppVisits = result.visits;
+                    ppPrescriptions = result.prescriptions;
+                    renderPpList();
+                } else {
+                    showPpError(result.message || 'Could not load prescriptions.');
+                }
+            } catch (err) {
+                console.error('Failed to load prescriptions', err);
+                showPpError('Could not load prescriptions — check that /Patients/GetPrescriptionsData exists.');
+            } finally {
+                document.getElementById('ppSkeleton').style.display = 'none';
+            }
+        }
+
+        function showPpError(msg) {
+            document.getElementById('ppList').innerHTML = '';
+            const empty = document.getElementById('ppEmptyState');
+            empty.innerHTML = `<i class="bi bi-exclamation-triangle"></i><p>${msg}</p>`;
+            empty.style.display = 'block';
+        }
+
+        function statusLabel(s) {
+            if (s === 'Active') return 'نشطة';
+            if (s === 'Completed') return 'مكتملة';
+            if (s === 'Cancelled') return 'ملغاة';
+            return s;
+        }
+
+        function renderPpList() {
+            document.getElementById('ppCount').textContent = `الروشتات (${ppPrescriptions.length})`;
+            const list = document.getElementById('ppList');
+            const empty = document.getElementById('ppEmptyState');
+
+            if (!ppPrescriptions.length) {
+                list.innerHTML = '';
+                empty.innerHTML = '<i class="bi bi-file-medical"></i><p>لا توجد روشتات مسجلة لهذا المريض</p>';
+                empty.style.display = 'block';
+                return;
+            }
+            empty.style.display = 'none';
+
+            list.innerHTML = ppPrescriptions.map(rx => `
+                    <div class="pp-card">
+                        <div class="pp-card-head">
+                            <div class="pp-date"><i class="bi bi-calendar3"></i> ${new Date(rx.prescriptionDate).toLocaleDateString('en-GB')}</div>
+                            <span class="pp-visit-badge">${rx.visitCategory} — ${new Date(rx.visitDate).toLocaleDateString('en-GB')}</span>
+                            <div class="pp-status ${rx.status.toLowerCase()}">${statusLabel(rx.status)}</div>
+                        </div>
+                        ${rx.diagnosis ? `<div class="pp-diagnosis"><strong>التشخيص:</strong> ${rx.diagnosis}</div>` : ''}
+                        <div class="pp-items">
+                            ${rx.items.map(item => `
+                                <div class="pp-item">
+                                    <div class="pp-drug-name"><i class="bi bi-capsule"></i> ${item.medicationName} <span class="pp-dosage">${item.dosage || ''}</span></div>
+                                    <div class="pp-instructions">
+                                        ${item.frequency ? `<span class="pp-chip"><i class="bi bi-clock"></i> ${item.frequency}</span>` : ''}
+                                        ${item.duration ? `<span class="pp-chip"><i class="bi bi-calendar-week"></i> ${item.duration}</span>` : ''}
+                                        ${item.instructions ? `<span class="pp-chip info"><i class="bi bi-info-circle"></i> ${item.instructions}</span>` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ${rx.notes ? `<div class="pp-footer">${rx.notes}</div>` : ''}
+                        <div class="pp-actions-bar">
+                            <span class="pp-by"><i class="bi bi-person-badge"></i> د. ${rx.prescribedBy || ''}</span>
+                            <button class="pp-btn-print" onclick="printPp(${rx.id})"><i class="bi bi-printer"></i> طباعة</button>
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        async function loadPpMedications() {
+            try {
+                const res = await fetch('/Medications/GetActiveMedications');
+                const result = await res.json();
+                if (result.success) {
+                    ppMedications = result.data;
+                    ppDrugOptionsHtml = buildPpOptionsHtml(ppMedications);
+                } else {
+                    ppDrugOptionsHtml = '<option value="">Could not load medications</option>';
+                }
+            } catch (err) {
+                console.error('Failed to load medications', err);
+                ppDrugOptionsHtml = '<option value="">Could not load medications</option>';
+            } finally {
+                ppMedicationsLoaded = true;
+                document.querySelectorAll('.pp-drug-select').forEach(sel => {
+                    sel.innerHTML = ppDrugOptionsHtml;
+                });
+            }
+        }
+
+        function buildPpOptionsHtml(meds) {
+            if (!meds.length) return '<option value="">No medications registered — upload the medications file from the catalog screen</option>';
+
+            const groups = {};
+            meds.forEach(m => {
+                if (!groups[m.categoryName]) groups[m.categoryName] = [];
+                groups[m.categoryName].push(m);
+            });
+
+            let html = '<option value="">Select medication...</option>';
+            Object.keys(groups).forEach(cat => {
+                html += `<optgroup label="${cat}">`;
+                groups[cat].forEach(m => {
+                    html += `<option value="${m.id}" data-name="${m.name}" data-dosage="${m.defaultDosage || ''}" data-freq="${m.defaultFrequency || ''}" data-duration="${m.defaultDuration || ''}">${m.name}</option>`;
+                });
+                html += '</optgroup>';
+            });
+            return html;
+        }
+
+        window.onPpDrugSelected = function(selectEl) {
+            const opt = selectEl.selectedOptions[0];
+            const row = selectEl.closest('.pp-item-row');
+            if (!row || !opt || !opt.value) return;
+
+            row.querySelector('.pp-drug-dosage').value = opt.dataset.dosage || '';
+            row.querySelector('.pp-drug-freq').value = opt.dataset.freq || '';
+            row.querySelector('.pp-drug-duration').value = opt.dataset.duration || '';
+        };
+
+        function renumberPpRows() {
+            document.querySelectorAll('#ppItemsEditor .pp-item-row').forEach((row, i) => {
+                const badge = row.querySelector('.pp-item-count');
+                if (badge) badge.textContent = i + 1;
+            });
+        }
+
+        function getPpDrugRowHtml(idx) {
+            return `
+                <div class="pp-item-row" data-index="${idx}">
+                    <span class="pp-item-count">${idx + 1}</span>
+                    <div class="pp-row-5">
+                        <div class="form-group">
+                            <label>Medication <span class="text-danger">*</span></label>
+                            <select class="pp-input pp-drug-select" onchange="onPpDrugSelected(this)">${ppDrugOptionsHtml}</select>
+                        </div>
+                        <div class="form-group">
+                            <label>Dosage</label>
+                            <input type="text" class="pp-input pp-drug-dosage" placeholder="500mg" />
+                        </div>
+                        <div class="form-group">
+                            <label>Frequency</label>
+                            <input type="text" class="pp-input pp-drug-freq" placeholder="3 times daily" />
+                        </div>
+                        <div class="form-group">
+                            <label>Duration</label>
+                            <input type="text" class="pp-input pp-drug-duration" placeholder="7 days" />
+                        </div>
+                        <div class="form-group">
+                            <label>Instructions</label>
+                            <input type="text" class="pp-input pp-drug-instr" placeholder="After meals..." />
+                        </div>
+                    </div>
+                    <button type="button" class="pp-item-remove" onclick="removePpDrugRow(this)" title="Remove">
+                        <i class="bi bi-trash3"></i>
+                    </button>
+                </div>`;
+        }
+
+        window.addPpDrugRow = function() {
+            const container = document.getElementById('ppItemsEditor');
+            const div = document.createElement('div');
+            div.innerHTML = getPpDrugRowHtml(ppDrugIndex++);
+            container.appendChild(div.firstElementChild);
+            renumberPpRows();
+        };
+
+        window.removePpDrugRow = function(btn) {
+            const rows = document.querySelectorAll('#ppItemsEditor .pp-item-row');
+            const row = btn.closest('.pp-item-row');
+            if (rows.length <= 1) {
+                row.querySelector('.pp-drug-select').value = '';
+                row.querySelectorAll('input').forEach(inp => inp.value = '');
+                return;
+            }
+            row.remove();
+            renumberPpRows();
+        };
+
+        window.openPpModal = function() {
+            if (!ppVisits.length) {
+                Swal.fire({ title: 'No Visits', text: 'This patient has no recorded visits yet — a visit is required before adding a prescription.', icon: 'warning' });
+                return;
+            }
+
+            const target = ppVisits.find(v => v.isOpen) || ppVisits[0]; // latest visit (ppVisits is date-desc)
+            ppTargetVisitId = target.id;
+            document.getElementById('ppVisitInfo').textContent =
+                `Visit: ${new Date(target.date).toLocaleDateString('en-GB')} — ${target.category}${target.isOpen ? ' (open)' : ''}`;
+
+            document.getElementById('ppModal').style.display = 'flex';
+            if (!ppMedicationsLoaded) loadPpMedications();
+        };
+
+        window.closePpModal = function() {
+            document.getElementById('ppModal').style.display = 'none';
+            document.getElementById('ppItemsEditor').innerHTML = getPpDrugRowHtml(0);
+            ppDrugIndex = 1;
+            document.getElementById('ppDiagnosis').value = '';
+            document.getElementById('ppNotes').value = '';
+            renumberPpRows();
+        };
+
+        window.submitPpPrescription = async function() {
+            if (!ppTargetVisitId) {
+                Swal.fire({ title: 'Error', text: 'No target visit determined.', icon: 'error' });
+                return;
+            }
+
+            const items = [];
+            document.querySelectorAll('.pp-item-row').forEach(row => {
+                const select = row.querySelector('.pp-drug-select');
+                const opt = select.selectedOptions[0];
+                if (!opt || !opt.value) return;
+
+                items.push({
+                    MedicationName: opt.dataset.name,
+                    Dosage: row.querySelector('.pp-drug-dosage').value,
+                    Frequency: row.querySelector('.pp-drug-freq').value,
+                    Duration: row.querySelector('.pp-drug-duration').value,
+                    Instructions: row.querySelector('.pp-drug-instr').value
+                });
+            });
+
+            if (!items.length) {
+                Swal.fire({ title: 'Required', text: 'Please select at least one medication.', icon: 'warning' });
+                return;
+            }
+
+            const data = {
+                VisitId: ppTargetVisitId,
+                Diagnosis: document.getElementById('ppDiagnosis').value,
+                Notes: document.getElementById('ppNotes').value,
+                Items: items,
+                PrescribedBy: '@(User.Identity?.Name ?? "System")'
+            };
+
+            const btn = document.getElementById('btnSavePp');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            try {
+                const res = await fetch('/Clinical/AddPrescription', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    Swal.fire({ title: 'Saved', text: 'Prescription saved successfully', icon: 'success', timer: 1500, showConfirmButton: false });
+                    closePpModal();
+                    loadPatientPrescriptions();
+                } else {
+                    Swal.fire({ title: 'Could not save', text: result.message || 'An unexpected error occurred', icon: 'error' });
+                }
+            } catch (err) {
+                Swal.fire({ title: 'Error', text: 'Could not connect to the server', icon: 'error' });
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Save Prescription';
+            }
+        };
+
+        window.printPp = function(id) { window.open(`/Clinical/PrintPrescription?id=${id}`, '_blank'); };
+
+        window.loadPatientPrescriptions = loadPatientPrescriptions;
+        document.addEventListener('DOMContentLoaded', loadPatientPrescriptions);
+    })();
+</script>

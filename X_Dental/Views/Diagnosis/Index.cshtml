@@ -2,7 +2,7 @@
 @using static Dental.Constants.EnumHelper
 @model List<DiagnosisListDto>
 @{
-    ViewData["Title"] = "إدارة التشخيصات";
+    ViewData["Title"] = "Diagnosis Catalog";
 }
 @section Styles {
     <style>
@@ -14,10 +14,65 @@
             --sc-sky-100: #dcf5f7;
             --sc-ink-900: #0b2e30;
             --sc-ink-600: #4b6b6c;
+            --sc-ink-400: #94a3b8;
         }
 
         body {
             background: radial-gradient(circle at 6% 4%, var(--sc-sky-100) 0%, transparent 38%), var(--sc-sky-50);
+        }
+
+        @@keyframes diagFadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@keyframes diagRowIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@keyframes diagShine {
+            0%, 100% {
+                right: -30%;
+            }
+
+            50% {
+                right: 105%;
+            }
+        }
+
+        @@keyframes diagChipPop {
+            0% {
+                transform: scale(.88);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @@keyframes diagPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(255,255,255,.25);
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px rgba(255,255,255,0);
+            }
         }
 
         .diag-hero {
@@ -31,12 +86,30 @@
             margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 16px;
+            position: relative;
+            overflow: hidden;
+            animation: diagFadeUp .5s ease;
         }
+
+            .diag-hero::before {
+                content: '';
+                position: absolute;
+                top: -60%;
+                right: -30%;
+                width: 45%;
+                height: 220%;
+                background: linear-gradient(105deg, transparent, rgba(255,255,255,.16), transparent);
+                transform: rotate(12deg);
+                animation: diagShine 6s ease-in-out infinite;
+                pointer-events: none;
+            }
 
             .diag-hero .hero-title {
                 display: flex;
                 align-items: center;
                 gap: 16px;
+                position: relative;
+                z-index: 1;
             }
 
             .diag-hero .hero-icon {
@@ -78,6 +151,9 @@
             gap: 8px;
             cursor: pointer;
             transition: all .2s ease;
+            position: relative;
+            z-index: 1;
+            animation: diagPulse 3s ease-in-out infinite;
         }
 
             .btn-hero-light:hover {
@@ -92,13 +168,14 @@
             border-radius: 18px;
             box-shadow: 0 20px 50px rgba(10,77,79,.08);
             padding: 22px;
+            animation: diagFadeUp .55s .05s ease backwards;
         }
 
         .diag-toolbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 18px;
+            margin-bottom: 14px;
             gap: 12px;
             flex-wrap: wrap;
         }
@@ -115,15 +192,60 @@
                 border-radius: 10px;
                 border: 1.5px solid var(--sc-sky-100);
                 font-size: .9rem;
+                transition: all .2s;
             }
+
+                .diag-search input:focus {
+                    outline: none;
+                    border-color: var(--sc-teal-500);
+                    box-shadow: 0 0 0 3px rgba(20,184,166,.12);
+                }
 
             .diag-search i {
                 position: absolute;
-                right: 14px;
+                left: 14px;
                 top: 50%;
                 transform: translateY(-50%);
                 color: var(--sc-ink-600);
             }
+
+        .diag-filter-chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .diag-chip {
+            padding: 7px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--sc-sky-100);
+            background: #fff;
+            font-weight: 700;
+            font-size: .78rem;
+            color: var(--sc-ink-600);
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+            .diag-chip:hover {
+                border-color: var(--sc-teal-500);
+                color: var(--sc-teal-700);
+            }
+
+            .diag-chip.active {
+                background: linear-gradient(135deg, var(--sc-teal-600), var(--sc-teal-700));
+                color: #fff;
+                border-color: transparent;
+                box-shadow: 0 4px 12px rgba(13,148,136,.3);
+                animation: diagChipPop .2s ease;
+            }
+
+        .diag-count {
+            font-size: .8rem;
+            color: var(--sc-ink-600);
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
 
         table.diag-table {
             width: 100%;
@@ -131,13 +253,33 @@
         }
 
             table.diag-table th {
-                text-align: right;
-                font-size: .78rem;
+                text-align: left;
+                font-size: .74rem;
+                text-transform: uppercase;
+                letter-spacing: .3px;
                 color: var(--sc-ink-600);
                 font-weight: 800;
                 padding: 10px 12px;
                 border-bottom: 2px solid var(--sc-sky-100);
+                cursor: pointer;
+                user-select: none;
+                white-space: nowrap;
             }
+
+                table.diag-table th:hover {
+                    color: var(--sc-teal-700);
+                }
+
+                table.diag-table th .sort-arrow {
+                    font-size: .68rem;
+                    opacity: .4;
+                    margin-left: 4px;
+                }
+
+                table.diag-table th.sorted .sort-arrow {
+                    opacity: 1;
+                    color: var(--sc-teal-600);
+                }
 
             table.diag-table td {
                 padding: 12px;
@@ -147,9 +289,14 @@
                 vertical-align: middle;
             }
 
-            table.diag-table tr:hover td {
-                background: var(--sc-sky-50);
+            table.diag-table tbody tr {
+                animation: diagRowIn .3s ease backwards;
+                transition: background .15s;
             }
+
+                table.diag-table tbody tr:hover td {
+                    background: var(--sc-sky-50);
+                }
 
         .code-badge {
             font-family: 'JetBrains Mono', monospace;
@@ -161,13 +308,14 @@
             font-weight: 700;
         }
 
-        .cat-badge {
-            font-size: .75rem;
+        .diag-name-main {
             font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 999px;
-            background: #ede9fe;
-            color: #5b21b6;
+        }
+
+        .diag-name-sub {
+            font-size: .76rem;
+            color: var(--sc-ink-600);
+            margin-top: 1px;
         }
 
         .price-cell {
@@ -175,26 +323,49 @@
             color: var(--sc-teal-700);
         }
 
-        .status-dot {
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-left: 6px;
+        .lab-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: .72rem;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
         }
 
-            .status-dot.active {
-                background: #16a34a;
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .78rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+        }
+
+            .status-pill.active {
+                background: #dcfce7;
+                color: #15803d;
             }
 
-            .status-dot.inactive {
-                background: #dc2626;
+            .status-pill.inactive {
+                background: #fee2e2;
+                color: #b91c1c;
             }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+            display: inline-block;
+        }
 
         .row-actions {
-
             display: flex;
-            gap: 6px;
+            gap: 4px;
             justify-content: flex-end;
         }
 
@@ -215,12 +386,70 @@
             .icon-btn:hover {
                 background: var(--sc-sky-100);
                 color: var(--sc-teal-700);
+                transform: scale(1.08);
             }
 
             .icon-btn.danger:hover {
                 background: #fee2e2;
                 color: #dc2626;
             }
+
+        .diag-pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .diag-page-info {
+            font-size: .8rem;
+            color: var(--sc-ink-600);
+            font-weight: 700;
+        }
+
+        .diag-page-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .page-btn {
+            min-width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--sc-sky-100);
+            background: #fff;
+            color: var(--sc-ink-600);
+            font-weight: 700;
+            font-size: .82rem;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+            .page-btn:hover:not(:disabled) {
+                border-color: var(--sc-teal-500);
+                color: var(--sc-teal-700);
+            }
+
+            .page-btn.active {
+                background: linear-gradient(135deg, var(--sc-teal-600), var(--sc-teal-700));
+                color: #fff;
+                border-color: transparent;
+            }
+
+            .page-btn:disabled {
+                opacity: .4;
+                cursor: not-allowed;
+            }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--sc-ink-600);
+            animation: diagFadeUp .4s ease;
+        }
 
         /* Modal */
         .diag-modal-overlay {
@@ -236,19 +465,20 @@
 
             .diag-modal-overlay.show {
                 display: flex;
+                animation: diagFadeUp .25s ease;
             }
 
         .diag-modal-box {
             background: #fff;
-            border-radius: 20px;
+            border-radius: 22px;
             padding: 28px;
             width: 92%;
-            max-width: 520px;
+            max-width: 560px;
             box-shadow: 0 25px 50px rgba(0,0,0,.18);
         }
 
             .diag-modal-box h5 {
-                margin: 0 0 18px;
+                margin: 0 0 20px;
                 font-weight: 800;
                 color: var(--sc-ink-900);
                 display: flex;
@@ -257,24 +487,31 @@
             }
 
         .diag-form-group {
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
 
             .diag-form-group label {
                 display: block;
-                font-size: .8rem;
+                font-size: .78rem;
                 font-weight: 700;
                 color: var(--sc-ink-600);
                 margin-bottom: 6px;
             }
 
-            .diag-form-group .form-control, .diag-form-group .form-select {
+            .diag-form-group .form-control {
                 width: 100%;
                 padding: 10px 12px;
                 border-radius: 10px;
                 border: 1.5px solid var(--sc-sky-100);
                 font-size: .9rem;
+                transition: all .2s;
             }
+
+                .diag-form-group .form-control:focus {
+                    outline: none;
+                    border-color: var(--sc-teal-500);
+                    box-shadow: 0 0 0 3px rgba(20,184,166,.12);
+                }
 
         .diag-form-row {
             display: grid;
@@ -282,11 +519,107 @@
             gap: 12px;
         }
 
+        /* Price / Status / Lab row */
+        .diag-meta-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .diag-meta-card {
+            border: 1.5px solid var(--sc-sky-100);
+            border-radius: 14px;
+            padding: 12px;
+            background: linear-gradient(180deg, #fff, var(--sc-sky-50));
+        }
+
+            .diag-meta-card label {
+                display: block;
+                font-size: .72rem;
+                font-weight: 800;
+                color: var(--sc-ink-600);
+                margin-bottom: 8px;
+                text-transform: uppercase;
+                letter-spacing: .3px;
+            }
+
+        .price-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .price-input-wrap input {
+                width: 100%;
+                border: none;
+                background: transparent;
+                font-size: 1.1rem;
+                font-weight: 800;
+                color: var(--sc-ink-900);
+                outline: none;
+            }
+
+            .price-input-wrap span {
+                font-size: .74rem;
+                color: var(--sc-ink-400);
+                font-weight: 700;
+            }
+
+        .meta-toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .meta-toggle-text {
+            font-size: .84rem;
+            font-weight: 700;
+            color: var(--sc-ink-900);
+        }
+
+        .switch-toggle {
+            width: 42px;
+            height: 24px;
+            border-radius: 999px;
+            border: none;
+            background: #e2e8f0;
+            position: relative;
+            cursor: pointer;
+            transition: background .2s;
+            flex-shrink: 0;
+        }
+
+            .switch-toggle.on {
+                background: var(--sc-teal-500);
+            }
+
+                .switch-toggle.on.lab-on {
+                    background: #2563eb;
+                }
+
+            .switch-toggle::after {
+                content: '';
+                position: absolute;
+                top: 3px;
+                left: 3px;
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: #fff;
+                transition: transform .2s;
+                box-shadow: 0 1px 3px rgba(0,0,0,.2);
+            }
+
+            .switch-toggle.on::after {
+                transform: translateX(18px);
+            }
+
         .diag-modal-actions {
             display: flex;
             justify-content: flex-end;
             gap: 10px;
-            margin-top: 20px;
+            margin-top: 22px;
         }
 
         .btn-cancel {
@@ -297,7 +630,12 @@
             border-radius: 10px;
             font-weight: 700;
             cursor: pointer;
+            transition: all .2s;
         }
+
+            .btn-cancel:hover {
+                background: #cbeef0;
+            }
 
         .btn-save {
             background: linear-gradient(135deg, var(--sc-teal-600), var(--sc-teal-700));
@@ -307,154 +645,133 @@
             border-radius: 10px;
             font-weight: 700;
             cursor: pointer;
+            transition: all .2s;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: var(--sc-ink-600);
+            .btn-save:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 8px 20px rgba(13,148,136,.3);
+            }
+
+        @@media (max-width: 640px) {
+            .diag-form-row, .diag-meta-row {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 }
 
-<section dir="rtl">
+<section dir="ltr">
     @Html.AntiForgeryToken()
     <div class="diag-hero">
         <div class="hero-title">
             <div class="hero-icon"><i class="bi bi-activity"></i></div>
             <div>
-                <h1>إدارة التشخيصات</h1>
-                <p>قائمة التشخيصات، الأسعار، وربطها بالسن أثناء السيشن</p>
+                <h1>Diagnosis Catalog</h1>
+                <p>Diagnoses, pricing, and lab linkage used during clinical sessions</p>
             </div>
         </div>
         <button class="btn-hero-light" onclick="openDiagFormModal()">
-            <i class="bi bi-plus-lg"></i> تشخيص جديد
+            <i class="bi bi-plus-lg"></i> New Diagnosis
         </button>
     </div>
 
     <div class="diag-card">
         <div class="diag-toolbar">
             <div class="diag-search">
-                <input type="text" id="diagSearchInput" placeholder="ابحث بالاسم أو الكود..." oninput="filterDiagTable()" />
+                <input type="text" id="diagSearchInput" class="text-center" placeholder="Search by name or code..." oninput="onDiagSearch()" />
                 <i class="bi bi-search"></i>
             </div>
-            <span class="text-muted" style="font-size:.82rem;">@Model.Count تشخيص مسجل</span>
+            <div class="diag-filter-chips" id="diagFilterChips">
+                <button class="diag-chip active" data-filter="all">All</button>
+                <button class="diag-chip" data-filter="active">Active</button>
+                <button class="diag-chip" data-filter="inactive">Inactive</button>
+                <button class="diag-chip" data-filter="lab">Lab-linked</button>
+            </div>
         </div>
 
-        @if (!Model.Any())
-        {
-            <div class="empty-state">
-                <i class="bi bi-inboxes" style="font-size:2rem;"></i>
-                <p class="mt-2">لا توجد تشخيصات مسجلة بعد. ابدأ بإضافة أول تشخيص.</p>
-            </div>
-        }
-        else
-        {
-            <div class="table-responsive">
-                <table class="diag-table" id="diagTable">
-                    <thead>
-                        <tr>
-                            <th>الكود</th>
-                            <th>اسم التشخيص</th>
-                            <th>التصنيف</th>
-                            <th>السعر</th>
-                            <th>الحالة</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var d in Model)
-                        {
-                            <tr data-search="@($"{d.Code} {d.NameAr} {d.NameEn}".ToLower())">
-                                <td><span class="code-badge">@d.Code</span></td>
-                                <td>
-                                    <div style="font-weight:700;">@d.NameAr</div>
-                                    @if (!string.IsNullOrWhiteSpace(d.NameEn))
-                                    {
-                                        <div style="font-size:.76rem;color:var(--sc-ink-600);">@d.NameEn</div>
-                                    }
-                                </td>
-                                <td><span class="cat-badge">@d.CategoryName</span></td>
-                                <td class="price-cell">@d.Price.ToString("N0") ج.م</td>
-                                <td>
-                                    <span class="status-dot @(d.IsActive ? "active" : "inactive")"></span>
-                                    @(d.IsActive ? "مفعّل" : "متوقف")
-                                </td>
-                                <td class="">
-                                <div class="d-flex text-end">
-                                    <button class="icon-btn" title="تعديل" onclick="editDiag(@d.Id)">
-                                        <i class="fs-5 bi bi-pencil"></i></button>
-                                    <button class="icon-btn" title="@(d.IsActive ? "إيقاف" : "تفعيل")" onclick="toggleDiag(@d.Id)">
-                                        <i class="fs-5 bi @(d.IsActive ? "bi-toggle-on" : "bi-toggle-off")"></i>
-                                    </button>
-                                    <button class="icon-btn danger" title="حذف" onclick="deleteDiag(@d.Id)">
-                                        <i class="fs-5 bi bi-trash"></i>
-                                    </button>
-                                </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
+        <div class="diag-count" id="diagCount"></div>
+
+        <div class="table-responsive">
+            <table class="diag-table" id="diagTable">
+                <thead>
+                    <tr>
+                        <th data-sort="code">Code <i class="bi bi-arrow-down-up sort-arrow"></i></th>
+                        <th data-sort="nameEn">Name <i class="bi bi-arrow-down-up sort-arrow"></i></th>
+                        <th data-sort="price">Price <i class="bi bi-arrow-down-up sort-arrow"></i></th>
+                        <th>Lab</th>
+                        <th data-sort="isActive">Status <i class="bi bi-arrow-down-up sort-arrow"></i></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="diagTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="empty-state" id="diagEmptyState" style="display:none;">
+            <i class="bi bi-inboxes" style="font-size:2rem;"></i>
+            <p class="mt-2">No diagnoses match your search.</p>
+        </div>
+
+        <div class="diag-pagination" id="diagPagination"></div>
     </div>
 </section>
 
 <!-- Add / Edit Modal -->
 <div class="diag-modal-overlay" id="diagFormModalOverlay">
-    <div class="diag-modal-box">
-        <h5><i class="bi bi-activity"></i> <span id="diagModalTitle">تشخيص جديد</span></h5>
+    <div class="diag-modal-box" dir="ltr">
+        <h5><i class="bi bi-activity"></i> <span id="diagModalTitle">New Diagnosis</span></h5>
         <form id="diagForm">
             <input type="hidden" id="diagId" value="0" />
+
             <div class="diag-form-row">
                 <div class="diag-form-group">
-                    <label>الكود <span style="color:#dc2626;">*</span></label>
-                    <input type="text" class="form-control" id="diagCode" placeholder="مثال: D01" />
+                    <label>Code <span style="color:#dc2626;">*</span></label>
+                    <input type="text" class="form-control" id="diagCode" placeholder="e.g. D01" />
                 </div>
                 <div class="diag-form-group">
-                    <label>التصنيف <span style="color:#dc2626;">*</span></label>
-                    <select class="form-select" id="diagCategory">
-                        @foreach (var cat in Enum.GetValues(typeof(DiagnosisCategory)).Cast<DiagnosisCategory>())
-                        {
-                            <option value="@((int)cat)">@cat</option>
-                        }
-                    </select>
+                    <label>Name (English) <span style="color:#dc2626;">*</span></label>
+                    <input type="text" class="form-control" id="diagNameEn" placeholder="e.g. Surface Caries" />
                 </div>
             </div>
+
             <div class="diag-form-group">
-                <label>اسم التشخيص (عربي) <span style="color:#dc2626;">*</span></label>
-                <input type="text" class="form-control" id="diagNameAr" placeholder="مثال: تسوس سطحي" />
+                <label>Name (Arabic) <span style="color:#94a3b8;">(optional)</span></label>
+                <input type="text" class="form-control" id="diagNameAr" placeholder="اختياري" dir="rtl" />
             </div>
-            <div class="diag-form-group">
-                <label>اسم التشخيص (إنجليزي)</label>
-                <input type="text" class="form-control" id="diagNameEn" placeholder="Optional" dir="ltr" />
-            </div>
-            <div class="diag-form-row">
-                <div class="diag-form-group">
-                    <label>السعر (ج.م) <span style="color:#dc2626;">*</span></label>
-                    <input type="number" min="0" step="0.01" class="form-control" id="diagPrice" placeholder="0" />
+
+            <div class="diag-meta-row">
+                <div class="diag-meta-card">
+                    <label>Price</label>
+                    <div class="price-input-wrap">
+                        <input type="number" min="0" step="0.01" id="diagPrice" value="0" />
+                        <span>EGP</span>
+                    </div>
                 </div>
-                <div class="diag-form-group">
-                    <label>الحالة</label>
-                    <select class="form-select" id="diagIsActive">
-                        <option value="true">مفعّل</option>
-                        <option value="false">متوقف</option>
-                    </select>
+                <div class="diag-meta-card">
+                    <label>Status</label>
+                    <div class="meta-toggle-row">
+                        <span class="meta-toggle-text" id="diagActiveText">Active</span>
+                        <button type="button" class="switch-toggle on" id="diagActiveToggle" onclick="toggleSwitch(this, 'diagActiveText', 'Active', 'Inactive')"></button>
+                    </div>
+                </div>
+                <div class="diag-meta-card">
+                    <label>Lab Linked</label>
+                    <div class="meta-toggle-row">
+                        <span class="meta-toggle-text" id="diagLabText">No</span>
+                        <button type="button" class="switch-toggle" id="diagLabToggle" onclick="toggleSwitch(this, 'diagLabText', 'Yes', 'No', true)"></button>
+                    </div>
                 </div>
             </div>
+
             <div class="diag-form-group">
-                <label>وصف مختصر</label>
-                <input type="text" class="form-control" id="diagDescription" placeholder="اختياري" />
-            </div>
-            <div class="diag-form-group">
-                <label>ملاحظات التشخيص</label>
-                <textarea class="form-control" id="diagNotes" rows="2" placeholder="اختياري"></textarea>
+                <label>Notes</label>
+                <textarea class="form-control" id="diagNotes" rows="2" placeholder="Optional"></textarea>
             </div>
         </form>
         <div class="diag-modal-actions">
-            <button type="button" class="btn-cancel" onclick="closeDiagFormModal()">إلغاء</button>
-            <button type="button" class="btn-save" onclick="submitDiagForm()"><i class="bi bi-check-lg"></i> حفظ</button>
+            <button type="button" class="btn-cancel" onclick="closeDiagFormModal()">Cancel</button>
+            <button type="button" class="btn-save" onclick="submitDiagForm()"><i class="bi bi-check-lg"></i> Save</button>
         </div>
     </div>
 </div>
@@ -462,12 +779,172 @@
 @section Scripts {
     <script>
         const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        const DEFAULT_CATEGORY = 1; // Category field is hidden from the UI — sent as a fixed default (Caries)
+
+        // ── Data (loaded once from the server-rendered model) ──
+        let diagAll = [
+                    @foreach (var d in Model)
+            {
+                @:{ id: @d.Id, code: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(d.Code)), nameEn: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(d.NameEn)), nameAr: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(d.NameAr)), price: @d.Price.ToString(System.Globalization.CultureInfo.InvariantCulture), isActive: @d.IsActive.ToString().ToLower(), isLab: @d.IsLaboratoryRelated.ToString().ToLower() },
+            }
+                ];
+
+        let diagFiltered = [...diagAll];
+        let diagSort = { key: 'code', dir: 'asc' };
+        let diagStatusFilter = 'all';
+        let diagSearchTerm = '';
+        let diagPage = 1;
+        const PAGE_SIZE = 10;
+
+        function applyDiagFilters() {
+            let list = [...diagAll];
+
+            if (diagStatusFilter === 'active') list = list.filter(d => d.isActive);
+            else if (diagStatusFilter === 'inactive') list = list.filter(d => !d.isActive);
+            else if (diagStatusFilter === 'lab') list = list.filter(d => d.isLab);
+
+            if (diagSearchTerm) {
+                const q = diagSearchTerm.toLowerCase();
+                list = list.filter(d =>
+                    d.code.toLowerCase().includes(q) ||
+                    d.nameEn.toLowerCase().includes(q) ||
+                    (d.nameAr || '').toLowerCase().includes(q)
+                );
+            }
+
+            list.sort((a, b) => {
+                let av = a[diagSort.key], bv = b[diagSort.key];
+                if (typeof av === 'string') { av = av.toLowerCase(); bv = bv.toLowerCase(); }
+                if (av < bv) return diagSort.dir === 'asc' ? -1 : 1;
+                if (av > bv) return diagSort.dir === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            diagFiltered = list;
+            diagPage = 1;
+            renderDiagTable();
+        }
+
+        function onDiagSearch() {
+            diagSearchTerm = document.getElementById('diagSearchInput').value.trim();
+            applyDiagFilters();
+        }
+
+        function statusPillHtml(isActive) {
+            return isActive
+                ? '<span class="status-pill active"><span class="status-dot"></span>Active</span>'
+                : '<span class="status-pill inactive"><span class="status-dot"></span>Inactive</span>';
+        }
+
+        function renderDiagTable() {
+            const totalPages = Math.max(1, Math.ceil(diagFiltered.length / PAGE_SIZE));
+            if (diagPage > totalPages) diagPage = totalPages;
+            const start = (diagPage - 1) * PAGE_SIZE;
+            const pageItems = diagFiltered.slice(start, start + PAGE_SIZE);
+
+            const tbody = document.getElementById('diagTableBody');
+            const empty = document.getElementById('diagEmptyState');
+
+            document.getElementById('diagCount').textContent = `${diagFiltered.length} diagnosis${diagFiltered.length === 1 ? '' : 'es'} found`;
+
+            if (!pageItems.length) {
+                tbody.innerHTML = '';
+                empty.style.display = 'block';
+                document.getElementById('diagPagination').innerHTML = '';
+                return;
+            }
+            empty.style.display = 'none';
+
+            tbody.innerHTML = pageItems.map((d, i) => `
+                        <tr style="animation-delay:${Math.min(i * 0.03, 0.3)}s">
+                            <td><span class="code-badge">${d.code}</span></td>
+                            <td>
+                                <div class="diag-name-main">${d.nameEn}</div>
+                                ${d.nameAr ? `<div class="diag-name-sub">${d.nameAr}</div>` : ''}
+                            </td>
+                            <td class="price-cell">${Number(d.price).toLocaleString()} EGP</td>
+                            <td>${d.isLab ? '<span class="lab-badge"><i class="bi bi-flask"></i> Lab</span>' : '<span style="color:#cbd5e1;">—</span>'}</td>
+                            <td>${statusPillHtml(d.isActive)}</td>
+                            <td>
+                                <div class="row-actions">
+                                    <button class="icon-btn" title="Edit" onclick="editDiag(${d.id})"><i class="bi bi-pencil"></i></button>
+                                    <button class="icon-btn" title="${d.isActive ? 'Deactivate' : 'Activate'}" onclick="toggleDiag(${d.id})"><i class="bi ${d.isActive ? 'bi-toggle-on' : 'bi-toggle-off'}"></i></button>
+                                    <button class="icon-btn danger" title="Delete" onclick="deleteDiag(${d.id})"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+
+            renderDiagPagination(totalPages);
+        }
+
+        function renderDiagPagination(totalPages) {
+            const wrap = document.getElementById('diagPagination');
+            if (totalPages <= 1) { wrap.innerHTML = ''; return; }
+
+            let buttons = `<button class="page-btn" ${diagPage === 1 ? 'disabled' : ''} onclick="goToDiagPage(${diagPage - 1})"><i class="bi bi-chevron-left"></i></button>`;
+            for (let p = 1; p <= totalPages; p++) {
+                buttons += `<button class="page-btn ${p === diagPage ? 'active' : ''}" onclick="goToDiagPage(${p})">${p}</button>`;
+            }
+            buttons += `<button class="page-btn" ${diagPage === totalPages ? 'disabled' : ''} onclick="goToDiagPage(${diagPage + 1})"><i class="bi bi-chevron-right"></i></button>`;
+
+            wrap.innerHTML = `
+                        <span class="diag-page-info">Page ${diagPage} of ${totalPages}</span>
+                        <div class="diag-page-controls">${buttons}</div>
+                    `;
+        }
+
+        window.goToDiagPage = function(p) {
+            diagPage = p;
+            renderDiagTable();
+        };
+
+        // ── Sorting ──
+        document.querySelectorAll('#diagTable th[data-sort]').forEach(th => {
+            th.addEventListener('click', () => {
+                const key = th.dataset.sort;
+                if (diagSort.key === key) {
+                    diagSort.dir = diagSort.dir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    diagSort = { key, dir: 'asc' };
+                }
+                document.querySelectorAll('#diagTable th[data-sort]').forEach(h => h.classList.remove('sorted'));
+                th.classList.add('sorted');
+                th.querySelector('.sort-arrow').className = `bi ${diagSort.dir === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down'} sort-arrow`;
+                applyDiagFilters();
+            });
+        });
+
+        // ── Filter chips ──
+        document.getElementById('diagFilterChips').addEventListener('click', e => {
+            const chip = e.target.closest('.diag-chip');
+            if (!chip) return;
+            document.querySelectorAll('.diag-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            diagStatusFilter = chip.dataset.filter;
+            applyDiagFilters();
+        });
+
+        // ── Modal toggles ──
+        window.toggleSwitch = function(btn, textId, onLabel, offLabel, isLab) {
+            const isOn = btn.classList.toggle('on');
+            if (isLab) btn.classList.toggle('lab-on', isOn);
+            document.getElementById(textId).textContent = isOn ? onLabel : offLabel;
+        };
+
+        function setSwitch(btn, textId, onLabel, offLabel, value, isLab) {
+            btn.classList.toggle('on', value);
+            if (isLab) btn.classList.toggle('lab-on', value);
+            document.getElementById(textId).textContent = value ? onLabel : offLabel;
+        }
 
         function openDiagFormModal() {
-            document.getElementById('diagModalTitle').textContent = 'تشخيص جديد';
+            document.getElementById('diagModalTitle').textContent = 'New Diagnosis';
             document.getElementById('diagForm').reset();
             document.getElementById('diagId').value = 0;
-            document.getElementById('diagIsActive').value = 'true';
+            document.getElementById('diagPrice').value = 0;
+            setSwitch(document.getElementById('diagActiveToggle'), 'diagActiveText', 'Active', 'Inactive', true);
+            setSwitch(document.getElementById('diagLabToggle'), 'diagLabText', 'Yes', 'No', false, true);
             document.getElementById('diagFormModalOverlay').classList.add('show');
         }
 
@@ -479,20 +956,19 @@
             const res = await fetch(`/Diagnosis/GetById?id=${id}`);
             const result = await res.json();
             if (!result.success) {
-                Swal.fire({ title: 'خطأ', text: result.message, icon: 'error', confirmButtonColor: '#dc2626' });
+                Swal.fire({ title: 'Error', text: result.message, icon: 'error', confirmButtonColor: '#dc2626' });
                 return;
             }
             const d = result.data;
-            document.getElementById('diagModalTitle').textContent = 'تعديل التشخيص';
+            document.getElementById('diagModalTitle').textContent = 'Edit Diagnosis';
             document.getElementById('diagId').value = d.id;
             document.getElementById('diagCode').value = d.code;
-            document.getElementById('diagCategory').value = d.category;
-            document.getElementById('diagNameAr').value = d.nameAr;
             document.getElementById('diagNameEn').value = d.nameEn || '';
+            document.getElementById('diagNameAr').value = d.nameAr || '';
             document.getElementById('diagPrice').value = d.price;
-            document.getElementById('diagIsActive').value = d.isActive ? 'true' : 'false';
-            document.getElementById('diagDescription').value = d.description || '';
             document.getElementById('diagNotes').value = d.notes || '';
+            setSwitch(document.getElementById('diagActiveToggle'), 'diagActiveText', 'Active', 'Inactive', !!d.isActive);
+            setSwitch(document.getElementById('diagLabToggle'), 'diagLabText', 'Yes', 'No', !!d.isLaboratoryRelated, true);
             document.getElementById('diagFormModalOverlay').classList.add('show');
         }
 
@@ -500,17 +976,17 @@
             const payload = {
                 Id: parseInt(document.getElementById('diagId').value) || 0,
                 Code: document.getElementById('diagCode').value.trim(),
-                NameAr: document.getElementById('diagNameAr').value.trim(),
                 NameEn: document.getElementById('diagNameEn').value.trim(),
-                Category: parseInt(document.getElementById('diagCategory').value),
+                NameAr: document.getElementById('diagNameAr').value.trim(),
+                Category: DEFAULT_CATEGORY,
                 Price: parseFloat(document.getElementById('diagPrice').value) || 0,
-                IsActive: document.getElementById('diagIsActive').value === 'true',
-                Description: document.getElementById('diagDescription').value.trim(),
+                IsActive: document.getElementById('diagActiveToggle').classList.contains('on'),
+                IsLaboratoryRelated: document.getElementById('diagLabToggle').classList.contains('on'),
                 Notes: document.getElementById('diagNotes').value.trim()
             };
 
-            if (!payload.Code || !payload.NameAr) {
-                Swal.fire({ title: 'تنبيه', text: 'الكود واسم التشخيص مطلوبين', icon: 'warning', confirmButtonColor: '#0d9488' });
+            if (!payload.Code || !payload.NameEn) {
+                Swal.fire({ title: 'Required', text: 'Code and English name are required', icon: 'warning', confirmButtonColor: '#0d9488' });
                 return;
             }
 
@@ -522,10 +998,10 @@
             const result = await res.json();
 
             if (result.success) {
-                Swal.fire({ title: 'تم', text: result.message, icon: 'success', timer: 1400, showConfirmButton: false })
+                Swal.fire({ title: 'Saved', text: result.message, icon: 'success', timer: 1400, showConfirmButton: false })
                     .then(() => location.reload());
             } else {
-                Swal.fire({ title: 'خطأ', text: result.message || 'حدث خطأ أثناء الحفظ', icon: 'error', confirmButtonColor: '#dc2626' });
+                Swal.fire({ title: 'Error', text: result.message || 'Something went wrong while saving', icon: 'error', confirmButtonColor: '#dc2626' });
             }
         }
 
@@ -536,14 +1012,14 @@
             const res = await fetch('/Diagnosis/ToggleActive', { method: 'POST', body: form });
             const result = await res.json();
             if (result.success) location.reload();
-            else Swal.fire({ title: 'خطأ', text: result.message, icon: 'error', confirmButtonColor: '#dc2626' });
+            else Swal.fire({ title: 'Error', text: result.message, icon: 'error', confirmButtonColor: '#dc2626' });
         }
 
         async function deleteDiag(id) {
             const confirmResult = await Swal.fire({
-                title: 'حذف التشخيص؟', text: 'هذا الإجراء قد لا يمكن التراجع عنه.', icon: 'warning',
+                title: 'Delete this diagnosis?', text: 'This action may not be reversible.', icon: 'warning',
                 showCancelButton: true, confirmButtonColor: '#dc2626', cancelButtonColor: '#64748b',
-                confirmButtonText: 'نعم، احذف', cancelButtonText: 'إلغاء'
+                confirmButtonText: 'Yes, delete', cancelButtonText: 'Cancel'
             });
             if (!confirmResult.isConfirmed) return;
 
@@ -553,18 +1029,13 @@
             const res = await fetch('/Diagnosis/Delete', { method: 'POST', body: form });
             const result = await res.json();
             if (result.success) {
-                Swal.fire({ title: 'تم', text: result.message, icon: 'success', timer: 1400, showConfirmButton: false })
+                Swal.fire({ title: 'Deleted', text: result.message, icon: 'success', timer: 1400, showConfirmButton: false })
                     .then(() => location.reload());
             } else {
-                Swal.fire({ title: 'خطأ', text: result.message, icon: 'error', confirmButtonColor: '#dc2626' });
+                Swal.fire({ title: 'Error', text: result.message, icon: 'error', confirmButtonColor: '#dc2626' });
             }
         }
 
-        function filterDiagTable() {
-            const q = document.getElementById('diagSearchInput').value.trim().toLowerCase();
-            document.querySelectorAll('#diagTable tbody tr').forEach(row => {
-                row.style.display = row.dataset.search.includes(q) ? '' : 'none';
-            });
-        }
+        applyDiagFilters();
     </script>
 }

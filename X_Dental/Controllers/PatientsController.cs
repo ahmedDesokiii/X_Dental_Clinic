@@ -109,6 +109,7 @@ namespace Dental.Controllers
                     .Include(p => p.Gender)
                     .Include(p => p.Visits)
                     .Include(p => p.Appointments)
+                    .Where(p=>p.IsActive)
                     .AsQueryable();
 
                 if (categoryFilter == "General")
@@ -968,6 +969,54 @@ namespace Dental.Controllers
                 }).ToList();
         }
 
+        #region Prescriptions (Patient Profile — كل روشتات المريض عبر كل الزيارات)
+        [HttpGet]
+        public async Task<IActionResult> GetPrescriptionsData(int patientId)
+        {
+            var patientExists = await _context.Patients.AnyAsync(p => p.Id == patientId);
+            if (!patientExists)
+                return Json(new { success = false, message = "Patient not found." });
+
+            var visits = await _context.Visits
+                .Where(v => v.PatientId == patientId)
+                .OrderByDescending(v => v.VisitDate)
+                .Select(v => new
+                {
+                    id = v.Id,
+                    date = v.VisitDate,
+                    category = v.Category == VisitCategory.Orthodontics ? "تقويم" : "عام",
+                    isOpen = v.Status == VisitStatus.InProgress
+                })
+                .ToListAsync();
+
+            var prescriptions = await _context.Prescriptions
+                .Where(p => p.Visit.PatientId == patientId)
+                .OrderByDescending(p => p.PrescriptionDate)
+                .Select(p => new
+                {
+                    id = p.Id,
+                    prescriptionDate = p.PrescriptionDate,
+                    diagnosis = p.Diagnosis,
+                    notes = p.Notes,
+                    status = p.Status.ToString(),
+                    prescribedBy = p.PrescribedBy,
+                    visitId = p.VisitId,
+                    visitDate = p.Visit.VisitDate,
+                    visitCategory = p.Visit.Category == VisitCategory.Orthodontics ? "تقويم" : "عام",
+                    items = p.Items.Select(i => new
+                    {
+                        medicationName = i.MedicationName,
+                        dosage = i.Dosage,
+                        frequency = i.Frequency,
+                        duration = i.Duration,
+                        instructions = i.Instructions
+                    }).ToList()
+                })
+                .ToListAsync();
+
+            return Json(new { success = true, visits, prescriptions });
+        }
+        #endregion
 
     }
 }

@@ -1,4 +1,7 @@
-﻿using Dental.Modules.Laboratory.DTOs;
+﻿// ============================================================
+// 📁 File: Controllers/LaboratoryController.cs
+// ============================================================
+using Dental.Modules.Laboratory.DTOs;
 using Dental.Modules.Laboratory.InterfacesLaboratory;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,9 +16,9 @@ namespace Dental.Controllers
         public IActionResult Index() => View();
 
         [HttpGet]
-        public async Task<IActionResult> GetDiagnoses()
+        public async Task<IActionResult> GetDiagnoses([FromQuery] LaboratoryFilterDto filter)
         {
-            var data = await _labService.GetLaboratoryDiagnosesAsync();
+            var data = await _labService.GetLaboratoryDiagnosesAsync(filter);
             return Json(new { success = true, data });
         }
 
@@ -28,7 +31,7 @@ namespace Dental.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdatePrice([FromBody] UpdateLaboratoryPriceRequest req)
+        public async Task<IActionResult> UpdatePrice(UpdateLaboratoryPriceRequest req)
         {
             var changedBy = User?.Identity?.Name ?? "System";
             var result = await _labService.UpdatePriceAsync(req, changedBy);

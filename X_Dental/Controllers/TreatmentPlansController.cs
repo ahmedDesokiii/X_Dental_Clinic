@@ -108,9 +108,9 @@ namespace Dental.Controllers
         [HttpGet]
         public async Task<IActionResult> GetProcedureOptions()
         {
-            var list = await _context.ProcedureCatalogs
+            var list = await _context.DiagnosisCatalogs
                 .Where(p => p.IsActive)
-                .Select(p => new { id = p.Id, name = p.NameEn, price = p.DefaultPrice })
+                .Select(p => new { id = p.Id, name = p.NameEn, price = p.Price })
                 .ToListAsync();
             return Json(new { success = true, data = list });
         }

@@ -25,19 +25,20 @@ namespace Dental.Modules.Diagnosis.ServicesDiagnosis
             return await _context.DiagnosisCatalogs
                 .Where(d => !d.IsDeleted)
                 .OrderBy(d => d.Code)
-                .Select(d => new DiagnosisListDto
-                {
-                    Id = d.Id,
-                    Code = d.Code,
-                    NameAr = d.NameAr,
-                    NameEn = d.NameEn,
-                    Category = d.Category,
-                    CategoryName = d.Category.ToString(),
-                    Price = d.Price,
-                    Description = d.Description,
-                    Notes = d.Notes,
-                    IsActive = d.IsActive
-                })
+                                .Select(d => new DiagnosisListDto
+                                {
+                                    Id = d.Id,
+                                    Code = d.Code,
+                                    NameAr = d.NameAr,
+                                    NameEn = d.NameEn,
+                                    Category = d.Category,
+                                    CategoryName = d.Category.ToString(),
+                                    Price = d.Price,
+                                    Description = d.Description,
+                                    Notes = d.Notes,
+                                    IsActive = d.IsActive,
+                                    IsLaboratoryRelated = d.IsLaboratoryRelated
+                                })
                 .ToListAsync();
         }
 
@@ -59,7 +60,8 @@ namespace Dental.Modules.Diagnosis.ServicesDiagnosis
                 Price = entity.Price,
                 Description = entity.Description,
                 Notes = entity.Notes,
-                IsActive = entity.IsActive
+                IsActive = entity.IsActive,
+                IsLaboratoryRelated = entity.IsLaboratoryRelated
             };
 
             return ServiceResult<DiagnosisFormDto>.Ok(dto);
@@ -73,13 +75,14 @@ namespace Dental.Modules.Diagnosis.ServicesDiagnosis
             var entity = new DiagnosisCatalog
             {
                 Code = dto.Code.Trim(),
-                NameAr = dto.NameAr.Trim(),
-                NameEn = string.IsNullOrWhiteSpace(dto.NameEn) ? dto.NameAr.Trim() : dto.NameEn.Trim(),
+                NameEn = dto.NameEn.Trim(),
+                NameAr = string.IsNullOrWhiteSpace(dto.NameAr) ? dto.NameEn.Trim() : dto.NameAr.Trim(),
                 Category = dto.Category,
                 Price = dto.Price,
                 Description = dto.Description,
                 Notes = dto.Notes,
-                IsActive = dto.IsActive
+                IsActive = dto.IsActive,
+                IsLaboratoryRelated = dto.IsLaboratoryRelated
             };
 
             _context.DiagnosisCatalogs.Add(entity);
@@ -100,13 +103,14 @@ namespace Dental.Modules.Diagnosis.ServicesDiagnosis
                 return ServiceResult<bool>.Fail("كود التشخيص ده مستخدم بالفعل.");
 
             entity.Code = dto.Code.Trim();
-            entity.NameAr = dto.NameAr.Trim();
-            entity.NameEn = string.IsNullOrWhiteSpace(dto.NameEn) ? dto.NameAr.Trim() : dto.NameEn.Trim();
+            entity.NameEn = dto.NameEn.Trim();
+            entity.NameAr = string.IsNullOrWhiteSpace(dto.NameAr) ? dto.NameEn.Trim() : dto.NameAr.Trim();
             entity.Category = dto.Category;
             entity.Price = dto.Price;
             entity.Description = dto.Description;
             entity.Notes = dto.Notes;
             entity.IsActive = dto.IsActive;
+            entity.IsLaboratoryRelated = dto.IsLaboratoryRelated;
             entity.ModifiedDate = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();

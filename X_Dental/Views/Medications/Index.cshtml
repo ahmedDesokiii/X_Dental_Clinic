@@ -1,0 +1,529 @@
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "كاتالوج الأدوية";
+    var categories = ViewBag.Categories as List<SelectListItem> ?? new();
+}
+
+<style>
+    :root {
+        --md-teal-50: #f0fdfa;
+        --md-teal-100: #ccfbf1;
+        --md-teal-500: #14b8a6;
+        --md-teal-600: #0d9488;
+        --md-teal-700: #0d7377;
+        --md-ink-900: #0b2e30;
+        --md-ink-600: #4b6b6c;
+        --md-ink-400: #94a3b8;
+    }
+
+    .med-page {
+        padding: 20px;
+        font-family: 'Segoe UI', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+        color: var(--md-ink-900);
+    }
+
+    .med-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+        .med-header h2 {
+            font-weight: 800;
+            margin: 0;
+            font-size: 1.3rem;
+        }
+
+    .med-layout {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        gap: 18px;
+        align-items: start;
+    }
+
+    @@media (max-width: 900px) {
+        .med-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .med-side {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        position: sticky;
+        top: 8px;
+    }
+
+    .med-upload-zone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 16px;
+        padding: 22px 14px;
+        text-align: center;
+        background: linear-gradient(180deg, #fff, #f8fdfc);
+        cursor: pointer;
+        transition: all .25s ease;
+    }
+
+        .med-upload-zone:hover {
+            border-color: var(--md-teal-500);
+            transform: translateY(-2px);
+        }
+
+        .med-upload-zone.drag-over {
+            border-color: var(--md-teal-600);
+            background: var(--md-teal-50);
+        }
+
+        .med-upload-zone.uploading {
+            pointer-events: none;
+            opacity: .8;
+        }
+
+    .med-upload-icon {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 10px;
+        border-radius: 12px;
+        background: var(--md-teal-50);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .med-upload-icon i {
+            font-size: 1.4rem;
+            color: var(--md-teal-600);
+        }
+
+    .med-upload-title {
+        margin: 0;
+        font-weight: 800;
+        font-size: .85rem;
+    }
+
+    .med-upload-hint {
+        color: var(--md-ink-400);
+        font-size: .72rem;
+        display: block;
+        margin-top: 2px;
+    }
+
+    .med-progress-wrap {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+        .med-progress-wrap.show {
+            display: flex;
+        }
+
+    .med-progress-track {
+        flex: 1;
+        height: 8px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        overflow: hidden;
+    }
+
+    .med-progress-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--md-teal-600), var(--md-teal-500));
+        transition: width .2s ease;
+    }
+
+    .med-chips {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .med-chip {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid #f1f5f9;
+        background: #fff;
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: .8rem;
+        font-weight: 700;
+        color: #475569;
+        cursor: pointer;
+        transition: all .2s ease;
+    }
+
+        .med-chip:hover {
+            background: var(--md-teal-50);
+        }
+
+        .med-chip.active {
+            background: linear-gradient(135deg, var(--md-teal-600), var(--md-teal-700));
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .med-chip em {
+            font-style: normal;
+            background: rgba(0,0,0,.08);
+            border-radius: 999px;
+            padding: 1px 7px;
+            font-size: .68rem;
+        }
+
+        .med-chip.active em {
+            background: rgba(255,255,255,.25);
+        }
+
+    .med-main {
+        background: #fff;
+        border: 1px solid #f1f5f9;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .med-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 18px;
+        border-bottom: 1px solid #f1f5f9;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .med-search {
+        flex: 1;
+        min-width: 200px;
+        padding: 9px 14px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: .88rem;
+        outline: none;
+    }
+
+        .med-search:focus {
+            border-color: var(--md-teal-500);
+        }
+
+    table.med-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: .87rem;
+    }
+
+        table.med-table th {
+            text-align: right;
+            color: var(--md-ink-600);
+            font-weight: 700;
+            padding: 10px 14px;
+            border-bottom: 2px solid var(--md-teal-50);
+            background: #fafefe;
+        }
+
+        table.med-table td {
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--md-teal-50);
+            vertical-align: middle;
+        }
+
+    .med-name {
+        font-weight: 700;
+        color: var(--md-ink-900);
+    }
+
+    .med-cat-select {
+        padding: 5px 8px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        font-size: .78rem;
+        background: #fff;
+    }
+
+    .med-guessed-badge {
+        display: inline-block;
+        margin-inline-start: 6px;
+        font-size: .62rem;
+        font-weight: 800;
+        color: #b45309;
+        background: #fef3c7;
+        padding: 1px 6px;
+        border-radius: 6px;
+    }
+
+    .med-toggle {
+        width: 38px;
+        height: 22px;
+        border-radius: 999px;
+        border: none;
+        cursor: pointer;
+        position: relative;
+        background: #e2e8f0;
+        transition: background .2s;
+    }
+
+        .med-toggle.on {
+            background: var(--md-teal-500);
+        }
+
+        .med-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform .2s;
+        }
+
+        .med-toggle.on::after {
+            transform: translateX(16px);
+        }
+
+    .med-empty {
+        text-align: center;
+        padding: 48px 20px;
+        color: var(--md-ink-400);
+    }
+
+        .med-empty i {
+            font-size: 2.2rem;
+            display: block;
+            margin-bottom: 10px;
+            opacity: .5;
+        }
+
+    .med-table-scroll {
+        max-height: 62vh;
+        overflow-y: auto;
+    }
+</style>
+
+<div class="med-page">
+    <div class="med-header">
+        <h2><i class="bi bi-capsule-pill"></i> كاتالوج الأدوية</h2>
+    </div>
+
+    <div class="med-layout">
+        <aside class="med-side">
+            <div class="med-upload-zone" id="medDropzone">
+                <div class="med-upload-icon"><i class="bi bi-cloud-arrow-up"></i></div>
+                <p class="med-upload-title">ارفع ملف الأدوية (Excel)</p>
+                <small class="med-upload-hint">شيت CATEGORY — بيحدّث القايمة تلقائيًا</small>
+                <input type="file" id="medFileInput" hidden accept=".xlsx,.xlsm" onchange="onMedFileSelected(event)" />
+
+                <div class="med-progress-wrap" id="medProgressWrap">
+                    <div class="med-progress-track"><div class="med-progress-fill" id="medProgressFill"></div></div>
+                    <span id="medProgressText" style="font-size:.68rem;font-weight:800;color:var(--md-teal-600);">0%</span>
+                </div>
+            </div>
+
+            <div class="med-chips" id="medCategoryChips">
+                <button class="med-chip active" data-cat="all">كل الأدوية <em id="cnt-all">0</em></button>
+                @foreach (var c in categories)
+                {
+                    <button class="med-chip" data-cat="@c.Value"> @c.Text <em id="cnt-@c.Value">0</em></button>
+                }
+            </div>
+        </aside>
+
+        <main class="med-main">
+            <div class="med-toolbar">
+                <input type="text" class="med-search" id="medSearchInput" placeholder="بحث بالاسم..." oninput="renderMedTable()" />
+            </div>
+            <div class="med-table-scroll">
+                <table class="med-table">
+                    <thead>
+                        <tr>
+                            <th>اسم الدواء</th>
+                            <th>الكاتيجوري</th>
+                            <th>الجرعة الافتراضية</th>
+                            <th>فعّال</th>
+                        </tr>
+                    </thead>
+                    <tbody id="medTableBody"></tbody>
+                </table>
+                <div class="med-empty" id="medEmptyState" style="display:none;">
+                    <i class="bi bi-capsule"></i>
+                    <p>لسه مفيش أدوية — ارفع ملف الإكسيل من الشريط الجانبي</p>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const MED_CATEGORIES = [
+                    @foreach (var c in categories)
+            {
+                @:{ value: @c.Value, text: "@c.Text" },
+            }
+                ];
+        let allMeds = [];
+        let activeCategoryFilter = 'all';
+
+        async function loadMedications() {
+            try {
+                const res = await fetch('/Medications/GetMedicationsData');
+                const result = await res.json();
+                if (result.success) {
+                    allMeds = result.data;
+                    updateChipCounts();
+                    renderMedTable();
+                }
+            } catch (err) {
+                console.error('Failed to load medications', err);
+            }
+        }
+
+        function updateChipCounts() {
+            document.getElementById('cnt-all').textContent = allMeds.length;
+            MED_CATEGORIES.forEach(c => {
+                const el = document.getElementById('cnt-' + c.value);
+                if (el) el.textContent = allMeds.filter(m => m.category == c.value).length;
+            });
+        }
+
+        function categorySelectHtml(med) {
+            const opts = MED_CATEGORIES.map(c =>
+                `<option value="${c.value}" ${c.value == med.category ? 'selected' : ''}>${c.text}</option>`
+            ).join('');
+            return `<select class="med-cat-select" onchange="updateMedCategory(${med.id}, this.value)">${opts}</select>`;
+        }
+
+        function renderMedTable() {
+            const search = (document.getElementById('medSearchInput').value || '').trim().toLowerCase();
+            let filtered = activeCategoryFilter === 'all'
+                ? allMeds
+                : allMeds.filter(m => m.category == activeCategoryFilter);
+
+            if (search) {
+                filtered = filtered.filter(m => (m.nameEn || '').toLowerCase().includes(search));
+            }
+
+            const body = document.getElementById('medTableBody');
+            const empty = document.getElementById('medEmptyState');
+
+            if (!filtered.length) {
+                body.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+            empty.style.display = 'none';
+
+            body.innerHTML = filtered.map(m => `
+                        <tr>
+                            <td class="med-name">${m.nameEn}</td>
+                            <td>${categorySelectHtml(m)}</td>
+                            <td>${m.defaultFrequency || '<span style="color:#cbd5e1">—</span>'}</td>
+                            <td><button class="med-toggle ${m.isActive ? 'on' : ''}" onclick="toggleMedActive(${m.id}, this)"></button></td>
+                        </tr>
+                    `).join('');
+        }
+
+        window.updateMedCategory = async function(id, category) {
+            const res = await fetch(`/Medications/UpdateCategory?id=${id}&category=${category}`, { method: 'POST' });
+            const result = await res.json();
+            if (result.success) {
+                const med = allMeds.find(m => m.id === id);
+                if (med) med.category = parseInt(category);
+                updateChipCounts();
+            } else {
+                Swal.fire({ title: 'خطأ', text: result.message || 'تعذر التحديث', icon: 'error' });
+            }
+        };
+
+        window.toggleMedActive = async function(id, btn) {
+            const res = await fetch(`/Medications/ToggleActive?id=${id}`, { method: 'POST' });
+            const result = await res.json();
+            if (result.success) {
+                btn.classList.toggle('on', result.isActive);
+                const med = allMeds.find(m => m.id === id);
+                if (med) med.isActive = result.isActive;
+            }
+        };
+
+        document.getElementById('medCategoryChips').addEventListener('click', e => {
+            const chip = e.target.closest('.med-chip');
+            if (!chip) return;
+            document.querySelectorAll('.med-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            activeCategoryFilter = chip.dataset.cat;
+            renderMedTable();
+        });
+
+        function setMedProgress(pct) {
+            document.getElementById('medProgressFill').style.width = pct + '%';
+            document.getElementById('medProgressText').textContent = pct + '%';
+        }
+
+        function uploadMedFile(file) {
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const dropzone = document.getElementById('medDropzone');
+            const progressWrap = document.getElementById('medProgressWrap');
+            dropzone.classList.add('uploading');
+            progressWrap.classList.add('show');
+            setMedProgress(0);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/Medications/Import');
+
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) setMedProgress(Math.round((e.loaded / e.total) * 100));
+            };
+
+            xhr.onload = function() {
+                dropzone.classList.remove('uploading');
+                progressWrap.classList.remove('show');
+                setMedProgress(0);
+
+                let result;
+                try { result = JSON.parse(xhr.responseText); } catch { result = { success: false }; }
+
+                if (result.success) {
+                    Swal.fire({ title: 'تم الاستيراد', text: result.message, icon: 'success', confirmButtonColor: '#0d9488' });
+                    document.getElementById('medFileInput').value = '';
+                    loadMedications();
+                } else {
+                    Swal.fire({ title: 'فشل الاستيراد', text: result.message || 'حدث خطأ غير متوقع', icon: 'error' });
+                }
+            };
+
+            xhr.onerror = function() {
+                dropzone.classList.remove('uploading');
+                progressWrap.classList.remove('show');
+                Swal.fire({ title: 'خطأ', text: 'تعذر الاتصال بالسيرفر', icon: 'error' });
+            };
+
+            xhr.send(formData);
+        }
+
+        window.onMedFileSelected = function(e) {
+            uploadMedFile(e.target.files[0]);
+        };
+
+        const medDropzone = document.getElementById('medDropzone');
+        medDropzone.addEventListener('click', () => document.getElementById('medFileInput').click());
+        ['dragover', 'dragenter'].forEach(evt =>
+            medDropzone.addEventListener(evt, e => { e.preventDefault(); medDropzone.classList.add('drag-over'); }));
+        ['dragleave', 'drop'].forEach(evt =>
+            medDropzone.addEventListener(evt, e => { e.preventDefault(); medDropzone.classList.remove('drag-over'); }));
+        medDropzone.addEventListener('drop', e => uploadMedFile(e.dataTransfer.files[0]));
+
+        document.addEventListener('DOMContentLoaded', loadMedications);
+    </script>
+}

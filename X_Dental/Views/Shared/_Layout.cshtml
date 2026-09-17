@@ -77,39 +77,43 @@
             </div>
             <nav class="sidebar-nav">
                 <a asp-controller="Home" asp-action="Index" class="sidebar-link" data-title="Dashboard">
-                    <i class="bi bi-grid-1x2-fill"></i>
+                    <i class="bi bi-grid-1x2-fill fs-5"></i>
                     <span>Dashboard</span>
                 </a>
                 @if (SignInManager.IsSignedIn(User))
                 {
                     <div class="sidebar-section-label">Clinic</div>
 
-                    <a asp-controller="Patients" asp-action="Index" class="sidebar-link" data-title="Patients">
-                        <i class="bi bi-people-fill"></i>
+                    <a asp-controller="Patients" asp-action="Index" title="Patients" class="sidebar-link " data-title="Patients">
+                        <i class="bi bi-people-fill fs-5"></i>
                         <span>Patients</span>
                     </a>
-                    <a asp-controller="Appointments" asp-action="index" class="sidebar-link" data-title="Appointments">
-                        <i class="bi bi-calendar2-week-fill"></i>
+                    <a asp-controller="Appointments" asp-action="index" title="Calendar" class="sidebar-link" data-title="Appointments">
+                        <i class="bi bi-calendar2-week-fill fs-5"></i>
                         <span>Appointments</span>
                     </a>
 
-                    <a asp-controller="Payments" asp-action="index" class="sidebar-link" data-title="Payments & Invoices">
-                        <i class="bi bi-cash-coin"></i>
+                    <a asp-controller="Payments" asp-action="index" title="Payments" class="sidebar-link" data-title="Payments & Invoices">
+                        <i class="bi bi-cash-coin fs-5"></i>
                         <span>Payments & Invoices</span>
                     </a>
 
-                    <a asp-controller="Diagnosis" asp-action="Index" class="sidebar-link" data-title="Diagnoses">
-                        <i class="bi bi-clipboard2-pulse-fill"></i>
+                    <a asp-controller="Diagnosis" asp-action="Index" title="Diagnosis"  class="sidebar-link" data-title="Diagnoses">
+                        <i class="bi bi-clipboard2-pulse-fill fs-5"></i>
                         <span>Diagnoses</span>
                     </a>
 
-                    <a asp-controller="Inventory" asp-action="Index" class="sidebar-link" data-title="Inventory">
-                        <i class="bi bi-box-seam-fill"></i>
+                    <a asp-controller="Inventory" asp-action="Index" title="Inventory" class="sidebar-link" data-title="Inventory">
+                        <i class="bi bi-box-seam-fill fs-5"></i>
                         <span>Inventory</span>
                     </a>
-                    <a asp-controller="Laboratory" asp-action="Index" class="sidebar-link" data-title="Laboratory">
-                        <i class="bi bi-droplet"></i>
+                    <a asp-controller="Laboratory" asp-action="Index" title="Laboratory" class="sidebar-link" data-title="Laboratory">
+                        <i class="bi bi-droplet fs-5"></i>
                         <span>Laboratory</span>
+                    </a>
+                    <a asp-controller="Medications" asp-action="Index" title="Medications" class="sidebar-link" data-title="Medications">
+                        <i class="bi bi-capsule-pill fs-5"></i>
+                        <span>Medications</span>
                     </a>
                     @if (User.IsInRole(Roles.Admin.ToString()))
                     {
@@ -129,9 +133,9 @@
                     }
                 }
             </nav>
-            <div class="sidebar-footer">
+            <div class="sidebar-footer py-1">
                 <a class="sidebar-clinic-link" href="https://www.facebook.com/share/1B3xKJX65H/" target="_blank" data-title="Clinic Page">
-                    <i class="bi bi-facebook"></i>
+                    <i class="bi bi-facebook "></i>
                     <span>Clinic Page</span>
                 </a>
             </div>

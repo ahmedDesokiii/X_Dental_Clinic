@@ -80,58 +80,63 @@
 
 <!-- Add Prescription Modal -->
 <div class="rx-modal" id="rxModal" style="display:none;">
-    <div class="modal-glass" style="max-width: 600px;">
+    <div class="modal-glass">
         <div class="modal-head">
-            <h5><i class="bi bi-file-earmark-medical"></i> روشتة جديدة</h5>
+            <h5><i class="bi bi-file-earmark-medical"></i> New Prescription</h5>
             <button class="btn-close-white" onclick="closeRxModal()"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="modal-body">
-            <div class="form-group mb-3">
-                <label>التشخيص</label>
-                <input type="text" class="form-glass" id="rxDiagnosis" placeholder="تشخيص الحالة..." />
+            <div class="rx-top-row">
+                <div class="form-group">
+                    <label>Diagnosis</label>
+                    <input type="text" class="form-glass" id="rxDiagnosis" placeholder="Diagnosis..." />
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <input type="text" class="form-glass" id="rxNotes" placeholder="Prescription notes..." />
+                </div>
             </div>
 
             <div class="rx-items-editor" id="rxItemsEditor">
                 <div class="rx-item-row" data-index="0">
-                    <div class="form-row-3">
+                    <span class="rx-item-count">1</span>
+                    <div class="rx-row-5">
                         <div class="form-group">
-                            <label>الدواء <span class="text-danger">*</span></label>
-                            <input type="text" class="form-glass drug-name" placeholder="اسم الدواء" />
+                            <label>Medication <span class="text-danger">*</span></label>
+                            <select class="form-glass drug-select" onchange="onDrugSelected(this)">
+                                <option value="">Loading medications...</option>
+                            </select>
                         </div>
                         <div class="form-group">
-                            <label>الجرعة</label>
+                            <label>Dosage</label>
                             <input type="text" class="form-glass drug-dosage" placeholder="500mg" />
                         </div>
                         <div class="form-group">
-                            <label>التكرار</label>
-                            <input type="text" class="form-glass drug-freq" placeholder="3 مرات يومياً" />
-                        </div>
-                    </div>
-                    <div class="form-row-2">
-                        <div class="form-group">
-                            <label>المدة</label>
-                            <input type="text" class="form-glass drug-duration" placeholder="7 أيام" />
+                            <label>Frequency</label>
+                            <input type="text" class="form-glass drug-freq" placeholder="3 times daily" />
                         </div>
                         <div class="form-group">
-                            <label>التعليمات</label>
-                            <input type="text" class="form-glass drug-instr" placeholder="بعد الأكل..." />
+                            <label>Duration</label>
+                            <input type="text" class="form-glass drug-duration" placeholder="7 days" />
+                        </div>
+                        <div class="form-group">
+                            <label>Instructions</label>
+                            <input type="text" class="form-glass drug-instr" placeholder="After meals..." />
                         </div>
                     </div>
+                    <button type="button" class="rx-item-remove" onclick="removeDrugRow(this)" title="Remove">
+                        <i class="bi bi-trash3"></i>
+                    </button>
                 </div>
             </div>
 
             <button class="btn-add-drug" onclick="addDrugRow()">
-                <i class="bi bi-plus-circle"></i> إضافة دواء آخر
+                <i class="bi bi-plus-circle"></i> Add Medication
             </button>
-
-            <div class="form-group mt-3">
-                <label>ملاحظات الروشتة</label>
-                <textarea class="form-glass" id="rxNotes" rows="2"></textarea>
-            </div>
         </div>
         <div class="modal-foot">
-            <button class="btn-modal btn-cancel" onclick="closeRxModal()">إلغاء</button>
-            <button class="btn-modal btn-save" onclick="submitPrescription()">حفظ الروشتة</button>
+            <button class="btn-modal btn-cancel" onclick="closeRxModal()">Cancel</button>
+            <button class="btn-modal btn-save" id="btnSaveRx" onclick="submitPrescription()">Save Prescription</button>
         </div>
     </div>
 </div>
@@ -421,6 +426,7 @@
         justify-content: center;
         z-index: 1000;
         animation: fadeIn 0.3s;
+        padding: 20px;
     }
 
     .modal-glass {
@@ -428,8 +434,8 @@
         backdrop-filter: blur(20px);
         border-radius: 24px;
         padding: 28px;
-        width: 90%;
-        max-width: 600px;
+        width: 100%;
+        max-width: 820px;
         border: 1px solid rgba(255,255,255,0.5);
         box-shadow: 0 25px 50px rgba(0,0,0,0.15);
         animation: scaleIn 0.3s;
@@ -468,49 +474,90 @@
         margin-bottom: 20px;
     }
 
+    .rx-top-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
     .rx-items-editor {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 12px;
         margin-bottom: 16px;
     }
 
     .rx-item-row {
         background: #f8fafc;
         border-radius: 14px;
-        padding: 16px;
+        padding: 14px 16px;
         border: 1px solid #e2e8f0;
-        position: relative;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
     }
 
-    .form-row-3 {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1fr;
-        gap: 12px;
-        margin-bottom: 12px;
+    .rx-item-count {
+        flex-shrink: 0;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ec4899, #db2777);
+        color: #fff;
+        font-size: 0.76rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 22px;
     }
 
-    .form-row-2 {
+    .rx-row-5 {
+        flex: 1;
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
+        grid-template-columns: 2fr 1fr 1fr 1fr 1.3fr;
+        gap: 10px;
+        min-width: 0;
     }
+
+    .rx-item-remove {
+        flex-shrink: 0;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        color: #94a3b8;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 20px;
+        transition: all 0.2s;
+    }
+
+        .rx-item-remove:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
 
     .form-group label {
         display: block;
-        font-size: 0.82rem;
+        font-size: 0.78rem;
         font-weight: 700;
         color: #374151;
-        margin-bottom: 6px;
+        margin-bottom: 5px;
+        white-space: nowrap;
     }
 
     .form-glass {
         width: 100%;
-        padding: 10px 14px;
+        padding: 9px 12px;
         border: 1px solid #e2e8f0;
         border-radius: 10px;
         background: rgba(255,255,255,0.8);
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         outline: none;
         transition: all 0.2s;
     }
@@ -519,6 +566,10 @@
             border-color: #ec4899;
             box-shadow: 0 0 0 3px rgba(236,72,153,0.1);
         }
+
+    select.form-glass {
+        cursor: pointer;
+    }
 
     .btn-add-drug {
         width: 100%;
@@ -574,6 +625,13 @@
             transform: translateY(-1px);
         }
 
+        .btn-save:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
     @@keyframes fadeIn {
         from {
             opacity: 0;
@@ -608,76 +666,178 @@
         }
     }
 
-    @@media (max-width: 768px) {
-        .form-row-3, .form-row-2 {
+    @@media (max-width: 900px) {
+        .rx-row-5 {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .rx-top-row, .rx-row-5 {
             grid-template-columns: 1fr;
+        }
+
+        .rx-item-count, .rx-item-remove {
+            margin-top: 0;
+        }
+
+        .rx-item-row {
+            flex-wrap: wrap;
         }
     }
 </style>
 
 <script>
+    // ── Medication catalog: loaded once, reused for every drug row ──
+    let rxMedications = [];
+    let rxDrugOptionsHtml = '<option value="">Select medication...</option>';
+    let rxMedicationsLoaded = false;
+
+    async function loadRxMedications() {
+        try {
+            const res = await fetch('/Medications/GetActiveMedications');
+            const result = await res.json();
+            if (result.success) {
+                rxMedications = result.data;
+                rxDrugOptionsHtml = buildRxOptionsHtml(rxMedications);
+            } else {
+                rxDrugOptionsHtml = '<option value="">Could not load medications</option>';
+            }
+        } catch (err) {
+            console.error('Failed to load medications', err);
+            rxDrugOptionsHtml = '<option value="">Could not load medications</option>';
+        } finally {
+            rxMedicationsLoaded = true;
+            document.querySelectorAll('.drug-select').forEach(sel => {
+                sel.innerHTML = rxDrugOptionsHtml;
+            });
+        }
+    }
+
+    function buildRxOptionsHtml(meds) {
+        if (!meds.length) return '<option value="">No medications registered — upload the medications file from the catalog screen</option>';
+
+        const groups = {};
+        meds.forEach(m => {
+            if (!groups[m.categoryName]) groups[m.categoryName] = [];
+            groups[m.categoryName].push(m);
+        });
+
+        let html = '<option value="">Select medication...</option>';
+        Object.keys(groups).forEach(cat => {
+            html += `<optgroup label="${cat}">`;
+            groups[cat].forEach(m => {
+                html += `<option value="${m.id}" data-name="${m.name}" data-dosage="${m.defaultDosage || ''}" data-freq="${m.defaultFrequency || ''}" data-duration="${m.defaultDuration || ''}">${m.name}</option>`;
+            });
+            html += '</optgroup>';
+        });
+        return html;
+    }
+
+    window.onDrugSelected = function(selectEl) {
+        const opt = selectEl.selectedOptions[0];
+        const row = selectEl.closest('.rx-item-row');
+        if (!row || !opt || !opt.value) return;
+
+        row.querySelector('.drug-dosage').value = opt.dataset.dosage || '';
+        row.querySelector('.drug-freq').value = opt.dataset.freq || '';
+        row.querySelector('.drug-duration').value = opt.dataset.duration || '';
+    };
+
     let drugIndex = 1;
-    function openRxModal() { document.getElementById('rxModal').style.display = 'flex'; }
+
+    function renumberRxRows() {
+        document.querySelectorAll('#rxItemsEditor .rx-item-row').forEach((row, i) => {
+            const badge = row.querySelector('.rx-item-count');
+            if (badge) badge.textContent = i + 1;
+        });
+    }
+
+    function openRxModal() {
+        document.getElementById('rxModal').style.display = 'flex';
+        if (!rxMedicationsLoaded) loadRxMedications();
+    }
     function closeRxModal() {
         document.getElementById('rxModal').style.display = 'none';
         document.getElementById('rxItemsEditor').innerHTML = getDrugRowHtml(0);
         drugIndex = 1;
         document.getElementById('rxDiagnosis').value = '';
         document.getElementById('rxNotes').value = '';
+        renumberRxRows();
     }
     function getDrugRowHtml(idx) {
         return `
-        <div class="rx-item-row" data-index="${idx}">
-            <div class="form-row-3">
-                <div class="form-group">
-                    <label>الدواء <span class="text-danger">*</span></label>
-                    <input type="text" class="form-glass drug-name" placeholder="اسم الدواء" />
+            <div class="rx-item-row" data-index="${idx}">
+                <span class="rx-item-count">${idx + 1}</span>
+                <div class="rx-row-5">
+                    <div class="form-group">
+                        <label>Medication <span class="text-danger">*</span></label>
+                        <select class="form-glass drug-select" onchange="onDrugSelected(this)">${rxDrugOptionsHtml}</select>
+                    </div>
+                    <div class="form-group">
+                        <label>Dosage</label>
+                        <input type="text" class="form-glass drug-dosage" placeholder="500mg" />
+                    </div>
+                    <div class="form-group">
+                        <label>Frequency</label>
+                        <input type="text" class="form-glass drug-freq" placeholder="3 times daily" />
+                    </div>
+                    <div class="form-group">
+                        <label>Duration</label>
+                        <input type="text" class="form-glass drug-duration" placeholder="7 days" />
+                    </div>
+                    <div class="form-group">
+                        <label>Instructions</label>
+                        <input type="text" class="form-glass drug-instr" placeholder="After meals..." />
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>الجرعة</label>
-                    <input type="text" class="form-glass drug-dosage" placeholder="500mg" />
-                </div>
-                <div class="form-group">
-                    <label>التكرار</label>
-                    <input type="text" class="form-glass drug-freq" placeholder="3 مرات يومياً" />
-                </div>
-            </div>
-            <div class="form-row-2">
-                <div class="form-group">
-                    <label>المدة</label>
-                    <input type="text" class="form-glass drug-duration" placeholder="7 أيام" />
-                </div>
-                <div class="form-group">
-                    <label>التعليمات</label>
-                    <input type="text" class="form-glass drug-instr" placeholder="بعد الأكل..." />
-                </div>
-            </div>
-        </div>`;
+                <button type="button" class="rx-item-remove" onclick="removeDrugRow(this)" title="Remove">
+                    <i class="bi bi-trash3"></i>
+                </button>
+            </div>`;
     }
     function addDrugRow() {
         const container = document.getElementById('rxItemsEditor');
         const div = document.createElement('div');
         div.innerHTML = getDrugRowHtml(drugIndex++);
         container.appendChild(div.firstElementChild);
+        renumberRxRows();
     }
+
+    window.removeDrugRow = function(btn) {
+        const rows = document.querySelectorAll('#rxItemsEditor .rx-item-row');
+        const row = btn.closest('.rx-item-row');
+        if (rows.length <= 1) {
+            // last remaining row — just clear it instead of removing
+            row.querySelector('.drug-select').value = '';
+            row.querySelectorAll('input').forEach(inp => inp.value = '');
+            return;
+        }
+        row.remove();
+        renumberRxRows();
+    };
 
     async function submitPrescription() {
         const items = [];
         document.querySelectorAll('.rx-item-row').forEach(row => {
-            const name = row.querySelector('.drug-name').value.trim();
-            if (!name) return;
+            const select = row.querySelector('.drug-select');
+            const opt = select.selectedOptions[0];
+            if (!opt || !opt.value) return;
+
             items.push({
-                MedicationName: name,
+                MedicationName: opt.dataset.name,
                 Dosage: row.querySelector('.drug-dosage').value,
                 Frequency: row.querySelector('.drug-freq').value,
                 Duration: row.querySelector('.drug-duration').value,
                 Instructions: row.querySelector('.drug-instr').value
             });
         });
+
         if (items.length === 0) {
-            Swal.fire({ title: 'مطلوب', text: 'أضف دواء واحد على الأقل', icon: 'warning', confirmButtonColor: '#ec4899' });
+            Swal.fire({ title: 'Required', text: 'Please select at least one medication.', icon: 'warning', confirmButtonColor: '#ec4899' });
             return;
         }
+
         const data = {
             VisitId: @Model.Visit.Id,
             Diagnosis: document.getElementById('rxDiagnosis').value,
@@ -685,11 +845,34 @@
             Items: items,
             PrescribedBy: '@(User.Identity?.Name ?? "System")'
         };
-        // TODO: Add API endpoint /Clinical/AddPrescription
-        Swal.fire({ title: 'تم', text: 'تم حفظ الروشتة بنجاح', icon: 'success', timer: 1500, showConfirmButton: false });
-        closeRxModal();
-        // location.reload();
+
+        const btn = document.getElementById('btnSaveRx');
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+
+        try {
+            const res = await fetch('/Clinical/AddPrescription', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+
+            if (result.success) {
+                Swal.fire({ title: 'Saved', text: 'Prescription saved successfully', icon: 'success', timer: 1500, showConfirmButton: false });
+                closeRxModal();
+                location.reload();
+            } else {
+                Swal.fire({ title: 'Could not save', text: result.message || 'An unexpected error occurred', icon: 'error' });
+            }
+        } catch (err) {
+            Swal.fire({ title: 'Error', text: 'Could not connect to the server', icon: 'error' });
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Save Prescription';
+        }
     }
+
     function printRx(id) { window.open(`/Clinical/PrintPrescription?id=${id}`, '_blank'); }
     async function deleteRx(id) {
         const confirm = await Swal.fire({
@@ -700,4 +883,6 @@
         // TODO: Add delete endpoint
         Swal.fire({ title: 'تم', text: 'تم الحذف', icon: 'success', timer: 1500, showConfirmButton: false });
     }
+
+    document.addEventListener('DOMContentLoaded', loadRxMedications);
 </script>

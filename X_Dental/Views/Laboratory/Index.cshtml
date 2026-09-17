@@ -1,147 +1,1021 @@
 ﻿@{
     ViewData["Title"] = "Laboratory";
 }
-
-<div dir="rtl" class="container-fluid p-3">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="fw-bold">تشخيصات المعمل</h4>
-        <div class="d-flex gap-2">
-            <input type="date" id="filterFrom" class="form-control form-control-sm" />
-            <input type="date" id="filterTo" class="form-control form-control-sm" />
-            <button class="btn btn-sm btn-teal" onclick="loadSummary()">فلترة</button>
-        </div>
-    </div>
-
-    <div class="row mb-3" id="summaryCards"></div>
-
-    <div class="card">
-        <div class="card-body">
-            <table class="table table-hover" id="labTable">
-                <thead>
-                    <tr>
-                        <th>Diagnosis</th>
-                        <th>Current Price</th>
-                        <th>Last Updated</th>
-                        <th>Updated By</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- Price Edit Modal -->
-<div class="modal fade" id="priceModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">تعديل سعر المعمل</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="pmDiagnosisId" />
-                <div class="mb-3">
-                    <label class="form-label">السعر الجديد</label>
-                    <input type="number" step="0.01" class="form-control" id="pmNewPrice" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">ملاحظات</label>
-                    <textarea class="form-control" id="pmNotes"></textarea>
-                </div>
-                <hr />
-                <h6>تاريخ الأسعار</h6>
-                <ul class="list-group" id="pmHistoryList" style="max-height:200px; overflow-y:auto;"></ul>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <button class="btn btn-teal" onclick="submitPrice()">حفظ</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-    <script>
-        let priceModal;
-        document.addEventListener('DOMContentLoaded', () => {
-            priceModal = new bootstrap.Modal(document.getElementById('priceModal'));
-            loadDiagnoses();
-            loadSummary();
-        });
-
-        async function loadDiagnoses() {
-            const res = await fetch('/Laboratory/GetDiagnoses');
-            const result = await res.json();
-            const tbody = document.querySelector('#labTable tbody');
-            tbody.innerHTML = result.data.map(d => `
-                    <tr>
-                        <td>${d.nameAr}</td>
-                        <td>${Number(d.currentPrice).toLocaleString()}</td>
-                        <td>${d.lastUpdated ? new Date(d.lastUpdated).toLocaleDateString('en-GB') : '—'}</td>
-                        <td>${d.updatedBy || '—'}</td>
-                        <td><button class="btn btn-sm btn-outline-primary" onclick="openPriceModal(${d.id}, ${d.currentPrice})">Edit Price</button></td>
-                    </tr>`).join('');
+@section Styles {
+    <style>
+        :root {
+            --lb-teal-700: #0d7377;
+            --lb-teal-600: #0f9b8e;
+            --lb-teal-500: #14b8a6;
+            --lb-sky-50: #eafbfc;
+            --lb-sky-100: #dcf5f7;
+            --lb-ink-900: #0b2e30;
+            --lb-ink-600: #4b6b6c;
+            --lb-ink-400: #94a3b8;
         }
 
-        async function openPriceModal(id, currentPrice) {
-            document.getElementById('pmDiagnosisId').value = id;
-            document.getElementById('pmNewPrice').value = currentPrice;
-            document.getElementById('pmNotes').value = '';
-
-            const res = await fetch(`/Laboratory/GetPriceHistory?diagnosisCatalogId=${id}`);
-            const result = await res.json();
-            document.getElementById('pmHistoryList').innerHTML = result.data.map(h => `
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span>${new Date(h.effectiveDate).toLocaleDateString('en-GB')}</span>
-                        <b>${Number(h.price).toLocaleString()}</b>
-                    </li>`).join('') || '<li class="list-group-item text-muted">لا يوجد سجل بعد</li>';
-
-            priceModal.show();
+        body {
+            background: radial-gradient(circle at 6% 4%, var(--lb-sky-100) 0%, transparent 38%), var(--lb-sky-50);
         }
 
-        async function submitPrice() {
-            const req = {
-                diagnosisCatalogId: parseInt(document.getElementById('pmDiagnosisId').value),
-                newPrice: parseFloat(document.getElementById('pmNewPrice').value),
-                notes: document.getElementById('pmNotes').value
-            };
-            const res = await fetch('/Laboratory/UpdatePrice', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(req)
-            });
-            const result = await res.json();
-            if (result.success) {
-                priceModal.hide();
-                loadDiagnoses();
-                loadSummary();
-                Swal.fire({ icon: 'success', title: result.message, timer: 1500, showConfirmButton: false });
-            } else {
-                Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+        @@keyframes lbFadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
 
-        async function loadSummary() {
+        @@keyframes lbRowIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@keyframes lbShine {
+            0%, 100% {
+                right: -30%;
+            }
+
+            50% {
+                right: 105%;
+            }
+        }
+
+        @@keyframes lbCountUp {
+            from {
+                opacity: 0;
+                filter: blur(3px);
+            }
+
+            to {
+                opacity: 1;
+                filter: blur(0);
+            }
+        }
+
+        @@keyframes lbChipPop {
+            0% {
+                transform: scale(.88);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .lb-hero {
+            background: linear-gradient(135deg, var(--lb-teal-700), var(--lb-teal-500));
+            border-radius: 18px;
+            padding: 22px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 14px 34px rgba(13,115,119,.28);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 16px;
+            position: relative;
+            overflow: hidden;
+            animation: lbFadeUp .5s ease;
+        }
+
+            .lb-hero::before {
+                content: '';
+                position: absolute;
+                top: -60%;
+                right: -30%;
+                width: 45%;
+                height: 220%;
+                background: linear-gradient(105deg, transparent, rgba(255,255,255,.16), transparent);
+                transform: rotate(12deg);
+                animation: lbShine 6s ease-in-out infinite;
+                pointer-events: none;
+            }
+
+            .lb-hero .hero-title {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .lb-hero .hero-icon {
+                width: 52px;
+                height: 52px;
+                background: rgba(255,255,255,.18);
+                color: #fff;
+                border-radius: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.4rem;
+                flex-shrink: 0;
+            }
+
+            .lb-hero h1 {
+                font-size: 1.25rem;
+                font-weight: 800;
+                margin: 0;
+                color: #fff;
+            }
+
+            .lb-hero p {
+                font-size: .85rem;
+                margin: 2px 0 0;
+                color: rgba(255,255,255,.9);
+                font-weight: 600;
+            }
+
+        .lb-date-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,.14);
+            border: 1px solid rgba(255,255,255,.25);
+            border-radius: 12px;
+            padding: 8px 12px;
+            position: relative;
+            z-index: 1;
+            flex-wrap: wrap;
+        }
+
+            .lb-date-filter input {
+                background: rgba(255,255,255,.9);
+                border: none;
+                border-radius: 8px;
+                padding: 6px 10px;
+                font-size: .82rem;
+                color: var(--lb-ink-900);
+            }
+
+            .lb-date-filter button {
+                background: #fff;
+                color: var(--lb-teal-700);
+                border: none;
+                padding: 7px 16px;
+                border-radius: 8px;
+                font-weight: 800;
+                font-size: .82rem;
+                cursor: pointer;
+                transition: all .2s;
+            }
+
+                .lb-date-filter button:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 6px 14px rgba(0,0,0,.18);
+                }
+
+        .lb-quick-chips {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .lb-chip {
+            padding: 7px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--lb-sky-100);
+            background: #fff;
+            font-weight: 700;
+            font-size: .78rem;
+            color: var(--lb-ink-600);
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+            .lb-chip:hover {
+                border-color: var(--lb-teal-500);
+                color: var(--lb-teal-700);
+            }
+
+            .lb-chip.active {
+                background: linear-gradient(135deg, var(--lb-teal-600), var(--lb-teal-700));
+                color: #fff;
+                border-color: transparent;
+                box-shadow: 0 4px 12px rgba(13,148,136,.3);
+                animation: lbChipPop .2s ease;
+            }
+
+        .lb-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        @@media (max-width: 1100px) {
+            .lb-kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .lb-kpi-card {
+            background: rgba(255,255,255,.85);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,.6);
+            border-radius: 16px;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 16px rgba(10,77,79,.06);
+            transition: all .25s ease;
+            animation: lbFadeUp .5s ease backwards;
+        }
+
+            .lb-kpi-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 10px 24px rgba(10,77,79,.12);
+            }
+
+        .lb-kpi-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+            .lb-kpi-icon.teal {
+                background: var(--lb-sky-50);
+                color: var(--lb-teal-600);
+            }
+
+            .lb-kpi-icon.green {
+                background: #f0fdf4;
+                color: #16a34a;
+            }
+
+            .lb-kpi-icon.purple {
+                background: #f5f3ff;
+                color: #7c3aed;
+            }
+
+            .lb-kpi-icon.blue {
+                background: #eff6ff;
+                color: #1d4ed8;
+            }
+
+        .lb-kpi-value {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--lb-ink-900);
+            display: block;
+            animation: lbCountUp .5s ease;
+        }
+
+        .lb-kpi-label {
+            font-size: .74rem;
+            color: var(--lb-ink-600);
+            font-weight: 700;
+        }
+
+        .lb-section {
+            background: rgba(255,255,255,.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,.6);
+            border-radius: 18px;
+            box-shadow: 0 20px 50px rgba(10,77,79,.08);
+            padding: 22px;
+            margin-bottom: 20px;
+            animation: lbFadeUp .55s .05s ease backwards;
+        }
+
+        .lb-section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+            .lb-section-head h4 {
+                margin: 0;
+                font-weight: 800;
+                font-size: 1rem;
+                color: var(--lb-ink-900);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+                .lb-section-head h4 i {
+                    color: var(--lb-teal-600);
+                }
+
+        .lb-search {
+            max-width: 280px;
+            position: relative;
+        }
+
+            .lb-search input {
+                width: 100%;
+                padding: 9px 36px 9px 12px;
+                border-radius: 10px;
+                border: 1.5px solid var(--lb-sky-100);
+                font-size: .86rem;
+            }
+
+                .lb-search input:focus {
+                    outline: none;
+                    border-color: var(--lb-teal-500);
+                    box-shadow: 0 0 0 3px rgba(20,184,166,.12);
+                }
+
+            .lb-search i {
+                position: absolute;
+                left: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--lb-ink-600);
+                font-size: .85rem;
+            }
+
+        table.lb-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            table.lb-table th {
+                text-align: left;
+                font-size: .72rem;
+                text-transform: uppercase;
+                letter-spacing: .3px;
+                color: var(--lb-ink-600);
+                font-weight: 800;
+                padding: 10px 12px;
+                border-bottom: 2px solid var(--lb-sky-100);
+                cursor: pointer;
+                user-select: none;
+                white-space: nowrap;
+            }
+
+                table.lb-table th:hover {
+                    color: var(--lb-teal-700);
+                }
+
+                table.lb-table th .sort-arrow {
+                    font-size: .66rem;
+                    opacity: .4;
+                    margin-left: 4px;
+                }
+
+                table.lb-table th.sorted .sort-arrow {
+                    opacity: 1;
+                    color: var(--lb-teal-600);
+                }
+
+            table.lb-table td {
+                padding: 11px 12px;
+                font-size: .86rem;
+                color: var(--lb-ink-900);
+                border-bottom: 1px solid var(--lb-sky-100);
+                vertical-align: middle;
+            }
+
+            table.lb-table tbody tr {
+                animation: lbRowIn .3s ease backwards;
+            }
+
+                table.lb-table tbody tr:hover td {
+                    background: var(--lb-sky-50);
+                }
+
+        .lb-name-main {
+            font-weight: 700;
+        }
+
+        .lb-name-sub {
+            font-size: .74rem;
+            color: var(--lb-ink-600);
+            margin-top: 1px;
+        }
+
+        .code-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .72rem;
+            background: var(--lb-sky-100);
+            color: var(--lb-teal-700);
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-weight: 700;
+        }
+
+        .price-cell {
+            font-weight: 800;
+            color: var(--lb-teal-700);
+        }
+
+        .lb-icon-btn {
+            border: none;
+            background: var(--lb-sky-50);
+            color: var(--lb-teal-700);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: .78rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all .2s;
+        }
+
+            .lb-icon-btn:hover {
+                background: var(--lb-teal-600);
+                color: #fff;
+                transform: translateY(-1px);
+            }
+
+        .lb-empty {
+            text-align: center;
+            padding: 36px;
+            color: var(--lb-ink-600);
+        }
+
+        .lb-pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 14px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .lb-page-info {
+            font-size: .78rem;
+            color: var(--lb-ink-600);
+            font-weight: 700;
+        }
+
+        .page-btn {
+            min-width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 1px solid var(--lb-sky-100);
+            background: #fff;
+            color: var(--lb-ink-600);
+            font-weight: 700;
+            font-size: .8rem;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+            .page-btn:hover:not(:disabled) {
+                border-color: var(--lb-teal-500);
+                color: var(--lb-teal-700);
+            }
+
+            .page-btn.active {
+                background: linear-gradient(135deg, var(--lb-teal-600), var(--lb-teal-700));
+                color: #fff;
+                border-color: transparent;
+            }
+
+            .page-btn:disabled {
+                opacity: .4;
+                cursor: not-allowed;
+            }
+
+        .lb-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,.4);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1050;
+        }
+
+            .lb-modal-overlay.show {
+                display: flex;
+                animation: lbFadeUp .25s ease;
+            }
+
+        .lb-modal-box {
+            background: #fff;
+            border-radius: 22px;
+            padding: 26px;
+            width: 92%;
+            max-width: 480px;
+            box-shadow: 0 25px 50px rgba(0,0,0,.18);
+        }
+
+            .lb-modal-box h5 {
+                margin: 0 0 4px;
+                font-weight: 800;
+                color: var(--lb-ink-900);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+        .lb-modal-sub {
+            font-size: .78rem;
+            color: var(--lb-ink-600);
+            font-weight: 600;
+            margin-bottom: 18px;
+        }
+
+        .lb-form-group {
+            margin-bottom: 14px;
+        }
+
+            .lb-form-group label {
+                display: block;
+                font-size: .78rem;
+                font-weight: 700;
+                color: var(--lb-ink-600);
+                margin-bottom: 6px;
+            }
+
+            .lb-form-group .form-control {
+                width: 100%;
+                padding: 10px 12px;
+                border-radius: 10px;
+                border: 1.5px solid var(--lb-sky-100);
+                font-size: .9rem;
+                transition: all .2s;
+            }
+
+                .lb-form-group .form-control:focus {
+                    outline: none;
+                    border-color: var(--lb-teal-500);
+                    box-shadow: 0 0 0 3px rgba(20,184,166,.12);
+                }
+
+        .lb-history-title {
+            font-size: .82rem;
+            font-weight: 800;
+            color: var(--lb-ink-900);
+            margin: 18px 0 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .lb-timeline {
+            max-height: 190px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 4px;
+        }
+
+        .lb-timeline-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--lb-sky-50);
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: .82rem;
+        }
+
+            .lb-timeline-item b {
+                color: var(--lb-teal-700);
+            }
+
+            .lb-timeline-item .tl-date {
+                color: var(--lb-ink-600);
+                font-weight: 600;
+            }
+
+        .lb-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-cancel {
+            background: var(--lb-sky-100);
+            color: var(--lb-ink-600);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+            .btn-cancel:hover {
+                background: #cbeef0;
+            }
+
+        .btn-save {
+            background: linear-gradient(135deg, var(--lb-teal-600), var(--lb-teal-700));
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+            .btn-save:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 8px 20px rgba(13,148,136,.3);
+            }
+
+        @@media (max-width: 640px) {
+            .lb-date-filter {
+                width: 100%;
+            }
+        }
+    </style>
+}
+<section dir="ltr">
+    @Html.AntiForgeryToken()
+    <div class="lb-hero">
+        <div class="hero-title">
+            <div class="hero-icon"><i class="bi bi-flask"></i></div>
+            <div>
+                <h1>Laboratory</h1>
+                <p>Lab-linked diagnoses, pricing, and billing totals</p>
+            </div>
+        </div>
+        <div class="lb-date-filter">
+            <input type="date" id="filterFrom" />
+            <span style="color:#fff;font-size:.8rem;">to</span>
+            <input type="date" id="filterTo" />
+            <button type="button" onclick="applyDateFilters()"><i class="bi bi-filter"></i> Apply</button>
+        </div>
+    </div>
+    <div class="lb-quick-chips" id="lbQuickChips">
+        <button class="lb-chip active" data-range="all">All Time</button>
+        <button class="lb-chip" data-range="today">Today</button>
+        <button class="lb-chip" data-range="week">This Week</button>
+        <button class="lb-chip" data-range="month">This Month</button>
+    </div>
+    <div class="lb-kpi-grid" id="lbKpiGrid">
+        <div class="lb-kpi-card">
+            <div class="lb-kpi-icon teal"><i class="bi bi-clipboard2-data"></i></div>
+            <div>
+                <span class="lb-kpi-value" id="kpiTotalCount">—</span>
+                <span class="lb-kpi-label">Total Cases</span>
+            </div>
+        </div>
+        <div class="lb-kpi-card">
+            <div class="lb-kpi-icon green"><i class="bi bi-cash-stack"></i></div>
+            <div>
+                <span class="lb-kpi-value" id="kpiTotalAmount">—</span>
+                <span class="lb-kpi-label">Total Amount (EGP)</span>
+            </div>
+        </div>
+        <div class="lb-kpi-card">
+            <div class="lb-kpi-icon purple"><i class="bi bi-diagram-3"></i></div>
+            <div>
+                <span class="lb-kpi-value" id="kpiDiagCount">—</span>
+                <span class="lb-kpi-label">Diagnosis Types</span>
+            </div>
+        </div>
+        <div class="lb-kpi-card">
+            <div class="lb-kpi-icon blue"><i class="bi bi-graph-up-arrow"></i></div>
+            <div>
+                <span class="lb-kpi-value" id="kpiAvgCase">—</span>
+                <span class="lb-kpi-label">Avg. per Case (EGP)</span>
+            </div>
+        </div>
+    </div>
+    <div class="lb-section" hidden>
+        <div class="lb-section-head">
+            <h4><i class="bi bi-bar-chart-line"></i> Billing Breakdown</h4>
+        </div>
+        <div class="table-responsive">
+            <table class="lb-table" id="lbSummaryTable">
+                <thead>
+                    <tr>
+                        <th>Diagnosis</th>
+                        <th>Count</th>
+                        <th>Current Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="lbSummaryBody"></tbody>
+            </table>
+            <div class="lb-empty" id="lbSummaryEmpty" style="display:none;">
+                <i class="bi bi-inboxes" style="font-size:1.8rem;"></i>
+                <p class="mt-2">No lab cases recorded for this period.</p>
+            </div>
+        </div>
+    </div>
+    <div class="lb-section">
+        <div class="lb-section-head">
+            <h4><i class="bi bi-list-check"></i> Lab-Linked Diagnoses</h4>
+            <div class="lb-search">
+                <input type="text" id="lbDiagSearch" class="text-center" placeholder="Search..." oninput="onLbDiagSearch()" />
+                <i class="bi bi-search"></i>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="lb-table" id="lbDiagTable">
+                <thead>
+                    <tr>
+                        <th data-sort="nameEn">Diagnosis <i class="bi bi-arrow-down-up sort-arrow"></i></th>
+                        <th data-sort="currentPrice">Current Price <i class="bi bi-arrow-down-up sort-arrow"></i></th>
+                        <th data-sort="lastUpdated">Last Updated <i class="bi bi-arrow-down-up sort-arrow"></i></th>
+                        <th>Updated By</th>
+                        <th data-sort="total">Total <i class="bi bi-arrow-down-up sort-arrow"></i></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="lbDiagBody"></tbody>
+            </table>
+            <div class="lb-empty" id="lbDiagEmpty" style="display:none;">
+                <i class="bi bi-flask" style="font-size:1.8rem;"></i>
+                <p class="mt-2">No diagnoses are marked as lab-linked yet. Mark some from the Diagnosis Catalog.</p>
+            </div>
+        </div>
+        <div class="lb-pagination" id="lbDiagPagination"></div>
+    </div>
+</section>
+<!-- Price Edit Modal -->
+<div class="lb-modal-overlay" id="priceModalOverlay">
+    <div class="lb-modal-box" dir="ltr">
+        <h5><i class="bi bi-tag"></i> Edit Lab Price</h5>
+        <div class="lb-modal-sub" id="pmDiagName"></div>
+        <input type="hidden" id="pmDiagnosisId" />
+        <div class="lb-form-group">
+            <label>New Price (EGP)</label>
+            <input type="number" step="0.01" min="0" class="form-control" id="pmNewPrice" />
+        </div>
+        <div class="lb-form-group">
+            <label>Notes</label>
+            <textarea class="form-control" id="pmNotes" rows="2" placeholder="Optional"></textarea>
+        </div>
+        <div class="lb-history-title"><i class="bi bi-clock-history"></i> Price History</div>
+        <div class="lb-timeline" id="pmHistoryList"></div>
+        <div class="lb-modal-actions">
+            <button class="btn-cancel" onclick="closePriceModal()">Cancel</button>
+            <button class="btn-save" onclick="submitPrice()"><i class="bi bi-check-lg"></i> Save</button>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        let lbDiagAll = [];
+        let lbDiagFiltered = [];
+        let lbDiagSort = { key: 'nameEn', dir: 'asc' };
+        let lbDiagSearchTerm = '';
+        let lbDiagPage = 1;
+        const LB_PAGE_SIZE = 8;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            applyDateFilters();
+        });
+
+        function fmtMoney(n) {
+            return Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
+        }
+
+        // تاريخ محلي من غير UTC shift (toISOString كانت بتخلي اليوم يتراجع في مصر)
+        function toLocalIsoDate(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        function getFilterParams() {
             const from = document.getElementById('filterFrom').value;
             const to = document.getElementById('filterTo').value;
             const params = new URLSearchParams();
             if (from) params.append('DateFrom', from);
             if (to) params.append('DateTo', to);
+            return params;
+        }
 
-            const res = await fetch(`/Laboratory/GetSummary?${params.toString()}`);
+        function applyDateFilters() {
+            loadDiagnoses();
+            loadSummary();
+        }
+
+        // ── Lab-linked diagnoses table ──
+        async function loadDiagnoses() {
+            const res = await fetch(`/Laboratory/GetDiagnoses?${getFilterParams().toString()}`);
+            const result = await res.json();
+            lbDiagAll = result.data || [];
+            applyLbDiagFilters();
+        }
+
+        function applyLbDiagFilters() {
+            let list = [...lbDiagAll];
+            if (lbDiagSearchTerm) {
+                const q = lbDiagSearchTerm.toLowerCase();
+                list = list.filter(d =>
+                    (d.nameEn || '').toLowerCase().includes(q) ||
+                    (d.nameAr || '').toLowerCase().includes(q) ||
+                    (d.code || '').toLowerCase().includes(q)
+                );
+            }
+            list.sort((a, b) => {
+                let av = a[lbDiagSort.key], bv = b[lbDiagSort.key];
+                if (av == null) av = '';
+                if (bv == null) bv = '';
+                if (typeof av === 'string') { av = av.toLowerCase(); bv = (bv || '').toLowerCase(); }
+                if (av < bv) return lbDiagSort.dir === 'asc' ? -1 : 1;
+                if (av > bv) return lbDiagSort.dir === 'asc' ? 1 : -1;
+                return 0;
+            });
+            lbDiagFiltered = list;
+            lbDiagPage = 1;
+            renderLbDiagTable();
+        }
+
+        function onLbDiagSearch() {
+            lbDiagSearchTerm = document.getElementById('lbDiagSearch').value.trim();
+            applyLbDiagFilters();
+        }
+
+        function renderLbDiagTable() {
+            const totalPages = Math.max(1, Math.ceil(lbDiagFiltered.length / LB_PAGE_SIZE));
+            if (lbDiagPage > totalPages) lbDiagPage = totalPages;
+            const start = (lbDiagPage - 1) * LB_PAGE_SIZE;
+            const pageItems = lbDiagFiltered.slice(start, start + LB_PAGE_SIZE);
+            const tbody = document.getElementById('lbDiagBody');
+            const empty = document.getElementById('lbDiagEmpty');
+            if (!pageItems.length) {
+                tbody.innerHTML = '';
+                empty.style.display = 'block';
+                document.getElementById('lbDiagPagination').innerHTML = '';
+                return;
+            }
+            empty.style.display = 'none';
+            tbody.innerHTML = pageItems.map((d, i) => `
+                                <tr style="animation-delay:${Math.min(i * 0.04, 0.3)}s">
+                                    <td>
+                                        <div class="lb-name-main">${d.nameEn || d.nameAr}</div>
+                                        ${d.nameAr && d.nameEn ? `<div class="lb-name-sub">${d.nameAr}</div>` : ''}
+                                    </td>
+                                    <td class="price-cell">${fmtMoney(d.currentPrice)} EGP</td>
+                                    <td>${d.lastUpdated ? new Date(d.lastUpdated).toLocaleDateString('en-GB') : '—'}</td>
+                                    <td>${d.updatedBy || '—'}</td>
+                                    <td class="price-cell">${fmtMoney(d.total)} EGP</td>
+                                    <td><button class="lb-icon-btn" onclick='openPriceModal(${JSON.stringify(d)})'><i class="bi bi-pencil"></i> Edit Price</button></td>
+                                </tr>
+                            `).join('');
+            renderLbDiagPagination(totalPages);
+        }
+
+        function renderLbDiagPagination(totalPages) {
+            const wrap = document.getElementById('lbDiagPagination');
+            if (totalPages <= 1) { wrap.innerHTML = ''; return; }
+            let buttons = `<button class="page-btn" ${lbDiagPage === 1 ? 'disabled' : ''} onclick="goToLbDiagPage(${lbDiagPage - 1})"><i class="bi bi-chevron-left"></i></button>`;
+            for (let p = 1; p <= totalPages; p++) {
+                buttons += `<button class="page-btn ${p === lbDiagPage ? 'active' : ''}" onclick="goToLbDiagPage(${p})">${p}</button>`;
+            }
+            buttons += `<button class="page-btn" ${lbDiagPage === totalPages ? 'disabled' : ''} onclick="goToLbDiagPage(${lbDiagPage + 1})"><i class="bi bi-chevron-right"></i></button>`;
+            wrap.innerHTML = `
+                                <span class="lb-page-info">Page ${lbDiagPage} of ${totalPages}</span>
+                                <div>${buttons}</div>
+                            `;
+        }
+
+        window.goToLbDiagPage = function(p) {
+            lbDiagPage = p;
+            renderLbDiagTable();
+        };
+
+        document.querySelectorAll('#lbDiagTable th[data-sort]').forEach(th => {
+            th.addEventListener('click', () => {
+                const key = th.dataset.sort;
+                if (lbDiagSort.key === key) {
+                    lbDiagSort.dir = lbDiagSort.dir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    lbDiagSort = { key, dir: 'asc' };
+                }
+                document.querySelectorAll('#lbDiagTable th[data-sort]').forEach(h => h.classList.remove('sorted'));
+                th.classList.add('sorted');
+                th.querySelector('.sort-arrow').className = `bi ${lbDiagSort.dir === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down'} sort-arrow`;
+                applyLbDiagFilters();
+            });
+        });
+
+        // ── Price edit modal ──
+        window.openPriceModal = async function(d) {
+            document.getElementById('pmDiagnosisId').value = d.id;
+            document.getElementById('pmDiagName').textContent = d.nameEn || d.nameAr;
+            document.getElementById('pmNewPrice').value = d.currentPrice;
+            document.getElementById('pmNotes').value = '';
+            const res = await fetch(`/Laboratory/GetPriceHistory?diagnosisCatalogId=${d.id}`);
+            const result = await res.json();
+            const list = result.data || [];
+            document.getElementById('pmHistoryList').innerHTML = list.length
+                ? list.map(h => `
+                                    <div class="lb-timeline-item">
+                                        <span class="tl-date">${new Date(h.effectiveDate).toLocaleDateString('en-GB')}</span>
+                                        <b>${fmtMoney(h.price)} EGP</b>
+                                    </div>`).join('')
+                : '<div class="lb-timeline-item" style="justify-content:center;color:#94a3b8;">No history yet</div>';
+            document.getElementById('priceModalOverlay').classList.add('show');
+        };
+
+        window.closePriceModal = function() {
+            document.getElementById('priceModalOverlay').classList.remove('show');
+        };
+
+        window.submitPrice = async function() {
+            const diagnosisCatalogId = parseInt(document.getElementById('pmDiagnosisId').value);
+            const newPrice = parseFloat(document.getElementById('pmNewPrice').value);
+            const notes = document.getElementById('pmNotes').value;
+            if (isNaN(newPrice) || newPrice < 0) {
+                Swal.fire({ title: 'Required', text: 'Enter a valid price', icon: 'warning', confirmButtonColor: '#0d9488' });
+                return;
+            }
+            const form = new URLSearchParams();
+            form.append('DiagnosisCatalogId', diagnosisCatalogId);
+            form.append('NewPrice', newPrice);
+            form.append('Notes', notes);
+            if (antiForgeryToken) form.append('__RequestVerificationToken', antiForgeryToken);
+            const res = await fetch('/Laboratory/UpdatePrice', { method: 'POST', body: form });
+            const result = await res.json();
+            if (result.success) {
+                closePriceModal();
+                applyDateFilters();
+                Swal.fire({ icon: 'success', title: result.message, timer: 1400, showConfirmButton: false });
+            } else {
+                Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+            }
+        };
+
+        // ── Date chips + Summary / KPIs ──
+        function setDateRange(range) {
+            const today = new Date();
+            const fromEl = document.getElementById('filterFrom');
+            const toEl = document.getElementById('filterTo');
+            if (range === 'all') {
+                fromEl.value = '';
+                toEl.value = '';
+            } else if (range === 'today') {
+                fromEl.value = toLocalIsoDate(today);
+                toEl.value = toLocalIsoDate(today);
+            } else if (range === 'week') {
+                const start = new Date(today);
+                start.setDate(today.getDate() - today.getDay());
+                fromEl.value = toLocalIsoDate(start);
+                toEl.value = toLocalIsoDate(today);
+            } else if (range === 'month') {
+                const start = new Date(today.getFullYear(), today.getMonth(), 1);
+                fromEl.value = toLocalIsoDate(start);
+                toEl.value = toLocalIsoDate(today);
+            }
+            applyDateFilters();
+        }
+
+        document.getElementById('lbQuickChips').addEventListener('click', e => {
+            const chip = e.target.closest('.lb-chip');
+            if (!chip) return;
+            document.querySelectorAll('.lb-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            setDateRange(chip.dataset.range);
+        });
+
+        async function loadSummary() {
+            const res = await fetch(`/Laboratory/GetSummary?${getFilterParams().toString()}`);
             const result = await res.json();
             const s = result.data;
-
-            document.getElementById('summaryCards').innerHTML = `
-                    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Total Count</div><div class="fs-4 fw-bold">${s.totalCount}</div></div></div>
-                    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Total Amount</div><div class="fs-4 fw-bold">${Number(s.totalAmount).toLocaleString()}</div></div></div>
-                ` + s.items.map(i => `
-                    <div class="col-md-3"><div class="card p-3">
-                        <div class="text-muted small">${i.nameAr}</div>
-                        <div class="fs-5 fw-bold">${i.count} × ${Number(i.currentPrice).toLocaleString()} = ${Number(i.total).toLocaleString()}</div>
-                    </div></div>`).join('');
+            document.getElementById('kpiTotalCount').textContent = s.totalCount;
+            document.getElementById('kpiTotalAmount').textContent = fmtMoney(s.totalAmount);
+            document.getElementById('kpiDiagCount').textContent = s.items.length;
+            document.getElementById('kpiAvgCase').textContent = fmtMoney(s.totalCount > 0 ? s.totalAmount / s.totalCount : 0);
+            const body = document.getElementById('lbSummaryBody');
+            const empty = document.getElementById('lbSummaryEmpty');
+            if (!s.items.length) {
+                body.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+            empty.style.display = 'none';
+            body.innerHTML = s.items.map((i, idx) => `
+                                <tr style="animation-delay:${Math.min(idx * 0.04, 0.3)}s">
+                                    <td class="lb-name-main">${i.nameEn || i.nameAr}</td>
+                                    <td>${i.count}</td>
+                                    <td>${fmtMoney(i.currentPrice)} EGP</td>
+                                    <td class="price-cell">${fmtMoney(i.total)} EGP</td>
+                                </tr>
+                            `).join('');
         }
     </script>
 }

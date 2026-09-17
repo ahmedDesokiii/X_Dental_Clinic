@@ -122,6 +122,8 @@ namespace Dental.Controllers
          }
      ).ToListAsync();
 
+
+
             // ⭐ خريطة أحدث حالة/تشخيص لكل سن — تُستخدم في الـ Tooltip عند الهوفر
             var statusLabelsForTooltip = new Dictionary<Dental.Models.Patient.ToothStatus, string>
 {
@@ -362,7 +364,7 @@ namespace Dental.Controllers
                             Surface = tooth.DiagnosisSurface,
                             Notes = tooth.DiagnosisNotes,
                             IsPrimary = tooth.DiagnosisIsPrimary,
-                            LabPriceSnapshot = diagEntity.Price   // ⭐ NEW
+                            LabPriceSnapshot = await GetCurrentLabPriceAsync(diagEntity)   // ⭐ lab price, not diagnosis price
                         };
                         _context.VisitDiagnoses.Add(vd);
                     }
@@ -482,7 +484,8 @@ namespace Dental.Controllers
                 ToothNumber = req.ToothNumber,
                 Surface = req.Surface,
                 Notes = req.Notes,
-                IsPrimary = req.IsPrimary
+                IsPrimary = req.IsPrimary,
+                LabPriceSnapshot = await GetCurrentLabPriceAsync(diagnosis)   // ⭐ NEW
             };
 
             _context.VisitDiagnoses.Add(vd);
@@ -610,7 +613,7 @@ namespace Dental.Controllers
                                 Surface = tooth.DiagnosisSurface,
                                 Notes = tooth.DiagnosisNotes,
                                 IsPrimary = tooth.DiagnosisIsPrimary,
-                                LabPriceSnapshot = diag.Price
+                                LabPriceSnapshot = await GetCurrentLabPriceAsync(diag)   // ⭐ lab price, not diagnosis price
                             });
 
                             visit.TotalAmount += diag.Price; // ⭐ الربط بالمدفوعات
@@ -865,6 +868,20 @@ namespace Dental.Controllers
                 }).ToList();
         }
 
+        // ⭐ سعر المعمل الحالي للتشخيص — منفصل تمامًا عن DiagnosisCatalog.Price،
+        // بياخد آخر سعر مسجّل في LaboratoryPriceHistories، ولو لسه معمول له سعر معمل
+        // خالص، بيرجع سعر التشخيص العادي كقيمة بداية بس.
+        private async Task<decimal> GetCurrentLabPriceAsync(DiagnosisCatalog diag)
+        {
+            if (!diag.IsLaboratoryRelated) return diag.Price;
 
+            var lastLabPrice = await _context.LaboratoryPriceHistories
+                .Where(h => h.DiagnosisCatalogId == diag.Id)
+                .OrderByDescending(h => h.EffectiveDate)
+                .Select(h => (decimal?)h.Price)
+                .FirstOrDefaultAsync();
+
+            return lastLabPrice ?? diag.Price;
+        }
     }
 }

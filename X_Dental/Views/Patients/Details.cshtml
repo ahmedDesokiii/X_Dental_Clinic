@@ -631,9 +631,10 @@
         backdrop-filter: blur(16px);
         border-radius: 22px;
         box-shadow: var(--dc-shadow);
-        overflow: hidden;
+        /* overflow: hidden; */
         border: 1px solid rgba(255,255,255,.6);
         margin-bottom: 20px;
+        
     }
 
     .tabs-pill-bar {
@@ -1284,7 +1285,7 @@
     </div>
 
     <!-- Tabs Container -->
-    <div class="tabs-container">
+    <div class="tabs-container pt-3 pb-5">
         <div class="tabs-pill-bar">
             <button class="tab-pill active" onclick="switchTab('overview', this)"><i class="bi bi-person-lines-fill"></i> Overview</button>
             <button class="tab-pill" onclick="switchTab('prevSessions', this)"><i class="bi bi-archive"></i> Previous Records</button>
@@ -1396,11 +1397,7 @@
 
             <!-- Tab: Prescriptions -->
             <div class="tab-panel" id="prescriptions">
-                <div class="placeholder-glass">
-                    <div class="placeholder-icon-glass"><i class="bi bi-file-medical"></i></div>
-                    <h3>Prescriptions</h3>
-                    <p>All prescriptions and medications written for the patient.</p>
-                </div>
+                @await Html.PartialAsync("_PatientPrescriptions")
             </div>
 
             <!-- Tab: Payments -->
@@ -1447,7 +1444,7 @@
                     </div>
                 </div>
 
-                <div class="info-card-glass full-width mb-3">
+                <div class="info-card-glass full-width mb-3" hidden>
                     <div class="card-header-glass"><i class="bi bi-clipboard2-data"></i> Visits</div>
                     <div class="card-body-glass">
                         <table class="pmt-table-new">
@@ -1524,6 +1521,7 @@
             // Lazy load per-tab data only when first opened
             if (tabId === 'payments') loadPaymentsTab();
             if (tabId === 'docs' && window.loadDocumentsTab) window.loadDocumentsTab();
+            if (tabId === 'prescriptions' && window.loadPatientPrescriptions) window.loadPatientPrescriptions();
             if (tabId === 'plans' && window.TreatmentPlans) window.TreatmentPlans.loadPlans();
         }
 
