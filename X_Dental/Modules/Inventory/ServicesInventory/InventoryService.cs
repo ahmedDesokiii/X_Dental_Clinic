@@ -1,4 +1,8 @@
-﻿using Dental.Core.Results;
+﻿// ============================================================
+// 📁 File: Modules/Inventory/ServicesInventory/InventoryService.cs
+// استبدل الملف بالكامل — نفس اللوجيك، الرسائل والسجل الزمني بالإنجليزي
+// ============================================================
+using Dental.Core.Results;
 using Dental.Data;
 using Dental.Models.Inventory;
 using Dental.Modules.Inventory.DTOs;
@@ -15,16 +19,17 @@ namespace Dental.Modules.Inventory.ServicesInventory
 
         private static (string text, string icon, string colorClass) ActionMeta(MaterialHistoryAction a) => a switch
         {
-            MaterialHistoryAction.Created => ("تم إنشاء الخامة", "bi-plus-circle", "hist-created"),
-            MaterialHistoryAction.Edited => ("تعديل بيانات", "bi-pencil-square", "hist-edited"),
-            MaterialHistoryAction.StockIn => ("توريد للمخزن", "bi-box-arrow-in-down", "hist-in"),
-            MaterialHistoryAction.StockOut => ("صرف من المخزن", "bi-box-arrow-up", "hist-out"),
-            MaterialHistoryAction.PriceChanged => ("تغيير السعر", "bi-currency-exchange", "hist-price"),
-            MaterialHistoryAction.QuantityAdjusted => ("تعديل الكمية", "bi-sliders", "hist-edited"),
-            MaterialHistoryAction.ExpiryUpdated => ("تحديث تاريخ الصلاحية", "bi-calendar-x", "hist-expiry"),
-            MaterialHistoryAction.Deleted => ("حذف", "bi-trash3", "hist-deleted"),
+            MaterialHistoryAction.Created => ("Material created", "bi-plus-circle", "hist-created"),
+            MaterialHistoryAction.Edited => ("Details updated", "bi-pencil-square", "hist-edited"),
+            MaterialHistoryAction.StockIn => ("Stock received", "bi-box-arrow-in-down", "hist-in"),
+            MaterialHistoryAction.StockOut => ("Stock issued", "bi-box-arrow-up", "hist-out"),
+            MaterialHistoryAction.PriceChanged => ("Price changed", "bi-currency-exchange", "hist-price"),
+            MaterialHistoryAction.QuantityAdjusted => ("Quantity adjusted", "bi-sliders", "hist-edited"),
+            MaterialHistoryAction.ExpiryUpdated => ("Expiry date updated", "bi-calendar-x", "hist-expiry"),
+            MaterialHistoryAction.Deleted => ("Deleted", "bi-trash3", "hist-deleted"),
             _ => (a.ToString(), "bi-circle", "hist-edited")
         };
+
         public async Task<List<MaterialListDto>> GetFilteredAsync(MaterialFilterDto filter)
         {
             var query = _context.Materials
@@ -76,9 +81,8 @@ namespace Dental.Modules.Inventory.ServicesInventory
             var m = await _context.Materials
                 .Include(x => x.Supplier)
                 .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-
             if (m == null)
-                return ServiceResult<MaterialDetailsDto>.Fail("الخامة غير موجودة.");
+                return ServiceResult<MaterialDetailsDto>.Fail("Material not found.");
 
             var dto = new MaterialDetailsDto
             {
@@ -122,9 +126,9 @@ namespace Dental.Modules.Inventory.ServicesInventory
         public async Task<ServiceResult<int>> CreateAsync(MaterialFormDto dto, string userName)
         {
             if (await ExistsCodeAsync(dto.Code))
-                return ServiceResult<int>.Fail("كود الخامة ده مستخدم بالفعل.");
+                return ServiceResult<int>.Fail("This material code is already in use.");
             if (dto.Quantity < 0 || dto.PurchasePrice < 0 || dto.CurrentPrice < 0)
-                return ServiceResult<int>.Fail("القيم المدخلة غير صالحة.");
+                return ServiceResult<int>.Fail("Entered values are not valid.");
 
             var entity = new Material
             {
@@ -145,7 +149,6 @@ namespace Dental.Modules.Inventory.ServicesInventory
                 IsActive = dto.IsActive,
                 Notes = dto.Notes
             };
-
             _context.Materials.Add(entity);
             await _context.SaveChangesAsync();
 
@@ -157,23 +160,21 @@ namespace Dental.Modules.Inventory.ServicesInventory
                 QuantityAfter = entity.Quantity,
                 PriceAfter = entity.CurrentPrice,
                 BatchNumber = entity.BatchNumber,
-                Notes = "تم إنشاء الخامة بالمخزون"
+                Notes = "Material created in inventory"
             });
             await _context.SaveChangesAsync();
-
-            return ServiceResult<int>.Ok(entity.Id, "تم إضافة الخامة بنجاح.");
+            return ServiceResult<int>.Ok(entity.Id, "Material added successfully.");
         }
 
         public async Task<ServiceResult<bool>> UpdateAsync(MaterialFormDto dto, string userName)
         {
             var entity = await _context.Materials.FirstOrDefaultAsync(m => m.Id == dto.Id && !m.IsDeleted);
             if (entity == null)
-                return ServiceResult<bool>.Fail("الخامة غير موجودة.");
-
+                return ServiceResult<bool>.Fail("Material not found.");
             if (await ExistsCodeAsync(dto.Code, dto.Id))
-                return ServiceResult<bool>.Fail("كود الخامة ده مستخدم بالفعل.");
+                return ServiceResult<bool>.Fail("This material code is already in use.");
             if (dto.PurchasePrice < 0 || dto.CurrentPrice < 0)
-                return ServiceResult<bool>.Fail("السعر لا يمكن أن يكون أقل من صفر.");
+                return ServiceResult<bool>.Fail("Price cannot be negative.");
 
             var oldPrice = entity.CurrentPrice;
             var oldQty = entity.Quantity;
@@ -194,8 +195,6 @@ namespace Dental.Modules.Inventory.ServicesInventory
             entity.IsActive = dto.IsActive;
             entity.Notes = dto.Notes;
             entity.ModifiedDate = DateTime.Now;
-            // ⭐ ملحوظة: الكمية بتتعدل بس عن طريق Stock In/Out — مش من فورم التعديل العادي
-            // عشان نحافظ على دقة الـ Audit Trail
 
             _context.MaterialHistories.Add(new MaterialHistory
             {
@@ -206,18 +205,17 @@ namespace Dental.Modules.Inventory.ServicesInventory
                 PriceAfter = entity.CurrentPrice,
                 QuantityBefore = oldQty,
                 QuantityAfter = entity.Quantity,
-                Notes = "تعديل بيانات الخامة"
+                Notes = "Material details updated"
             });
-
             await _context.SaveChangesAsync();
-            return ServiceResult<bool>.Ok(true, "تم تعديل بيانات الخامة بنجاح.");
+            return ServiceResult<bool>.Ok(true, "Material updated successfully.");
         }
 
         public async Task<ServiceResult<bool>> DeleteAsync(int id, string userName)
         {
             var entity = await _context.Materials.FirstOrDefaultAsync(m => m.Id == id && !m.IsDeleted);
             if (entity == null)
-                return ServiceResult<bool>.Fail("الخامة غير موجودة.");
+                return ServiceResult<bool>.Fail("Material not found.");
 
             entity.IsDeleted = true;
             entity.IsActive = false;
@@ -228,25 +226,23 @@ namespace Dental.Modules.Inventory.ServicesInventory
                 MaterialId = entity.Id,
                 Action = MaterialHistoryAction.Deleted,
                 UserName = userName,
-                Notes = "تم حذف الخامة (Soft Delete)"
+                Notes = "Material deleted (soft delete)"
             });
-
             await _context.SaveChangesAsync();
-            return ServiceResult<bool>.Ok(true, "تم حذف الخامة بنجاح.");
+            return ServiceResult<bool>.Ok(true, "Material deleted successfully.");
         }
 
         public async Task<ServiceResult<bool>> StockInAsync(StockInRequest req, string userName)
         {
             if (req.Quantity <= 0)
-                return ServiceResult<bool>.Fail("الكمية يجب أن تكون أكبر من صفر.");
+                return ServiceResult<bool>.Fail("Quantity must be greater than zero.");
 
             var material = await _context.Materials.FirstOrDefaultAsync(m => m.Id == req.MaterialId && !m.IsDeleted);
             if (material == null)
-                return ServiceResult<bool>.Fail("الخامة غير موجودة.");
+                return ServiceResult<bool>.Fail("Material not found.");
 
             var qtyBefore = material.Quantity;
             material.Quantity += req.Quantity;
-
             if (req.UnitPrice.HasValue && req.UnitPrice.Value >= 0)
                 material.PurchasePrice = req.UnitPrice.Value;
             if (!string.IsNullOrWhiteSpace(req.BatchNumber))
@@ -283,21 +279,19 @@ namespace Dental.Modules.Inventory.ServicesInventory
                 Notes = req.Notes
             });
             await _context.SaveChangesAsync();
-
-            return ServiceResult<bool>.Ok(true, "تم توريد الكمية للمخزن بنجاح.");
+            return ServiceResult<bool>.Ok(true, "Stock received successfully.");
         }
 
         public async Task<ServiceResult<bool>> StockOutAsync(StockOutRequest req, string userName)
         {
             if (req.Quantity <= 0)
-                return ServiceResult<bool>.Fail("الكمية يجب أن تكون أكبر من صفر.");
+                return ServiceResult<bool>.Fail("Quantity must be greater than zero.");
 
             var material = await _context.Materials.FirstOrDefaultAsync(m => m.Id == req.MaterialId && !m.IsDeleted);
             if (material == null)
-                return ServiceResult<bool>.Fail("الخامة غير موجودة.");
-
+                return ServiceResult<bool>.Fail("Material not found.");
             if (req.Quantity > material.Quantity)
-                return ServiceResult<bool>.Fail($"الكمية المطلوب صرفها ({req.Quantity}) أكبر من المتاح بالمخزون ({material.Quantity}).");
+                return ServiceResult<bool>.Fail($"Requested quantity ({req.Quantity}) exceeds available stock ({material.Quantity}).");
 
             var qtyBefore = material.Quantity;
             material.Quantity -= req.Quantity;
@@ -327,8 +321,7 @@ namespace Dental.Modules.Inventory.ServicesInventory
                 Notes = req.DestinationOrReason ?? req.Notes
             });
             await _context.SaveChangesAsync();
-
-            return ServiceResult<bool>.Ok(true, "تم صرف الكمية من المخزن بنجاح.");
+            return ServiceResult<bool>.Ok(true, "Stock issued successfully.");
         }
 
         public async Task<List<MaterialHistoryDto>> GetHistoryAsync(int materialId)
@@ -361,7 +354,7 @@ namespace Dental.Modules.Inventory.ServicesInventory
                 .Where(m => !m.IsDeleted)
                 .ToListAsync();
 
-            var dashboard = new InventoryDashboardDto
+            return new InventoryDashboardDto
             {
                 TotalMaterials = materials.Count,
                 TotalStockValue = materials.Sum(m => m.Quantity * m.CurrentPrice),
@@ -378,8 +371,6 @@ namespace Dental.Modules.Inventory.ServicesInventory
                         TotalValue = g.Sum(m => m.Quantity * m.CurrentPrice)
                     }).ToList()
             };
-
-            return dashboard;
         }
     }
 }

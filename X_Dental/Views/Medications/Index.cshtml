@@ -1,362 +1,614 @@
 ﻿@using Microsoft.AspNetCore.Mvc.Rendering
 @{
-    ViewData["Title"] = "كاتالوج الأدوية";
+    ViewData["Title"] = "Medication Catalog";
     var categories = ViewBag.Categories as List<SelectListItem> ?? new();
 }
-
-<style>
-    :root {
-        --md-teal-50: #f0fdfa;
-        --md-teal-100: #ccfbf1;
-        --md-teal-500: #14b8a6;
-        --md-teal-600: #0d9488;
-        --md-teal-700: #0d7377;
-        --md-ink-900: #0b2e30;
-        --md-ink-600: #4b6b6c;
-        --md-ink-400: #94a3b8;
-    }
-
-    .med-page {
-        padding: 20px;
-        font-family: 'Segoe UI', 'IBM Plex Sans Arabic', system-ui, sans-serif;
-        color: var(--md-ink-900);
-    }
-
-    .med-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 18px;
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-
-        .med-header h2 {
-            font-weight: 800;
-            margin: 0;
-            font-size: 1.3rem;
+@section Styles {
+    <style>
+        :root {
+            --md-teal-50: #f0fdfa;
+            --md-teal-100: #ccfbf1;
+            --md-teal-500: #14b8a6;
+            --md-teal-600: #0d9488;
+            --md-teal-700: #0d7377;
+            --md-ink-900: #0b2e30;
+            --md-ink-600: #4b6b6c;
+            --md-ink-400: #94a3b8;
         }
 
-    .med-layout {
-        display: grid;
-        grid-template-columns: 260px 1fr;
-        gap: 18px;
-        align-items: start;
-    }
+        @@keyframes medFadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
 
-    @@media (max-width: 900px) {
-        .med-layout {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    .med-side {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        position: sticky;
-        top: 8px;
-    }
-
-    .med-upload-zone {
-        border: 2px dashed #cbd5e1;
-        border-radius: 16px;
-        padding: 22px 14px;
-        text-align: center;
-        background: linear-gradient(180deg, #fff, #f8fdfc);
-        cursor: pointer;
-        transition: all .25s ease;
-    }
-
-        .med-upload-zone:hover {
-            border-color: var(--md-teal-500);
-            transform: translateY(-2px);
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .med-upload-zone.drag-over {
-            border-color: var(--md-teal-600);
-            background: var(--md-teal-50);
+        @@keyframes medRowIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .med-upload-zone.uploading {
-            pointer-events: none;
-            opacity: .8;
+        @@keyframes medShine {
+            0%, 100% {
+                right: -30%;
+            }
+
+            50% {
+                right: 105%;
+            }
         }
 
-    .med-upload-icon {
-        width: 48px;
-        height: 48px;
-        margin: 0 auto 10px;
-        border-radius: 12px;
-        background: var(--md-teal-50);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+        @@keyframes chipPop {
+            from {
+                transform: scale(.92);
+            }
 
-        .med-upload-icon i {
-            font-size: 1.4rem;
-            color: var(--md-teal-600);
+            to {
+                transform: scale(1);
+            }
         }
 
-    .med-upload-title {
-        margin: 0;
-        font-weight: 800;
-        font-size: .85rem;
-    }
-
-    .med-upload-hint {
-        color: var(--md-ink-400);
-        font-size: .72rem;
-        display: block;
-        margin-top: 2px;
-    }
-
-    .med-progress-wrap {
-        display: none;
-        align-items: center;
-        gap: 8px;
-        margin-top: 14px;
-    }
-
-        .med-progress-wrap.show {
-            display: flex;
+        .med-page {
+            padding: 16px 20px 48px;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: var(--md-ink-900);
         }
 
-    .med-progress-track {
-        flex: 1;
-        height: 8px;
-        border-radius: 999px;
-        background: #e2e8f0;
-        overflow: hidden;
-    }
-
-    .med-progress-fill {
-        height: 100%;
-        width: 0%;
-        border-radius: 999px;
-        background: linear-gradient(90deg, var(--md-teal-600), var(--md-teal-500));
-        transition: width .2s ease;
-    }
-
-    .med-chips {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .med-chip {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border: 1px solid #f1f5f9;
-        background: #fff;
-        border-radius: 10px;
-        padding: 8px 12px;
-        font-size: .8rem;
-        font-weight: 700;
-        color: #475569;
-        cursor: pointer;
-        transition: all .2s ease;
-    }
-
-        .med-chip:hover {
-            background: var(--md-teal-50);
-        }
-
-        .med-chip.active {
-            background: linear-gradient(135deg, var(--md-teal-600), var(--md-teal-700));
+        .med-hero {
+            background: linear-gradient(135deg, #0d7377 0%, #0f9b8e 50%, #14b8a6 100%);
+            border-radius: 22px;
+            padding: 22px 28px;
             color: #fff;
-            border-color: transparent;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 14px 34px rgba(13,115,119,.25);
+            animation: medFadeUp .45s ease both;
         }
 
-        .med-chip em {
-            font-style: normal;
-            background: rgba(0,0,0,.08);
-            border-radius: 999px;
-            padding: 1px 7px;
-            font-size: .68rem;
+            .med-hero::before {
+                content: '';
+                position: absolute;
+                top: -60%;
+                right: -30%;
+                width: 45%;
+                height: 220%;
+                background: linear-gradient(105deg, transparent, rgba(255,255,255,.16), transparent);
+                transform: rotate(12deg);
+                animation: medShine 7s ease-in-out infinite;
+                pointer-events: none;
+            }
+
+            .med-hero h1 {
+                margin: 0;
+                font-size: 1.3rem;
+                font-weight: 800;
+                position: relative;
+            }
+
+            .med-hero p {
+                margin: 4px 0 0;
+                font-size: .85rem;
+                opacity: .92;
+                position: relative;
+            }
+
+        .med-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
         }
 
-        .med-chip.active em {
-            background: rgba(255,255,255,.25);
+        .med-kpi {
+            background: rgba(255,255,255,.92);
+            border: 1px solid rgba(255,255,255,.6);
+            border-radius: 16px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 14px rgba(10,77,79,.06);
+            animation: medFadeUp .5s ease both;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s;
         }
 
-    .med-main {
-        background: #fff;
-        border: 1px solid #f1f5f9;
-        border-radius: 16px;
-        overflow: hidden;
-    }
+            .med-kpi:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 22px rgba(10,77,79,.1);
+            }
 
-    .med-toolbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 14px 18px;
-        border-bottom: 1px solid #f1f5f9;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
+            .med-kpi.active {
+                outline: 2px solid rgba(20,184,166,.3);
+            }
 
-    .med-search {
-        flex: 1;
-        min-width: 200px;
-        padding: 9px 14px;
-        border: 1.5px solid #e2e8f0;
-        border-radius: 10px;
-        font-size: .88rem;
-        outline: none;
-    }
-
-        .med-search:focus {
-            border-color: var(--md-teal-500);
+        .med-kpi-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
-    table.med-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: .87rem;
-    }
+            .med-kpi-icon.teal {
+                background: var(--md-teal-50);
+                color: var(--md-teal-600);
+            }
 
-        table.med-table th {
-            text-align: right;
-            color: var(--md-ink-600);
-            font-weight: 700;
-            padding: 10px 14px;
-            border-bottom: 2px solid var(--md-teal-50);
-            background: #fafefe;
-        }
+            .med-kpi-icon.green {
+                background: #f0fdf4;
+                color: #16a34a;
+            }
 
-        table.med-table td {
-            padding: 8px 14px;
-            border-bottom: 1px solid var(--md-teal-50);
-            vertical-align: middle;
-        }
+            .med-kpi-icon.slate {
+                background: #f1f5f9;
+                color: #64748b;
+            }
 
-    .med-name {
-        font-weight: 700;
-        color: var(--md-ink-900);
-    }
+            .med-kpi-icon.purple {
+                background: #f5f3ff;
+                color: #7c3aed;
+            }
 
-    .med-cat-select {
-        padding: 5px 8px;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
-        font-size: .78rem;
-        background: #fff;
-    }
-
-    .med-guessed-badge {
-        display: inline-block;
-        margin-inline-start: 6px;
-        font-size: .62rem;
-        font-weight: 800;
-        color: #b45309;
-        background: #fef3c7;
-        padding: 1px 6px;
-        border-radius: 6px;
-    }
-
-    .med-toggle {
-        width: 38px;
-        height: 22px;
-        border-radius: 999px;
-        border: none;
-        cursor: pointer;
-        position: relative;
-        background: #e2e8f0;
-        transition: background .2s;
-    }
-
-        .med-toggle.on {
-            background: var(--md-teal-500);
-        }
-
-        .med-toggle::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #fff;
-            transition: transform .2s;
-        }
-
-        .med-toggle.on::after {
-            transform: translateX(16px);
-        }
-
-    .med-empty {
-        text-align: center;
-        padding: 48px 20px;
-        color: var(--md-ink-400);
-    }
-
-        .med-empty i {
-            font-size: 2.2rem;
+        .med-kpi-val {
             display: block;
-            margin-bottom: 10px;
-            opacity: .5;
+            font-size: 1.2rem;
+            font-weight: 800;
         }
 
-    .med-table-scroll {
-        max-height: 62vh;
-        overflow-y: auto;
-    }
-</style>
+        .med-kpi-lbl {
+            display: block;
+            font-size: .72rem;
+            font-weight: 700;
+            color: var(--md-ink-600);
+        }
 
-<div class="med-page">
-    <div class="med-header">
-        <h2><i class="bi bi-capsule-pill"></i> كاتالوج الأدوية</h2>
+        .med-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 18px;
+            align-items: start;
+            animation: medFadeUp .5s .05s ease both;
+        }
+
+        @@media (max-width: 900px) {
+            .med-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .med-kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .med-side {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            position: sticky;
+            top: 8px;
+        }
+
+        .med-upload-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 20px 14px;
+            text-align: center;
+            background: linear-gradient(180deg, #fff, #f8fdfc);
+            cursor: pointer;
+            transition: all .25s ease;
+        }
+
+            .med-upload-zone:hover {
+                border-color: var(--md-teal-500);
+                transform: translateY(-2px);
+            }
+
+            .med-upload-zone.drag-over {
+                border-color: var(--md-teal-600);
+                background: var(--md-teal-50);
+            }
+
+            .med-upload-zone.uploading {
+                pointer-events: none;
+                opacity: .85;
+            }
+
+        .med-upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 10px;
+            border-radius: 12px;
+            background: var(--md-teal-50);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .med-upload-icon i {
+                font-size: 1.4rem;
+                color: var(--md-teal-600);
+            }
+
+        .med-upload-title {
+            margin: 0;
+            font-weight: 800;
+            font-size: .85rem;
+        }
+
+        .med-upload-hint {
+            color: var(--md-ink-400);
+            font-size: .72rem;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .med-progress-wrap {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+            .med-progress-wrap.show {
+                display: flex;
+            }
+
+        .med-progress-track {
+            flex: 1;
+            height: 8px;
+            border-radius: 999px;
+            background: #e2e8f0;
+            overflow: hidden;
+        }
+
+        .med-progress-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--md-teal-600), var(--md-teal-500));
+            transition: width .2s ease;
+        }
+
+        .med-chips {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 46vh;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+
+        .med-chip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #f1f5f9;
+            background: #fff;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: .8rem;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+
+            .med-chip:hover {
+                background: var(--md-teal-50);
+            }
+
+            .med-chip.active {
+                background: linear-gradient(135deg, var(--md-teal-600), var(--md-teal-700));
+                color: #fff;
+                border-color: transparent;
+                animation: chipPop .18s ease;
+            }
+
+            .med-chip em {
+                font-style: normal;
+                background: rgba(0,0,0,.08);
+                border-radius: 999px;
+                padding: 1px 7px;
+                font-size: .68rem;
+            }
+
+            .med-chip.active em {
+                background: rgba(255,255,255,.25);
+            }
+
+        .med-main {
+            background: #fff;
+            border: 1px solid #f1f5f9;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 28px rgba(10,77,79,.06);
+        }
+
+        .med-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            border-bottom: 1px solid #f1f5f9;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .med-search {
+            flex: 1;
+            min-width: 200px;
+            padding: 9px 14px 9px 36px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: .88rem;
+            outline: none;
+            background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%230d9488' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z'/%3E%3C/svg%3E") no-repeat 12px center;
+        }
+
+            .med-search:focus {
+                border-color: var(--md-teal-500);
+                box-shadow: 0 0 0 3px rgba(20,184,166,.12);
+            }
+
+        .med-page-info {
+            font-size: .75rem;
+            font-weight: 700;
+            color: var(--md-ink-600);
+            white-space: nowrap;
+        }
+
+        table.med-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .87rem;
+        }
+
+            table.med-table th {
+                text-align: left;
+                color: var(--md-ink-600);
+                font-weight: 800;
+                font-size: .72rem;
+                text-transform: uppercase;
+                letter-spacing: .3px;
+                padding: 10px 14px;
+                border-bottom: 2px solid var(--md-teal-50);
+                background: #fafefe;
+                position: sticky;
+                top: 0;
+                z-index: 1;
+            }
+
+            table.med-table td {
+                padding: 10px 14px;
+                border-bottom: 1px solid var(--md-teal-50);
+                vertical-align: middle;
+            }
+
+            table.med-table tbody tr {
+                animation: medRowIn .28s ease both;
+            }
+
+                table.med-table tbody tr:hover td {
+                    background: var(--md-teal-50);
+                }
+
+        .med-name {
+            font-weight: 700;
+            color: var(--md-ink-900);
+        }
+
+        .med-name-sub {
+            font-size: .74rem;
+            color: var(--md-ink-600);
+            font-weight: 600;
+            margin-top: 1px;
+        }
+
+        .med-defaults {
+            font-size: .78rem;
+            color: #475569;
+            line-height: 1.35;
+        }
+
+            .med-defaults b {
+                color: var(--md-ink-900);
+            }
+
+        .med-cat-select {
+            padding: 5px 8px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            font-size: .78rem;
+            background: #fff;
+            max-width: 180px;
+        }
+
+        .med-toggle {
+            width: 38px;
+            height: 22px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            background: #e2e8f0;
+            transition: background .2s;
+        }
+
+            .med-toggle.on {
+                background: var(--md-teal-500);
+            }
+
+            .med-toggle::after {
+                content: '';
+                position: absolute;
+                top: 2px;
+                left: 2px;
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: #fff;
+                transition: transform .2s;
+            }
+
+            .med-toggle.on::after {
+                transform: translateX(16px);
+            }
+
+        .med-empty {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--md-ink-400);
+        }
+
+            .med-empty i {
+                font-size: 2.2rem;
+                display: block;
+                margin-bottom: 10px;
+                opacity: .5;
+            }
+
+        .med-table-scroll {
+            max-height: 62vh;
+            overflow-y: auto;
+        }
+
+        .med-pager {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-top: 1px solid #f1f5f9;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            min-width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            color: #475569;
+            font-weight: 700;
+            font-size: .8rem;
+            cursor: pointer;
+        }
+
+            .page-btn.active {
+                background: linear-gradient(135deg, var(--md-teal-600), var(--md-teal-700));
+                color: #fff;
+                border-color: transparent;
+            }
+
+            .page-btn:disabled {
+                opacity: .4;
+                cursor: not-allowed;
+            }
+
+        .med-skel {
+            height: 40px;
+            border-radius: 8px;
+            margin: 8px 14px;
+            background: linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 37%,#f1f5f9 63%);
+            background-size: 400% 100%;
+            animation: medShine 1.2s linear infinite;
+        }
+    </style>
+}
+
+<div class="med-page" dir="ltr">
+    <div class="med-hero">
+        <div>
+            <h1><i class="bi bi-capsule-pill"></i> Medication Catalog</h1>
+            <p>Import from Excel, assign categories, and keep the prescription list current</p>
+        </div>
+    </div>
+
+    <div class="med-kpi-grid">
+        <div class="med-kpi active" data-filter="all" onclick="applyKpiFilter('all')">
+            <div class="med-kpi-icon teal"><i class="bi bi-capsule"></i></div>
+            <div><span class="med-kpi-val" id="kpiTotal">—</span><span class="med-kpi-lbl">Total</span></div>
+        </div>
+        <div class="med-kpi" data-filter="active" onclick="applyKpiFilter('active')">
+            <div class="med-kpi-icon green"><i class="bi bi-check-circle"></i></div>
+            <div><span class="med-kpi-val" id="kpiActive">—</span><span class="med-kpi-lbl">Active</span></div>
+        </div>
+        <div class="med-kpi" data-filter="inactive" onclick="applyKpiFilter('inactive')">
+            <div class="med-kpi-icon slate"><i class="bi bi-pause-circle"></i></div>
+            <div><span class="med-kpi-val" id="kpiInactive">—</span><span class="med-kpi-lbl">Inactive</span></div>
+        </div>
+        <div class="med-kpi" data-filter="all">
+            <div class="med-kpi-icon purple"><i class="bi bi-diagram-3"></i></div>
+            <div><span class="med-kpi-val" id="kpiCats">—</span><span class="med-kpi-lbl">Categories in use</span></div>
+        </div>
     </div>
 
     <div class="med-layout">
         <aside class="med-side">
             <div class="med-upload-zone" id="medDropzone">
                 <div class="med-upload-icon"><i class="bi bi-cloud-arrow-up"></i></div>
-                <p class="med-upload-title">ارفع ملف الأدوية (Excel)</p>
-                <small class="med-upload-hint">شيت CATEGORY — بيحدّث القايمة تلقائيًا</small>
+                <p class="med-upload-title">Upload medications (Excel)</p>
+                <small class="med-upload-hint">CATEGORY sheet — the list refreshes automatically</small>
                 <input type="file" id="medFileInput" hidden accept=".xlsx,.xlsm" onchange="onMedFileSelected(event)" />
-
                 <div class="med-progress-wrap" id="medProgressWrap">
                     <div class="med-progress-track"><div class="med-progress-fill" id="medProgressFill"></div></div>
                     <span id="medProgressText" style="font-size:.68rem;font-weight:800;color:var(--md-teal-600);">0%</span>
                 </div>
             </div>
-
             <div class="med-chips" id="medCategoryChips">
-                <button class="med-chip active" data-cat="all">كل الأدوية <em id="cnt-all">0</em></button>
+                <button class="med-chip active" data-cat="all">All medications <em id="cnt-all">0</em></button>
                 @foreach (var c in categories)
                 {
-                    <button class="med-chip" data-cat="@c.Value"> @c.Text <em id="cnt-@c.Value">0</em></button>
+                    <button class="med-chip" data-cat="@c.Value">@c.Text <em id="cnt-@c.Value">0</em></button>
                 }
             </div>
         </aside>
-
         <main class="med-main">
             <div class="med-toolbar">
-                <input type="text" class="med-search" id="medSearchInput" placeholder="بحث بالاسم..." oninput="renderMedTable()" />
+                <input type="text" class="med-search" id="medSearchInput" placeholder="Search by name..." />
+                <span class="med-page-info" id="medPageInfo"></span>
             </div>
             <div class="med-table-scroll">
                 <table class="med-table">
                     <thead>
                         <tr>
-                            <th>اسم الدواء</th>
-                            <th>الكاتيجوري</th>
-                            <th>الجرعة الافتراضية</th>
-                            <th>فعّال</th>
+                            <th>Medication</th>
+                            <th>Category</th>
+                            <th>Defaults</th>
+                            <th>Active</th>
                         </tr>
                     </thead>
-                    <tbody id="medTableBody"></tbody>
+                    <tbody id="medTableBody">
+                        <tr><td colspan="4"><div class="med-skel"></div><div class="med-skel"></div><div class="med-skel"></div></td></tr>
+                    </tbody>
                 </table>
                 <div class="med-empty" id="medEmptyState" style="display:none;">
                     <i class="bi bi-capsule"></i>
-                    <p>لسه مفيش أدوية — ارفع ملف الإكسيل من الشريط الجانبي</p>
+                    <p>No medications yet — upload an Excel file from the sidebar</p>
                 </div>
             </div>
+            <div class="med-pager" id="medPager"></div>
         </main>
     </div>
 </div>
@@ -364,26 +616,53 @@
 @section Scripts {
     <script>
         const MED_CATEGORIES = [
-                    @foreach (var c in categories)
+                @foreach (var c in categories)
             {
-                @:{ value: @c.Value, text: "@c.Text" },
+                @:{ value: @c.Value, text: "@Html.Raw((c.Text ?? "").Replace("\"", "\\\""))" },
             }
-                ];
+            ];
+        const PAGE_SIZE = 20;
         let allMeds = [];
         let activeCategoryFilter = 'all';
+        let activeStatusFilter = 'all';
+        let currentPage = 1;
+        let searchTerm = '';
+        let searchTimer = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMedications();
+            document.getElementById('medSearchInput').addEventListener('input', e => {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(() => {
+                    searchTerm = (e.target.value || '').trim().toLowerCase();
+                    currentPage = 1;
+                    renderMedTable();
+                }, 250);
+            });
+        });
 
         async function loadMedications() {
             try {
                 const res = await fetch('/Medications/GetMedicationsData');
                 const result = await res.json();
                 if (result.success) {
-                    allMeds = result.data;
+                    allMeds = result.data || [];
                     updateChipCounts();
+                    updateKpis();
                     renderMedTable();
                 }
             } catch (err) {
                 console.error('Failed to load medications', err);
             }
+        }
+
+        function updateKpis() {
+            const total = allMeds.length;
+            const active = allMeds.filter(m => m.isActive).length;
+            document.getElementById('kpiTotal').textContent = total.toLocaleString('en-US');
+            document.getElementById('kpiActive').textContent = active.toLocaleString('en-US');
+            document.getElementById('kpiInactive').textContent = (total - active).toLocaleString('en-US');
+            document.getElementById('kpiCats').textContent = new Set(allMeds.map(m => m.category)).size;
         }
 
         function updateChipCounts() {
@@ -394,6 +673,21 @@
             });
         }
 
+        function getFiltered() {
+            let list = activeCategoryFilter === 'all'
+                ? allMeds
+                : allMeds.filter(m => m.category == activeCategoryFilter);
+            if (activeStatusFilter === 'active') list = list.filter(m => m.isActive);
+            if (activeStatusFilter === 'inactive') list = list.filter(m => !m.isActive);
+            if (searchTerm) {
+                list = list.filter(m =>
+                    (m.nameEn || '').toLowerCase().includes(searchTerm) ||
+                    (m.nameAr || '').toLowerCase().includes(searchTerm)
+                );
+            }
+            return list;
+        }
+
         function categorySelectHtml(med) {
             const opts = MED_CATEGORIES.map(c =>
                 `<option value="${c.value}" ${c.value == med.category ? 'selected' : ''}>${c.text}</option>`
@@ -401,35 +695,75 @@
             return `<select class="med-cat-select" onchange="updateMedCategory(${med.id}, this.value)">${opts}</select>`;
         }
 
-        function renderMedTable() {
-            const search = (document.getElementById('medSearchInput').value || '').trim().toLowerCase();
-            let filtered = activeCategoryFilter === 'all'
-                ? allMeds
-                : allMeds.filter(m => m.category == activeCategoryFilter);
+        function defaultsHtml(m) {
+            const freq = m.defaultFrequency || '—';
+            const dose = m.defaultDosage || '—';
+            const dur = m.defaultDuration || '—';
+            return `<div class="med-defaults"><div>Freq: <b>${freq}</b></div><div>Dose: ${dose} · Duration: ${dur}</div></div>`;
+        }
 
-            if (search) {
-                filtered = filtered.filter(m => (m.nameEn || '').toLowerCase().includes(search));
-            }
+        function applyKpiFilter(status) {
+            activeStatusFilter = status;
+            document.querySelectorAll('.med-kpi[data-filter]').forEach(k => {
+                k.classList.toggle('active', k.dataset.filter === status);
+            });
+            currentPage = 1;
+            renderMedTable();
+        }
+
+        function renderMedTable() {
+            const filtered = getFiltered();
+            const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+            if (currentPage > totalPages) currentPage = totalPages;
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const pageItems = filtered.slice(start, start + PAGE_SIZE);
 
             const body = document.getElementById('medTableBody');
             const empty = document.getElementById('medEmptyState');
+            const info = document.getElementById('medPageInfo');
+            info.textContent = filtered.length
+                ? `${start + 1}–${start + pageItems.length} of ${filtered.length}`
+                : '';
 
-            if (!filtered.length) {
+            if (!pageItems.length) {
                 body.innerHTML = '';
                 empty.style.display = 'block';
+                document.getElementById('medPager').innerHTML = '';
                 return;
             }
             empty.style.display = 'none';
-
-            body.innerHTML = filtered.map(m => `
-                        <tr>
-                            <td class="med-name">${m.nameEn}</td>
-                            <td>${categorySelectHtml(m)}</td>
-                            <td>${m.defaultFrequency || '<span style="color:#cbd5e1">—</span>'}</td>
-                            <td><button class="med-toggle ${m.isActive ? 'on' : ''}" onclick="toggleMedActive(${m.id}, this)"></button></td>
-                        </tr>
-                    `).join('');
+            body.innerHTML = pageItems.map((m, i) => {
+                const sub = m.nameAr && m.nameAr !== m.nameEn ? `<div class="med-name-sub">${m.nameAr}</div>` : '';
+                return `<tr style="animation-delay:${Math.min(i * 0.03, .3)}s">
+                        <td><div class="med-name">${m.nameEn || ''}</div>${sub}</td>
+                        <td>${categorySelectHtml(m)}</td>
+                        <td>${defaultsHtml(m)}</td>
+                        <td><button class="med-toggle ${m.isActive ? 'on' : ''}" onclick="toggleMedActive(${m.id}, this)" title="Toggle active"></button></td>
+                    </tr>`;
+            }).join('');
+            renderPager(totalPages);
         }
+
+        function renderPager(totalPages) {
+            const wrap = document.getElementById('medPager');
+            if (totalPages <= 1) { wrap.innerHTML = ''; return; }
+            let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goMedPage(${currentPage - 1})">‹</button>`;
+            const windowSize = 7;
+            let from = Math.max(1, currentPage - 3);
+            let to = Math.min(totalPages, from + windowSize - 1);
+            from = Math.max(1, to - windowSize + 1);
+            for (let p = from; p <= to; p++) {
+                html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goMedPage(${p})">${p}</button>`;
+            }
+            html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goMedPage(${currentPage + 1})">›</button>`;
+            wrap.innerHTML = html;
+        }
+
+        window.goMedPage = function(p) {
+            currentPage = p;
+            renderMedTable();
+            document.querySelector('.med-table-scroll').scrollTop = 0;
+        };
 
         window.updateMedCategory = async function(id, category) {
             const res = await fetch(`/Medications/UpdateCategory?id=${id}&category=${category}`, { method: 'POST' });
@@ -438,8 +772,9 @@
                 const med = allMeds.find(m => m.id === id);
                 if (med) med.category = parseInt(category);
                 updateChipCounts();
+                updateKpis();
             } else {
-                Swal.fire({ title: 'خطأ', text: result.message || 'تعذر التحديث', icon: 'error' });
+                Swal.fire({ title: 'Error', text: result.message || 'Could not update', icon: 'error' });
             }
         };
 
@@ -450,6 +785,7 @@
                 btn.classList.toggle('on', result.isActive);
                 const med = allMeds.find(m => m.id === id);
                 if (med) med.isActive = result.isActive;
+                updateKpis();
             }
         };
 
@@ -459,6 +795,7 @@
             document.querySelectorAll('.med-chip').forEach(c => c.classList.remove('active'));
             chip.classList.add('active');
             activeCategoryFilter = chip.dataset.cat;
+            currentPage = 1;
             renderMedTable();
         });
 
@@ -469,53 +806,41 @@
 
         function uploadMedFile(file) {
             if (!file) return;
-
             const formData = new FormData();
             formData.append('file', file);
-
             const dropzone = document.getElementById('medDropzone');
             const progressWrap = document.getElementById('medProgressWrap');
             dropzone.classList.add('uploading');
             progressWrap.classList.add('show');
             setMedProgress(0);
-
             const xhr = new XMLHttpRequest();
             xhr.open('POST', '/Medications/Import');
-
             xhr.upload.onprogress = function(e) {
                 if (e.lengthComputable) setMedProgress(Math.round((e.loaded / e.total) * 100));
             };
-
             xhr.onload = function() {
                 dropzone.classList.remove('uploading');
                 progressWrap.classList.remove('show');
                 setMedProgress(0);
-
                 let result;
                 try { result = JSON.parse(xhr.responseText); } catch { result = { success: false }; }
-
                 if (result.success) {
-                    Swal.fire({ title: 'تم الاستيراد', text: result.message, icon: 'success', confirmButtonColor: '#0d9488' });
+                    Swal.fire({ title: 'Import complete', text: result.message, icon: 'success', confirmButtonColor: '#0d9488' });
                     document.getElementById('medFileInput').value = '';
                     loadMedications();
                 } else {
-                    Swal.fire({ title: 'فشل الاستيراد', text: result.message || 'حدث خطأ غير متوقع', icon: 'error' });
+                    Swal.fire({ title: 'Import failed', text: result.message || 'Unexpected error', icon: 'error' });
                 }
             };
-
             xhr.onerror = function() {
                 dropzone.classList.remove('uploading');
                 progressWrap.classList.remove('show');
-                Swal.fire({ title: 'خطأ', text: 'تعذر الاتصال بالسيرفر', icon: 'error' });
+                Swal.fire({ title: 'Error', text: 'Could not reach the server', icon: 'error' });
             };
-
             xhr.send(formData);
         }
 
-        window.onMedFileSelected = function(e) {
-            uploadMedFile(e.target.files[0]);
-        };
-
+        window.onMedFileSelected = function(e) { uploadMedFile(e.target.files[0]); };
         const medDropzone = document.getElementById('medDropzone');
         medDropzone.addEventListener('click', () => document.getElementById('medFileInput').click());
         ['dragover', 'dragenter'].forEach(evt =>
@@ -523,7 +848,5 @@
         ['dragleave', 'drop'].forEach(evt =>
             medDropzone.addEventListener(evt, e => { e.preventDefault(); medDropzone.classList.remove('drag-over'); }));
         medDropzone.addEventListener('drop', e => uploadMedFile(e.dataTransfer.files[0]));
-
-        document.addEventListener('DOMContentLoaded', loadMedications);
     </script>
 }

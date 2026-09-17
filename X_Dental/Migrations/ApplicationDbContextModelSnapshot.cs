@@ -78,7 +78,7 @@ namespace Dental.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DiagnosisCatalogs");
+                    b.ToTable("DiagnosisCatalogs", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Clinic.LaboratoryPriceHistory", b =>
@@ -124,7 +124,7 @@ namespace Dental.Migrations
 
                     b.HasIndex("DiagnosisCatalogId");
 
-                    b.ToTable("LaboratoryPriceHistories");
+                    b.ToTable("LaboratoryPriceHistories", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Clinic.MedicationCatalog", b =>
@@ -162,7 +162,7 @@ namespace Dental.Migrations
 
                     b.HasIndex("NameAr");
 
-                    b.ToTable("MedicationCatalogs");
+                    b.ToTable("MedicationCatalogs", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Clinic.Prescription", b =>
@@ -213,7 +213,7 @@ namespace Dental.Migrations
 
                     b.HasIndex("VisitId");
 
-                    b.ToTable("Prescriptions");
+                    b.ToTable("Prescriptions", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Clinic.PrescriptionItem", b =>
@@ -265,7 +265,7 @@ namespace Dental.Migrations
 
                     b.HasIndex("PrescriptionId");
 
-                    b.ToTable("PrescriptionItems");
+                    b.ToTable("PrescriptionItems", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Clinic.ProcedureCatalog", b =>
@@ -315,7 +315,7 @@ namespace Dental.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ProcedureCatalogs");
+                    b.ToTable("ProcedureCatalogs", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Clinic.TreatmentPlan", b =>
@@ -353,7 +353,7 @@ namespace Dental.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TreatmentPlans");
+                    b.ToTable("TreatmentPlans", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Clinic.TreatmentPlanStep", b =>
@@ -404,7 +404,7 @@ namespace Dental.Migrations
 
                     b.HasIndex("TreatmentPlanId");
 
-                    b.ToTable("TreatmentPlanSteps");
+                    b.ToTable("TreatmentPlanSteps", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Clinic.VisitDiagnosis", b =>
@@ -458,7 +458,7 @@ namespace Dental.Migrations
 
                     b.HasIndex("VisitId");
 
-                    b.ToTable("VisitDiagnoses");
+                    b.ToTable("VisitDiagnoses", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Clinic.VisitPayment", b =>
@@ -510,7 +510,7 @@ namespace Dental.Migrations
 
                     b.HasIndex("VisitId");
 
-                    b.ToTable("VisitPayments");
+                    b.ToTable("VisitPayments", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Clinic.VisitProcedure", b =>
@@ -567,7 +567,7 @@ namespace Dental.Migrations
 
                     b.HasIndex("VisitId");
 
-                    b.ToTable("VisitProcedures");
+                    b.ToTable("VisitProcedures", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Inventory.Material", b =>
@@ -654,7 +654,7 @@ namespace Dental.Migrations
 
                     b.HasIndex("SupplierId");
 
-                    b.ToTable("Materials");
+                    b.ToTable("Materials", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Inventory.MaterialHistory", b =>
@@ -730,7 +730,7 @@ namespace Dental.Migrations
 
                     b.HasIndex("MaterialId");
 
-                    b.ToTable("MaterialHistories");
+                    b.ToTable("MaterialHistories", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Inventory.StockTransaction", b =>
@@ -803,7 +803,7 @@ namespace Dental.Migrations
 
                     b.HasIndex("SupplierId");
 
-                    b.ToTable("StockTransactions");
+                    b.ToTable("StockTransactions", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Inventory.Supplier", b =>
@@ -850,7 +850,7 @@ namespace Dental.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Suppliers");
+                    b.ToTable("Suppliers", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Patient.Appointment", b =>
@@ -918,7 +918,7 @@ namespace Dental.Migrations
 
                     b.HasIndex("VisitId");
 
-                    b.ToTable("Appointments");
+                    b.ToTable("Appointments", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Patient.BloodGroup", b =>
@@ -1020,7 +1020,7 @@ namespace Dental.Migrations
 
                     b.HasIndex("VisitId");
 
-                    b.ToTable("DentalChartEntries");
+                    b.ToTable("DentalChartEntries", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Patient.DocumentType", b =>
@@ -1058,7 +1058,7 @@ namespace Dental.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DocumentTypes");
+                    b.ToTable("DocumentTypes", (string)null);
 
                     b.HasData(
                         new
@@ -1542,7 +1542,7 @@ namespace Dental.Migrations
 
                     b.HasIndex("VisitId");
 
-                    b.ToTable("PatientXRays");
+                    b.ToTable("PatientXRays", (string)null);
                 });
 
             modelBuilder.Entity("Dental.Models.Patient.Tag", b =>
