@@ -3,126 +3,577 @@
 @model LoginModel
 
 @{
-    ViewData["Title"] = "تسجيل الدخول";
+    ViewData["Title"] = "Sign In";
+    Layout = "/Views/Shared/_Layout.cshtml";
 }
-
-<div  class="text-center mb-1">
-    <div class="card border-0 bg-transparent" >
-        <div class="card-body">
-            <span class="text-center fw-bold fs-1  pb-3" style="color:#415E72 !important ">
-               @ViewData["Title"]
-                <i class="bi bi-box-arrow-in-right pe-2 fs-1"></i>
-            </span>
-        </div>
+    <!-- Soft animated background -->
+    <div class="login-bg">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
     </div>
-</div>
 
-<section class="mt-0" id="loginfrm">
-    <div class="container-fluid ">
-        <div class="row d-flex justify-content-center align-items-center mt-1">
-            <div class="col-md-4"></div>
-            <div class="col-md-4 ">
-                <div class="card shadow px-4 pt-5 pb-3 " style="border-radius:15px 30px;background: linear-gradient(115deg, #EAEFEF,#fff)">
-                    <form id="account" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-                        <!-- UserName -->
-                        <div class="input-group mb-3">
+    <div class="login-container">
+        <!-- Header -->
+        <div class="login-header animate-item" style="--delay: 0.05s">
+            <div class="login-icon">
+                <i class="bi bi-box-arrow-in-right"></i>
+            </div>
+            <h1>@ViewData["Title"]</h1>
+            <p>Welcome to Dr. Mohammed El.Kholy Dental Suite</p>
+        </div>
 
-                            <span class="input-group-text border-start-0 fw-bold text-center text-white rounded-end-3" style="background:#415E72" id="inputGroup-sizing-default">&nbsp;&nbsp;&nbsp;&nbsp;اسم المستخدم&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                            <input asp-for="Input.UserName" required class="form-control text-center me-1 p-0" aria-required="true" placeholder="ادخل اسم المستخدم ..." type="text" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" style="border-top-left-radius : 20px ;border-left-width:3px;border-right-width:3px;" autofocus>
-                        </div>
+        <!-- Card -->
+        <div class="login-card animate-item" style="--delay: 0.15s">
+            <form id="account" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-2" role="alert"></div>
 
-                  
-                        <!-- Password -->
-                        <div class="input-group mb-3">
-                            <span class="input-group-text border-start-0 fw-bold text-center text-white rounded-end-3 px-3" style="background:#415E72" id="inputGroup-sizing-default">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;كلمة المرور&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp</span>
-                            <input asp-for="Input.Password" required id="pass" class="form-control text-center me-1 p-0" placeholder="ادخل كلمة المرور صحيحة..." type="password" style="border-top-left-radius : 20px ;border-left-width:3px;border-right-width:3px;">
-                            <br>
-                        </div>
+                <!-- Username -->
+                <div class="form-group animate-item" style="--delay: 0.25s">
+                    <label class="form-label">
+                        <i class="bi bi-person-fill"></i>
+                        Username
+                    </label>
+                    <div class="input-wrapper">
+                        <input asp-for="Input.UserName"
+                               required
+                               class="form-control modern-input"
+                               placeholder="Enter your username..."
+                               autofocus
+                               autocomplete="username" />
+                    </div>
+                </div>
 
-                        <div class="d-flex justify-content-between  align-items-center ">
-                            <a class=" text-decoration-none link-primary" id="forgot-password" href="#" @* asp-area="Identity" asp-page="./ForgotPassword" *@>نسيت كلمة المرور</a>
-
-                            <!-- Checkbox -->
-                            <div class="checkbox my-0 py-0">
-                                <label asp-for="Input.RememberMe" class="form-label">
-                                    <input class="form-check-input mx-2" asp-for="Input.RememberMe" />
-                                    تذكرني
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="text-center text-lg-start mt-2 pt-2">
-                            <button id="login-submit" type="submit" data-mdb-button-init data-mdb-ripple-init class="btn fw-bold btn-lg w-100 send-btn"
-                                    style="padding-left: 3rem; padding-right: 3rem">
-                                تسجيل الدخول
-                            </button>
-
-                            <p class="small fw-bold text-center mt-2 pt-1 mb-0">
-                                هل لديك حساب ؟ <a href="#" class="link-danger">تسجيل حساب جديد</a>
-                            </p>
-                            @*  <p class="small fw-bold text-center mt-2 pt-1 mb-0">
-                            هل لديك حساب ؟ <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl"
-                                              class="link-danger">تسجيل حساب جديد</a>
-                        </p> *@
-                        </div>
-                    </form>
-                    <div class="d-flex flex-row align-items-center justify-content-center mt-5 mb-0">
-                        <button type="button" data-mdb-button-init data-mdb-ripple-init class="btn border-0 btn-floating mx-1">
-                            <i class="bi bi-google fs-4"></i>
-                        </button>
-                        <button type="button" data-mdb-button-init data-mdb-ripple-init class="btn border-0 btn-floating mx-1">
-                            <i class="bi bi-twitter fs-4"></i>
-                        </button>
-                        <button type="button" data-mdb-button-init data-mdb-ripple-init class="btn border-0 btn-floating mx-1">
-                            <i class="bi bi-youtube fs-4"></i>
-                        </button>
-                        <button type="button" data-mdb-button-init data-mdb-ripple-init class="btn border-0 btn-floating mx-1">
-                            <i class="bi bi-facebook fs-4"></i>
-                        </button>
-                        <button type="button" data-mdb-button-init data-mdb-ripple-init class="btn border-0 btn-floating mx-1">
-                            <i class="bi bi-whatsapp fs-4"></i>
-                        </button>
-                        <button type="button" data-mdb-button-init data-mdb-ripple-init class="btn border-0 btn-floating mx-1">
-                            <i class="bi bi-twitter-x fs-4"></i>
+                <!-- Password -->
+                <div class="form-group animate-item" style="--delay: 0.35s">
+                    <label class="form-label">
+                        <i class="bi bi-lock-fill"></i>
+                        Password
+                    </label>
+                    <div class="input-wrapper">
+                        <input asp-for="Input.Password"
+                               required
+                               id="pass"
+                               type="password"
+                               class="form-control modern-input"
+                               placeholder="Enter your password..."
+                               autocomplete="current-password" />
+                        <button type="button" class="toggle-password" onclick="togglePassword()" title="Show/Hide password">
+                            <i class="bi bi-eye" id="eyeIcon"></i>
                         </button>
                     </div>
-            
                 </div>
+
+                <!-- Options -->
+                <div class="form-options animate-item" style="--delay: 0.45s">
+                    <label class="remember-me">
+                        <input class="form-check-input" asp-for="Input.RememberMe" />
+                        <span>Remember me</span>
+                    </label>
+                    <a href="#" class="forgot-link" id="forgot-password">Forgot password?</a>
                 </div>
-            <div class="col-md-1"></div>
-            <div class="col-md-3 justify-content-center mx-auto">
-                @* <img src="~/images/dots/hero-image.png" /> *@
+
+                <!-- Submit -->
+                <div class="animate-item" style="--delay: 0.55s">
+                    <button id="login-submit" type="submit" class="btn-login">
+                        <span class="btn-text">Sign In</span>
+                        <span class="btn-icon">
+                            <i class="bi bi-arrow-right"></i>
+                        </span>
+                    </button>
+                </div>
+
+                <!-- Register -->
+                <div class="register-link animate-item" style="--delay: 0.65s">
+                    Don't have an account?
+                    <a href="#" class="link-register">Create one</a>
+                </div>
+            </form>
+
+            <!-- Divider -->
+            <div class="divider animate-item" style="--delay: 0.75s">
+                <span>or continue with</span>
+            </div>
+
+            <!-- Social -->
+            <div class="social-icons animate-item" style="--delay: 0.85s">
+                <button type="button" class="social-btn" title="Google">
+                    <i class="bi bi-google"></i>
+                </button>
+                <button type="button" class="social-btn" title="Facebook">
+                    <i class="bi bi-facebook"></i>
+                </button>
+                <button type="button" class="social-btn" title="WhatsApp">
+                    <i class="bi bi-whatsapp"></i>
+                </button>
+                <button type="button" class="social-btn" title="X (Twitter)">
+                    <i class="bi bi-twitter-x"></i>
+                </button>
+                <button type="button" class="social-btn" title="YouTube">
+                    <i class="bi bi-youtube"></i>
+                </button>
             </div>
         </div>
     </div>
-</section>
-
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/Login.js"></script>
+
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('pass');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+            }
+        }
+    </script>
 }
 
 <style>
-    .send-btn {
-        background: linear-gradient(135deg, #25D366, #128C7E);
-        border: none;
-        color: #fff;
-        border-radius: 10px;
-        padding: 8px 22px;
-        transition: all .25s ease-in-out;
+    /* ========== Compact + English Login (keeps original colors) ========== */
+
+    .login-wrapper {
+        min-height: calc(100vh - 120px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        padding: 16px 12px;
     }
 
-        .send-btn:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(0,0,0,.15);
-            opacity: .95;
+    .login-bg {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    .shape {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(70px);
+        opacity: 0.16;
+        animation: floatShape 16s ease-in-out infinite;
+    }
+
+    .shape-1 {
+        width: 340px;
+        height: 340px;
+        background: #415E72;
+        top: -100px;
+        right: -70px;
+    }
+
+    .shape-2 {
+        width: 260px;
+        height: 260px;
+        background: #25D366;
+        bottom: -80px;
+        left: -50px;
+        animation-delay: -5s;
+    }
+
+    .shape-3 {
+        width: 200px;
+        height: 200px;
+        background: #415E72;
+        top: 45%;
+        left: 25%;
+        opacity: 0.1;
+        animation-delay: -10s;
+    }
+
+    @@keyframes floatShape {
+        0%, 100% {
+            transform: translate(0, 0) scale(1);
         }
 
-        .send-btn:disabled {
-            opacity: .6;
-            cursor: not-allowed;
+        33% {
+            transform: translate(20px, -30px) scale(1.04);
         }
 
+        66% {
+            transform: translate(-15px, 18px) scale(0.96);
+        }
+    }
+
+    .login-container {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 400px;
+    }
+
+    /* Header - more compact */
+    .login-header {
+        text-align: center;
+        margin-bottom: 18px;
+    }
+
+    .login-icon {
+        width: 58px;
+        height: 58px;
+        margin: 0 auto 10px;
+        background: linear-gradient(135deg, #415E72, #2c4456);
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        color: white;
+        font-size: 1.6rem;
+        box-shadow: 0 8px 22px rgba(65, 94, 114, 0.3);
+        animation: iconPulse 3s ease-in-out infinite;
+    }
+
+    @@keyframes iconPulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.06);
+        }
+    }
+
+    .login-header h1 {
+        font-size: 1.7rem;
+        font-weight: 800;
+        color: #415E72;
+        margin: 0 0 4px;
+        letter-spacing: -0.4px;
+    }
+
+    .login-header p {
+        color: #6b7c8a;
+        font-size: 0.88rem;
+        margin: 0;
+    }
+
+    /* Card - tighter padding */
+    .login-card {
+        background: linear-gradient(145deg, #EAEFEF, #ffffff);
+        border-radius: 20px;
+        padding: 26px 24px 20px;
+        box-shadow: 0 16px 40px -12px rgba(65, 94, 114, 0.16);
+        border: 1px solid rgba(65, 94, 114, 0.07);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #415E72, #25D366, #415E72);
+            background-size: 200% 100%;
+            animation: gradientMove 4s linear infinite;
+        }
+
+    @@keyframes gradientMove {
+        0% {
+            background-position: 0% 50%;
+        }
+
+        100% {
+            background-position: 200% 50%;
+        }
+    }
+
+    /* Form groups - reduced spacing */
+    .form-group {
+        margin-bottom: 14px;
+    }
+
+    .form-label {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-weight: 600;
+        color: #415E72;
+        font-size: 0.88rem;
+        margin-bottom: 6px;
+    }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+    .modern-input {
+        width: 100%;
+        height: 46px;
+        border: 2px solid rgba(65, 94, 114, 0.14);
+        border-radius: 12px;
+        padding: 0 44px 0 14px;
+        font-size: 0.95rem;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.75);
+        transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+        color: #2c3e50;
+    }
+
+        .modern-input:focus {
+            outline: none;
+            border-color: #415E72;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(65, 94, 114, 0.12);
+        }
+
+        .modern-input::placeholder {
+            color: #a0aec0;
+            font-size: 0.88rem;
+        }
+
+    .toggle-password {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #6b7c8a;
+        font-size: 1.1rem;
+        cursor: pointer;
+        padding: 3px;
+        transition: color 0.2s;
+    }
+
+        .toggle-password:hover {
+            color: #415E72;
+        }
+
+    /* Options */
+    .form-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        font-size: 0.86rem;
+    }
+
+    .remember-me {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        cursor: pointer;
+        color: #415E72;
+        font-weight: 500;
+    }
+
+    .forgot-link {
+        color: #415E72;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+
+        .forgot-link:hover {
+            color: #25D366;
+            text-decoration: underline;
+        }
+
+    /* Button */
+    .btn-login {
+        width: 100%;
+        height: 48px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #25D366, #128C7E);
+        color: white;
+        font-size: 1.05rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: 0 6px 20px rgba(37, 211, 102, 0.32);
+    }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(37, 211, 102, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login .btn-icon {
+            transition: transform 0.28s ease;
+        }
+
+        .btn-login:hover .btn-icon {
+            transform: translateX(5px);
+        }
+
+    /* Register */
+    .register-link {
+        text-align: center;
+        margin-top: 14px;
+        font-size: 0.88rem;
+        color: #6b7c8a;
+    }
+
+    .link-register {
+        color: #e74c3c;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+        .link-register:hover {
+            text-decoration: underline;
+        }
+
+    /* Divider */
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 18px 0 14px;
+        color: #a0aec0;
+        font-size: 0.8rem;
+    }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(65, 94, 114, 0.13);
+        }
+
+        .divider span {
+            padding: 0 12px;
+        }
+
+    /* Social - smaller */
+    .social-icons {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .social-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        border: 1.5px solid rgba(65, 94, 114, 0.12);
+        background: white;
+        color: #415E72;
+        font-size: 1.15rem;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+        .social-btn:hover {
+            transform: translateY(-5px) scale(1.08);
+            border-color: transparent;
+            color: white;
+        }
+
+        .social-btn:nth-child(1):hover {
+            background: #DB4437;
+            box-shadow: 0 6px 16px rgba(219, 68, 55, 0.3);
+        }
+
+        .social-btn:nth-child(2):hover {
+            background: #1877F2;
+            box-shadow: 0 6px 16px rgba(24, 119, 242, 0.3);
+        }
+
+        .social-btn:nth-child(3):hover {
+            background: #25D366;
+            box-shadow: 0 6px 16px rgba(37, 211, 102, 0.3);
+        }
+
+        .social-btn:nth-child(4):hover {
+            background: #000;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+        }
+
+        .social-btn:nth-child(5):hover {
+            background: #FF0000;
+            box-shadow: 0 6px 16px rgba(255, 0, 0, 0.3);
+        }
+
+    /* Entrance animation */
+    .animate-item {
+        opacity: 0;
+        transform: translateY(18px);
+        animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @@keyframes fadeUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Dark mode */
+    [data-theme="dark"] .login-card {
+        background: linear-gradient(145deg, #1e293b, #0f172a);
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    [data-theme="dark"] .login-header h1,
+    [data-theme="dark"] .form-label,
+    [data-theme="dark"] .remember-me {
+        color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .modern-input {
+        background: rgba(15, 23, 42, 0.55);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #e2e8f0;
+    }
+
+        [data-theme="dark"] .modern-input:focus {
+            background: #0f172a;
+            border-color: #415E72;
+        }
+
+    [data-theme="dark"] .social-btn {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, 0.08);
+        color: #94a3b8;
+    }
+
+    /* Mobile */
+    @@media (max-width: 480px) {
+        .login-card {
+            padding: 22px 16px 16px;
+        }
+
+        .login-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .social-btn {
+            width: 40px;
+            height: 40px;
+        }
+    }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .animate-item,
+        .shape,
+        .login-icon,
+        .login-card::before {
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+        }
+    }
 </style>
-

@@ -1,0 +1,493 @@
+﻿@model Dental.Models.Clinic.Prescription
+@{
+    Layout = null;   // صفحة مستقلة بدون Layout
+    var patient = Model.Visit?.Patient;
+    var clinicName    = ViewBag.ClinicName as string ?? "عيادة الأسنان";
+    var clinicAddress = ViewBag.ClinicAddress as string ?? "";
+    var clinicPhone   = ViewBag.ClinicPhone as string ?? "";
+    var clinicLogo    = ViewBag.ClinicLogo as string;
+    var age = patient?.DateOfBirth.HasValue == true
+        ? DateTime.Now.Year - patient.DateOfBirth.Value.Year
+        : (int?)null;
+    var verifyUrl = ViewBag.VerifyUrl as string ?? "";
+}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>روشتة — @(patient?.FullNameAr ?? "")</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        :root {
+            --teal: #0d9488;
+            --teal-dark: #0f766e;
+            --ink: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --bg: #f8fafc;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', 'IBM Plex Sans Arabic', Tahoma, Arial, sans-serif;
+            background: #e2e8f0;
+            color: var(--ink);
+            line-height: 1.5;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+            .clinic-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 16px;
+                border-bottom: 3px solid var(--teal);
+                padding-bottom: 14px;
+                margin-bottom: 18px;
+            }
+
+            .qr-box {
+                text-align: center;
+                flex-shrink: 0;
+            }
+
+            .qr-img {
+                display: block;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 4px;
+                background: #fff;
+            }
+
+            .qr-caption {
+                font-size: 0.68rem;
+                color: var(--muted);
+                font-weight: 700;
+                margin-top: 4px;
+            }
+
+        /* شريط الأزرار (يختفي عند الطباعة) */
+        .print-toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+        .btn-print {
+            background: linear-gradient(135deg, #0d9488, #0f766e);
+            color: #fff;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(13,148,136,.35);
+        }
+        .btn-print:hover { transform: translateY(-1px); }
+        .btn-close-page {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* ورقة الروشتة */
+        .rx-sheet {
+            width: 210mm;          /* A4 */
+            min-height: 297mm;
+            margin: 24px auto;
+            background: #fff;
+            padding: 18mm 16mm 20mm;
+            box-shadow: 0 8px 30px rgba(0,0,0,.12);
+            position: relative;
+        }
+
+        /* ── هيدر العيادة ── */
+        .clinic-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 3px solid var(--teal);
+            padding-bottom: 14px;
+            margin-bottom: 18px;
+        }
+        .clinic-logo {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+            border-radius: 12px;
+            flex-shrink: 0;
+        }
+        .clinic-logo-placeholder {
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+            color: var(--teal-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            flex-shrink: 0;
+        }
+        .clinic-info h1 {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--teal-dark);
+            margin-bottom: 4px;
+        }
+        .clinic-info p {
+            font-size: 0.82rem;
+            color: var(--muted);
+            margin: 0;
+        }
+
+        /* عنوان الروشتة */
+        .rx-title {
+            text-align: center;
+            margin: 12px 0 18px;
+        }
+        .rx-title span {
+            display: inline-block;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.15rem;
+            padding: 6px 32px;
+            border-radius: 999px;
+            letter-spacing: 1px;
+        }
+
+        /* بيانات المريض */
+        .patient-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 24px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 18px;
+            font-size: 0.9rem;
+        }
+        .patient-box .label {
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 0.78rem;
+        }
+        .patient-box .value {
+            font-weight: 700;
+            color: var(--ink);
+        }
+        .patient-box .full {
+            grid-column: 1 / -1;
+        }
+
+        /* التشخيص */
+        .section {
+            margin-bottom: 16px;
+        }
+        .section-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--teal-dark);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .diagnosis-text {
+            background: #f0fdfa;
+            border-right: 4px solid var(--teal);
+            padding: 10px 14px;
+            border-radius: 0 8px 8px 0;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        /* جدول الأدوية */
+        .meds-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            margin-top: 6px;
+        }
+        .meds-table th {
+            background: var(--teal);
+            color: #fff;
+            font-weight: 700;
+            padding: 9px 10px;
+            text-align: right;
+            font-size: 0.8rem;
+        }
+        .meds-table th:first-child { border-radius: 0 8px 0 0; }
+        .meds-table th:last-child  { border-radius: 8px 0 0 0; }
+        .meds-table td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+        .meds-table tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+        .med-name {
+            font-weight: 800;
+            color: var(--ink);
+        }
+        .med-num {
+            display: inline-flex;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #ccfbf1;
+            color: var(--teal-dark);
+            font-size: 0.75rem;
+            font-weight: 800;
+            align-items: center;
+            justify-content: center;
+            margin-left: 6px;
+        }
+
+        /* ملاحظات */
+        .notes-box {
+            background: #fffbeb;
+            border: 1px dashed #fbbf24;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            color: #78350f;
+            margin-top: 8px;
+        }
+
+        /* التوقيع */
+        .signature-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 40px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--border);
+        }
+        .sig-block {
+            text-align: center;
+            min-width: 160px;
+        }
+        .sig-line {
+            border-bottom: 1.5px solid #94a3b8;
+            height: 50px;
+            margin-bottom: 6px;
+        }
+        .sig-label {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+        .doctor-name {
+            font-weight: 800;
+            color: var(--teal-dark);
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
+
+        /* فوتر */
+        .rx-footer {
+            margin-top: 28px;
+            text-align: center;
+            font-size: 0.72rem;
+            color: #94a3b8;
+            border-top: 1px solid var(--border);
+            padding-top: 10px;
+        }
+
+        /* ── Print styles ── */
+        @@media print {
+            body { background: #fff; }
+            .print-toolbar { display: none !important; }
+            .rx-sheet {
+                width: 100%;
+                min-height: auto;
+                margin: 0;
+                padding: 10mm 12mm;
+                box-shadow: none;
+            }
+            @@page {
+                size: A4;
+                margin: 8mm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- شريط التحكم (يختفي عند الطباعة) -->
+    <div class="print-toolbar no-print">
+        <button class="btn-print" onclick="window.print()">
+            <i class="bi bi-printer"></i> طباعة الروشتة
+        </button>
+        <button class="btn-close-page" onclick="window.close()">إغلاق</button>
+    </div>
+
+    <!-- ورقة الروشتة -->
+    <div class="rx-sheet">
+
+        <!-- هيدر العيادة + QR -->
+        <div class="clinic-header">
+            <div style="display:flex; align-items:center; gap:16px; flex:1;">
+                @if (!string.IsNullOrEmpty(clinicLogo))
+                {
+                    <img src="@clinicLogo" alt="Logo" class="clinic-logo" onerror="this.style.display='none'" />
+                }
+                else
+                {
+                    <div class="clinic-logo-placeholder"><i class="bi bi-hospital"></i></div>
+                }
+                <div class="clinic-info">
+                    <h1>@clinicName</h1>
+                    @if (!string.IsNullOrEmpty(clinicAddress))
+                    {
+                        <p><i class="bi bi-geo-alt"></i> @clinicAddress</p>
+                    }
+                    @if (!string.IsNullOrEmpty(clinicPhone))
+                    {
+                        <p><i class="bi bi-telephone"></i> @clinicPhone</p>
+                    }
+                </div>
+            </div>
+
+            <!-- QR Code للتحقق -->
+            @if (!string.IsNullOrEmpty(verifyUrl))
+            {
+                <div class="qr-box">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=4&data=@Uri.EscapeDataString(verifyUrl)"
+                         alt="QR Verify"
+                         width="110" height="110"
+                         class="qr-img" />
+                    <div class="qr-caption">امسح للتحقق</div>
+                </div>
+            }
+        </div>
+
+        <!-- عنوان -->
+        <div class="rx-title">
+            <span>روشتة طبية</span>
+        </div>
+
+        <!-- بيانات المريض -->
+        <div class="patient-box">
+            <div class="full">
+                <div class="label">اسم المريض</div>
+                <div class="value" style="font-size:1.1rem;">@(patient?.FullNameAr ?? "—")</div>
+            </div>
+            <div>
+                <div class="label">كود المريض</div>
+                <div class="value">@(patient?.PatientCode ?? "—")</div>
+            </div>
+            <div>
+                <div class="label">تاريخ الروشتة</div>
+                <div class="value">@Model.PrescriptionDate.ToString("dd/MM/yyyy  hh:mm tt")</div>
+            </div>
+            <div>
+                <div class="label">العمر</div>
+                <div class="value">@(age.HasValue ? $"{age} سنة" : "—")</div>
+            </div>
+            <div>
+                <div class="label">النوع</div>
+                <div class="value">@(patient?.Gender?.NameAr ?? "—")</div>
+            </div>
+        </div>
+
+        <!-- التشخيص -->
+        @if (!string.IsNullOrWhiteSpace(Model.Diagnosis))
+        {
+            <div class="section">
+                <div class="section-label"><i class="bi bi-clipboard2-pulse"></i> التشخيص</div>
+                <div class="diagnosis-text">@Model.Diagnosis</div>
+            </div>
+        }
+
+        <!-- الأدوية -->
+        <div class="section">
+            <div class="section-label"><i class="bi bi-capsule"></i> الأدوية</div>
+            <table class="meds-table">
+                <thead>
+                    <tr>
+                        <th style="width:32px;">#</th>
+                        <th>الدواء</th>
+                        <th>الجرعة</th>
+                        <th>التكرار</th>
+                        <th>المدة</th>
+                        <th>التعليمات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int i = 1;
+                    }
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td><span class="med-num">@i</span></td>
+                            <td class="med-name">@item.MedicationName</td>
+                            <td>@(item.Dosage ?? "—")</td>
+                            <td>@(item.Frequency ?? "—")</td>
+                            <td>@(item.Duration ?? "—")</td>
+                            <td>@(item.Instructions ?? "—")</td>
+                        </tr>
+                        i++;
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ملاحظات -->
+        @if (!string.IsNullOrWhiteSpace(Model.Notes))
+        {
+            <div class="section">
+                <div class="section-label"><i class="bi bi-chat-left-text"></i> ملاحظات</div>
+                <div class="notes-box">@Model.Notes</div>
+            </div>
+        }
+
+        <!-- التوقيع -->
+        <div class="signature-area">
+            <div class="sig-block">
+                <div class="sig-line"></div>
+                <div class="sig-label">توقيع المريض / ولي الأمر</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-line"></div>
+                <div class="sig-label">الطبيب المعالج</div>
+                <div class="doctor-name">د. @(Model.PrescribedBy ?? "")</div>
+            </div>
+        </div>
+
+        <!-- فوتر -->
+        <div class="rx-footer">
+            طُبعت بتاريخ @DateTime.Now.ToString("dd/MM/yyyy HH:mm") — روشتة رقم #@Model.Id
+            <br />
+            <span style="font-size:0.65rem;">امسح رمز QR للتحقق من صحة الروشتة</span>
+        </div>
+    </div>
+
+    <script>
+        // طباعة تلقائية اختياريًا (احذف السطر لو مش عايز)
+        // window.onload = () => setTimeout(() => window.print(), 400);
+    </script>
+</body>
+</html>

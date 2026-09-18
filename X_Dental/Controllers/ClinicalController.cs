@@ -883,5 +883,76 @@ namespace Dental.Controllers
 
             return lastLabPrice ?? diag.Price;
         }
+
+        // ─────────────────────────────────────────────
+        // 🖨️ Print Prescription (+ QR)
+        // ─────────────────────────────────────────────
+        [HttpGet]
+        public async Task<IActionResult> PrintPrescription(int id)
+        {
+            var prescription = await _context.Prescriptions
+                .AsNoTracking()
+                .Include(p => p.Items)
+                .Include(p => p.Visit)
+                    .ThenInclude(v => v.Patient)
+                        .ThenInclude(pt => pt.Gender)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (prescription == null)
+                return NotFound();
+
+            // بيانات العيادة — عدّلها حسب عيادتك
+            ViewBag.ClinicName = "عيادة الأسنان";
+            ViewBag.ClinicAddress = "العنوان هنا";
+            ViewBag.ClinicPhone = "01xxxxxxxxx";
+            ViewBag.ClinicLogo = "/images/clinic-logo.png";
+
+            // رابط التحقق + توكن بسيط (يمكن تغيير السر لاحقاً)
+            var verifyToken = GenerateRxVerifyToken(id, prescription.PrescriptionDate);
+            var verifyUrl = Url.Action("VerifyPrescription", "Clinical",
+                new { id, t = verifyToken }, Request.Scheme);
+
+            ViewBag.VerifyUrl = verifyUrl;
+            ViewBag.VerifyToken = verifyToken;
+
+            return View(prescription);
+        }
+
+        // ─────────────────────────────────────────────
+        // ✅ Verify Prescription (يفتح من QR)
+        // ─────────────────────────────────────────────
+        [HttpGet]
+        public async Task<IActionResult> VerifyPrescription(int id, string t)
+        {
+            var prescription = await _context.Prescriptions
+                .AsNoTracking()
+                .Include(p => p.Items)
+                .Include(p => p.Visit)
+                    .ThenInclude(v => v.Patient)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (prescription == null)
+                return View("VerifyPrescription", null); // صفحة "غير موجودة"
+
+            var expected = GenerateRxVerifyToken(id, prescription.PrescriptionDate);
+            if (string.IsNullOrEmpty(t) || !string.Equals(t, expected, StringComparison.Ordinal))
+            {
+                ViewBag.InvalidToken = true;
+                return View("VerifyPrescription", null);
+            }
+
+            ViewBag.ClinicName = "عيادة الأسنان";
+            return View(prescription);
+        }
+
+        // توكن تحقق بسيط (SHA256) — غيّر السر في الإنتاج
+        private static string GenerateRxVerifyToken(int prescriptionId, DateTime date)
+        {
+            const string secret = "DentalClinic-Rx-Verify-2024"; // غيّره لسري قوي
+            var raw = $"{prescriptionId}|{date:yyyyMMddHHmm}|{secret}";
+            var hash = System.Security.Cryptography.SHA256.HashData(
+                System.Text.Encoding.UTF8.GetBytes(raw));
+            return Convert.ToHexString(hash)[..16].ToLowerInvariant(); // 16 حرف كافية
+        }
     }
 }
