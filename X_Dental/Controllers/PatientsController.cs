@@ -331,14 +331,15 @@ namespace Dental.Controllers
             // ⭐ NEW: خريطة أحدث حالة/تشخيص لكل سن — تُستخدم في الـ Tooltip الخاص بالـ Dental Chart التفاعلي
             var statusLabelsForTooltip = new Dictionary<Dental.Models.Patient.ToothStatus, string>
     {
-        { Dental.Models.Patient.ToothStatus.Healthy, "سليم" },
-        { Dental.Models.Patient.ToothStatus.Decayed, "تسوس" },
-        { Dental.Models.Patient.ToothStatus.Treated, "معالج" },
-        { Dental.Models.Patient.ToothStatus.Missing, "مفقود" },
-        { Dental.Models.Patient.ToothStatus.Extracted, "مخلوع" },
-        { Dental.Models.Patient.ToothStatus.RootCanal, "عصب" },
-        { Dental.Models.Patient.ToothStatus.Crown, "تاج" },
-        { Dental.Models.Patient.ToothStatus.Filling, "حشوة" }
+    { Dental.Models.Patient.ToothStatus.Healthy, "Healthy" },
+    { Dental.Models.Patient.ToothStatus.Decayed, "Decayed" },
+    { Dental.Models.Patient.ToothStatus.Treated, "Treated" },
+    { Dental.Models.Patient.ToothStatus.Missing, "Missing" },
+    { Dental.Models.Patient.ToothStatus.Extracted, "Extracted" },
+    { Dental.Models.Patient.ToothStatus.RootCanal, "RootCanal" },
+    { Dental.Models.Patient.ToothStatus.Crown, "Crown" },
+    { Dental.Models.Patient.ToothStatus.Filling, "Filling" }
+
     };
 
             if (chartEntries.Any())
@@ -561,14 +562,15 @@ namespace Dental.Controllers
 
             var statusLabels = new Dictionary<Dental.Models.Patient.ToothStatus, string>
     {
-        { Dental.Models.Patient.ToothStatus.Healthy, "سليم" },
-        { Dental.Models.Patient.ToothStatus.Decayed, "تسوس" },
-        { Dental.Models.Patient.ToothStatus.Treated, "معالج" },
-        { Dental.Models.Patient.ToothStatus.Missing, "مفقود" },
-        { Dental.Models.Patient.ToothStatus.Extracted, "مخلوع" },
-        { Dental.Models.Patient.ToothStatus.RootCanal, "عصب" },
-        { Dental.Models.Patient.ToothStatus.Crown, "تاج" },
-        { Dental.Models.Patient.ToothStatus.Filling, "حشوة" }
+    { Dental.Models.Patient.ToothStatus.Healthy, "Healthy" },
+    { Dental.Models.Patient.ToothStatus.Decayed, "Decayed" },
+    { Dental.Models.Patient.ToothStatus.Treated, "Treated" },
+    { Dental.Models.Patient.ToothStatus.Missing, "Missing" },
+    { Dental.Models.Patient.ToothStatus.Extracted, "Extracted" },
+    { Dental.Models.Patient.ToothStatus.RootCanal, "RootCanal" },
+    { Dental.Models.Patient.ToothStatus.Crown, "Crown" },
+    { Dental.Models.Patient.ToothStatus.Filling, "Filling" }
+
     };
 
             return entries.Select(e =>

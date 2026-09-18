@@ -164,7 +164,7 @@
 
     .pmodal-grid {
         display: grid;
-        grid-template-columns: 1.15fr 1fr;
+        grid-template-columns: 1fr 1fr;
         gap: 0 26px;
     }
 
@@ -524,7 +524,7 @@
                     string.Join("", fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => p[0])))
                 </div>
                 <div>
-                    <h2 id="pmTitle">@(isEdit ? "Edit Patient" : "New Patient")</h2>
+                    <h2 class="fs-5 text-light" id="pmTitle">@(isEdit ? fullName : "New Patient")</h2>
                     <p>@(isEdit ? "Update the patient's basic information" : "Enter basic info & start the session right away")</p>
                 </div>
                 <button type="button" class="pmodal-close" data-pm-close title="Close">
@@ -593,44 +593,44 @@
                             <div class="pmodal-sec-ico"><i class="bi bi-heart-pulse-fill"></i></div>
                             <div><h3>Medical History</h3><span>Important before any treatment</span></div>
                         </div>
-                        <div class="pmf align-start" style="height:calc(100% - 42px);">
+                        <div class="pmf align-start" >
                             <label style="margin-top:9px">Medical Notes</label>
                             <textarea name="MedicalNotes" class="form-control"
                                       placeholder="Allergies, chronic diseases, current medications...">@medNotes</textarea>
                         </div>
+
+
+                        <div class="pmodal-sec-head">
+                            <div class="pmodal-sec-ico"><i class="bi bi-card-checklist"></i></div>
+                            <div><h3>File Type</h3><span>Select the required treatment type</span></div>
+                        </div>
+                        <div class="pm-tiles" id="pmTypeTiles">
+                            <label class="pm-tile @(patientType == 1 ? "selected" : "")" data-type="general">
+                                <input type="radio" name="PatientType" value="1" @(patientType == 1 ? "checked" : "") />
+                                <span class="tc"><i class="bi bi-check-lg"></i></span>
+                                <div class="ti"><i class="bi bi-app-indicator"></i></div>
+                                <div class="tt">General</div>
+                                <div class="td">General & preventive dentistry</div>
+                            </label>
+                            <label class="pm-tile @(patientType == 2 ? "selected" : "")" data-type="ortho">
+                                <input type="radio" name="PatientType" value="2" @(patientType == 2 ? "checked" : "") />
+                                <span class="tc"><i class="bi bi-check-lg"></i></span>
+                                <div class="ti"><i class="bi bi-braces"></i></div>
+                                <div class="tt">Orthodontics</div>
+                                <div class="td">Regular braces follow-up</div>
+                            </label>
+                            <label class="pm-tile @(patientType == 3 ? "selected" : "")" data-type="both">
+                                <input type="radio" name="PatientType" value="3" @(patientType == 3 ? "checked" : "") />
+                                <span class="tc"><i class="bi bi-check-lg"></i></span>
+                                <div class="ti"><i class="bi bi-heart-pulse"></i></div>
+                                <div class="tt">Both Files</div>
+                                <div class="td">General treatment & ortho follow-up</div>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
-                <!-- ═══ File Type — full width under both columns ═══ -->
-                <div class="pmodal-sec d3">
-                    <div class="pmodal-sec-head">
-                        <div class="pmodal-sec-ico"><i class="bi bi-card-checklist"></i></div>
-                        <div><h3>File Type</h3><span>Select the required treatment type</span></div>
-                    </div>
-                    <div class="pm-tiles" id="pmTypeTiles">
-                        <label class="pm-tile @(patientType == 1 ? "selected" : "")" data-type="general">
-                            <input type="radio" name="PatientType" value="1" @(patientType == 1 ? "checked" : "") />
-                            <span class="tc"><i class="bi bi-check-lg"></i></span>
-                            <div class="ti"><i class="bi bi-app-indicator"></i></div>
-                            <div class="tt">General</div>
-                            <div class="td">General & preventive dentistry</div>
-                        </label>
-                        <label class="pm-tile @(patientType == 2 ? "selected" : "")" data-type="ortho">
-                            <input type="radio" name="PatientType" value="2" @(patientType == 2 ? "checked" : "") />
-                            <span class="tc"><i class="bi bi-check-lg"></i></span>
-                            <div class="ti"><i class="bi bi-braces"></i></div>
-                            <div class="tt">Orthodontics</div>
-                            <div class="td">Regular braces follow-up</div>
-                        </label>
-                        <label class="pm-tile @(patientType == 3 ? "selected" : "")" data-type="both">
-                            <input type="radio" name="PatientType" value="3" @(patientType == 3 ? "checked" : "") />
-                            <span class="tc"><i class="bi bi-check-lg"></i></span>
-                            <div class="ti"><i class="bi bi-heart-pulse"></i></div>
-                            <div class="tt">Both Files</div>
-                            <div class="td">General treatment & ortho follow-up</div>
-                        </label>
-                    </div>
-                </div>
+
             </div>
 
             <div class="pmodal-foot">

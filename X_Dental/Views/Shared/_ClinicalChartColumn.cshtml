@@ -13,14 +13,14 @@
     <div class="chart-section-head">
         <h4><i class="bi bi-grid-3x3-gap"></i> الدينتال شارت</h4>
         <div class="legend-bar">
-            <span class="legend-item"><span class="dot healthy"></span> سليم</span>
-            <span class="legend-item"><span class="dot decayed"></span> تسوس</span>
-            <span class="legend-item"><span class="dot treated"></span> معالج</span>
-            <span class="legend-item"><span class="dot missing"></span> مفقود</span>
-            <span class="legend-item"><span class="dot extracted"></span> مخلوع</span>
-            <span class="legend-item"><span class="dot rootcanal"></span> عصب</span>
-            <span class="legend-item"><span class="dot crown"></span> تاج</span>
-            <span class="legend-item"><span class="dot implant"></span> زرعة</span>
+            <span class="legend-item"><span class="dot healthy"></span> healthy</span>
+            <span class="legend-item"><span class="dot decayed"></span> decayed</span>
+            <span class="legend-item"><span class="dot treated"></span> treated</span>
+            <span class="legend-item"><span class="dot missing"></span> missing</span>
+            <span class="legend-item"><span class="dot extracted"></span> extracted</span>
+            <span class="legend-item"><span class="dot rootcanal"></span> rootcanal</span>
+            <span class="legend-item"><span class="dot crown"></span> crown</span>
+            <span class="legend-item"><span class="dot implant"></span> implant</span>
         </div>
     </div>
 
@@ -150,18 +150,15 @@
                             <div class="form-group">
                                 <label>حالة السن</label>
                                 <select class="form-glass" id="toothStatus">
-                                    <option value="1">سليم</option>
-                                    <option value="2">تسوس</option>
-                                    <option value="3">معالج</option>
-                                    <option value="4">مفقود</option>
-                                    <option value="5">مخلوع</option>
-                                    <option value="6">مطمور</option>
-                                    <option value="7">تاج</option>
-                                    <option value="8">جسر</option>
-                                    <option value="9">زرعة</option>
-                                    <option value="10">مكسور</option>
-                                    <option value="11">عصب</option>
-                                    <option value="12">حشوة</option>
+                                    <option value="1">Healthy</option>
+                                    <option value="2">Decayed</option>
+                                    <option value="3">Treated</option>
+                                    <option value="4">Missing</option>
+                                    <option value="5">Extracted</option>
+                                    <option value="6">RootCanal</option>
+                                    <option value="7">Crown</option>
+                                    <option value="8">Impants</option>
+                                    <option value="9">filling</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -511,15 +508,48 @@
     let currentXrayBase64 = null;
     let currentXrayFileName = null;
 
+        <span class="legend-item-sm"><span class="legend-dot" style="background:#fff;border:2px solid #0f9b8e;"></span> Healthy</span>
+        <span class="legend-item-sm"><span class="legend-dot" style="background:#ef4444;"></span> Decayed</span>
+        <span class="legend-item-sm"><span class="legend-dot" style="background:#3b82f6;"></span> Treated</span>
+        <span class="legend-item-sm"><span class="legend-dot" style="background:#cbd5e1;"></span> Missing</span>
+        <span class="legend-item-sm"><span class="legend-dot" style="background:#ec4899;"></span> Impants</span>
+        <span class="legend-item-sm"><span class="legend-dot" style="background:#cbd5e1;"></span> Extracted</span>
+        <span class="legend-item-sm"><span class="legend-dot" style="background:#a855f7;"></span> Crown</span>
+        <span class="legend-item-sm"><span class="legend-dot" style="background:#a855f7;"></span> bridge</span>
+        <span class="legend-item-sm"><span class="legend-dot" style="background:#a855f7;"></span> fractured</span>
+        <span class="legend-item-sm"><span class="legend-dot" style="background:#f59e0b;"></span> RootCanal</span>
+        <span class="legend-item-sm"><span class="legend-dot" style="background:#f59e0b;"></span> filling</span>
+
+
     const STATUS_ID_TO_CLASS = {
-        1: 'healthy', 2: 'decayed', 3: 'treated', 4: 'missing', 5: 'extracted',
-        6: 'impacted', 7: 'crown', 8: 'bridge', 9: 'implant', 10: 'fractured',
-        11: 'rootcanal', 12: 'filling'
+        1: 'healthy',
+        2: 'decayed',
+        3: 'treated',
+        4: 'missing',
+        6: 'implant',
+        7: 'extracted',
+        8: 'crown',
+        9: 'bridge',
+        10: 'fractured',
+        11: 'rootcanal',
+        12: 'filling'
+        
     };
     const STATUS_ID_TO_LABEL = {
-        1: 'سليم', 2: 'تسوس', 3: 'معالج', 4: 'مفقود', 5: 'مخلوع', 6: 'مطمور',
-        7: 'تاج', 8: 'جسر', 9: 'زرعة', 10: 'مكسور', 11: 'عصب', 12: 'حشوة'
+        1: 'healthy',
+        2: 'decayed',
+        3: 'treated',
+        4: 'missing',
+        6: 'implant',
+        7: 'extracted',
+        8: 'crown',
+        9: 'bridge',
+        10: 'fractured',
+        11: 'rootcanal',
+        12: 'filling'
     };
+
+
 
     function onDiagnosisChange() {
         const select = document.getElementById('diagCatalogId');
