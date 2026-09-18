@@ -13,17 +13,18 @@
 
     string StatusArLabel(Dental.Models.Patient.ToothStatus s) => s switch
     {
-        Dental.Models.Patient.ToothStatus.Healthy => "سليم",
-        Dental.Models.Patient.ToothStatus.Decayed => "تسوس",
-        Dental.Models.Patient.ToothStatus.Treated => "معالج",
-        Dental.Models.Patient.ToothStatus.Missing => "مفقود",
-        Dental.Models.Patient.ToothStatus.Extracted => "مخلوع",
-        Dental.Models.Patient.ToothStatus.RootCanal => "عصب",
-        Dental.Models.Patient.ToothStatus.Crown => "تاج",
-        Dental.Models.Patient.ToothStatus.Filling => "حشوة",
+        Dental.Models.Patient.ToothStatus.Healthy => "Healthy",
+        Dental.Models.Patient.ToothStatus.Decayed => "Decayed",
+        Dental.Models.Patient.ToothStatus.Treated => "Treated",
+        Dental.Models.Patient.ToothStatus.Missing => "Missing",
+        Dental.Models.Patient.ToothStatus.Extracted => "Extracted",
+        Dental.Models.Patient.ToothStatus.RootCanal => "RootCanal",
+        Dental.Models.Patient.ToothStatus.Crown => "Crown",
+        Dental.Models.Patient.ToothStatus.Filling => "Filling",
         _ => s.ToString()
     };
 }
+
 
 <style>
     .ro-chart-shell {
@@ -229,12 +230,15 @@
     </div>
 
     <div class="ro-legend">
-        <span class="ro-legend-item"><span class="ro-legend-dot" style="background:#fff;border:2px solid #0f9b8e;"></span> سليم</span>
-        <span class="ro-legend-item"><span class="ro-legend-dot" style="background:#ef4444;"></span> تسوس</span>
-        <span class="ro-legend-item"><span class="ro-legend-dot" style="background:#3b82f6;"></span> معالج</span>
-        <span class="ro-legend-item"><span class="ro-legend-dot" style="background:#a855f7;"></span> تاج</span>
-        <span class="ro-legend-item"><span class="ro-legend-dot" style="background:#f59e0b;"></span> عصب</span>
-        <span class="ro-legend-item"><span class="ro-legend-dot" style="background:#cbd5e1;"></span> مفقود</span>
+
+        <span class="ro-legend-item-sm"><span class="ro-legend-dot" style="background:#fff;border:2px solid #0f9b8e;"></span> Healthy</span>
+        <span class="ro-legend-item-sm"><span class="ro-legend-dot" style="background:#ef4444;"></span> Decayed</span>
+        <span class="ro-legend-item-sm"><span class="ro-legend-dot" style="background:#3b82f6;"></span> Treated</span>
+        <span class="ro-legend-item-sm"><span class="ro-legend-dot" style="background:#cbd5e1;"></span> Missing</span>
+        <span class="ro-legend-item-sm"><span class="ro-legend-dot" style="background:#cbd5e1;"></span> Extracted</span>
+        <span class="ro-legend-item-sm"><span class="ro-legend-dot" style="background:#f59e0b;"></span> RootCanal</span>
+        <span class="ro-legend-item-sm"><span class="ro-legend-dot" style="background:#a855f7;"></span> Crown</span>
+        <span class="ro-legend-item-sm"><span class="ro-legend-dot" style="background:#ec4899;"></span> Impants</span>
     </div>
 </div>
 

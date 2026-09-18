@@ -471,8 +471,8 @@
         .diag-modal-box {
             background: #fff;
             border-radius: 22px;
-            padding: 28px;
-            width: 92%;
+            padding: 0px;
+            width: 100%;
             max-width: 560px;
             box-shadow: 0 25px 50px rgba(0,0,0,.18);
         }
@@ -526,6 +526,95 @@
             gap: 10px;
             margin-bottom: 16px;
         }
+
+
+        /* ═════════ Patient Modal — XL · glass · spring animations ═════════ */
+        .pmodal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 1080;
+            background: rgba(11,46,48,.38);
+            backdrop-filter: blur(7px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            opacity: 0;
+            transition: opacity .3s ease;
+        }
+
+            .pmodal-backdrop.show {
+                opacity: 1;
+            }
+
+        /* ⭐ XL — no scroll on desktop */
+        .pmodal {
+            width: 100%;
+            max-width: 940px;
+            background: rgba(255,255,255,.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,.7);
+            border-radius: 24px;
+            box-shadow: 0 30px 80px rgba(10,77,79,.3);
+            transform: translateY(45px) scale(.93);
+            opacity: 0;
+            transition: transform .5s cubic-bezier(.2,1.35,.35,1), opacity .35s ease;
+        }
+
+        .pmodal-backdrop.show .pmodal {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .pm-age-badge {
+            flex-basis: 100%;
+            margin-left: 100px;
+            font-size: .74rem;
+            font-weight: 800;
+            color: #0f766e;
+        }
+
+        .pmodal.hide-out {
+            transform: translateY(30px) scale(.95) !important;
+            opacity: 0 !important;
+        }
+
+        /* Header */
+        .pmodal-head {
+            position: relative;
+            overflow: hidden;
+            border-radius: 24px 24px 0 0;
+            padding: 18px 24px;
+            color: #fff;
+            background: linear-gradient(135deg,#0a5d60 0%,#0d7377 40%,#119e91 100%);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+            .pmodal-head::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 85% -30%, rgba(255,255,255,.35), transparent 50%);
+                pointer-events: none;
+            }
+
+        .pmodal-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            flex-shrink: 0;
+            background: rgba(255,255,255,.16);
+            border: 1px solid rgba(255,255,255,.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            font-weight: 800;
+            animation: pmodalFloat 4s ease-in-out infinite;
+        }
+
 
         .diag-meta-card {
             border: 1.5px solid var(--sc-sky-100);
@@ -720,8 +809,14 @@
 <!-- Add / Edit Modal -->
 <div class="diag-modal-overlay" id="diagFormModalOverlay">
     <div class="diag-modal-box" dir="ltr">
-        <h5><i class="bi bi-activity"></i> <span id="diagModalTitle">New Diagnosis</span></h5>
-        <form id="diagForm">
+
+        <div class="pmodal-head">
+            <i class="bi bi-activity"></i> <span id="diagModalTitle">New Diagnosis</span>
+        </div>
+
+
+        <form id="diagForm" class="p-3">
+            
             <input type="hidden" id="diagId" value="0" />
 
             <div class="diag-form-row">
@@ -769,7 +864,7 @@
                 <textarea class="form-control" id="diagNotes" rows="2" placeholder="Optional"></textarea>
             </div>
         </form>
-        <div class="diag-modal-actions">
+        <div class="diag-modal-actions p-3">
             <button type="button" class="btn-cancel" onclick="closeDiagFormModal()">Cancel</button>
             <button type="button" class="btn-save" onclick="submitDiagForm()"><i class="bi bi-check-lg"></i> Save</button>
         </div>
@@ -867,9 +962,9 @@
                             <td>${statusPillHtml(d.isActive)}</td>
                             <td>
                                 <div class="row-actions">
-                                    <button class="icon-btn" title="Edit" onclick="editDiag(${d.id})"><i class="bi bi-pencil"></i></button>
-                                    <button class="icon-btn" title="${d.isActive ? 'Deactivate' : 'Activate'}" onclick="toggleDiag(${d.id})"><i class="bi ${d.isActive ? 'bi-toggle-on' : 'bi-toggle-off'}"></i></button>
-                                    <button class="icon-btn danger" title="Delete" onclick="deleteDiag(${d.id})"><i class="bi bi-trash"></i></button>
+                                    <button class="icon-btn fs-5" title="Edit" onclick="editDiag(${d.id})"><i class="bi bi-pencil"></i></button>
+                                    <button class="icon-btn fs-5" title="${d.isActive ? 'Deactivate' : 'Activate'}" onclick="toggleDiag(${d.id})"><i class="bi ${d.isActive ? 'bi-toggle-on' : 'bi-toggle-off'}"></i></button>
+                                    <button class="icon-btn danger fs-5" title="Delete" onclick="deleteDiag(${d.id})"><i class="bi bi-trash"></i></button>
                                 </div>
                             </td>
                         </tr>

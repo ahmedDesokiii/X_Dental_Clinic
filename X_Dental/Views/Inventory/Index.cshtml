@@ -1239,11 +1239,11 @@
                                     <td>${statusBadge(m)}</td>
                                     <td>
                                         <div class="row-actions">
-                                            <button class="act-btn in" title="Receive stock" onclick="openStockIn(${m.id}, decodeURIComponent('${encodeURIComponent(m.name || '')}'))"><i class="bi bi-box-arrow-in-down"></i></button>
-                                            <button class="act-btn out" title="Issue stock" onclick="openStockOut(${m.id}, decodeURIComponent('${encodeURIComponent(m.name || '')}'), ${m.quantity})"><i class="bi bi-box-arrow-up"></i></button>
-                                            <a class="act-btn" title="Details & timeline" href="/Inventory/Details/${m.id}"><i class="bi bi-clock-history"></i></a>
-                                            <button class="act-btn" title="Edit" onclick="openMaterialModal(${m.id})"><i class="bi bi-pencil-square"></i></button>
-                                            <button class="act-btn danger" title="Delete" onclick="deleteMaterial(${m.id})"><i class="bi bi-trash3"></i></button>
+                                            <button class="act-btn in fs-5" title="Receive stock" onclick="openStockIn(${m.id}, decodeURIComponent('${encodeURIComponent(m.name || '')}'))"><i class="bi bi-box-arrow-in-down"></i></button>
+                                            <button class="act-btn out fs-5" title="Issue stock" onclick="openStockOut(${m.id}, decodeURIComponent('${encodeURIComponent(m.name || '')}'), ${m.quantity})"><i class="bi bi-box-arrow-up"></i></button>
+                                            <a class="act-btn fs-5" title="Details & timeline" href="/Inventory/Details/${m.id}"><i class="bi bi-clock-history"></i></a>
+                                            <button class="act-btn fs-5" title="Edit" onclick="openMaterialModal(${m.id})"><i class="bi bi-pencil-square"></i></button>
+                                            <button class="act-btn danger fs-5" title="Delete" onclick="deleteMaterial(${m.id})"><i class="bi bi-trash3"></i></button>
                                         </div>
                                     </td>
                                 </tr>`).join('');
