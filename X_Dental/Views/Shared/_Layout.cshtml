@@ -8,29 +8,29 @@
 <!DOCTYPE html>
 <html lang="ar" data-theme="light">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="autocomplete" content="off">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Dental Clinic</title>
 
-    <!-- Preload critical fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Beiruti:wght@400;600;700&family=Ubuntu+Condensed&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Beiruti:wght@400;600;700&family=Ubuntu+Condensed&display=swap" rel="stylesheet"></noscript>
-
-    <!-- Bootstrap -->
+    <!-- Bootstrap (base only) -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 
-    <!-- Design System -->
+    <!-- Fonts: Beiruti (Arabic) + Ubuntu Condensed (Latin) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Beiruti:wght@200..900&family=Ubuntu+Condensed&display=swap" rel="stylesheet">
+
+    <!-- Premium Design System v2.0 -->
     <link rel="stylesheet" href="~/css/clinic-design-system-v2.css" asp-append-version="true" />
 
-    <!-- Page-specific -->
+    <!-- Page-specific styles -->
     @await RenderSectionAsync("Styles", required: false)
 
-    <!-- Legacy (يمكن إزالتها تدريجياً) -->
+    <!-- Legacy CSS — TODO: Migrate and remove -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/patient-hero-shared.css" asp-append-version="true" />
+
     <link rel="stylesheet" href="~/css/CreationStyle.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/executive-dashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Dental.styles.css" asp-append-version="true" />
@@ -39,695 +39,82 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="icon" type="image/x-icon" href="~/dental.ico">
 
-    <!-- Select2 + DataTables -->
+    <!-- Select2 -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.3.4/css/dataTables.dataTables.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/columncontrol/1.1.1/css/columnControl.dataTables.css" />
 
     <!-- SweetAlert -->
     <link href="~/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
 
-    <!-- Critical CSS for instant polish + animations -->
-    <style>
-
-            :root {
-                --sc-teal-900: #0a4d4f;
-                --sc-teal-700: #0d7377;
-                --sc-teal-600: #0f9b8e;
-                --sc-teal-500: #14b8a6;
-                --sc-teal-100: #c7f2ea;
-                --sc-sky-50: #eafbfc;
-                --sc-sky-100: #dcf5f7;
-                --sc-coral-300: #f6c6bc;
-                --sc-ink-900: #0b2e30;
-                --sc-ink-600: #4b6b6c;
-                --brand: #0d9488;
-                --brand-dark: #0f766e;
-                --brand-light: #f0fdfa;
-                --radius-lg: 18px;
-                --radius-md: 12px;
-                --shadow-soft: 0 1px 3px rgba(15, 23, 42, 0.06);
-                --shadow-hover: 0 10px 26px rgba(10, 77, 79, 0.12);
-                --shadow-card: 0 20px 50px rgba(10, 77, 79, .08);
-            }
-
-            body {
-                background: radial-gradient(circle at 6% 4%, var(--sc-teal-100) 0%, transparent 38%), radial-gradient(circle at 97% 92%, var(--sc-coral-300) 0%, transparent 26%), var(--sc-sky-50);
-            }
-
-
-
-            :root {
-                --sidebar-width: 280px;
-                --sidebar-collapsed: 88px;
-                --topbar-height: 72px;
-                --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
-                --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
-                --glass: rgba(255, 255, 255, 0.72);
-                --glass-dark: linear-gradient(180deg, #1e293b 0%, #0a4d4f 100%);
-                --shadow-soft: 0 10px 40px -10px rgba(0, 0, 0, 0.12);
-                --shadow-glow: 0 0 0 1px rgba(255,255,255,0.1), 0 20px 50px -15px rgba(0,0,0,0.25);
-            }
-
-            [data-theme="dark"] {
-                --glass: var(--glass-dark);
-            }
-
-            /* ========== App Shell ========== */
-            .app-shell {
-                display: flex;
-                min-height: 100vh;
-                background: radial-gradient(circle at 6% 4%, var(--sc-teal-100) 0%, transparent 38%), radial-gradient(circle at 97% 92%, var(--sc-coral-300) 0%, transparent 26%), var(--sc-sky-50);
-                overflow: hidden;
-            }
-
-            /* ========== Sidebar ========== */
-            .app-sidebar {
-                width: var(--sidebar-width);
-                background: linear-gradient(180deg, #1e293b 0%, #0a4d4f 100%);
-                color: #e2e8f0;
-                display: flex;
-                flex-direction: column;
-                position: fixed;
-                top: 0;
-                bottom: 0;
-                right: 0; /* RTL */
-                z-index: 1000;
-                transition: width 0.4s var(--ease-smooth), transform 0.4s var(--ease-smooth);
-                will-change: width, transform;
-                box-shadow: -8px 0 30px rgba(0,0,0,0.15);
-            }
-
-                .app-sidebar.collapsed {
-                    width: var(--sidebar-collapsed);
-                }
-
-                    .app-sidebar.collapsed .brand-text,
-                    .app-sidebar.collapsed .sidebar-link span,
-                    .app-sidebar.collapsed .sidebar-section-label,
-                    .app-sidebar.collapsed .sidebar-clinic-link span {
-                        opacity: 0;
-                        width: 0;
-                        overflow: hidden;
-                        white-space: nowrap;
-                    }
-
-            .sidebar-brand {
-                display: flex;
-                align-items: center;
-                gap: 14px;
-                padding: 24px 20px;
-                border-bottom: 1px solid rgba(255,255,255,0.06);
-            }
-
-                .sidebar-brand .mark {
-                    width: 42px;
-                    height: 42px;
-                    background: linear-gradient(135deg, #70FFD2, #0ea5e9);
-                    border-radius: 14px;
-                    display: grid;
-                    place-items: center;
-                    flex-shrink: 0;
-                    box-shadow: 0 8px 20px rgba(14, 165, 233, 0.35);
-                    transition: transform 0.3s var(--ease-bounce);
-                }
-
-                .sidebar-brand:hover .mark {
-                    transform: scale(1.08) rotate(-4deg);
-                }
-
-            .brand-text {
-                transition: opacity 0.25s ease, width 0.25s ease;
-            }
-
-                .brand-text strong {
-                    display: block;
-                    font-size: 1.05rem;
-                    font-weight: 700;
-                    letter-spacing: -0.02em;
-                }
-
-                .brand-text span {
-                    font-size: 0.78rem;
-                    opacity: 0.65;
-                }
-
-            /* Nav */
-            .sidebar-nav {
-                flex: 1;
-                overflow-y: auto;
-                overflow-x: hidden;
-                padding: 16px 12px;
-                scrollbar-width: thin;
-                scrollbar-color: rgba(255,255,255,0.15) transparent;
-            }
-
-            .sidebar-section-label {
-                font-size: 0.7rem;
-                text-transform: uppercase;
-                letter-spacing: 0.08em;
-                color: #64748b;
-                margin: 20px 12px 8px;
-                font-weight: 600;
-                transition: opacity 0.2s;
-            }
-
-            .sidebar-link {
-                display: flex;
-                align-items: center;
-                gap: 14px;
-                padding: 12px 16px;
-                border-radius: 12px;
-                color: #94a3b8;
-                text-decoration: none;
-                font-weight: 500;
-                margin-bottom: 4px;
-                position: relative;
-                transition: all 0.25s var(--ease-smooth);
-                overflow: hidden;
-            }
-
-                .sidebar-link i {
-                    font-size: 1.25rem;
-                    flex-shrink: 0;
-                    transition: transform 0.3s var(--ease-bounce);
-                }
-
-                .sidebar-link span {
-                    transition: opacity 0.25s ease;
-                    white-space: nowrap;
-                }
-
-                .sidebar-link:hover {
-                    background: rgba(255,255,255,0.06);
-                    color: #f1f5f9;
-                }
-
-                    .sidebar-link:hover i {
-                        transform: scale(1.15);
-                    }
-
-                .sidebar-link.active {
-                    background: linear-gradient(90deg, rgba(14,165,233,0.2), transparent);
-                    color: #14b8a6;
-                    box-shadow: inset 3px 0 0 #14b8a6;
-                }
-
-                    .sidebar-link.active i {
-                        color: #14b8a6;
-                    }
-
-            /* Sidebar footer */
-            .sidebar-footer {
-                padding: 12px;
-                border-top: 1px solid rgba(255,255,255,0.06);
-            }
-
-            .sidebar-clinic-link {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                padding: 12px 16px;
-                border-radius: 12px;
-                color: #94a3b8;
-                text-decoration: none;
-                transition: all 0.25s ease;
-            }
-
-                .sidebar-clinic-link:hover {
-                    background: rgba(59, 130, 246, 0.15);
-                    color: #60a5fa;
-                }
-
-            /* ========== Main Column ========== */
-           /*  .app-main {
-                flex: 1;
-                margin-right: var(--sidebar-width);
-                display: flex;
-                flex-direction: column;
-                min-height: 100vh;
-                transition: margin-right 0.4s var(--ease-smooth);
-            }
- */
-   /*          .app-sidebar.collapsed ~ .app-main {
-                margin-right: var(--sidebar-collapsed);
-            }
- */
-            /* ========== Topbar ========== */
-            .app-topbar {
-                height: var(--topbar-height);
-                background: var(--glass);
-                backdrop-filter: blur(20px) saturate(180%);
-                -webkit-backdrop-filter: blur(20px) saturate(180%);
-                border-bottom: 1px solid rgba(0,0,0,0.05);
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 0 24px;
-                position: sticky;
-                top: 0;
-                z-index: 900;
-                transition: background 0.3s ease;
-            }
-
-            [data-theme="dark"] .app-topbar {
-                border-bottom-color: rgba(255,255,255,0.06);
-            }
-
-            .topbar-left {
-                display: flex;
-                align-items: center;
-                gap: 16px;
-            }
-
-            .sidebar-toggle {
-                width: 42px;
-                height: 42px;
-                border-radius: 12px;
-                border: none;
-                background: rgba(0,0,0,0.04);
-                color: #64748b;
-                display: grid;
-                place-items: center;
-                cursor: pointer;
-                transition: all 0.25s var(--ease-smooth);
-            }
-
-                .sidebar-toggle:hover {
-                    background: rgba(14,165,233,0.12);
-                    color: #0ea5e9;
-                    transform: scale(1.05);
-                }
-
-            .topbar-search {
-                position: relative;
-                width: 320px;
-            }
-
-                .topbar-search i {
-                    position: absolute;
-                    right: 16px;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    color: #94a3b8;
-                    pointer-events: none;
-                }
-
-                .topbar-search input {
-                    width: 100%;
-                    height: 44px;
-                    border-radius: 14px;
-                    border: 1px solid rgba(0,0,0,0.06);
-                    background: rgba(255,255,255,0.6);
-                    padding: 0 48px 0 18px;
-                    font-size: 0.95rem;
-                    transition: all 0.3s var(--ease-smooth);
-                    outline: none;
-                }
-
-            [data-theme="dark"] .topbar-search input {
-                background: rgba(255,255,255,0.05);
-                border-color: rgba(255,255,255,0.08);
-                color: #e2e8f0;
-            }
-
-            .topbar-search input:focus {
-                border-color: #0ea5e9;
-                box-shadow: 0 0 0 4px rgba(14,165,233,0.15);
-                background: #fff;
-            }
-
-            [data-theme="dark"] .topbar-search input:focus {
-                background: rgba(15,23,42,0.9);
-            }
-
-            .topbar-actions {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
-
-            .theme-toggle,
-            .topbar-btn {
-                width: 42px;
-                height: 42px;
-                border-radius: 12px;
-                border: none;
-                background: transparent;
-                color: #64748b;
-                display: grid;
-                place-items: center;
-                cursor: pointer;
-                position: relative;
-                transition: all 0.25s var(--ease-smooth);
-            }
-
-                .theme-toggle:hover,
-                .topbar-btn:hover {
-                    background: rgba(0,0,0,0.05);
-                    color: #0ea5e9;
-                    transform: translateY(-2px);
-                }
-
-                .topbar-btn .badge {
-                    position: absolute;
-                    top: 6px;
-                    left: 6px;
-                    background: #ef4444;
-                    color: white;
-                    font-size: 0.65rem;
-                    font-weight: 700;
-                    width: 18px;
-                    height: 18px;
-                    border-radius: 50%;
-                    display: grid;
-                    place-items: center;
-                    animation: pulse-badge 2s infinite;
-                }
-
-            @@keyframes pulse-badge {
-                0%, 100% {
-                    transform: scale(1);
-                }
-
-                50% {
-                    transform: scale(1.15);
-                }
-            }
-
-            /* User Menu */
-            .user-menu {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                padding: 6px 12px 6px 6px;
-                border-radius: 16px;
-                cursor: pointer;
-                transition: all 0.25s ease;
-                position: relative;
-                margin-right: 4px;
-            }
-
-                .user-menu:hover,
-                .user-menu.active {
-                    background: rgba(0,0,0,0.04);
-                }
-
-            .user-avatar {
-                width: 40px;
-                height: 40px;
-                border-radius: 12px;
-                background: linear-gradient(135deg, #0ea5e9, #38bdf8);
-                color: white;
-                display: grid;
-                place-items: center;
-                font-weight: 700;
-                font-size: 1.1rem;
-                box-shadow: 0 4px 12px rgba(14,165,233,0.3);
-            }
-
-            .user-info {
-                display: flex;
-                flex-direction: column;
-                line-height: 1.2;
-            }
-
-                .user-info .name {
-                    font-weight: 600;
-                    font-size: 0.92rem;
-                }
-
-                .user-info .role {
-                    font-size: 0.75rem;
-                    color: #94a3b8;
-                }
-
-            .user-dropdown {
-                position: absolute;
-                top: calc(100% + 10px);
-                left: 0;
-                width: 220px;
-                background: var(--glass);
-                backdrop-filter: blur(20px);
-                border-radius: 16px;
-                box-shadow: var(--shadow-glow);
-                border: 1px solid rgba(255,255,255,0.1);
-                padding: 8px;
-                opacity: 0;
-                visibility: hidden;
-                transform: translateY(12px) scale(0.96);
-                transition: all 0.3s var(--ease-smooth);
-                z-index: 100;
-            }
-
-                .user-dropdown.show {
-                    opacity: 1;
-                    visibility: visible;
-                    transform: translateY(0) scale(1);
-                }
-
-            .dropdown-item {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                padding: 12px 14px;
-                border-radius: 10px;
-                color: inherit;
-                text-decoration: none;
-                font-size: 0.92rem;
-                transition: all 0.2s ease;
-                border: none;
-                background: none;
-                width: 100%;
-                text-align: right;
-                cursor: pointer;
-            }
-
-                .dropdown-item:hover {
-                    background: rgba(14,165,233,0.1);
-                    color: #0ea5e9;
-                }
-
-                .dropdown-item.danger:hover {
-                    background: rgba(239,68,68,0.1);
-                    color: #ef4444;
-                }
-
-            .dropdown-divider {
-                height: 1px;
-                background: rgba(0,0,0,0.06);
-                margin: 6px 0;
-            }
-
-            /* ========== Content ========== */
-            .app-content {
-                flex: 1;
-                padding: 28px;
-                animation: contentFadeIn 0.5s var(--ease-smooth) both;
-            }
-
-            @@keyframes contentFadeIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(16px);
-                }
-
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-
-            /* ========== FAB ========== */
-            .fab {
-                position: fixed;
-                bottom: 28px;
-                left: 28px;
-                width: 60px;
-                height: 60px;
-                border-radius: 20px;
-                background: linear-gradient(135deg, #0ea5e9, #0284c7);
-                color: white;
-                border: none;
-                box-shadow: 0 12px 30px rgba(14,165,233,0.4);
-                display: grid;
-                place-items: center;
-                font-size: 1.5rem;
-                cursor: pointer;
-                z-index: 800;
-                transition: all 0.35s var(--ease-bounce);
-            }
-
-                .fab:hover {
-                    transform: scale(1.1) rotate(90deg);
-                    box-shadow: 0 16px 40px rgba(14,165,233,0.5);
-                }
-
-                .fab:active {
-                    transform: scale(0.95);
-                }
-
-            /* ========== Overlay ========== */
-            .sidebar-overlay {
-                position: fixed;
-                inset: 0;
-                background: rgba(15,23,42,0.5);
-                backdrop-filter: blur(4px);
-                z-index: 999;
-                opacity: 0;
-                visibility: hidden;
-                transition: all 0.3s ease;
-            }
-
-                .sidebar-overlay.active {
-                    opacity: 1;
-                    visibility: visible;
-                }
-
-            /* ========== Mobile ========== */
-            @@media (max-width: 768px) {
-                .app-sidebar {
-                    transform: translateX(100%);
-                    width: var(--sidebar-width) !important;
-                }
-
-                    .app-sidebar.mobile-open {
-                        transform: translateX(0);
-                    }
-
-                .app-main {
-                    margin-right: 0 !important;
-                }
-
-                .topbar-search {
-                    display: none;
-                }
-
-                .user-info {
-                    display: none;
-                }
-            }
-
-            /* ========== Entrance Animations ========== */
-            .sidebar-link {
-                animation: slideInRight 0.4s var(--ease-smooth) both;
-            }
-
-                .sidebar-link:nth-child(1) {
-                    animation-delay: 0.05s;
-                }
-
-                .sidebar-link:nth-child(2) {
-                    animation-delay: 0.1s;
-                }
-
-                .sidebar-link:nth-child(3) {
-                    animation-delay: 0.15s;
-                }
-
-                .sidebar-link:nth-child(4) {
-                    animation-delay: 0.2s;
-                }
-
-                .sidebar-link:nth-child(5) {
-                    animation-delay: 0.25s;
-                }
-
-                .sidebar-link:nth-child(6) {
-                    animation-delay: 0.3s;
-                }
-
-                .sidebar-link:nth-child(7) {
-                    animation-delay: 0.35s;
-                }
-
-                .sidebar-link:nth-child(8) {
-                    animation-delay: 0.4s;
-                }
-
-                .sidebar-link:nth-child(9) {
-                    animation-delay: 0.45s;
-                }
-
-            @@keyframes slideInRight {
-                from {
-                    opacity: 0;
-                    transform: translateX(20px);
-                }
-
-                to {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-            }
-
-            /* Reduce motion for accessibility */
-            @@media (prefers-reduced-motion: reduce) {
-                *, *::before, *::after {
-                    animation-duration: 0.01ms !important;
-                    transition-duration: 0.01ms !important;
-                }
-            }
-    </style>
+    <!-- JS (core first) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdn.datatables.net/2.3.4/js/dataTables.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.2/moment.min.js"></script>
 </head>
-<body>
-    <div class="app-shell">
-        <!-- Overlay -->
-        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-        <!-- Sidebar -->
+<body>
+
+    <div class="app-shell">
+
+        <!-- Sidebar Overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+        <!-- ============ Sidebar ============ -->
         <aside class="app-sidebar" id="appSidebar">
             <div class="sidebar-brand">
                 <span class="mark">
-                    <svg viewBox="0 0 22 22" fill="none" width="24" height="24">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 2C9.6 2 8.1 3.2 6.7 3.2c-1.7 0-3.2 1.5-3.2 4 0 2.1.6 3.9 1.1 5.9.5 2 .9 4.3 1.6 5.9.5 1.2 1.1 2 1.9 2 1.1 0 1.3-2.5 1.6-4.2.2-1.2.6-2.1 1.3-2.1s1.1.9 1.3 2.1c.3 1.7.5 4.2 1.6 4.2.8 0 1.4-.8 1.9-2 .7-1.6 1.1-3.9 1.6-5.9.5-2 1.1-3.8 1.1-5.9 0-2.5-1.5-4-3.2-4C15.9 3.2 14.4 2 12 2z" fill="white" />
                     </svg>
                 </span>
                 <div class="brand-text">
-                    <strong class="link-light">Dr/ Mohammed El.Kholy</strong>
-                    <span>Family Dental Clinic </span>
+                    <strong>Dr/ Mohammed El.Kholy</strong>
+                    <span>Dental Suite</span>
                 </div>
             </div>
-
             <nav class="sidebar-nav">
                 <a asp-controller="Home" asp-action="Index" class="sidebar-link" data-title="Dashboard">
-                    <i class="bi bi-grid-1x2-fill"></i>
+                    <i class="bi bi-grid-1x2-fill fs-5"></i>
                     <span>Dashboard</span>
                 </a>
-
                 @if (SignInManager.IsSignedIn(User))
                 {
                     <div class="sidebar-section-label">Clinic</div>
 
-                    <a asp-controller="Patients" asp-action="Index" class="sidebar-link" data-title="Patients">
-                        <i class="bi bi-people-fill"></i>
+                    <a asp-controller="Patients" asp-action="Index" title="Patients" class="sidebar-link " data-title="Patients">
+                        <i class="bi bi-people-fill fs-5"></i>
                         <span>Patients</span>
                     </a>
-                    <a asp-controller="Appointments" asp-action="Index" class="sidebar-link" data-title="Appointments">
-                        <i class="bi bi-calendar2-week-fill"></i>
+                    <a asp-controller="Appointments" asp-action="index" title="Calendar" class="sidebar-link" data-title="Appointments">
+                        <i class="bi bi-calendar2-week-fill fs-5"></i>
                         <span>Appointments</span>
                     </a>
-                    <a asp-controller="Payments" asp-action="Index" class="sidebar-link" data-title="Payments">
-                        <i class="bi bi-cash-coin"></i>
+
+                    <a asp-controller="Payments" asp-action="index" title="Payments" class="sidebar-link" data-title="Payments & Invoices">
+                        <i class="bi bi-cash-coin fs-5"></i>
                         <span>Payments & Invoices</span>
                     </a>
-                    <a asp-controller="Diagnosis" asp-action="Index" class="sidebar-link" data-title="Diagnoses">
-                        <i class="bi bi-clipboard2-pulse-fill"></i>
+
+                    <a asp-controller="Diagnosis" asp-action="Index" title="Diagnosis"  class="sidebar-link" data-title="Diagnoses">
+                        <i class="bi bi-clipboard2-pulse-fill fs-5"></i>
                         <span>Diagnoses</span>
                     </a>
-                    <a asp-controller="Inventory" asp-action="Index" class="sidebar-link" data-title="Inventory">
-                        <i class="bi bi-box-seam-fill"></i>
+
+                    <a asp-controller="Inventory" asp-action="Index" title="Inventory" class="sidebar-link" data-title="Inventory">
+                        <i class="bi bi-box-seam-fill fs-5"></i>
                         <span>Inventory</span>
                     </a>
-                    <a asp-controller="Laboratory" asp-action="Index" class="sidebar-link" data-title="Laboratory">
-                        <i class="bi bi-droplet"></i>
+                    <a asp-controller="Laboratory" asp-action="Index" title="Laboratory" class="sidebar-link" data-title="Laboratory">
+                        <i class="bi bi-droplet fs-5"></i>
                         <span>Laboratory</span>
                     </a>
-                    <a asp-controller="Medications" asp-action="Index" class="sidebar-link" data-title="Medications">
-                        <i class="bi bi-capsule-pill"></i>
+                    <a asp-controller="Medications" asp-action="Index" title="Medications" class="sidebar-link" data-title="Medications">
+                        <i class="bi bi-capsule-pill fs-5"></i>
                         <span>Medications</span>
                     </a>
-
                     @if (User.IsInRole(Roles.Admin.ToString()))
                     {
                         <div class="sidebar-section-label">Administration</div>
@@ -739,20 +126,23 @@
                             <i class="bi bi-shield-lock-fill"></i>
                             <span>Roles</span>
                         </a>
+                        @*                         <a href="#" class="sidebar-link" data-title="Reports">
+                            <i class="bi bi-bar-chart-line-fill"></i>
+                            <span>Reports</span>
+                        </a> *@
                     }
                 }
             </nav>
-
-            <div class="sidebar-footer">
-                <a class="sidebar-clinic-link fs-6" href="https://www.facebook.com/share/1B3xKJX65H/" target="_blank" rel="noopener">
-                    <i class="bi bi-facebook"></i>
+            <div class="sidebar-footer py-1">
+                <a class="sidebar-clinic-link" href="https://www.facebook.com/share/1B3xKJX65H/" target="_blank" data-title="Clinic Page">
+                    <i class="bi bi-facebook "></i>
                     <span>Clinic Page</span>
                 </a>
             </div>
         </aside>
-
-        <!-- Main -->
+        <!-- ============ Main Column ============ -->
         <div class="app-main">
+            <!-- Topbar — Floating Glass -->
             <header class="app-topbar">
                 <div class="topbar-left">
                     <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Toggle menu">
@@ -760,38 +150,35 @@
                     </button>
                     <div class="topbar-search">
                         <i class="bi bi-search"></i>
-                        <input type="text" class="text-center" placeholder=" ...ابحث عن مريض، فاتورة، موعد" />
+                        <input type="text" placeholder="Search patient, invoice, appointment..." />
                     </div>
                 </div>
-
                 <div class="topbar-actions">
-                    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="تبديل المظهر">
+                    <!-- Theme Toggle -->
+                    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
                         <i class="bi bi-moon-fill" id="themeIcon"></i>
                     </button>
-                    
-                @if (SignInManager.IsSignedIn(User))
-                {
-                    <button class="topbar-btn" title="الإشعارات" id="notificationBtn">
-                        <i class="bi bi-bell-fill fs-3"></i>
+                    <button class="topbar-btn" title="Notifications" id="notificationBtn">
+                        <i class="bi bi-bell-fill"></i>
                         <span class="badge">3</span>
                     </button>
-
-                    <button class="topbar-btn" title="الرسائل">
+                    <button class="topbar-btn" title="Messages">
                         <i class="bi bi-chat-left-text-fill"></i>
                     </button>
-
+                    <!-- User Menu -->
                     <div class="user-menu" id="userMenu" onclick="toggleUserDropdown()">
                         <div class="user-avatar">
                             @(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "U")
                         </div>
                         <div class="user-info">
-                            <span class="name text-info">@(User.Identity?.Name ?? "User")</span>
+                            <span class="name">@(User.Identity?.Name ?? "User")</span>
                             <span class="role">
-                                @(User.IsInRole(Roles.Admin.ToString()) ? "Admin" : "Doctor")
+                                @(User.IsInRole(Roles.Admin.ToString()) ? "Admin" : "Staff")
                             </span>
                         </div>
-                        <i class="bi bi-chevron-down" style="font-size:0.8rem;opacity:0.6"></i>
+                        <i class="bi bi-chevron-down"></i>
 
+                        <!-- Dropdown -->
                         <div class="user-dropdown" id="userDropdown">
                             <a href="#" class="dropdown-item">
                                 <i class="bi bi-person"></i>
@@ -802,155 +189,166 @@
                                 <span>Settings</span>
                             </a>
                             <div class="dropdown-divider"></div>
-                            <form asp-area="Identity" asp-page="/Account/Logout"
-                                  asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })"
-                                  method="post" style="margin:0">
+                            <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post" style="margin:0;">
                                 <button type="submit" class="dropdown-item danger">
                                     <i class="bi bi-box-arrow-right"></i>
-                                    <span>Log Out</span>
+                                    <span>Logout</span>
                                 </button>
                             </form>
                         </div>
                     </div>
-                }
-                    </div>
+                </div>
             </header>
-
+            <!-- Page Content -->
             <main class="app-content" dir="auto">
                 @RenderBody()
             </main>
         </div>
     </div>
 
-    <!-- FAB -->
-    <button class="fab" id="fabBtn" title="إجراء سريع" onclick="showQuickActions()">
+    <!-- Floating Action Button -->
+    <button class="fab" id="fabBtn" title="Quick Action" onclick="showQuickActions()">
         <i class="bi bi-plus-lg"></i>
     </button>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- ================= Scripts ================= -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="~/sweetalert2/sweetalert2.all.min.js"></script>
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js"></script>
-    <script src="https://cdn.datatables.net/2.3.4/js/dataTables.js"></script>
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.2/moment.min.js"></script>
+
+    <!-- App Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script src="~/js/site.js"></script>
     <script src="~/js/login.js"></script>
     <script src="~/js/Users.js"></script>
+    
 
     <script>
-            // ========== Core UI ==========
-            function toggleSidebar() {
-                const sidebar = document.getElementById('appSidebar');
-                const overlay = document.getElementById('sidebarOverlay');
-                const isMobile = window.innerWidth <= 768;
+        $(document).ready(function () {
+        // Initialize Select2
+        $('.searchable').select2({
+        dir: 'rtl',
+        width: '100%'
+        });
 
-                if (isMobile) {
-                    sidebar.classList.toggle('mobile-open');
-                    overlay.classList.toggle('active');
-                } else {
-                    sidebar.classList.toggle('collapsed');
-                    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-                }
-            }
+        // Mark active sidebar link based on current URL
+        var path = window.location.pathname.toLowerCase();
+        $('.sidebar-link').each(function () {
+        var href = ($(this).attr('href') || '').toLowerCase();
+        if (href && href !== '#' && path.indexOf(href) === 0) {
+        $(this).addClass('active');
+        }
+        });
 
-            // Restore sidebar state
-            (function() {
-                const sidebar = document.getElementById('appSidebar');
-                if (localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth > 768) {
-                    sidebar.classList.add('collapsed');
-                }
-            })();
+        // Close dropdowns when clicking outside
+        $(document).on('click', function (e) {
+        if (!$(e.target).closest('#userMenu').length) {
+        $('#userDropdown').removeClass('show');
+        $('#userMenu').removeClass('active');
+        }
+        });
 
-            function toggleUserDropdown() {
-                const dropdown = document.getElementById('userDropdown');
-                const menu = document.getElementById('userMenu');
-                dropdown.classList.toggle('show');
-                menu.classList.toggle('active');
-            }
+        // Animate stat cards on scroll
+        animateOnScroll();
+        });
 
-            function toggleTheme() {
-                const html = document.documentElement;
-                const icon = document.getElementById('themeIcon');
-                const current = html.getAttribute('data-theme');
-                const next = current === 'dark' ? 'light' : 'dark';
+        // Sidebar Toggle
+        function toggleSidebar() {
+        const sidebar = document.getElementById('appSidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const isMobile = window.innerWidth <= 768;
 
-                html.setAttribute('data-theme', next);
-                localStorage.setItem('theme', next);
+        if (isMobile) {
+        sidebar.classList.toggle('mobile-open');
+        overlay.classList.toggle('active');
+        } else {
+        sidebar.classList.toggle('collapsed');
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        }
+        }
 
-                icon.classList.toggle('bi-moon-fill', next === 'light');
-                icon.classList.toggle('bi-sun-fill', next === 'dark');
-            }
+        // Restore sidebar state
+        (function () {
+        const sidebar = document.getElementById('appSidebar');
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed && window.innerWidth > 768) {
+        sidebar.classList.add('collapsed');
+        }
+        })();
 
-            // Restore theme
-            (function() {
-                const saved = localStorage.getItem('theme') || 'light';
-                document.documentElement.setAttribute('data-theme', saved);
-                const icon = document.getElementById('themeIcon');
-                if (icon && saved === 'dark') {
-                    icon.classList.replace('bi-moon-fill', 'bi-sun-fill');
-                }
-            })();
+        // User Dropdown Toggle
+        function toggleUserDropdown() {
+        const dropdown = document.getElementById('userDropdown');
+        const menu = document.getElementById('userMenu');
+        dropdown.classList.toggle('show');
+        menu.classList.toggle('active');
+        }
 
-            // Close dropdowns on outside click
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('#userMenu')) {
-                    document.getElementById('userDropdown')?.classList.remove('show');
-                    document.getElementById('userMenu')?.classList.remove('active');
-                }
-            });
+        // Theme Toggle
+        function toggleTheme() {
+        const html = document.documentElement;
+        const icon = document.getElementById('themeIcon');
+        const currentTheme = html.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
-            // Handle resize
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 768) {
-                    document.getElementById('appSidebar')?.classList.remove('mobile-open');
-                    document.getElementById('sidebarOverlay')?.classList.remove('active');
-                }
-            });
+        html.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
 
-            // Active link
-            document.addEventListener('DOMContentLoaded', function() {
-                const path = window.location.pathname.toLowerCase();
-                document.querySelectorAll('.sidebar-link').forEach(link => {
-                    const href = (link.getAttribute('href') || '').toLowerCase();
-                    if (href && href !== '#' && path.startsWith(href)) {
-                        link.classList.add('active');
-                    }
-                });
+        if (newTheme === 'dark') {
+        icon.classList.remove('bi-moon-fill');
+        icon.classList.add('bi-sun-fill');
+        } else {
+        icon.classList.remove('bi-sun-fill');
+        icon.classList.add('bi-moon-fill');
+        }
+        }
 
-                // Select2
-                if (typeof $ !== 'undefined' && $.fn.select2) {
-                    $('.searchable').select2({ dir: 'rtl', width: '100%' });
-                }
-            });
+        // Restore theme
+        (function () {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        const icon = document.getElementById('themeIcon');
+        if (savedTheme === 'dark' && icon) {
+        icon.classList.remove('bi-moon-fill');
+        icon.classList.add('bi-sun-fill');
+        }
+        })();
 
-            // Quick Actions
-            function showQuickActions() {
-                // يمكنك فتح modal هنا لاحقاً
-                console.log('Quick actions');
-            }
+        // Handle window resize
+        window.addEventListener('resize', function () {
+        const sidebar = document.getElementById('appSidebar');
+        const overlay = document.getElementById('sidebarOverlay');
 
-            // Animate cards on scroll (lightweight)
-            function animateOnScroll() {
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            entry.target.style.animationPlayState = 'running';
-                        }
-                    });
-                }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+        if (window.innerWidth > 768) {
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('active');
+        }
+        });
 
-                document.querySelectorAll('.stat-card, .card, .animate-on-scroll').forEach(el => {
-                    observer.observe(el);
-                });
-            }
+        // Animate elements on scroll
+        function animateOnScroll() {
+        const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+        if (entry.isIntersecting) {
+        entry.target.style.animationPlayState = 'running';
+        }
+        });
+        }, { threshold: 0.1 });
 
-            document.addEventListener('DOMContentLoaded', animateOnScroll);
+        document.querySelectorAll('.stat-card, .card').forEach(el => {
+        observer.observe(el);
+        });
+        }
+
+        // Quick Actions FAB
+        function showQuickActions() {
+        // You can implement a modal or dropdown here
+        console.log('Quick actions clicked');
+        }
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
