@@ -110,8 +110,8 @@
                         <div>
                             <label class="inv-label">Status</label>
                             <label class="inv-toggle">
-                                <input type="hidden" name="IsActive" value="false" />
                                 <input type="checkbox" name="IsActive" value="true" @(isEdit ? (Model.IsActive ? "checked" : null) : "checked") />
+                                <input type="hidden" name="IsActive" value="false" />
                                 <span class="inv-toggle-track"></span>
                                 <span class="inv-toggle-text">Active</span>
                             </label>

@@ -262,6 +262,7 @@ namespace Dental.Modules.Inventory.ServicesInventory
                 ExpiryDate = req.ExpiryDate,
                 SupplierId = req.SupplierId,
                 UserName = userName,
+                
                 Notes = req.Notes
             };
             _context.StockTransactions.Add(transaction);
