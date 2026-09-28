@@ -38,7 +38,7 @@
         </div>
         <div class="modal-body-new">
 
-            <!-- ═══ Row 1: Title + Notes + Add Step (inline) ═══ -->
+            <!-- ═══ Row 1: Title + Notes + Plan Cost + Add Step ═══ -->
             <div class="tp-header-inline-row">
                 <div class="tp-hi-title">
                     <label class="form-label-custom-new">Plan Title <span class="text-danger">*</span></label>
@@ -47,6 +47,10 @@
                 <div class="tp-hi-notes">
                     <label class="form-label-custom-new">Notes</label>
                     <input type="text" class="form-control-custom-new" id="tpPlanNotes" placeholder="Overview or patient consent notes..." />
+                </div>
+                <div class="tp-hi-cost">
+                    <label class="form-label-custom-new">Plan Cost</label>
+                    <input type="text" class="form-control-custom-new tp-readonly" id="tpPlanCost" value="0 EGP" readonly tabindex="-1" />
                 </div>
                 <div class="tp-hi-btn">
                     <label class="form-label-custom-new tp-invisible-label">Add</label>
@@ -69,7 +73,7 @@
 @* ══════════ Add Step Modal (for existing plan) ══════════ *@
 <div class="custom-modal-new" id="tpAddStepModal">
     <div class="modal-overlay-new" onclick="TreatmentPlans.closeAddStepModal()"></div>
-    <div class="modal-box-new">
+    <div class="modal-box-new tp-modal-lg">
         <div class="modal-head-new">
             <h5><i class="bi bi-plus-circle me-2"></i> Add Step</h5>
             <button type="button" class="btn-close btn-close-white" onclick="TreatmentPlans.closeAddStepModal()"></button>
@@ -92,7 +96,7 @@
 @* ══════════ Link-to-visit Modal (when marking a step Done) ══════════ *@
 <div class="custom-modal-new" id="tpLinkVisitModal">
     <div class="modal-overlay-new" onclick="TreatmentPlans.closeLinkVisitModal()"></div>
-    <div class="modal-box-new">
+    <div class="modal-box-new tp-modal-lg">
         <div class="modal-head-new">
             <h5><i class="bi bi-check2-circle me-2"></i> Mark Step as Done</h5>
             <button type="button" class="btn-close btn-close-white" onclick="TreatmentPlans.closeLinkVisitModal()"></button>
@@ -723,6 +727,53 @@
         font-size: .82rem;
         padding: 20px;
     }
+
+    /* ── Header row: 4 أعمدة ── */
+    .tp-header-inline-row {
+        grid-template-columns: 1.3fr 1.3fr 0.8fr auto;
+    }
+
+    .tp-readonly {
+        background: var(--dc-teal-50) !important;
+        color: var(--dc-teal-700) !important;
+        font-weight: 800;
+        cursor: default;
+    }
+
+    /* ── رأس كل Step: الرقم + X ── */
+    .tp-step-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .tp-step-editor-row .tp-step-head .tp-step-badge-num {
+        position: static;
+        width: auto;
+        height: 22px;
+        padding: 0 10px;
+        border-radius: 999px;
+        font-size: .72rem;
+    }
+
+    .tp-step-editor-row .tp-step-head .tp-remove-step {
+        position: static;
+    }
+
+    /* ── صف واحد: Description - Tooth - Procedure - Cost ── */
+    .tp-field-grid-4 {
+        display: grid;
+        grid-template-columns: 2fr 0.8fr 1.4fr 0.9fr;
+        gap: 10px;
+    }
+
+    @@media (max-width: 760px) {
+        .tp-header-inline-row,
+        .tp-field-grid-4 {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
 <script>
@@ -735,6 +786,44 @@
         function money(v) { return Number(v || 0).toLocaleString('en-US'); }
 
         function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-GB') : '—'; }
+
+        const TOOTH_Q = { 1: 'UL', 2: 'UR', 3: 'LL', 4: 'LR' }; // نفس ترقيم الشارت
+
+        function toothOptionsHtml() {
+            let h = '<option value="">—</option>';
+            [1, 2, 3, 4].forEach(q => {
+                h += `<optgroup label="${TOOTH_Q[q]}">`;
+                for (let p = 1; p <= 8; p++) {
+                    const n = q * 10 + p;
+                    h += `<option value="${n}">${TOOTH_Q[q]}-${p}</option>`;
+                }
+                h += '</optgroup>';
+            });
+            return h;
+        }
+
+        function todayIso() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        function recalcPlanCost() {
+            const total = Array.from(document.querySelectorAll('#tpStepsEditor .tp-f-cost'))
+                .reduce((sum, el) => sum + (parseFloat(el.value) || 0), 0);
+            document.getElementById('tpPlanCost').value = money(total) + ' EGP';
+        }
+
+        function renumberSteps() {
+            document.querySelectorAll('#tpStepsEditor .tp-step-editor-row').forEach((row, i) => {
+                row.querySelector('.tp-step-badge-num').textContent = `Step ${i + 1}`;
+            });
+        }
+
+        function removeStepRow(rowId) {
+            document.getElementById(rowId)?.remove();
+            renumberSteps();
+            recalcPlanCost();
+        }
 
         async function loadPlans() {
             const skeleton = document.getElementById('tpSkeleton');
@@ -817,7 +906,7 @@
             const tags = [];
             if (s.toothNumber) tags.push(`Tooth ${s.toothNumber}`);
             if (s.procedureName) tags.push(s.procedureName);
-            if (s.targetDate) tags.push(`Target: ${fmtDate(s.targetDate)}`);
+            if (s.targetDate) tags.push(`Start: ${fmtDate(s.targetDate)}`);
             if (s.completedDate) tags.push(`Done: ${fmtDate(s.completedDate)}`);
 
             return `
@@ -833,7 +922,7 @@
                                 <span class="tp-step-badge ${s.statusColorClass}">${s.statusText}</span>
                                 <div class="tp-step-actions">
                                     ${s.status !== 3 ? `<button class="tp-icon-btn" title="Mark Done" onclick="TreatmentPlans.openLinkVisitModal(${s.id})"><i class="bi bi-check2-circle"></i></button>` : ''}
-                                    ${s.status === 1 ? `<button class="tp-icon-btn" title="In Progress" onclick="TreatmentPlans.quickStatus(${s.id}, 2)"><i class="bi bi-play-circle"></i></button>` : ''}
+ 
                                     <button class="tp-icon-btn danger" title="Delete step" onclick="TreatmentPlans.deleteStep(${s.id})"><i class="bi bi-trash3"></i></button>
                                 </div>
                             </div>
@@ -854,6 +943,7 @@
         async function openCreateModal() {
             document.getElementById('tpPlanTitle').value = '';
             document.getElementById('tpPlanNotes').value = '';
+            document.getElementById('tpPlanCost').value = '0 EGP';
             document.getElementById('tpStepsEditor').innerHTML = '';
             stepEditorCounter = 0;
             if (!procedureOptions.length) await loadProcedureOptions();
@@ -880,55 +970,47 @@
         function addStepRow() {
             stepEditorCounter++;
             const rowId = `tpStepRow_${stepEditorCounter}`;
-            const wrap = document.getElementById('tpStepsEditor');
             const div = document.createElement('div');
             div.className = 'tp-step-editor-row';
             div.id = rowId;
             div.innerHTML = `
-                        <span class="tp-step-badge-num mt-3 mb-2" >${stepEditorCounter}</span>
-                        <button type="button" class="tp-remove-step" onclick="document.getElementById('${rowId}').remove()"><i class="bi bi-x"></i></button>
-
-                        <div class="tp-field-grid-3a pt-2">
-                            <div>
-                                <label class="form-label-custom-new">Step Description <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control-custom-new tp-f-desc" placeholder="e.g. Fit upper braces" />
-                            </div>
-                            <div>
-                                <label class="form-label-custom-new">Linked Procedure</label>
-                                <select class="form-control-custom-new tp-f-proc" onchange="TreatmentPlans.onProcedurePick(this)">
-                                    ${procedureOptionsHtml()}
-                                </select>
-                            </div>
-                            <div>
-                                <label class="form-label-custom-new">Tooth #</label>
-                                <input type="text" class="form-control-custom-new tp-f-tooth" placeholder="e.g. UL-4" inputmode="numeric" />
-                            </div>
-                        </div>
-
-                        <div class="tp-field-grid-3b">
-                            <div>
-                                <label class="form-label-custom-new">Estimated Cost</label>
-                                <input type="number" step="0.01" class="form-control-custom-new tp-f-cost" value="0" />
-                            </div>
-                            <div>
-                                <label class="form-label-custom-new">Target Date</label>
-                                <input type="date" class="form-control-custom-new tp-f-date" />
-                            </div>
-                            <div>
-                                <label class="form-label-custom-new">Notes</label>
-                                <input type="text" class="form-control-custom-new tp-f-notes" placeholder="Optional notes..." />
-                            </div>
-                        </div>`;
-            wrap.appendChild(div);
+            <div class="tp-step-head">
+                <span class="tp-step-badge-num"></span>
+                <button type="button" class="tp-remove-step" onclick="TreatmentPlans.removeStepRow('${rowId}')"><i class="bi bi-x"></i></button>
+            </div>
+            <div class="tp-field-grid-4">
+                <div>
+                    <label class="form-label-custom-new">Step Description <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control-custom-new tp-f-desc" placeholder="e.g. Fit upper braces" />
+                </div>
+                <div>
+                    <label class="form-label-custom-new">Tooth #</label>
+                    <select class="form-control-custom-new tp-f-tooth">${toothOptionsHtml()}</select>
+                </div>
+                <div>
+                    <label class="form-label-custom-new">Linked Procedure</label>
+                    <select class="form-control-custom-new tp-f-proc" onchange="TreatmentPlans.onProcedurePick(this)">
+                        ${procedureOptionsHtml()}
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label-custom-new">Estimated Cost</label>
+                    <input type="number" step="0.01" min="0" class="form-control-custom-new tp-f-cost" value="0" oninput="TreatmentPlans.recalcPlanCost()" />
+                </div>
+            </div>`;
+            document.getElementById('tpStepsEditor').appendChild(div);
+            renumberSteps();
+            recalcPlanCost();
         }
 
         function onProcedurePick(selectEl) {
             const opt = selectEl.options[selectEl.selectedIndex];
             const price = opt?.dataset?.price;
-            if (price) {
-                const row = selectEl.closest('.tp-step-editor-row');
-                row.querySelector('.tp-f-cost').value = price;
-            }
+            if (!price) return;
+            const row = selectEl.closest('.tp-step-editor-row');
+            const costEl = row?.querySelector('.tp-f-cost');
+            if (costEl) costEl.value = price;
+            recalcPlanCost();
         }
 
         async function savePlan() {
@@ -938,13 +1020,14 @@
                 return;
             }
 
-            const steps = Array.from(document.querySelectorAll('.tp-step-editor-row')).map(row => ({
+            const today = todayIso();
+            const steps = Array.from(document.querySelectorAll('#tpStepsEditor .tp-step-editor-row')).map(row => ({
                 Description: row.querySelector('.tp-f-desc').value.trim(),
                 ProcedureCatalogId: row.querySelector('.tp-f-proc').value ? parseInt(row.querySelector('.tp-f-proc').value) : null,
                 ToothNumber: row.querySelector('.tp-f-tooth').value ? parseInt(row.querySelector('.tp-f-tooth').value) : null,
                 EstimatedCost: parseFloat(row.querySelector('.tp-f-cost').value || 0),
-                TargetDate: row.querySelector('.tp-f-date').value || null,
-                Notes: row.querySelector('.tp-f-notes').value.trim()
+                TargetDate: today,   // مخفي — تاريخ اليوم
+                Notes: ''            // مخفي — فاضي
             })).filter(s => s.Description);
 
             const btn = document.getElementById('tpBtnSavePlan');
@@ -985,36 +1068,28 @@
             document.getElementById('tpAddStepPlanId').value = planId;
             const wrap = document.querySelector('#tpAddStepModal .tp-step-row-fields');
             wrap.innerHTML = `
-                    <label class="form-label-custom-new">Step Description <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control-custom-new" id="tpSoloDesc" placeholder="e.g. Adjust braces wire" />
-                    <div class="tp-field-grid">
-                        <div>
-                            <label class="form-label-custom-new">Linked Procedure</label>
-                            <select class="form-control-custom-new" id="tpSoloProc" onchange="TreatmentPlans.onProcedurePick(this)">
-                                ${procedureOptionsHtml()}
-                            </select>
-                        </div>
-                        <div>
-                            <label class="form-label-custom-new">Tooth # (optional)</label>
-                            <input type="number" class="form-control-custom-new" id="tpSoloTooth" min="11" max="48" />
-                        </div>
+            <div class="tp-step-editor-row">
+                <div class="tp-field-grid-4">
+                    <div>
+                        <label class="form-label-custom-new">Step Description <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control-custom-new" id="tpSoloDesc" placeholder="e.g. Adjust braces wire" />
                     </div>
-                    <div class="tp-field-grid">
-                        <div>
-                            <label class="form-label-custom-new">Estimated Cost</label>
-                            <input type="number" step="0.01" class="form-control-custom-new" id="tpSoloCost" value="0" />
-                        </div>
-                        <div>
-                            <label class="form-label-custom-new">Target Date</label>
-                            <input type="date" class="form-control-custom-new" id="tpSoloDate" />
-                        </div>
+                    <div>
+                        <label class="form-label-custom-new">Tooth #</label>
+                        <select class="form-control-custom-new" id="tpSoloTooth">${toothOptionsHtml()}</select>
                     </div>
-                    <div class="tp-field-grid full">
-                        <div>
-                            <label class="form-label-custom-new">Notes</label>
-                            <input type="text" class="form-control-custom-new" id="tpSoloNotes" placeholder="Optional notes..." />
-                        </div>
-                    </div>`;
+                    <div>
+                        <label class="form-label-custom-new">Linked Procedure</label>
+                        <select class="form-control-custom-new" id="tpSoloProc" onchange="TreatmentPlans.onProcedurePick(this)">
+                            ${procedureOptionsHtml()}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label-custom-new">Estimated Cost</label>
+                        <input type="number" step="0.01" min="0" class="form-control-custom-new tp-f-cost" id="tpSoloCost" value="0" />
+                    </div>
+                </div>
+            </div>`;
             document.getElementById('tpAddStepModal').classList.add('show');
         }
         function closeAddStepModal() {
@@ -1038,8 +1113,8 @@
                         ProcedureCatalogId: document.getElementById('tpSoloProc').value ? parseInt(document.getElementById('tpSoloProc').value) : null,
                         ToothNumber: document.getElementById('tpSoloTooth').value ? parseInt(document.getElementById('tpSoloTooth').value) : null,
                         EstimatedCost: parseFloat(document.getElementById('tpSoloCost').value || 0),
-                        TargetDate: document.getElementById('tpSoloDate').value || null,
-                        Notes: document.getElementById('tpSoloNotes').value.trim()
+                        TargetDate: todayIso(),   // مخفي — تاريخ اليوم
+                        Notes: ''                 // مخفي — فاضي
                     })
                 });
                 const result = await res.json();
@@ -1159,7 +1234,8 @@
             loadPlans, toggleExpand, openCreateModal, closeCreateModal, addStepRow, onProcedurePick, savePlan,
             openAddStepModal, closeAddStepModal, saveNewStep, quickStatus,
             openLinkVisitModal, closeLinkVisitModal, confirmStepDone,
-            deleteStep, deletePlan, setPlanStatus
+            deleteStep, deletePlan, setPlanStatus,
+            removeStepRow, recalcPlanCost
         };
     })();
 </script>

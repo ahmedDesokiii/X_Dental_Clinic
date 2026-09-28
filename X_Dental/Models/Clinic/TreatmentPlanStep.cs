@@ -11,8 +11,6 @@ namespace Dental.Models.Clinic
         public int StepOrder { get; set; }
         public string Description { get; set; } = string.Empty;
 
-        public int? ProcedureCatalogId { get; set; }
-        public ProcedureCatalog? ProcedureCatalog { get; set; }
 
         public int? ToothNumber { get; set; }
         public decimal EstimatedCost { get; set; }
@@ -24,5 +22,10 @@ namespace Dental.Models.Clinic
         public DateTime? CompletedDate { get; set; }
 
         public string? Notes { get; set; }
+
+        public int? ProcedureCatalogId { get; set; }
+
+        [ForeignKey(nameof(ProcedureCatalogId))]
+        public DiagnosisCatalog? ProcedureCatalog { get; set; }   // كان ProcedureCatalog
     }
 }
