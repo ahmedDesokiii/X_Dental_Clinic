@@ -201,7 +201,7 @@
         </div>
 
         <div class="teeth-row upper">
-            @foreach (var i in Enumerable.Range(11, 8).Concat(Enumerable.Range(21, 8)))
+            @foreach (var i in Enumerable.Range(11, 8).Reverse().Concat(Enumerable.Range(21, 8)))
             {
                 var tooth = Model?.Teeth?.FirstOrDefault(t => t.ToothNumber == i);
                 var status = tooth?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
@@ -215,7 +215,7 @@
         </div>
 
         <div class="teeth-row lower">
-            @foreach (var i in Enumerable.Range(41, 8).Concat(Enumerable.Range(31, 8)))
+            @foreach (var i in Enumerable.Range(41, 8).Reverse().Concat(Enumerable.Range(31, 8)))
             {
                 var tooth = Model?.Teeth?.FirstOrDefault(t => t.ToothNumber == i);
                 var status = tooth?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
@@ -252,19 +252,19 @@
         });
 
         var toothInfoMap = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-                                (Model?.Teeth ?? new List<Dental.Modules.Patients.DTOs.ToothDto>()).ToDictionary(
+                                                                        (Model?.Teeth ?? new List<Dental.Modules.Patients.DTOs.ToothDto>()).ToDictionary(
                         t => t.ToothNumber.ToString(),
                         t => new
                         {
-                                        status = StatusArLabel(t.Status),
-                                        notes = t.Notes,
-                                        lastTreatment = t.Treatments != null && t.Treatments.Any()
+                                                            status = StatusArLabel(t.Status),
+                                                            notes = t.Notes,
+                                                            lastTreatment = t.Treatments != null && t.Treatments.Any()
                         ? t.Treatments.OrderByDescending(x => x.TreatmentDate).First().ProcedureName
                         : null,
-                                        lastDate = t.Treatments != null && t.Treatments.Any()
+                                                            lastDate = t.Treatments != null && t.Treatments.Any()
                         ? t.Treatments.OrderByDescending(x => x.TreatmentDate).First().TreatmentDate.ToString("dd/MM/yyyy")
                         : null,
-                                        treatmentsCount = t.Treatments != null ? t.Treatments.Count : 0
+                                                            treatmentsCount = t.Treatments != null ? t.Treatments.Count : 0
                         })
                         ));
 

@@ -19,6 +19,17 @@
         /// <summary>عدد الحالات داخل الفترة المحددة.</summary>
         public int CasesCount { get; set; }
 
+        /// <summary>الحالات (المرضى) اللي اتعملهم التشخيص ده داخل الفترة المحددة.</summary>
+        public List<LaboratoryCaseDto> Cases { get; set; } = new();
+    }
+
+    public class LaboratoryCaseDto
+    {
+        public int VisitId { get; set; }
+        public DateTime VisitDate { get; set; }
+        public int PatientId { get; set; }
+        public string PatientName { get; set; } = string.Empty;
+        public string? Mobile { get; set; }
     }
 
     public class LaboratoryPriceHistoryDto

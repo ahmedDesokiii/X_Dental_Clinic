@@ -1,6 +1,6 @@
 ﻿// ============================================================
 // 📁 File: Modules/Laboratory/ServicesLaboratory/LaboratoryService.cs
-// استبدل الملف بالكامل بالنسخة دي
+// استبدل الملف بالكامل بالنسخة دي — (إضافة الحالات تحت كل تشخيص)
 // ============================================================
 using Dental.Core.Results;
 using Dental.Data;
@@ -57,8 +57,19 @@ namespace Dental.Modules.Laboratory.ServicesLaboratory
             var caseQuery =
                 from vd in _context.VisitDiagnoses.AsNoTracking()
                 join v in _context.Visits.AsNoTracking() on vd.VisitId equals v.Id
+                join p in _context.Patients.AsNoTracking() on v.PatientId equals p.Id
                 where ids.Contains(vd.DiagnosisCatalogId)
-                select new { vd.DiagnosisCatalogId, v.VisitDate };
+                select new
+                {
+                    vd.DiagnosisCatalogId,
+                    v.VisitDate,
+                    VisitId = v.Id,
+                    PatientId = p.Id,
+                    p.FullNameAr,
+                    p.FullNameEn,
+                    p.Mobile,
+                    p.Phone
+                };
 
             if (dateFrom.HasValue)
                 caseQuery = caseQuery.Where(x => x.VisitDate >= dateFrom.Value);
@@ -76,7 +87,19 @@ namespace Dental.Modules.Laboratory.ServicesLaboratory
                         var currentLabPrice = latestByDiag.TryGetValue(g.Key, out var last)
                             ? last.Price
                             : list.First(d => d.Id == g.Key).CurrentPrice;
-                        return (Count: g.Count(), Total: g.Count() * currentLabPrice);
+                        var caseList = g
+                            .OrderByDescending(x => x.VisitDate)
+                            .ThenByDescending(x => x.VisitId)
+                            .Select(x => new LaboratoryCaseDto
+                            {
+                                VisitId = x.VisitId,
+                                VisitDate = x.VisitDate,
+                                PatientId = x.PatientId,
+                                PatientName = !string.IsNullOrWhiteSpace(x.FullNameAr) ? x.FullNameAr : (x.FullNameEn ?? string.Empty),
+                                Mobile = !string.IsNullOrWhiteSpace(x.Mobile) ? x.Mobile : x.Phone
+                            })
+                            .ToList();
+                        return (Count: g.Count(), Total: g.Count() * currentLabPrice, Cases: caseList);
                     });
 
             foreach (var item in list)
@@ -85,6 +108,7 @@ namespace Dental.Modules.Laboratory.ServicesLaboratory
                 {
                     item.CasesCount = t.Count;
                     item.Total = t.Total;
+                    item.Cases = t.Cases;
                 }
             }
 

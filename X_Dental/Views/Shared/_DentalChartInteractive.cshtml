@@ -579,11 +579,11 @@
 
         <!-- Upper Arch -->
         <div class="teeth-row upper">
-            @for (int i = 11; i <= 18; i++)
+            @for (int i = 18; i >= 11; i--)
             {
                 var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((i % 10) * 45)ms" onclick="openToothModal(@i, event)">
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((18 - i) * 45)ms" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
                         <span class="tooth-num">@(i - 10)</span>
                         <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
@@ -607,11 +607,11 @@
 
         <!-- Lower Arch -->
         <div class="teeth-row lower">
-            @for (int i = 41; i <= 48; i++)
+            @for (int i = 48; i >= 41; i--)
             {
                 var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((i % 10) * 45 + 720)ms" onclick="openToothModal(@i, event)">
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((48 - i) * 45 + 720)ms" onclick="openToothModal(@i, event)">
                     <div class="tooth-inner">
                         <span class="tooth-num">@(i - 40)</span>
                         <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
@@ -869,10 +869,10 @@
             const row = document.createElement('div');
             row.className = 'xray-file-row';
             row.innerHTML = `
-                        <img src="${xr.base64}" class="xray-thumb" />
-                        <input type="text" class="form-glass-v4 xray-note-input" placeholder="Note..." value="${xr.notes || ''}" />
-                        <button type="button" class="xray-remove-btn"><i class="bi bi-x"></i></button>
-                    `;
+                            <img src="${xr.base64}" class="xray-thumb" />
+                            <input type="text" class="form-glass-v4 xray-note-input" placeholder="Note..." value="${xr.notes || ''}" />
+                            <button type="button" class="xray-remove-btn"><i class="bi bi-x"></i></button>
+                        `;
             row.querySelector('.xray-note-input').addEventListener('input', function() {
                 currentXrayFiles[idx].notes = this.value;
             });
