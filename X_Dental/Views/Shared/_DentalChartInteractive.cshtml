@@ -652,7 +652,7 @@
                             <label>Tooth Status</label>
                             <select class="form-glass-v4 mb-2" id="toothStatus">
                                 <option value="1">Healthy</option>
-                                <option value="2">Decayed</option>
+                                <option value="2" selected>Decayed</option>
                                 <option value="3">Treated</option>
                                 <option value="4">Missing</option>
                                 <option value="5">Extracted</option>
@@ -787,7 +787,7 @@
             ' (' + toothLabelJs(num) + ')' + (hist ? ' — Edit History' : '');
 
         const existing = uid ? window.pendingToothRecords.find(r => r.uid === uid) : null;
-        document.getElementById('toothStatus').value = existing ? existing.Status : 1;
+        document.getElementById('toothStatus').value = existing ? existing.Status : 2;
         document.getElementById('toothProcedure').value = existing ? (existing.ProcedureCode || '') : '';
         document.getElementById('toothDiagnosis').value =
             hist ? (hist.diagId || '') : (existing ? (existing.DiagnosisCatalogId || '') : '');

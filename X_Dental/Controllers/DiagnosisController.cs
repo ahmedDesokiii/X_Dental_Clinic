@@ -4,6 +4,7 @@
 using Dental.Modules.Diagnosis.DTOs;
 using Dental.Modules.Diagnosis.InterfacesDiagnosis;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.RegularExpressions;
 
 namespace Dental.Controllers
 {
@@ -35,11 +36,50 @@ namespace Dental.Controllers
             return Json(new { success = true, data = result.Data });
         }
 
-        // ── حفظ (إضافة أو تعديل حسب Id) ──
+
+        // ── توليد الكود التالي: D-1001, D-1002 ... ──
+        private async Task<string> GenerateNextCodeAsync()
+        {
+            var list = await _diagnosisService.GetAllAsync();
+
+            var max = list
+                .Select(x => Regex.Match(x.Code ?? "", @"^D-(\d+)$"))
+                .Where(m => m.Success)
+                .Select(m => int.Parse(m.Groups[1].Value))
+                .DefaultIfEmpty(0)
+                .Max();
+
+            return $"D-{Math.Max(max, 1000) + 1}";
+        }
+
+        // ── الـ View بتستخدمه لعرض الكود الجديد في المودال ──
+        [HttpGet]
+        public async Task<IActionResult> GetNextCode()
+        {
+            return Json(new { success = true, code = await GenerateNextCodeAsync() });
+        }
+
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Save(DiagnosisFormDto dto)
         {
+            if (dto.Id > 0)
+            {
+                // التعديل: الكود يفضل زي ما هو في الداتا بيز
+                var existing = await _diagnosisService.GetByIdAsync(dto.Id);
+                if (!existing.Success)
+                    return Json(new { success = false, message = existing.Message });
+                dto.Code = existing.Data.Code;
+                ModelState.Remove(nameof(dto.Code));
+            }
+            else
+            {
+                // الإضافة: السيرفر هو اللي يولّد الكود
+                dto.Code = await GenerateNextCodeAsync();
+                ModelState.Remove(nameof(dto.Code));
+            }
+
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values
@@ -58,6 +98,7 @@ namespace Dental.Controllers
             var createResult = await _diagnosisService.CreateAsync(dto);
             return Json(new { success = createResult.Success, message = createResult.Message, id = createResult.Data });
         }
+
 
         // ── تفعيل / إيقاف سريع ──
         [HttpPost]

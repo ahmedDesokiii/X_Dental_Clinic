@@ -4,6 +4,7 @@ using Dental.Modules.Inventory.InterfacesInventory;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 using static Dental.Constants.EnumHelper;
 
 namespace Dental.Controllers
@@ -86,13 +87,48 @@ namespace Dental.Controllers
                 return PartialView("_MaterialFormModal", result.Data);
             }
 
-            return PartialView("_MaterialFormModal", new MaterialDetailsDto());
+            return PartialView("_MaterialFormModal", new MaterialDetailsDto { Code = await GenerateNextCodeAsync() });
+        }
+
+        // ── توليد الكود التالي: M-1001, M-1002 ... ──
+        private async Task<string> GenerateNextCodeAsync()
+        {
+            // IgnoreQueryFilters عشان الماتريال المحذوف (soft delete) يتحسب ومنكررش كوده
+            var codes = await _context.Materials
+                .IgnoreQueryFilters()
+                .Where(m => m.Code.StartsWith("MT-"))
+                .Select(m => m.Code)
+                .ToListAsync();
+
+            var max = codes
+                .Select(c => Regex.Match(c, @"^MT-(\d+)$"))
+                .Where(m => m.Success)
+                .Select(m => int.Parse(m.Groups[1].Value))
+                .DefaultIfEmpty(0)
+                .Max();
+
+            return $"MT-{Math.Max(max, 1000) + 1}";
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Save(MaterialFormDto dto)
         {
+            if (dto.Id > 0)
+            {
+                // التعديل: الكود يفضل زي ما هو
+                var existing = await _inventoryService.GetByIdAsync(dto.Id);
+                if (!existing.Success)
+                    return Json(new { success = false, message = existing.Message });
+                dto.Code = existing.Data.Code;
+            }
+            else
+            {
+                // الإضافة: السيرفر هو اللي يولّد الكود
+                dto.Code = await GenerateNextCodeAsync();
+            }
+            ModelState.Remove(nameof(dto.Code));
+
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();

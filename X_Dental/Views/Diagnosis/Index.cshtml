@@ -507,10 +507,25 @@
                 transition: all .2s;
             }
 
+          .inv-input[readonly] {
+                background: #eafbfc;
+                color: #4b6b6c;
+                font-weight: 800;
+                cursor: not-allowed;
+            }
+
                 .diag-form-group .form-control:focus {
                     outline: none;
                     border-color: var(--sc-teal-500);
                     box-shadow: 0 0 0 3px rgba(20,184,166,.12);
+                }
+
+                .diag-form-group .form-control[readonly] {
+                    background: var(--sc-sky-50);
+                    color: var(--sc-ink-600);
+                    font-weight: 800;
+                    letter-spacing: .5px;
+                    cursor: not-allowed;
                 }
 
         .diag-form-row {
@@ -821,8 +836,8 @@
 
             <div class="diag-form-row">
                 <div class="diag-form-group">
-                    <label>Code <span style="color:#dc2626;">*</span></label>
-                    <input type="text" class="form-control" id="diagCode" placeholder="e.g. D01" />
+                    <label>Code <span style="color:#dc2626;"></span></label>
+                    <input type="text" class="form-control" id="diagCode" readonly tabindex="-1" placeholder="Auto-generated" />
                 </div>
                 <div class="diag-form-group">
                     <label>Name (English) <span style="color:#dc2626;">*</span></label>
@@ -1033,13 +1048,22 @@
             document.getElementById(textId).textContent = value ? onLabel : offLabel;
         }
 
-        function openDiagFormModal() {
+        async function openDiagFormModal() {
             document.getElementById('diagModalTitle').textContent = 'New Diagnosis';
             document.getElementById('diagForm').reset();
             document.getElementById('diagId').value = 0;
             document.getElementById('diagPrice').value = 0;
             setSwitch(document.getElementById('diagActiveToggle'), 'diagActiveText', 'Active', 'Inactive', true);
             setSwitch(document.getElementById('diagLabToggle'), 'diagLabText', 'Yes', 'No', false, true);
+
+            try {
+                const res = await fetch('/Diagnosis/GetNextCode');
+                const result = await res.json();
+                document.getElementById('diagCode').value = result.success ? result.code : '';
+            } catch {
+                document.getElementById('diagCode').value = '';
+            }
+
             document.getElementById('diagFormModalOverlay').classList.add('show');
         }
 
