@@ -13,13 +13,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Dental Clinic</title>
 
-    <!-- Bootstrap (base only) -->
+    <!-- Local Fonts -->
+    <style>
+            @@font-face {
+                font-family: 'Beiruti';
+                src: url('/fonts/Beiruti-VariableFont_wght.ttf') format('truetype');
+                font-weight: 500 900;
+                font-style: normal;
+                font-display: swap;
+            }
+    </style>
+    
+    <!-- Bootstrap (local) -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-
-    <!-- Fonts: Beiruti (Arabic) + Ubuntu Condensed (Latin) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Beiruti:wght@200..900&family=Ubuntu+Condensed&display=swap" rel="stylesheet">
 
     <!-- Premium Design System v2.0 -->
     <link rel="stylesheet" href="~/css/clinic-design-system-v2.css" asp-append-version="true" />
@@ -27,33 +33,35 @@
     <!-- Page-specific styles -->
     @await RenderSectionAsync("Styles", required: false)
 
-    <!-- Legacy CSS — TODO: Migrate and remove -->
+    <!-- Legacy CSS -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/patient-hero-shared.css" asp-append-version="true" />
-
     <link rel="stylesheet" href="~/css/CreationStyle.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/executive-dashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Dental.styles.css" asp-append-version="true" />
 
-    <!-- Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Bootstrap Icons (local) -->
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
+
     <link rel="icon" type="image/x-icon" href="~/dental.ico">
 
-    <!-- Select2 -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- SweetAlert (local) -->
+    <link href="~/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
+    <!-- Select2 (local) -->
+    <link href="~/lib/select2/select2.min.css" rel="stylesheet" />
 
-    <!-- DataTables -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.4/css/dataTables.dataTables.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/columncontrol/1.1.1/css/columnControl.dataTables.css" />
+    <!-- DataTables (local) -->
+    <link rel="stylesheet" href="~/lib/datatables/dataTables.dataTables.min.css" />
+    <link rel="stylesheet" href="~/lib/datatables/columnControl.dataTables.css" />
 
-    <!-- SweetAlert -->
+    <!-- SweetAlert (local) -->
     <link href="~/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
 
-    <!-- JS (core first) -->
-    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-    <script src="https://cdn.datatables.net/2.3.4/js/dataTables.js"></script>
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.2/moment.min.js"></script>
+    <!-- JS (core first) - Local -->
+    <script src="~/lib/jquery/jquery-3.7.1.min.js"></script>
+    <script src="~/lib/datatables/dataTables.min.js"></script>
+    <script src="~/lib/highcharts/highcharts.js"></script>
+    <script src="~/lib/moment/moment.min.js"></script>
 </head>
 
 <body>
@@ -62,6 +70,7 @@
 
         <!-- Sidebar Overlay (mobile) -->
         <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
         <!-- ============ Sidebar ============ -->
         <aside class="app-sidebar" id="appSidebar">
             <div class="sidebar-brand">
@@ -98,7 +107,7 @@
                         <span>Payments & Invoices</span>
                     </a>
 
-                    <a asp-controller="Diagnosis" asp-action="Index" title="Diagnosis"  class="sidebar-link" data-title="Diagnoses">
+                    <a asp-controller="Diagnosis" asp-action="Index" title="Diagnosis" class="sidebar-link" data-title="Diagnoses">
                         <i class="bi bi-clipboard2-pulse-fill fs-5"></i>
                         <span>Diagnoses</span>
                     </a>
@@ -126,10 +135,6 @@
                             <i class="bi bi-shield-lock-fill"></i>
                             <span>Roles</span>
                         </a>
-                        @*                         <a href="#" class="sidebar-link" data-title="Reports">
-                            <i class="bi bi-bar-chart-line-fill"></i>
-                            <span>Reports</span>
-                        </a> *@
                     }
                 }
             </nav>
@@ -140,9 +145,10 @@
                 </a>
             </div>
         </aside>
+
         <!-- ============ Main Column ============ -->
         <div class="app-main">
-            <!-- Topbar — Floating Glass -->
+            <!-- Topbar -->
             <header class="app-topbar">
                 <div class="topbar-left">
                     <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Toggle menu">
@@ -199,6 +205,7 @@
                     </div>
                 </div>
             </header>
+
             <!-- Page Content -->
             <main class="app-content" dir="auto">
                 @RenderBody()
@@ -213,142 +220,141 @@
 
     <!-- ================= Scripts ================= -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="~/lib/select2/select2.min.js"></script>
     <script src="~/sweetalert2/sweetalert2.all.min.js"></script>
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js"></script>
+
+    <!-- Firebase (local) -->
+    <script src="~/lib/firebase/firebase-app-compat.js"></script>
+    <script src="~/lib/firebase/firebase-messaging-compat.js"></script>
+    <script src="~/sweetalert2/sweetalert2.all.min.js"></script>
 
     <!-- App Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script src="~/js/site.js"></script>
     <script src="~/js/login.js"></script>
     <script src="~/js/Users.js"></script>
-    
 
     <script>
-        $(document).ready(function () {
-        // Initialize Select2
-        $('.searchable').select2({
-        dir: 'rtl',
-        width: '100%'
-        });
+            $(document).ready(function () {
+                // Initialize Select2
+                $('.searchable').select2({
+                    dir: 'rtl',
+                    width: '100%'
+                });
 
-        // Mark active sidebar link based on current URL
-        var path = window.location.pathname.toLowerCase();
-        $('.sidebar-link').each(function () {
-        var href = ($(this).attr('href') || '').toLowerCase();
-        if (href && href !== '#' && path.indexOf(href) === 0) {
-        $(this).addClass('active');
-        }
-        });
+                // Mark active sidebar link based on current URL
+                var path = window.location.pathname.toLowerCase();
+                $('.sidebar-link').each(function () {
+                    var href = ($(this).attr('href') || '').toLowerCase();
+                    if (href && href !== '#' && path.indexOf(href) === 0) {
+                        $(this).addClass('active');
+                    }
+                });
 
-        // Close dropdowns when clicking outside
-        $(document).on('click', function (e) {
-        if (!$(e.target).closest('#userMenu').length) {
-        $('#userDropdown').removeClass('show');
-        $('#userMenu').removeClass('active');
-        }
-        });
+                // Close dropdowns when clicking outside
+                $(document).on('click', function (e) {
+                    if (!$(e.target).closest('#userMenu').length) {
+                        $('#userDropdown').removeClass('show');
+                        $('#userMenu').removeClass('active');
+                    }
+                });
 
-        // Animate stat cards on scroll
-        animateOnScroll();
-        });
+                // Animate stat cards on scroll
+                animateOnScroll();
+            });
 
-        // Sidebar Toggle
-        function toggleSidebar() {
-        const sidebar = document.getElementById('appSidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        const isMobile = window.innerWidth <= 768;
+            // Sidebar Toggle
+            function toggleSidebar() {
+                const sidebar = document.getElementById('appSidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                const isMobile = window.innerWidth <= 768;
 
-        if (isMobile) {
-        sidebar.classList.toggle('mobile-open');
-        overlay.classList.toggle('active');
-        } else {
-        sidebar.classList.toggle('collapsed');
-        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-        }
-        }
+                if (isMobile) {
+                    sidebar.classList.toggle('mobile-open');
+                    overlay.classList.toggle('active');
+                } else {
+                    sidebar.classList.toggle('collapsed');
+                    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+                }
+            }
 
-        // Restore sidebar state
-        (function () {
-        const sidebar = document.getElementById('appSidebar');
-        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-        if (isCollapsed && window.innerWidth > 768) {
-        sidebar.classList.add('collapsed');
-        }
-        })();
+            // Restore sidebar state
+            (function () {
+                const sidebar = document.getElementById('appSidebar');
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (isCollapsed && window.innerWidth > 768) {
+                    sidebar.classList.add('collapsed');
+                }
+            })();
 
-        // User Dropdown Toggle
-        function toggleUserDropdown() {
-        const dropdown = document.getElementById('userDropdown');
-        const menu = document.getElementById('userMenu');
-        dropdown.classList.toggle('show');
-        menu.classList.toggle('active');
-        }
+            // User Dropdown Toggle
+            function toggleUserDropdown() {
+                const dropdown = document.getElementById('userDropdown');
+                const menu = document.getElementById('userMenu');
+                dropdown.classList.toggle('show');
+                menu.classList.toggle('active');
+            }
 
-        // Theme Toggle
-        function toggleTheme() {
-        const html = document.documentElement;
-        const icon = document.getElementById('themeIcon');
-        const currentTheme = html.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            // Theme Toggle
+            function toggleTheme() {
+                const html = document.documentElement;
+                const icon = document.getElementById('themeIcon');
+                const currentTheme = html.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
-        html.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
+                html.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
 
-        if (newTheme === 'dark') {
-        icon.classList.remove('bi-moon-fill');
-        icon.classList.add('bi-sun-fill');
-        } else {
-        icon.classList.remove('bi-sun-fill');
-        icon.classList.add('bi-moon-fill');
-        }
-        }
+                if (newTheme === 'dark') {
+                    icon.classList.remove('bi-moon-fill');
+                    icon.classList.add('bi-sun-fill');
+                } else {
+                    icon.classList.remove('bi-sun-fill');
+                    icon.classList.add('bi-moon-fill');
+                }
+            }
 
-        // Restore theme
-        (function () {
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        const icon = document.getElementById('themeIcon');
-        if (savedTheme === 'dark' && icon) {
-        icon.classList.remove('bi-moon-fill');
-        icon.classList.add('bi-sun-fill');
-        }
-        })();
+            // Restore theme
+            (function () {
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                const icon = document.getElementById('themeIcon');
+                if (savedTheme === 'dark' && icon) {
+                    icon.classList.remove('bi-moon-fill');
+                    icon.classList.add('bi-sun-fill');
+                }
+            })();
 
-        // Handle window resize
-        window.addEventListener('resize', function () {
-        const sidebar = document.getElementById('appSidebar');
-        const overlay = document.getElementById('sidebarOverlay');
+            // Handle window resize
+            window.addEventListener('resize', function () {
+                const sidebar = document.getElementById('appSidebar');
+                const overlay = document.getElementById('sidebarOverlay');
 
-        if (window.innerWidth > 768) {
-        sidebar.classList.remove('mobile-open');
-        overlay.classList.remove('active');
-        }
-        });
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('mobile-open');
+                    overlay.classList.remove('active');
+                }
+            });
 
-        // Animate elements on scroll
-        function animateOnScroll() {
-        const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-        if (entry.isIntersecting) {
-        entry.target.style.animationPlayState = 'running';
-        }
-        });
-        }, { threshold: 0.1 });
+            // Animate elements on scroll
+            function animateOnScroll() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.style.animationPlayState = 'running';
+                        }
+                    });
+                }, { threshold: 0.1 });
 
-        document.querySelectorAll('.stat-card, .card').forEach(el => {
-        observer.observe(el);
-        });
-        }
+                document.querySelectorAll('.stat-card, .card').forEach(el => {
+                    observer.observe(el);
+                });
+            }
 
-        // Quick Actions FAB
-        function showQuickActions() {
-        // You can implement a modal or dropdown here
-        console.log('Quick actions clicked');
-        }
+            // Quick Actions FAB
+            function showQuickActions() {
+                console.log('Quick actions clicked');
+            }
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
