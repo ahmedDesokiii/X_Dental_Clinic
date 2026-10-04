@@ -2,28 +2,50 @@
 @{
     var previousSessions = ViewBag.PreviousSessions as List<Dental.Modules.Clinical.DTOs.PreviousSessionRecordDto> ?? new();
 
-    string TLbl(int n) => (n / 10) switch
+    // عرض رقم السن — 0 أو قيم غير قياسية تظهر كـ "—"
+    string TLbl(int n)
     {
-        1 => $"UL-{n % 10}",
-        2 => $"UR-{n % 10}",
-        3 => $"LL-{n % 10}",
-        4 => $"LR-{n % 10}",
-        _ => n.ToString()
-    };
-
-    var groupedSessions = previousSessions
-        .GroupBy(r => new { r.VisitId, Date = r.Date.Date })
-        .OrderByDescending(g => g.Key.Date)
-        .Select(g => new
+        if (n <= 0) return "—";
+        return (n / 10) switch
         {
-            g.Key.VisitId,
-            g.Key.Date,
-            Teeth = g.OrderBy(x => x.ToothNumber).ToList(),
-            DiagnosisTotal = g.Sum(x => x.DiagnosisPrice),
-            VisitTotalAmount = g.First().VisitTotalAmount,
-            VisitPaidAmount = g.First().VisitPaidAmount,
-            VisitDiscount = g.First().VisitDiscount,
-            VisitRemaining = g.First().VisitRemaining
+            1 => $"UL-{n % 10}",
+            2 => $"UR-{n % 10}",
+            3 => $"LL-{n % 10}",
+            4 => $"LR-{n % 10}",
+            _ => n.ToString()
+        };
+    }
+
+    // ============================================================
+    // تجميع حسب التاريخ فقط (مش VisitId)
+    // → كل التشخيصات/الأسنان اللي حصلت في نفس اليوم تظهر في بلوك واحد
+    // الماليات: مجموع مميز لكل VisitId في اليوم (من غير تكرار)
+    // ============================================================
+    var groupedSessions = previousSessions
+        .GroupBy(r => r.Date.Date)
+        .OrderByDescending(g => g.Key)
+        .Select(g =>
+        {
+            var distinctVisits = g
+                .GroupBy(x => x.VisitId)
+                .Select(vg => vg.First())
+                .ToList();
+
+            return new
+            {
+                Date = g.Key,
+                // أول VisitId للـ panel id فقط (للـ accordion)
+                PrimaryVisitId = distinctVisits.First().VisitId,
+                VisitIds = distinctVisits.Select(v => v.VisitId).ToList(),
+                Teeth = g.OrderBy(x => x.ToothNumber == 0 ? int.MaxValue : x.ToothNumber)
+                         .ThenBy(x => x.DiagnosisName)
+                         .ToList(),
+                DiagnosisTotal = g.Sum(x => x.DiagnosisPrice),
+                VisitTotalAmount = distinctVisits.Sum(v => v.VisitTotalAmount),
+                VisitPaidAmount = distinctVisits.Sum(v => v.VisitPaidAmount),
+                VisitDiscount = distinctVisits.Sum(v => v.VisitDiscount),
+                VisitRemaining = distinctVisits.Sum(v => v.VisitRemaining)
+            };
         })
         .ToList();
 
@@ -35,7 +57,6 @@
 }
 
 <div class="ps-grand-totals mb-2 mt-0">
-   
     <div class="ps-grand-item">
         <span>إجمالي الزيارات</span>
         <b>@grandVisitTotal.ToString("N0")</b>
@@ -57,7 +78,7 @@
     <div class="section-card" style="margin-bottom:16px;">
         <div class="section-head">
             <h4><i class="bi bi-clock-history"></i> السجل السابق للمريض</h4>
-            <span class="section-badge">@groupedSessions.Count زيارة سابقة</span>
+            <span class="section-badge">@groupedSessions.Count يوم علاج</span>
         </div>
 
         @if (groupedSessions.Any())
@@ -65,14 +86,18 @@
             <div class="ps-groups">
                 @foreach (var grp in groupedSessions)
                 {
-                    var panelId = $"psPanel_{grp.VisitId}_{grp.Date:yyyyMMdd}";
+                    var panelId = $"psPanel_{grp.PrimaryVisitId}_{grp.Date:yyyyMMdd}";
+                    var teethWithNumber = grp.Teeth.Count(t => t.ToothNumber > 0);
+                    var teethLabel = teethWithNumber > 0
+                        ? $"{teethWithNumber} سن"
+                        : $"{grp.Teeth.Count} سجل";
                     <div class="ps-session-block">
                         <button type="button" class="ps-session-head" onclick="togglePsPanel(this)" data-target="@panelId">
                             <div class="ps-session-date">
                                 <i class="bi bi-chevron-left ps-chevron"></i>
                                 <i class="bi bi-calendar-event"></i>
                                 <b>@grp.Date.ToString("dd/MM/yyyy")</b>
-                                <span class="ps-teeth-count">@grp.Teeth.Count سن</span>
+                                <span class="ps-teeth-count">@teethLabel</span>
                             </div>
                             <div class="ps-session-financials">
                                 <span class="ps-fin-chip total"><i class="bi bi-wallet2"></i> @grp.VisitTotalAmount.ToString("N0")</span>
@@ -90,7 +115,7 @@
                                      data-diag="@(r.DiagnosisCatalogId ?? 0)"
                                      data-notes="@(r.DiagnosisNotes ?? "")"
                                      data-tooth="@r.ToothNumber">
-                                    <span class="tooth-chip">@TLbl(r.ToothNumber)</span>
+                                    <span class="tooth-chip @(r.ToothNumber <= 0 ? "tooth-chip-empty" : "")">@TLbl(r.ToothNumber)</span>
                                     <div class="ps-tooth-info">
                                         <span class="ps-diag-name">@(r.DiagnosisName ?? "بدون تشخيص")</span>
                                         @if (!string.IsNullOrWhiteSpace(r.DiagnosisNotes))
@@ -115,14 +140,12 @@
                         </div>
 
                         <div class="ps-session-subtotal">
-                            <span>إجمالي تشخيصات هذه الزيارة</span>
+                            <span>إجمالي تشخيصات هذا اليوم</span>
                             <b>@grp.DiagnosisTotal.ToString("N0") م.ج</b>
                         </div>
                     </div>
                 }
             </div>
-
-            
         }
         else
         {
@@ -318,7 +341,7 @@
 
     .ps-grand-totals {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 10px;
         margin-top: 16px;
         padding-top: 16px;
@@ -363,6 +386,14 @@
                 color: #dc2626;
             }
 
+    /* سن فاضي / غير محدد */
+    .tooth-chip-empty {
+        background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;
+        color: #94a3b8 !important;
+        box-shadow: none !important;
+        font-size: 0.9rem !important;
+    }
+
     @@media (max-width: 767.98px) {
         .ps-grand-totals {
             grid-template-columns: repeat(2, 1fr);
@@ -376,7 +407,6 @@
 </style>
 
 <script>
-    // ⭐ Accordion: هيدر + فوتر ظاهرين دايمًا، الـ body بس اللي بيتفتح/يتقفل
     function togglePsPanel(headerBtn) {
         const targetId = headerBtn.dataset.target;
         const panel = document.getElementById(targetId);
@@ -389,9 +419,7 @@
     }
     window.togglePsPanel = togglePsPanel;
 
-    /* ⭐ تعديل ريكورد سابق: يفتح مودال السن في وضع History Edit — بدون أي تغيير في المدفوعات */
     function editPreviousRecord(btn) {
-        // منع إغلاق/فتح الـ accordion عند الضغط على زرار التعديل
         if (event) event.stopPropagation();
 
         const row = btn.closest('.ps-tooth-row');

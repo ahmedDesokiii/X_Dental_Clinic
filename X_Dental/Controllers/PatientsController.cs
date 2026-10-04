@@ -545,57 +545,141 @@ namespace Dental.Controllers
         }
         #endregion
 
+        // ============================================================
+        // PATCH: PatientsController.cs
+        // استبدل method GetPreviousSessionsAsync بالكامل بالنسخة دي
+        // ============================================================
+
         private async Task<List<PreviousSessionRecordDto>> GetPreviousSessionsAsync(int patientId)
         {
-            var entries = await _context.DentalChartEntries
-                .Where(e => e.PatientId == patientId)
-                .Include(e => e.Visit)
-                .OrderByDescending(e => e.Date)
+            // 1) كل زيارات المريض (مكتملة أو ليها دفع/تشخيص)
+            var visits = await _context.Visits
+                .AsNoTracking()
+                .Where(v => v.PatientId == patientId)
+                .OrderByDescending(v => v.VisitDate)
                 .ToListAsync();
 
-            var visitIds = entries.Select(e => e.VisitId).Distinct().ToList();
+            if (!visits.Any())
+                return new List<PreviousSessionRecordDto>();
 
+            var visitIds = visits.Select(v => v.Id).ToList();
+            var visitMap = visits.ToDictionary(v => v.Id);
+
+            // 2) التشخيصات (المصدر الأساسي — حتى لو ToothNumber = null)
             var diagnoses = await _context.VisitDiagnoses
-                .Where(d => visitIds.Contains(d.VisitId))
+                .AsNoTracking()
+                .Where(d => visitIds.Contains(d.VisitId) && !d.IsDeleted)
                 .Include(d => d.Diagnosis)
+                .ToListAsync();
+
+            // 3) شارت الأسنان (للحالة/Status لو موجودة)
+            var chartEntries = await _context.DentalChartEntries
+                .AsNoTracking()
+                .Where(e => e.PatientId == patientId && !e.IsDeleted)
                 .ToListAsync();
 
             var statusLabels = new Dictionary<Dental.Models.Patient.ToothStatus, string>
     {
-    { Dental.Models.Patient.ToothStatus.Healthy, "Healthy" },
-    { Dental.Models.Patient.ToothStatus.Decayed, "Decayed" },
-    { Dental.Models.Patient.ToothStatus.Treated, "Treated" },
-    { Dental.Models.Patient.ToothStatus.Missing, "Missing" },
-    { Dental.Models.Patient.ToothStatus.Extracted, "Extracted" },
-    { Dental.Models.Patient.ToothStatus.RootCanal, "RootCanal" },
-    { Dental.Models.Patient.ToothStatus.Crown, "Crown" },
-    { Dental.Models.Patient.ToothStatus.Filling, "Filling" }
-
+        { Dental.Models.Patient.ToothStatus.Healthy, "Healthy" },
+        { Dental.Models.Patient.ToothStatus.Decayed, "Decayed" },
+        { Dental.Models.Patient.ToothStatus.Treated, "Treated" },
+        { Dental.Models.Patient.ToothStatus.Missing, "Missing" },
+        { Dental.Models.Patient.ToothStatus.Extracted, "Extracted" },
+        { Dental.Models.Patient.ToothStatus.RootCanal, "RootCanal" },
+        { Dental.Models.Patient.ToothStatus.Crown, "Crown" },
+        { Dental.Models.Patient.ToothStatus.Filling, "Filling" }
     };
 
-            return entries.Select(e =>
+            var result = new List<PreviousSessionRecordDto>();
+
+            // ── أ) صف لكل VisitDiagnosis (حتى لو مفيش سن) ──
+            foreach (var d in diagnoses)
             {
-                var diag = diagnoses.FirstOrDefault(d => d.VisitId == e.VisitId && d.ToothNumber == e.ToothNumber);
-                return new PreviousSessionRecordDto
+                if (!visitMap.TryGetValue(d.VisitId, out var visit))
+                    continue;
+
+                // أحدث شارت لنفس السن + نفس الزيارة (لو موجود)
+                var chart = chartEntries
+                    .Where(c => c.VisitId == d.VisitId
+                             && d.ToothNumber != null
+                             && c.ToothNumber == d.ToothNumber.Value)
+                    .OrderByDescending(c => c.Date)
+                    .FirstOrDefault();
+
+                // لو مفيش شارت على نفس الزيارة، جرّب أي شارت لنفس السن
+                if (chart == null && d.ToothNumber != null)
                 {
-                    VisitDiagnosisId = diag?.Id ?? 0,                    // ✅
-                    VisitId = (int)e.VisitId,                                 // ✅
-                    DiagnosisCatalogId = diag?.DiagnosisCatalogId,       // ✅
-                    ToothNumber = e.ToothNumber,
-                    Date = e.Date,
-                    StatusText = statusLabels.TryGetValue(e.Status, out var lbl) ? lbl : e.Status.ToString(),
-                    DiagnosisName = diag?.Diagnosis?.NameAr,
-                    DiagnosisNotes = diag?.Notes,
-                    DiagnosisPrice = diag?.Diagnosis?.Price ?? 0,
-                    VisitTotalAmount = e.Visit?.TotalAmount ?? 0,
-                    VisitPaidAmount = e.Visit?.PaidAmount ?? 0,
-                    VisitDiscount = e.Visit?.Discount ?? 0,
-                    VisitRemaining = e.Visit?.Remaining ?? 0
-                };
-            }).ToList();
+                    chart = chartEntries
+                        .Where(c => c.ToothNumber == d.ToothNumber.Value)
+                        .OrderByDescending(c => c.Date)
+                        .FirstOrDefault();
+                }
+
+                var statusText = chart != null && statusLabels.TryGetValue(chart.Status, out var lbl)
+                    ? lbl
+                    : (d.ToothNumber == null || d.ToothNumber == 0 ? "—" : "Decayed");
+
+                result.Add(new PreviousSessionRecordDto
+                {
+                    VisitDiagnosisId = d.Id,
+                    VisitId = d.VisitId,
+                    DiagnosisCatalogId = d.DiagnosisCatalogId,
+                    // 0 = بدون سن محدد (يظهر في الشاشة كـ "—")
+                    ToothNumber = d.ToothNumber ?? 0,
+                    Date = visit.VisitDate,
+                    StatusText = statusText,
+                    DiagnosisName = d.Diagnosis?.NameAr,
+                    DiagnosisNotes = d.Notes,
+                    DiagnosisPrice = d.Diagnosis?.Price ?? 0,
+                    VisitTotalAmount = visit.TotalAmount,
+                    VisitPaidAmount = visit.PaidAmount,
+                    VisitDiscount = visit.Discount,
+                    VisitRemaining = visit.Remaining
+                });
+            }
+
+            // ── ب) زيارات فيها دفع أو مبلغ، ومفيهاش أي VisitDiagnosis ──
+            //     عشان السجلات اللي Tooth=0/فاضي والدفع موجود متضيعش
+            var visitsWithDiag = diagnoses.Select(d => d.VisitId).ToHashSet();
+            foreach (var visit in visits)
+            {
+                if (visitsWithDiag.Contains(visit.Id))
+                    continue;
+
+                var hasMoney = visit.PaidAmount > 0
+                            || visit.TotalAmount > 0
+                            || visit.Discount > 0;
+                if (!hasMoney)
+                    continue;
+
+                result.Add(new PreviousSessionRecordDto
+                {
+                    VisitDiagnosisId = 0,
+                    VisitId = visit.Id,
+                    DiagnosisCatalogId = null,
+                    ToothNumber = 0,
+                    Date = visit.VisitDate,
+                    StatusText = "—",
+                    DiagnosisName = string.IsNullOrWhiteSpace(visit.ChiefComplaint)
+                        ? "زيارة بدون تشخيص مسجّل"
+                        : visit.ChiefComplaint,
+                    DiagnosisNotes = visit.Notes,
+                    DiagnosisPrice = 0,
+                    VisitTotalAmount = visit.TotalAmount,
+                    VisitPaidAmount = visit.PaidAmount,
+                    VisitDiscount = visit.Discount,
+                    VisitRemaining = visit.Remaining
+                });
+            }
+
+            return result
+                .OrderByDescending(r => r.Date)
+                .ThenBy(r => r.ToothNumber)
+                .ToList();
         }
 
-    #endregion
+
+        #endregion
 
         #region Create
         [HttpGet]
