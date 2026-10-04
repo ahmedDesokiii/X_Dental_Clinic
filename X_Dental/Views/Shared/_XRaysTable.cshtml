@@ -1,28 +1,34 @@
 @{
     var xrayGroups = ViewBag.XRayGroups as List<Dental.Modules.Clinical.DTOs.XRayGroupDto> ?? new();
 
-    string TLbl(int n) => (n / 10) switch
+    string TLbl(int n)
     {
-        1 => $"UL-{n % 10}",
-        2 => $"UR-{n % 10}",
-        3 => $"LL-{n % 10}",
-        4 => $"LR-{n % 10}",
-        _ => n.ToString()
-    };
+        if (n <= 0) return "عام";
+        return (n / 10) switch
+        {
+            1 => $"UL-{n % 10}",
+            2 => $"UR-{n % 10}",
+            3 => $"LL-{n % 10}",
+            4 => $"LR-{n % 10}",
+            _ => n.ToString()
+        };
+    }
+
+    var totalImages = xrayGroups.Sum(g => g.Items?.Count ?? 0);
 }
 
 <div class="xray-section">
     <div class="section-head">
         <h4><i class="bi bi-image"></i> Teeth X-Rays</h4>
-        <span class="section-badge">@xrayGroups.Sum(g => g.Items.Count) image</span>
+        <span class="section-badge">@totalImages image</span>
     </div>
 
-    @if (!xrayGroups.Any())
+    @if (!xrayGroups.Any() || totalImages == 0)
     {
-        <div class="empty-state  placeholder-icon-glass">
+        <div class="empty-state placeholder-icon-glass">
             <i class="bi bi-image"></i>
         </div>
-            <h3 class="text-center">No X-Rays images yet.</h3>
+        <h3 class="text-center">No X-Rays images yet.</h3>
     }
     else
     {
@@ -31,7 +37,7 @@
             {
                 <div class="xray-group">
                     <div class="xray-group-head">
-                        <span class="tooth-chip">@TLbl(group.ToothNumber)</span>
+                        <span class="tooth-chip @(group.ToothNumber <= 0 ? "tooth-chip-empty" : "")">@TLbl(group.ToothNumber)</span>
                         <span class="xray-count">@group.Items.Count image</span>
                     </div>
                     <div class="xray-grid">
@@ -39,14 +45,15 @@
                         {
                             <div class="xray-card" onclick="openXrayViewer('@item.FilePath')">
                                 <div class="xray-thumb-wrap">
-                                    <img src="@item.FilePath" loading="lazy" />
+                                    <img src="@item.FilePath" loading="lazy" alt="@(item.FileName ?? "X-Ray")" />
                                     <div class="xray-overlay"><i class="bi bi-zoom-in"></i></div>
                                 </div>
                                 <div class="xray-meta">
                                     <span class="xray-date">@item.TakenDate.ToString("dd/MM/yyyy")</span>
-                                    <small class="">@TLbl(group.ToothNumber)</small>
-
-                                    @* <span class="xray-note">@(string.IsNullOrWhiteSpace(item.Notes) ? "بدون ملاحظات" : item.Notes)</span> *@
+                                    @if (!string.IsNullOrWhiteSpace(item.Notes))
+                                    {
+                                        <span class="xray-note">@item.Notes</span>
+                                    }
                                 </div>
                             </div>
                         }
@@ -59,7 +66,7 @@
 
 <!-- Lightbox -->
 <div class="xray-lightbox" id="xrayViewerModal" style="display:none;" onclick="closeXrayViewer()">
-    <img id="xrayViewerImg" src="" />
+    <img id="xrayViewerImg" src="" alt="X-Ray" />
 </div>
 
 <style>
@@ -119,6 +126,7 @@
         width: 100%;
         height: 120px;
         overflow: hidden;
+        background: #f1f5f9;
     }
 
         .xray-thumb-wrap img {
@@ -172,6 +180,13 @@
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
+    }
+
+    .tooth-chip-empty {
+        background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;
+        color: #64748b !important;
+        box-shadow: none !important;
+        min-width: 42px;
     }
 
     .xray-lightbox {

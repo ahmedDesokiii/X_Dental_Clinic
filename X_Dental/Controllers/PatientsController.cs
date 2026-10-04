@@ -1031,16 +1031,33 @@ namespace Dental.Controllers
             return RedirectToAction("Session", "Clinical", new { patientId = patient.Id, visitId = visit.Id });
         }
 
+        // ============================================================
+        // PATCH: PatientsController.cs
+        // استبدل method GetXRaysGroupedAsync بالكامل بالنسخة دي
+        // ============================================================
+        // السبب: الشرط القديم (ToothNumber != null) كان بيخفي كل الأشعة المرحّلة
+        // من النظام القديم لأن PatientRays_T مفيهوش رقم سن أصلاً.
+        // ============================================================
+
         private async Task<List<XRayGroupDto>> GetXRaysGroupedAsync(int patientId)
         {
             var xrays = await _context.PatientXRays
-                .Where(x => x.PatientId == patientId && x.ToothNumber != null)
+                .AsNoTracking()
+                .Where(x => x.PatientId == patientId && !x.IsDeleted)
                 .OrderByDescending(x => x.TakenDate)
                 .ToListAsync();
 
+            if (!xrays.Any())
+                return new List<XRayGroupDto>();
+
+            // تجميع:
+            //  - الأشعة اللي ليها سن → مجموعة لكل سن
+            //  - الأشعة بدون سن (NULL أو 0) → مجموعة واحدة ToothNumber = 0 ("بدون سن")
             return xrays
-                .GroupBy(x => x.ToothNumber!.Value)
-                .OrderBy(g => g.Key)
+                .GroupBy(x => x.ToothNumber.HasValue && x.ToothNumber.Value > 0
+                    ? x.ToothNumber.Value
+                    : 0)
+                .OrderBy(g => g.Key == 0 ? int.MaxValue : g.Key) // بدون سن في الآخر
                 .Select(g => new XRayGroupDto
                 {
                     ToothNumber = g.Key,
@@ -1052,8 +1069,10 @@ namespace Dental.Controllers
                         Notes = x.Notes,
                         TakenDate = x.TakenDate
                     }).ToList()
-                }).ToList();
+                })
+                .ToList();
         }
+
 
         #region Prescriptions (Patient Profile — كل روشتات المريض عبر كل الزيارات)
         [HttpGet]
