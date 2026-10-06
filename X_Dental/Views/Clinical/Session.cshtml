@@ -206,12 +206,12 @@
     .session-hero {
         background: linear-gradient(135deg, #0d7377 0%, #0f9b8e 50%, #14b8a6 100%);
         border-radius: 24px;
-        padding: 20px 28px;
+        padding: 10px 28px;
         color: #fff;
         box-shadow: var(--dc-shadow-lg), 0 0 0 1px rgba(255,255,255,0.15) inset;
         position: relative;
         overflow: hidden;
-        margin-bottom: 20px;
+        margin-bottom: 7px;
         animation: fadeInUp 0.7s ease forwards;
     }
 
@@ -570,13 +570,14 @@
         backdrop-filter: blur(20px) saturate(1.8);
         border-top: 1px solid rgba(0,0,0,0.06);
         box-shadow: 0 -8px 32px rgba(10,77,79,0.08);
-        padding: 14px 24px;
+        padding: 10px 24px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         z-index: 100;
         transform: translateY(100%);
         transition: transform 0.4s cubic-bezier(0.2,0.8,0.3,1);
+        margin-bottom :7px;
     }
 
         .bottom-action-bar.visible {
@@ -889,7 +890,7 @@
         top: -60%;
         right: -30%;
         width: 55%;
-        height: 220%;
+        height: 200%;
         background: linear-gradient(105deg, transparent, rgba(255,255,255,.14), transparent);
         transform: rotate(12deg);
         animation: heroShine 6s ease-in-out infinite;
@@ -1017,6 +1018,31 @@
             </div>
         </div>
 
+    @* ====== BOTTOM STICKY ACTION BAR ====== *@
+    <div class="bottom-action-bar rounded-4" id="bottomBar">
+        <div class="bottom-stats">
+            <div class="bottom-stat">
+                <span class="bottom-stat-value" id="barTotal">@Model.Visit.TotalAmount.ToString("N0")</span>
+                <span class="bottom-stat-label">Total Amount</span>
+            </div>
+            <div class="bottom-stat paid">
+                <span class="bottom-stat-value" id="barPaid">@Model.Visit.PaidAmount.ToString("N0")</span>
+                <span class="bottom-stat-label">Paid Amount</span>
+            </div>
+            <div class="bottom-stat ">
+                <span class="bottom-stat-value text-warning">@Model.Visit.Discount.ToString("N0")</span>
+                <span class="bottom-stat-label"> Discount</span>
+            </div>
+            <div class="bottom-stat remaining">
+                <span class="bottom-stat-value" id="barRemaining">@Model.Visit.Remaining.ToString("N0")</span>
+                <span class="bottom-stat-label">Remaining</span>
+            </div>
+        </div>
+        <button type="button" class="btn-finish" onclick="window.saveAndEndSession()">
+            <i class="bi bi-check2-circle"></i> Save Session
+        </button>
+    </div>
+
         <div class="hero-metrics" hidden>
             <div class="metric-glass anim-fade-up anim-d1">
                 <span class="metric-value">@Model.Visit.TotalAmount.ToString("N0")</span>
@@ -1109,30 +1135,7 @@
   
 
 
-@* ====== BOTTOM STICKY ACTION BAR ====== *@
-<div class="bottom-action-bar rounded-4"  id="bottomBar">
-    <div class="bottom-stats">
-        <div class="bottom-stat">
-            <span class="bottom-stat-value" id="barTotal">@Model.Visit.TotalAmount.ToString("N0")</span>
-            <span class="bottom-stat-label">Total Amount</span>
-        </div>
-        <div class="bottom-stat paid">
-            <span class="bottom-stat-value" id="barPaid">@Model.Visit.PaidAmount.ToString("N0")</span>
-            <span class="bottom-stat-label">Paid Amount</span>
-        </div>
-        <div class="bottom-stat ">
-            <span class="bottom-stat-value text-warning">@Model.Visit.Discount.ToString("N0")</span>
-            <span class="bottom-stat-label"> Discount</span>
-        </div>
-        <div class="bottom-stat remaining">
-            <span class="bottom-stat-value" id="barRemaining">@Model.Visit.Remaining.ToString("N0")</span>
-            <span class="bottom-stat-label">Remaining</span>
-        </div>
-    </div>
-    <button type="button" class="btn-finish" onclick="window.saveAndEndSession()">
-        <i class="bi bi-check2-circle"></i> Save Session
-    </button>
-</div>
+
 
 @section Scripts {
     <script>

@@ -2,11 +2,18 @@
 @model Dental.ViewModels.Dashboards.DashboardViewModel
 @{
     ViewData["Title"] = "لوحة التحكم";
+
+    // حساب النسب للـ Progress Rings
+    var totalMoney = Model.TotalRevenue + Model.TotalDue;
+    var collectionRate = totalMoney > 0 ? (int)Math.Round((Model.TotalRevenue / totalMoney) * 100) : 0;
+
+    var totalVisits = Model.GeneralVisits + Model.OrthoVisits;
+    var generalPct = totalVisits > 0 ? (int)Math.Round((Model.GeneralVisits / (double)totalVisits) * 100) : 0;
+    var orthoPct = totalVisits > 0 ? (int)Math.Round((Model.OrthoVisits / (double)totalVisits) * 100) : 0;
 }
 
 @section Styles {
     <style>
-        /* =========== ديزاين النظام (متوافق مع التصميم الحالي) =========== */
         :root {
             --sc-teal-900: #0a4d4f;
             --sc-teal-700: #0d7377;
@@ -19,109 +26,231 @@
             --sc-ink-900: #0b2e30;
             --sc-ink-600: #4b6b6c;
             --brand: #0d9488;
-            --brand-dark: #0f766e;
-            --brand-light: #f0fdfa;
-            --card-grad: linear-gradient(160deg, rgba(255,255,255,.9), rgba(255,255,255,.65));
-            --shadow-card: 0 20px 50px rgba(10, 77, 79, .08);
+            --card-grad: linear-gradient(165deg, rgba(255,255,255,.94), rgba(255,255,255,.7));
+            --shadow-card: 0 18px 45px rgba(10, 77, 79, .09);
+            --shadow-hover: 0 26px 55px rgba(10, 77, 79, .16);
         }
 
         .dashboard-body {
-            background: radial-gradient(circle at 5% 5%, var(--sc-teal-100) 0%, transparent 38%),
-                         radial-gradient(circle at 95% 90%, var(--sc-coral-300) 0%, transparent 28%),
-                         var(--sc-sky-50);
+            background: radial-gradient(circle at 4% 4%, var(--sc-teal-100) 0%, transparent 36%), radial-gradient(circle at 96% 92%, var(--sc-coral-300) 0%, transparent 26%), var(--sc-sky-50);
             min-height: 100vh;
         }
 
-        /* ============ Hero ============ */
+        /* ===================== HERO ===================== */
         .dash-hero {
             position: relative;
             overflow: hidden;
-            border-radius: 22px;
-            background: linear-gradient(135deg, #0d7377, #119e91, #0f9b8e);
-            padding: 26px 30px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #0c6b6e 0%, #0f9b8e 55%, #14b8a6 100%);
+            padding: 28px 30px 24px;
             color: #fff;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            box-shadow: 0 18px 40px rgba(13,115,119,.25);
-            margin-bottom: 24px;
+            margin-bottom: 22px;
+            box-shadow: 0 20px 50px rgba(13,115,119,.28);
             isolation: isolate;
         }
-        .dash-hero .brand-icons {
-            position: absolute;
-            inset: 0;
-            z-index: -1;
-            pointer-events: none;
+
+            .dash-hero .brand-icons {
+                position: absolute;
+                inset: 0;
+                z-index: -1;
+                pointer-events: none;
+            }
+
+            .dash-hero .float-ic {
+                position: absolute;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 68px;
+                height: 68px;
+                border-radius: 20px;
+                font-size: 1.9rem;
+                background: rgba(255,255,255,.11);
+                border: 1px solid rgba(255,255,255,.18);
+                backdrop-filter: blur(8px);
+                will-change: transform;
+                animation: floatIcon 7.5s infinite ease-in-out;
+            }
+
+                .dash-hero .float-ic:nth-child(1) {
+                    top: 12px;
+                    right: 26%;
+                }
+
+                .dash-hero .float-ic:nth-child(2) {
+                    bottom: -16px;
+                    left: 7%;
+                    animation-delay: 1.5s;
+                    width: 56px;
+                    height: 56px;
+                    font-size: 1.4rem;
+                }
+
+        @@keyframes floatIcon {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-13px) rotate(5deg);
+            }
         }
-        .dash-hero .brand-icons .float-ic {
-            position: absolute;
+
+        .hero-top {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 70px; height: 70px;
-            border-radius: 20px;
-            font-size: 2rem;
-            background: rgba(255,255,255,.12);
-            border: 1px solid rgba(255,255,255,.2);
-            backdrop-filter: blur(6px);
-            animation: floatIcon 8s infinite ease-in-out;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 22px;
         }
-        .dash-hero .brand-icons .float-ic:nth-child(1) { top: 10px; right: 28%; animation-delay: 0s; }
-        .dash-hero .brand-icons .float-ic:nth-child(2) { bottom: -20px; left: 8%; animation-delay: 1.6s; font-size: 1.5rem; width: 60px; height: 60px; }
-        .dash-hero h1 {
-            font-size: 1.4rem;
+
+        .hero-text h1 {
+            font-size: 1.5rem;
             font-weight: 800;
-            margin: 0;
+            margin: 0 0 6px;
+            letter-spacing: -0.4px;
         }
-        .dash-hero p {
-            font-size: 0.85rem;
-            margin: 5px 0 0;
-            opacity: .9;
+
+        .hero-text .greeting {
+            font-size: .95rem;
+            font-weight: 700;
+            opacity: .97;
+            margin-bottom: 3px;
         }
-        .dash-actions {
+
+        .hero-text .date-line {
+            font-size: .8rem;
+            opacity: .82;
+        }
+
+        .hero-actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
-        .dash-actions .btn-hero-dash {
+
+        .btn-hero {
             border: none;
-            padding: 10px 20px;
-            border-radius: 12px;
+            padding: 11px 20px;
+            border-radius: 13px;
             font-weight: 700;
-            font-size: .85rem;
+            font-size: .84rem;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             cursor: pointer;
-            transition: all .2s;
-            box-shadow: 0 8px 22px rgba(0,0,0,.12);
+            transition: transform .22s ease, box-shadow .22s ease;
+            will-change: transform;
+            text-decoration: none;
+        }
+
+            .btn-hero.white {
+                background: #fff;
+                color: var(--sc-teal-700);
+                box-shadow: 0 8px 22px rgba(0,0,0,.13);
             }
-        .btn-hero-dash.white {
-            background: #fff;
-            color: var(--sc-teal-700);
+
+            .btn-hero.glass {
+                background: rgba(255,255,255,.15);
+                color: #fff;
+                border: 1px solid rgba(255,255,255,.28);
+            }
+
+            .btn-hero:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 14px 30px rgba(0,0,0,.18);
+                color: inherit;
+            }
+
+        .hero-mini-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
         }
-        .btn-hero-dash.glass {
+
+        .hero-mini {
             background: rgba(255,255,255,.14);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,.3);
+            border: 1px solid rgba(255,255,255,.22);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: transform .25s ease, background .25s ease;
         }
-        .btn-hero-dash:hover { transform: translateY(-2px); }
 
-        @@keyframes float {
-            0%,100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-16px) rotate(8deg); }
+            .hero-mini:hover {
+                transform: translateY(-3px);
+                background: rgba(255,255,255,.2);
+            }
+
+            .hero-mini .mini-icon {
+                width: 42px;
+                height: 42px;
+                border-radius: 12px;
+                background: rgba(255,255,255,.2);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.25rem;
+                flex-shrink: 0;
+            }
+
+            .hero-mini .mini-value {
+                font-size: 1.25rem;
+                font-weight: 800;
+                line-height: 1.1;
+            }
+
+            .hero-mini .mini-label {
+                font-size: .72rem;
+                opacity: .85;
+                font-weight: 600;
+                margin-top: 2px;
+            }
+
+        /* ===================== INSIGHTS ===================== */
+        .insights-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 22px;
         }
-        .dash-hero .brand-icons .float-ic { animation-name: float; }
 
-        /* ============ بطاقات الإحصائيات ============ */
+        .insight-pill {
+            background: var(--card-grad);
+            border: 1px solid rgba(255,255,255,.6);
+            border-radius: 50px;
+            padding: 8px 16px;
+            font-size: .8rem;
+            font-weight: 700;
+            color: var(--sc-ink-900);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 8px 24px rgba(10,77,79,.06);
+            transition: transform .2s ease;
+        }
+
+            .insight-pill i {
+                color: var(--sc-teal-600);
+                font-size: 1rem;
+            }
+
+            .insight-pill:hover {
+                transform: translateY(-2px);
+            }
+
+        /* ===================== STATS ===================== */
         .stats-grid-dash {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 22px;
         }
+
         .stat-glass {
             background: var(--card-grad);
             backdrop-filter: blur(14px);
@@ -132,170 +261,582 @@
             align-items: center;
             gap: 16px;
             box-shadow: var(--shadow-card);
-            transition: transform .25s ease, box-shadow .25s ease;
+            transition: transform .28s cubic-bezier(.2,.8,.3,1), box-shadow .28s ease;
             opacity: 0;
-            animation: riseItem .6s ease forwards;
+            transform: translateY(22px);
+            animation: riseItem .65s cubic-bezier(.2,.8,.3,1) forwards;
+            will-change: transform, opacity;
         }
-        .stat-glass:hover { transform: translateY(-5px); box-shadow: 0 18px 40px rgba(10,77,79,.15); }
-        .stat-glass:nth-child(2) { animation-delay: .08s; }
-        .stat-glass:nth-child(3) { animation-delay: .16s; }
-        .stat-glass:nth-child(4) { animation-delay: .24s; }
+
+            .stat-glass:hover {
+                transform: translateY(-6px);
+                box-shadow: var(--shadow-hover);
+            }
+
+            .stat-glass:nth-child(1) {
+                animation-delay: .05s;
+            }
+
+            .stat-glass:nth-child(2) {
+                animation-delay: .12s;
+            }
+
+            .stat-glass:nth-child(3) {
+                animation-delay: .19s;
+            }
+
+            .stat-glass:nth-child(4) {
+                animation-delay: .26s;
+            }
 
         .stat-icon-wrap {
-            width: 56px; height: 56px;
-            border-radius: 16px;
+            width: 54px;
+            height: 54px;
+            border-radius: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.45rem;
             flex-shrink: 0;
+            transition: transform .3s ease;
         }
-        .icon-teal { background: #f0fdfa; color: #0f766e; }
-        .icon-blue { background: #eff6ff; color: #1d4ed8; }
-        .icon-green { background: #f0fdf4; color: #166534; }
-        .icon-red { background: #fef2f2; color: #dc2626; }
+
+        .stat-glass:hover .stat-icon-wrap {
+            transform: scale(1.08);
+        }
+
+        .icon-teal {
+            background: #f0fdfa;
+            color: #0f766e;
+        }
+
+        .icon-blue {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .icon-green {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .icon-red {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
         .stat-number {
-            font-size: 1.7rem;
+            font-size: 1.65rem;
             font-weight: 800;
             color: var(--sc-ink-900);
             line-height: 1;
+            letter-spacing: -0.4px;
         }
+
         .stat-label {
-            font-size: .78rem;
+            font-size: .76rem;
             color: var(--sc-ink-600);
             font-weight: 600;
             margin-top: 4px;
         }
 
-        /* ============ عناصر reveal أنيميشن ============ */
+        /* ===================== PROGRESS RINGS ===================== */
+        .rings-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .ring-card {
+            background: var(--card-grad);
+            border: 1px solid rgba(255,255,255,.55);
+            border-radius: 20px;
+            padding: 22px 18px;
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            transition: transform .28s ease, box-shadow .28s ease;
+        }
+
+            .ring-card:hover {
+                transform: translateY(-5px);
+                box-shadow: var(--shadow-hover);
+            }
+
+        .progress-ring {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+
+            .progress-ring svg {
+                transform: rotate(-90deg);
+                width: 120px;
+                height: 120px;
+            }
+
+            .progress-ring circle {
+                fill: none;
+                stroke-width: 9;
+            }
+
+            .progress-ring .bg {
+                stroke: #e6f7f5;
+            }
+
+            .progress-ring .progress {
+                stroke-linecap: round;
+                transition: stroke-dashoffset 1.4s cubic-bezier(.2,.8,.3,1);
+            }
+
+        .ring-value {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: var(--sc-ink-900);
+        }
+
+            .ring-value span {
+                font-size: 1.5rem;
+                line-height: 1;
+            }
+
+            .ring-value small {
+                font-size: .7rem;
+                font-weight: 600;
+                color: var(--sc-ink-600);
+                margin-top: 2px;
+            }
+
+        .ring-title {
+            font-size: .88rem;
+            font-weight: 800;
+            color: var(--sc-ink-900);
+            text-align: center;
+        }
+
+        .ring-sub {
+            font-size: .75rem;
+            color: var(--sc-ink-600);
+            font-weight: 600;
+            text-align: center;
+            margin-top: -6px;
+        }
+
+        /* ===================== TIMELINE ===================== */
+        .timeline-section {
+            background: var(--card-grad);
+            border: 1px solid rgba(255,255,255,.55);
+            border-radius: 20px;
+            padding: 22px 24px;
+            box-shadow: var(--shadow-card);
+            margin-bottom: 22px;
+        }
+
+            .timeline-section h5 {
+                font-size: .95rem;
+                font-weight: 800;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: var(--sc-ink-900);
+                margin-bottom: 20px;
+            }
+
+                .timeline-section h5 i {
+                    color: var(--sc-teal-600);
+                }
+
+        .timeline {
+            position: relative;
+            padding-right: 8px;
+        }
+
+            .timeline::before {
+                content: '';
+                position: absolute;
+                top: 8px;
+                bottom: 8px;
+                right: 15px;
+                width: 3px;
+                background: linear-gradient(to bottom, var(--sc-teal-500), #99f6e4);
+                border-radius: 3px;
+            }
+
+        .timeline-item {
+            position: relative;
+            padding-right: 42px;
+            padding-bottom: 22px;
+            opacity: 0;
+            transform: translateX(18px);
+            animation: timelineIn .55s cubic-bezier(.2,.8,.3,1) forwards;
+        }
+
+            .timeline-item:nth-child(1) {
+                animation-delay: .1s;
+            }
+
+            .timeline-item:nth-child(2) {
+                animation-delay: .2s;
+            }
+
+            .timeline-item:nth-child(3) {
+                animation-delay: .3s;
+            }
+
+            .timeline-item:nth-child(4) {
+                animation-delay: .4s;
+            }
+
+            .timeline-item:nth-child(5) {
+                animation-delay: .5s;
+            }
+
+            .timeline-item:nth-child(6) {
+                animation-delay: .6s;
+            }
+
+            .timeline-item:last-child {
+                padding-bottom: 0;
+            }
+
+        @@keyframes timelineIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .timeline-dot {
+            position: absolute;
+            right: 7px;
+            top: 4px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid var(--sc-teal-500);
+            box-shadow: 0 0 0 4px rgba(20,184,166,.15);
+            z-index: 2;
+        }
+
+        .timeline-content {
+            background: rgba(240,253,250,.55);
+            border: 1px solid rgba(20,184,166,.12);
+            border-radius: 14px;
+            padding: 12px 16px;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+            .timeline-content:hover {
+                transform: translateX(-4px);
+                box-shadow: 0 8px 22px rgba(10,77,79,.08);
+            }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+            gap: 10px;
+        }
+
+        .timeline-title {
+            font-weight: 800;
+            font-size: .9rem;
+            color: var(--sc-ink-900);
+        }
+
+        .timeline-time {
+            font-size: .75rem;
+            font-weight: 700;
+            color: var(--sc-teal-600);
+            white-space: nowrap;
+        }
+
+        .timeline-desc {
+            font-size: .8rem;
+            color: var(--sc-ink-600);
+            font-weight: 600;
+        }
+
+        .timeline-badge {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 2px 10px;
+            border-radius: 6px;
+            font-size: .7rem;
+            font-weight: 800;
+        }
+
+        .badge-visit {
+            background: #ccfbf1;
+            color: #0f766e;
+        }
+
+        .badge-appointment {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        /* ===================== REVEAL & CHARTS ===================== */
         .reveal {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(26px);
             transition: opacity .7s cubic-bezier(.2,.8,.3,1), transform .7s cubic-bezier(.2,.8,.3,1);
+            will-change: transform, opacity;
         }
-        .reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+            .reveal.is-visible {
+                opacity: 1;
+                transform: translateY(0);
+            }
 
         @@keyframes riseItem {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(22px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        /* ============ الجرافات - حاويات ============ */
         .charts-row1 {
             display: grid;
-            grid-template-columns: 1.6fr 1fr;
+            grid-template-columns: 1.55fr 1fr;
             gap: 16px;
             margin-bottom: 16px;
         }
+
         .charts-row2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 22px;
         }
+
         .chart-glass {
             background: var(--card-grad);
             backdrop-filter: blur(14px);
             border: 1px solid rgba(255,255,255,.55);
             border-radius: 18px;
-            padding: 18px 20px 10px;
+            padding: 18px 20px 12px;
             box-shadow: var(--shadow-card);
             overflow: hidden;
             min-height: 280px;
+            transition: box-shadow .28s ease;
         }
-        .chart-glass h5 {
-            font-size: .9rem;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--sc-ink-900);
-            margin-bottom: 12px;
-        }
-        .chart-glass h5 i { color: var(--sc-teal-600); }
 
-        /* ============ الجداول داخل الصفحة ============ */
+            .chart-glass:hover {
+                box-shadow: var(--shadow-hover);
+            }
+
+            .chart-glass h5 {
+                font-size: .88rem;
+                font-weight: 800;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: var(--sc-ink-900);
+                margin-bottom: 12px;
+            }
+
+                .chart-glass h5 i {
+                    color: var(--sc-teal-600);
+                }
+
         .info-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: .85rem;
+            font-size: .84rem;
         }
-        .info-table th {
-            background: var(--sc-sky-50);
-            text-align: right !important;
-            font-size: .78rem;
-            font-weight: 700;
-            color: var(--sc-ink-600);
-            padding: 10px 8px;
-            border-bottom: 2px solid var(--sc-sky-100);
-        }
-        .info-table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid var(--sc-sky-100);
-            color: var(--sc-ink-900);
-            font-weight: 600;
-        }
+
+            .info-table th {
+                background: var(--sc-sky-50);
+                text-align: right !important;
+                font-size: .76rem;
+                font-weight: 700;
+                color: var(--sc-ink-600);
+                padding: 10px 8px;
+                border-bottom: 2px solid var(--sc-sky-100);
+            }
+
+            .info-table td {
+                padding: 10px 8px;
+                border-bottom: 1px solid var(--sc-sky-100);
+                color: var(--sc-ink-900);
+                font-weight: 600;
+            }
+
+            .info-table tbody tr {
+                transition: background .2s ease;
+            }
+
+                .info-table tbody tr:hover {
+                    background: rgba(13,148,136,.045);
+                }
+
         .tab-badge {
             display: inline-block;
-            padding: 3px 12px;
+            padding: 3px 11px;
             border-radius: 8px;
-            font-size: .72rem;
+            font-size: .71rem;
             font-weight: 800;
         }
-        .tab-in-progress { background: #fef3c7; color: #92400e; }
-        .tab-completed { background: #d1fae5; color: #047857; }
-        .tab-cancelled { background: #fee2e2; color: #b91c1c; }
-        .tab-scheduled { background: #dbeafe; color: #1e40af; }
-        .tab-confirmed { background: #cffafe; color: #0e7490; }
 
-        /* ============ موبايل ============ */
-        @@media (max-width: 1100px) {
-            .stats-grid-dash { grid-template-columns: repeat(2, 1fr); }
-            .charts-row1, .charts-row2 { grid-template-columns: 1fr; }
+        .tab-in-progress {
+            background: #fef3c7;
+            color: #92400e;
         }
+
+        .tab-completed {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .tab-cancelled {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .tab-scheduled {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .tab-confirmed {
+            background: #cffafe;
+            color: #0e7490;
+        }
+
+        .empty-state, .empty-dash {
+            text-align: center;
+            padding: 36px 16px;
+            color: var(--sc-ink-600);
+            font-size: .9rem;
+            font-weight: 600;
+        }
+
+            .empty-state i, .empty-dash i {
+                display: block;
+                font-size: 2.1rem;
+                margin-bottom: 10px;
+                opacity: .4;
+                color: var(--sc-teal-600);
+            }
+
+        /* ===================== RESPONSIVE ===================== */
+        @@media (max-width: 1100px) {
+            .stats-grid-dash, .rings-section {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .charts-row1, .charts-row2 {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-mini-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @@media (max-width: 640px) {
-            .stats-grid-dash { grid-template-columns: 1fr; }
-            .chart-glass { padding: 12px; }
+            .stats-grid-dash, .rings-section {
+                grid-template-columns: 1fr;
+            }
+
+            .dash-hero {
+                padding: 20px;
+            }
         }
     </style>
 }
 
 <div class="dashboard dash-body" dir="rtl">
 
-    <!-- ===== Hero ===== -->
+    <!-- ===================== HERO ===================== -->
     <div class="dash-hero">
         <div class="brand-icons">
             <div class="float-ic"><i class="bi bi-clipboard2-pulse"></i></div>
             <div class="float-ic"><i class="bi bi-calendar2-week"></i></div>
         </div>
-        <div>
-            <h1><i class="bi bi-grid-1x2-fill me-2"></i> لوحة التحكم</h1>
-            <p>نظرة شاملة على نشاط العيادة اليوم والأسبوع</p>
+
+        <div class="hero-top">
+            <div class="hero-text">
+                <h1><i class="bi bi-grid-1x2-fill me-2"></i>لوحة التحكم</h1>
+                <div class="greeting" id="timeGreeting">مرحباً بك</div>
+                <div class="date-line" id="currentDate"></div>
+            </div>
+            <div class="hero-actions">
+                <a asp-controller="Patients" asp-action="Create" class="btn-hero white">
+                    <i class="bi bi-person-plus-fill"></i> مريض جديد
+                </a>
+                <a asp-controller="Appointments" asp-action="Index" class="btn-hero glass">
+                    <i class="bi bi-calendar2-plus"></i> حجز موعد
+                </a>
+                <a asp-controller="Payments" asp-action="Index" class="btn-hero glass">
+                    <i class="bi bi-cash-coin"></i> المدفوعات
+                </a>
+            </div>
         </div>
-        <div class="dash-actions">
-            <a asp-controller="Patients" asp-action="Create" class="btn-hero-dash white">
-                <i class="bi bi-person-plus-fill"></i> مريض
-            </a>
-            <a asp-controller="Appointments" asp-action="Index" class="btn-hero-dash glass">
-                <i class="bi bi-calendar2-plus"></i> موعد
-            </a>
+
+        <div class="hero-mini-cards">
+            <div class="hero-mini">
+                <div class="mini-icon"><i class="bi bi-calendar-day"></i></div>
+                <div>
+                    <div class="mini-value">@Model.TodayAppointments</div>
+                    <div class="mini-label">مواعيد اليوم</div>
+                </div>
+            </div>
+            <div class="hero-mini">
+                <div class="mini-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                <div>
+                    <div class="mini-value">@Model.TotalDue.ToString("N0")</div>
+                    <div class="mini-label">متأخرات (ج.م)</div>
+                </div>
+            </div>
+            <div class="hero-mini">
+                <div class="mini-icon"><i class="bi bi-people"></i></div>
+                <div>
+                    <div class="mini-value">@Model.TotalPatients</div>
+                    <div class="mini-label">إجمالي المرضى</div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- ===== Static: 4 Cards ===== -->
+    <!-- ===================== INSIGHTS STRIP ===================== -->
+    <div class="insights-strip">
+        <div class="insight-pill"><i class="bi bi-graph-up-arrow"></i> إيرادات: <strong>@Model.TotalRevenue.ToString("N0") ج.م</strong></div>
+        <div class="insight-pill"><i class="bi bi-clipboard2-pulse"></i> زيارات عامة: <strong>@Model.GeneralVisits</strong></div>
+        <div class="insight-pill"><i class="bi bi-braces-asterisk"></i> زيارات تقويم: <strong>@Model.OrthoVisits</strong></div>
+        <div class="insight-pill"><i class="bi bi-lightning-charge"></i> النظام يعمل بكفاءة</div>
+    </div>
+
+    <!-- ===================== MAIN STATS ===================== -->
     <div class="stats-grid-dash">
         <div class="stat-glass">
             <div class="stat-icon-wrap icon-teal"><i class="bi bi-people-fill"></i></div>
             <div>
                 <span class="stat-number" data-target="@Model.TotalPatients">0</span>
-                <span class="stat-label">إجمالي patients</span>
+                <span class="stat-label">إجمالي المرضى</span>
             </div>
         </div>
         <div class="stat-glass">
             <div class="stat-icon-wrap icon-blue"><i class="bi bi-calendar-day"></i></div>
             <div>
                 <span class="stat-number" data-target="@Model.TodayAppointments">0</span>
-                <span class="stat-label">زيارة اليوم</span>
+                <span class="stat-label">زيارات اليوم</span>
             </div>
         </div>
         <div class="stat-glass">
@@ -314,41 +855,124 @@
         </div>
     </div>
 
-    <!-- ===== Grass Graphs ===== -->
-    <div class="charts-row1 reveal ">
-        <div class="chart-glass col-5">
-            <h5><i class="bi bi-graph-up"></i> المواعيد القادمة 7 أيام</h5>
-            <div id="chartAppointments" style="height: 250px;"></div>
-        </div>
-        <div class="chart-glass col-2">
-            <h5><i class="bi bi-pie-chart-fill"></i> توزيع الزيارات</h5>
-            <div id="chartVisitsPie" style="height: 250px;"></div>
+    <!-- ===================== PROGRESS RINGS ===================== -->
+    <div class="rings-section reveal">
+        <div class="ring-card">
+            <div class="progress-ring" data-pct="@collectionRate" data-color="#0d9488">
+                <svg viewBox="0 0 120 120">
+                    <circle class="bg" cx="60" cy="60" r="52"></circle>
+                    <circle class="progress" cx="60" cy="60" r="52" stroke="#0d9488"></circle>
+                </svg>
+                <div class="ring-value">
+                    <span>@collectionRate%</span>
+                    <small>تحصيل</small>
+                </div>
+            </div>
+            <div class="ring-title">معدل التحصيل</div>
+            <div class="ring-sub">الإيرادات مقابل المتأخرات</div>
         </div>
 
-        <div class="chart-glass col-5">
-            <h5><i class="bi bi-list-check"></i> آخر الزيارات</h5>
-            @if (Model.RecentVisits.Any())
+        <div class="ring-card">
+            <div class="progress-ring" data-pct="@generalPct" data-color="#14b8a6">
+                <svg viewBox="0 0 120 120">
+                    <circle class="bg" cx="60" cy="60" r="52"></circle>
+                    <circle class="progress" cx="60" cy="60" r="52" stroke="#14b8a6"></circle>
+                </svg>
+                <div class="ring-value">
+                    <span>@generalPct%</span>
+                    <small>عام</small>
+                </div>
+            </div>
+            <div class="ring-title">الزيارات العامة</div>
+            <div class="ring-sub">@Model.GeneralVisits من أصل @totalVisits</div>
+        </div>
+
+        <div class="ring-card">
+            <div class="progress-ring" data-pct="@orthoPct" data-color="#f59e0b">
+                <svg viewBox="0 0 120 120">
+                    <circle class="bg" cx="60" cy="60" r="52"></circle>
+                    <circle class="progress" cx="60" cy="60" r="52" stroke="#f59e0b"></circle>
+                </svg>
+                <div class="ring-value">
+                    <span>@orthoPct%</span>
+                    <small>تقويم</small>
+                </div>
+            </div>
+            <div class="ring-title">زيارات التقويم</div>
+            <div class="ring-sub">@Model.OrthoVisits من أصل @totalVisits</div>
+        </div>
+    </div>
+
+    <!-- ===================== LAST ACTIVITY TIMELINE ===================== -->
+    <div class="timeline-section reveal">
+        <h5><i class="bi bi-activity"></i> آخر النشاطات</h5>
+
+        <div class="timeline">
+            @{
+                var activities = new List<(string Title, string Desc, string Time, string Type)>();
+
+                foreach (var v in Model.RecentVisits.Take(4))
+                {
+                    activities.Add((
+                        v.PatientName,
+                        $"زيارة {(v.Category == "General" ? "عامة" : "تقويم")} - {v.TotalAmount.ToString("N0")} ج.م",
+                        "زيارة حديثة",
+                        "visit"
+                    ));
+                }
+
+                foreach (var ap in Model.RecentAppointments.Take(3))
+                {
+                    activities.Add((
+                        ap.PatientName,
+                        $"{ap.Reason ?? "موعد"} - {ap.Status}",
+                        ap.AppointmentDate.ToString("HH:mm"),
+                        "appointment"
+                    ));
+                }
+            }
+
+            @if (activities.Any())
             {
-                <table class="info-table">
-                    <thead><tr><th>المريض</th><th>النوع</th><th>المبلغ</th></tr></thead>
-                    <tbody>
-                        @foreach (var v in Model.RecentVisits)
-                        {
-                            <tr>
-                                <td>@v.PatientName</td>
-                                <td>@(v.Category == "General" ? "عام" : "تقويم")</td>
-                                <td>@v.TotalAmount.ToString("N0") ج.م</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                foreach (var act in activities.Take(6))
+                {
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-header">
+                                <span class="timeline-title">@act.Title</span>
+                                <span class="timeline-time">@act.Time</span>
+                            </div>
+                            <div class="timeline-desc">@act.Desc</div>
+                            <span class="timeline-badge @(act.Type == "visit" ? "badge-visit" : "badge-appointment")">
+                                @(act.Type == "visit" ? "زيارة" : "موعد")
+                            </span>
+                        </div>
+                    </div>
+                }
             }
             else
             {
-                <p class="empty-state"><i class="bi bi-clipboard"></i> لا توجد زيارات حديثة</p>
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    لا توجد نشاطات حديثة
+                </div>
             }
         </div>
     </div>
+
+    <!-- ===================== CHARTS ===================== -->
+    <div class="charts-row1 reveal">
+        <div class="chart-glass">
+            <h5><i class="bi bi-graph-up"></i> المواعيد القادمة 7 أيام</h5>
+            <div id="chartAppointments" style="height: 250px;"></div>
+        </div>
+        <div class="chart-glass">
+            <h5><i class="bi bi-pie-chart-fill"></i> توزيع الزيارات</h5>
+            <div id="chartVisitsPie" style="height: 250px;"></div>
+        </div>
+    </div>
+
     <div class="charts-row2 reveal">
         <div class="chart-glass">
             <h5><i class="bi bi-bar-chart-fill"></i> الإيرادات آخر 6 شهور</h5>
@@ -360,176 +984,110 @@
         </div>
     </div>
 
-    <!-- ====== Famous Tables + Lists ===== -->
-    <div class="charts-row1 reveal">
-        <div class="chart-glass">
-            <h5><i class="bi bi-clock-history"></i> أحدث المواعيد</h5>
-            @if (Model.RecentAppointments.Any())
-            {
-                <table class="info-table">
-                    <thead>
-                        <tr><th>المريض</th><th>التوقيت</th><th>السبب</th><th>الحالة</th></tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var ap in Model.RecentAppointments)
-                        {
-                            var cls = ap.Status.ToString().ToLower();
-                            <tr>
-                                <td>@ap.PatientName</td>
-                                <td>@ap.AppointmentDate.ToString("HH:mm")</td>
-                                <td>@(ap.Reason ?? "-")</td>
-                                <td><span class="tab-badge tab-@cls">@ap.Status</span></td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-            else
-            {
-                <p class="empty-dash"><i class="bi bi-inbox"></i> لا توجد مواعيد قادمة</p>
-            }
-        </div>
-
-     
-    </div>
 </div>
 
 @section Scripts {
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
 
-            // ===== 1) عدّاد متحرك =====
-            const counters = document.querySelectorAll('.stat-number');
-            counters.forEach(el => {
+            // تحية + تاريخ
+            (function() {
+                const hour = new Date().getHours();
+                let greeting = 'مرحباً بك';
+                if (hour >= 5 && hour < 12) greeting = 'صباح الخير';
+                else if (hour >= 12 && hour < 17) greeting = 'مساء الخير';
+                else if (hour >= 17 && hour < 22) greeting = 'مساء النور';
+                else greeting = 'ليلة سعيدة';
+                const g = document.getElementById('timeGreeting');
+                if (g) g.textContent = greeting;
+                const d = document.getElementById('currentDate');
+                if (d) d.textContent = new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            })();
+
+            // عدّادات متحركة
+            document.querySelectorAll('.stat-number').forEach(el => {
                 const target = parseFloat(el.dataset.target || '0');
                 const isMoney = el.dataset.mony === 'true';
-                let start = 0;
-                const duration = 900;
-                const startTime = performance.now();
-
+                const duration = 1100;
+                const start = performance.now();
                 function step(now) {
-                    const p = Math.min((now - startTime) / duration, 1);
-                    const eased = 1 - Math.pow(1 - p, 3);
+                    const p = Math.min((now - start) / duration, 1);
+                    const eased = p === 1 ? 1 : 1 - Math.pow(2, -10 * p);
                     const val = Math.floor(target * eased);
-                    el.textContent = isMoney
-                        ? val.toLocaleString('en-EG') + ' ج.م'
-                        : val.toLocaleString('en-EG');
+                    el.textContent = isMoney ? val.toLocaleString('en-EG') + ' ج.م' : val.toLocaleString('en-EG');
                     if (p < 1) requestAnimationFrame(step);
-                    else el.textContent = isMoney
-                        ? target.toLocaleString('en-EG') + ' ج.م'
-                        : target.toLocaleString('en-EG');
+                    else el.textContent = isMoney ? target.toLocaleString('en-EG') + ' ج.م' : target.toLocaleString('en-EG');
                 }
                 requestAnimationFrame(step);
             });
 
-            // ===== 2) Reveal on Scroll =====
-            const observer = new IntersectionObserver((entries) => {
+            // Progress Rings Animation
+            document.querySelectorAll('.progress-ring').forEach(ring => {
+                const pct = parseInt(ring.dataset.pct || '0');
+                const circle = ring.querySelector('.progress');
+                const radius = 52;
+                const circumference = 2 * Math.PI * radius;
+                circle.style.strokeDasharray = circumference;
+                circle.style.strokeDashoffset = circumference;
+
+                setTimeout(() => {
+                    const offset = circumference - (pct / 100) * circumference;
+                    circle.style.strokeDashoffset = offset;
+                }, 300);
+            });
+
+            // Reveal on Scroll
+            const obs = new IntersectionObserver((entries) => {
                 entries.forEach(e => {
                     if (e.isIntersecting) {
                         e.target.classList.add('is-visible');
-                        observer.unobserve(e.target);
+                        obs.unobserve(e.target);
                     }
                 });
-            }, { threshold: 0.15 });
-            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+            }, { threshold: 0.12 });
+            document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
-            // ============ 3) Highcharts Graphs ============
-
-            // Vue: Appointments Coming
+            // Highcharts
             Highcharts.chart('chartAppointments', {
-                    chart: {
-                        type: 'areaspline',
-                        backgroundColor: 'transparent',
-                        style: { fontFamily: 'Beiruti, sans-serif' }
-                    },
-                    title: { text: null },
-                    credits: { enabled: false },
-                    xAxis: {
-                        categories: @Html.Raw(JsonSerializer.Serialize(Model.AppointmentNext7Days.Select(x => x.Label))),
-                        lineColor: '#dcf5f7'
-                    },
-                    yAxis: {
-                        title: null,
-                        gridLineColor: '#eefdfa',
-                        min: 0,
-                    },
-                    legend: { enabled: false },
-                    plotOptions: {
-                        areaspline: {
-                            fillOpacity: .3,
-                            lineWidth: 3,
-                            marker: { enabled: true, radius: 4, fillColor: '#0d9488' },
-                        }
-                    },
-                    series: [{
-                        name: 'المواعيد',
-                        data: @Html.Raw(JsonSerializer.Serialize(Model.AppointmentNext7Days.Select(x => x.Count))),
-                        color: '#0d9488'
-                    }]
-                });
-
-                // Pie visits
-                Highcharts.chart('chartVisitsPie', {
-                    chart: {
-                        type: 'pie',
-                        backgroundColor: 'transparent',
-                    },
-                title: { text: null },
-                credits: { enabled: false },
-                plotOptions: {
-                    pie: {
-                        innerSize: '55%',
-                        borderWidth: 0,
-                        dataLabels: {
-                            enabled: false,
-                        },
-                        showInLegend: true,
-                    }
-                },
-                legend: {
-                    layout: 'horizontal',
-                    align: 'center',
-                    verticalAlign: 'bottom',
-                    itemStyle: { fontWeight: '700', fontSize: '12px' }
-                },
-                series: [{
-                    data: [
-                        ['عام', @Model.GeneralVisits],
-                        ['تقويم', @Model.OrthoVisits]
-                    ],
-                colors: ['#14b8a6', '#f59e0b'] 
-                }]
+                chart: { type: 'areaspline', backgroundColor: 'transparent', style: { fontFamily: 'Beiruti, sans-serif' }, animation: { duration: 900 } },
+                title: { text: null }, credits: { enabled: false },
+                xAxis: { categories: @Html.Raw(JsonSerializer.Serialize(Model.AppointmentNext7Days.Select(x => x.Label))), lineColor: '#dcf5f7', labels: { style: { fontWeight: '600', fontSize: '11px' } } },
+                yAxis: { title: null, gridLineColor: '#eefdfa', min: 0 },
+                legend: { enabled: false },
+                tooltip: { backgroundColor: 'rgba(255,255,255,.96)', borderRadius: 10, style: { fontWeight: '600' } },
+                plotOptions: { areaspline: { fillOpacity: 0.28, lineWidth: 3, marker: { enabled: true, radius: 4, fillColor: '#0d9488', lineWidth: 2, lineColor: '#fff' } } },
+                series: [{ name: 'المواعيد', data: @Html.Raw(JsonSerializer.Serialize(Model.AppointmentNext7Days.Select(x => x.Count))), color: '#0d9488' }]
             });
 
-            // Bar: Earnings
+            Highcharts.chart('chartVisitsPie', {
+                chart: { type: 'pie', backgroundColor: 'transparent', animation: { duration: 900 } },
+                title: { text: null }, credits: { enabled: false },
+                tooltip: { backgroundColor: 'rgba(255,255,255,.96)', borderRadius: 10, pointFormat: '<b>{point.percentage:.1f}%</b>' },
+                plotOptions: { pie: { innerSize: '58%', borderWidth: 0, dataLabels: { enabled: false }, showInLegend: true } },
+                legend: { layout: 'horizontal', align: 'center', verticalAlign: 'bottom', itemStyle: { fontWeight: '700', fontSize: '12px' } },
+                series: [{ data: [['عام', @Model.GeneralVisits], ['تقويم', @Model.OrthoVisits]], colors: ['#14b8a6', '#f59e0b'] }]
+            });
+
             Highcharts.chart('chartRevenueBar', {
-                chart: { type: 'column', backgroundColor: 'transparent' },
-                title: { text: null },
-                credits: { enabled: false },
-                xAxis: { categories: @Html.Raw(JsonSerializer.Serialize(Model.RevenueLast6Months.Select(x => x.Label))), },
-                yAxis: { title: null },
-                series: [{
-                    name: 'الإيرادات',
-                    data: @Html.Raw(JsonSerializer.Serialize(Model.RevenueLast6Months.Select(x => x.Amount))),
-                    color: '#0d9488',
-                }]
+                chart: { type: 'column', backgroundColor: 'transparent', animation: { duration: 900 } },
+                title: { text: null }, credits: { enabled: false },
+                xAxis: { categories: @Html.Raw(JsonSerializer.Serialize(Model.RevenueLast6Months.Select(x => x.Label))), labels: { style: { fontWeight: '600', fontSize: '11px' } } },
+                yAxis: { title: null, gridLineColor: '#eefdfa' },
+                legend: { enabled: false },
+                tooltip: { backgroundColor: 'rgba(255,255,255,.96)', borderRadius: 10, valueSuffix: ' ج.م' },
+                plotOptions: { column: { borderRadius: 6, pointPadding: 0.14 } },
+                series: [{ name: 'الإيرادات', data: @Html.Raw(JsonSerializer.Serialize(Model.RevenueLast6Months.Select(x => x.Amount))), color: '#0d9488' }]
             });
 
-            // Hbar: Top Procedures
             Highcharts.chart('chartTopProcedures', {
-                chart: { type: 'bar', backgroundColor: 'transparent' },
-                title: { text: null },
-                credits: { enabled: false },
-                xAxis: {
-                    categories: @Html.Raw(JsonSerializer.Serialize(Model.TopProcedures.Select(x => x.Name))),
-                title: { text: null }
-                },
-                yAxis: { title: { text: 'Number' } },
-                series: [{
-                    name: 'عدد المرات',
-                    data: @Html.Raw(JsonSerializer.Serialize(Model.TopProcedures.Select(x => x.Count))),
-                    color: '#0f9b8e'
-                }]
+                chart: { type: 'bar', backgroundColor: 'transparent', animation: { duration: 900 } },
+                title: { text: null }, credits: { enabled: false },
+                xAxis: { categories: @Html.Raw(JsonSerializer.Serialize(Model.TopProcedures.Select(x => x.Name))), title: { text: null }, labels: { style: { fontWeight: '600', fontSize: '11px' } } },
+                yAxis: { title: { text: null }, gridLineColor: '#eefdfa' },
+                legend: { enabled: false },
+                tooltip: { backgroundColor: 'rgba(255,255,255,.96)', borderRadius: 10 },
+                plotOptions: { bar: { borderRadius: 5, pointPadding: 0.12 } },
+                series: [{ name: 'عدد المرات', data: @Html.Raw(JsonSerializer.Serialize(Model.TopProcedures.Select(x => x.Count))), color: '#0f9b8e' }]
             });
         });
     </script>
