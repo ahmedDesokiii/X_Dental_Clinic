@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/SetUp/">
+    <File Path="C:/Users/ahmed.desoky/Desktop/Dental Proj.zip" />
+  </Folder>
   <Project Path="../X-RayExporter/X-RayExporter.csproj" Id="5c5db4e4-9520-481c-97b6-21b6338f76b9" />
   <Project Path="Dental.csproj" />
 </Solution>

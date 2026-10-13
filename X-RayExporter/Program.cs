@@ -26,7 +26,7 @@ using Microsoft.Data.SqlClient;
 // إعدادات — عدّلها حسب بيئتك
 // =============================================================================
 const string ConnectionString =
-    "Server=(localdb)\\mssqllocaldb;Database=X_FamilyDental_DB;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True;";
+    "Server=(localdb)\\mssqllocaldb;Database=X_FamilyDental_DB_v01;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True;";
 
 // المسار الفعلي على القرص = wwwroot/uploads/xrays بتاع الأبلكيشن
 const string OutputRoot = @"D:\Projects\Dental\X_Dental\wwwroot\uploads\xrays";
@@ -106,15 +106,15 @@ static async Task<Stats> MigrateTableAsync(
     var stats = new Stats();
 
     int total = await ScalarIntAsync(readConn,
-        $"SELECT COUNT(*) FROM [FAMILYDB.MDF].dbo.[{sourceTable}]");
+        $"SELECT COUNT(*) FROM [FamilyDB].dbo.[{sourceTable}]");
     int nullCode = await ScalarIntAsync(readConn,
-        $"SELECT COUNT(*) FROM [FAMILYDB.MDF].dbo.[{sourceTable}] WHERE [{codeCol}] IS NULL");
+        $"SELECT COUNT(*) FROM [FamilyDB].dbo.[{sourceTable}] WHERE [{codeCol}] IS NULL");
 
     Console.WriteLine($"إجمالي الصفوف: {total} | بدون كود مريض: {nullCode}");
 
     await using var cmd = new SqlCommand($"""
         SELECT [{idCol}], [{codeCol}], [{dateCol}], [{fileNameCol}], [{notesCol}], [{imgCol}], [{srcCol}]
-        FROM [FAMILYDB.MDF].dbo.[{sourceTable}]
+        FROM [FamilyDB].dbo.[{sourceTable}]
         WHERE [{codeCol}] IS NOT NULL
         ORDER BY [{idCol}]
         """, readConn);
