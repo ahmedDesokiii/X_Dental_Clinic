@@ -386,43 +386,43 @@
 
         <!-- الهيدر فاضي تماماً (مفيش عنوان "روشتة طبية") عشان الورق المطبوع مسبقاً -->
         <!-- 1) QR في المنتصف تحت الهيدر المطبوع على الورق -->
-        @if (!string.IsNullOrEmpty(verifyUrl))
-        {
-            <div class="qr-center">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&margin=3&data=@Uri.EscapeDataString(verifyUrl)"
-                     alt="QR Verify"
-                     width="90" height="90"
-                     class="qr-img" />
-                <div class="qr-caption">امسح للتحقق</div>
-            </div>
-        }
-
+        
+      
+        <br><br>
+        <br><br>
+        <br><br>
+        
         <!-- 2) بيانات المريض -->
-        <div class="patient-box">
+        <div class=" border-0">
             <!-- الصف 1: الاسم + العمر -->
-            <div class="patient-row">
+            <div class="patient-row border-0 ">
                 <div class="field grow">
-                    <span class="label">اسم المريض</span>
+                    @* <span class="label">اسم المريض</span> *@
                     <div class="value name">@(patient?.FullNameAr ?? "—")</div>
                 </div>
-                <div class="field shrink">
-                    <span class="label">العمر</span>
+                <div class="field grow">
                     <div class="value">@(age.HasValue ? $"{age} سنة" : "—")</div>
+                </div>
+                <div class="field shrink">
+                    @* <span class="label">العمر</span> *@
+
+                    <div class="value">@Model.PrescriptionDate.ToString("yy/MM/dd")</div>
+
                 </div>
             </div>
             <!-- الصف 2: التاريخ + النوع -->
-            <div class="patient-row">
-                <div class="field grow">
-                    <span class="label">تاريخ الروشتة</span>
-                    <div class="value">@Model.PrescriptionDate.ToString("dd/MM/yyyy  hh:mm tt")</div>
+            <div class="patient-row" >
+                <div class="field grow" hidden>
+                    @* <span class="label">تاريخ الروشتة</span> *@
+                    <div class="value">@Model.PrescriptionDate.ToString("yy/MM/dd")</div>
                 </div>
-                <div class="field shrink">
+                <div class="field shrink" hidden>
                     <span class="label">النوع</span>
                     <div class="value">@(patient?.Gender?.NameAr ?? "—")</div>
                 </div>
             </div>
         </div>
-
+        <br><br>
         <!-- 3) باقي التفاصيل -->
         <!-- التشخيص -->
         @if (!string.IsNullOrWhiteSpace(Model.Diagnosis))
@@ -477,12 +477,12 @@
         }
 
         <!-- التوقيع -->
-        <div class="signature-area">
-            <div class="sig-block">
+        <div class="signature-area" hidden>
+            <div class="sig-block" hidden>
                 <div class="sig-line"></div>
                 <div class="sig-label">توقيع المريض / ولي الأمر</div>
             </div>
-            <div class="sig-block">
+            <div class="sig-block" hidden>
                 <div class="sig-line"></div>
                 <div class="sig-label">الطبيب المعالج</div>
                 <div class="doctor-name">Dr. @(Model.PrescribedBy ?? "")</div>
@@ -490,10 +490,23 @@
         </div>
 
         <!-- فوتر -->
-        <div class="rx-footer">
+        <div class="rx-footer" hidden>
             طُبعت بتاريخ @DateTime.Now.ToString("dd/MM/yyyy HH:mm") — روشتة رقم #@Model.Id
             <br />
             <span style="font-size:0.6rem;">امسح رمز QR للتحقق من صحة الروشتة</span>
+        </div>
+
+        <div class="rx-footer">
+            @if (!string.IsNullOrEmpty(verifyUrl))
+            {
+                <div class="qr-center">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&margin=3&data=@Uri.EscapeDataString(verifyUrl)"
+                         alt="QR Verify"
+                         width="90" height="90"
+                         class="qr-img" />
+                    <div class="qr-caption">امسح لعرض الروشيته</div>
+                </div>
+            }
         </div>
     </div>
 

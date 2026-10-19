@@ -11,7 +11,7 @@ namespace Dental.Models.Clinic
         public string NameEn { get; set; } = null!;
         public DiagnosisCategory Category { get; set; }
         public string? Description { get; set; }
-
+        public DiagnosisPricingMode PricingMode { get; set; } = DiagnosisPricingMode.PerUnit;
         public decimal Price { get; set; } = 0;
         public string? Notes { get; set; }
 

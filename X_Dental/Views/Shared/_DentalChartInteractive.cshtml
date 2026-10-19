@@ -207,6 +207,10 @@
             font-size: .74rem;
         }
 
+        .tooth-tooltip .tt-units {
+            color: #c4b5fd !important;
+        }
+
     .diagnosis-row {
         display: flex;
         align-items: center;
@@ -234,6 +238,17 @@
 
         .diagnosis-price-badge.updated {
             animation: priceBadgePulse .35s ease;
+        }
+
+        .diagnosis-price-badge.multi {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        }
+
+        .diagnosis-price-badge small {
+            display: block;
+            font-size: .66rem;
+            font-weight: 700;
+            opacity: .85;
         }
 
     @@keyframes priceBadgePulse {
@@ -371,16 +386,21 @@
         background: linear-gradient(135deg, #0d9488, #0d7377);
         color: #fff;
         flex-shrink: 0;
+        transition: background .3s ease;
     }
 
-        .tooth-modal-head h5 {
-            margin: 0;
-            font-weight: 800;
-            font-size: 1.05rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    .tooth-modal.mu-mode .tooth-modal-head {
+        background: linear-gradient(135deg, #7c3aed, #0d7377);
+    }
+
+    .tooth-modal-head h5 {
+        margin: 0;
+        font-weight: 800;
+        font-size: 1.05rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 
     .btn-close-modal {
         width: 34px;
@@ -520,6 +540,389 @@
             box-shadow: 0 8px 24px rgba(13,115,119,0.35);
         }
 
+    /* ══════════════════════════════════════════════
+           ⭐ Multi-Unit
+           ══════════════════════════════════════════════ */
+    .mu-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding: 4px 6px 8px;
+    }
+
+    .mu-toggle {
+        border: 1.5px solid #ddd6fe;
+        background: #fff;
+        color: #6d28d9;
+        font-weight: 800;
+        font-size: .78rem;
+        padding: 7px 14px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        cursor: pointer;
+        transition: all .25s ease;
+    }
+
+        .mu-toggle:hover {
+            border-color: #7c3aed;
+            transform: translateY(-1px);
+        }
+
+        .mu-toggle .mu-switch {
+            width: 28px;
+            height: 16px;
+            border-radius: 999px;
+            background: #e2e8f0;
+            position: relative;
+            transition: background .25s ease;
+        }
+
+            .mu-toggle .mu-switch::after {
+                content: '';
+                position: absolute;
+                top: 2px;
+                left: 2px;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: #fff;
+                box-shadow: 0 1px 3px rgba(0,0,0,.2);
+                transition: left .25s cubic-bezier(.3,1.4,.5,1);
+            }
+
+        .mu-toggle.on {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 6px 16px rgba(124,58,237,.3);
+        }
+
+            .mu-toggle.on .mu-switch {
+                background: rgba(255,255,255,.35);
+            }
+
+                .mu-toggle.on .mu-switch::after {
+                    left: 14px;
+                }
+
+    .mu-hint {
+        font-size: .72rem;
+        font-weight: 700;
+        color: #6d28d9;
+        background: #f5f3ff;
+        padding: 5px 10px;
+        border-radius: 8px;
+        display: none;
+        animation: muPop .25s ease;
+    }
+
+    .chart-shell.mu-on .mu-hint {
+        display: inline-block;
+    }
+
+    .chart-shell.mu-on .chart-canvas {
+        box-shadow: 0 0 0 2px rgba(124,58,237,.35), 0 16px 40px rgba(124,58,237,.12);
+        transition: box-shadow .3s ease;
+    }
+
+    .multi-check {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+        color: #fff;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: .7rem;
+        z-index: 31;
+        box-shadow: 0 3px 8px rgba(124,58,237,.45);
+        border: 2px solid #fff;
+    }
+
+    .tooth-box.multi-picked {
+        z-index: 15;
+    }
+
+        .tooth-box.multi-picked .multi-check {
+            display: flex;
+            animation: muPop .3s cubic-bezier(.2,1.5,.4,1);
+        }
+
+        .tooth-box.multi-picked .realistic-tooth {
+            transform: translateY(-3px) scale(1.1);
+            filter: drop-shadow(0 0 3px rgba(124,58,237,.75)) drop-shadow(0 0 10px rgba(124,58,237,.4));
+        }
+
+        .tooth-box.multi-picked .tooth-num {
+            background: #7c3aed;
+        }
+
+    @@keyframes muPop {
+        from {
+            transform: scale(.4);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .mu-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+        padding: 10px 14px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #7c3aed, #5b21b6);
+        color: #fff;
+        box-shadow: 0 12px 28px rgba(91,33,182,.3);
+        animation: muSlide .35s cubic-bezier(.2,1.2,.3,1);
+    }
+
+        .mu-bar[hidden] {
+            display: none;
+        }
+
+    @@keyframes muSlide {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .mu-bar-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .mu-bar-count {
+        background: rgba(255,255,255,.18);
+        border-radius: 12px;
+        padding: 4px 12px;
+        text-align: center;
+        line-height: 1.1;
+    }
+
+        .mu-bar-count b {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+
+        .mu-bar-count span {
+            font-size: .62rem;
+            font-weight: 700;
+            opacity: .85;
+        }
+
+    .mu-bar-range {
+        font-weight: 800;
+        font-size: .86rem;
+    }
+
+        .mu-bar-range small {
+            display: block;
+            font-size: .7rem;
+            font-weight: 600;
+            opacity: .8;
+        }
+
+    .mu-bar-actions {
+        display: flex;
+        gap: 6px;
+    }
+
+        .mu-bar-actions button {
+            border: none;
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-weight: 800;
+            font-size: .78rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: transform .2s ease, background .2s ease;
+        }
+
+            .mu-bar-actions button:hover {
+                transform: translateY(-1px);
+            }
+
+    .mu-btn-clear {
+        background: rgba(255,255,255,.16);
+        color: #fff;
+    }
+
+        .mu-btn-clear:hover {
+            background: rgba(255,255,255,.26);
+        }
+
+    .mu-btn-go {
+        background: #fff;
+        color: #6d28d9;
+        box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    }
+
+    /* شريط الوحدات جوه المودال */
+    .mu-units-strip {
+        background: linear-gradient(135deg, #f5f3ff, #faf5ff);
+        border: 1px solid #ddd6fe;
+        border-radius: 14px;
+        padding: 10px 12px;
+        margin-bottom: 14px;
+        animation: muPop .3s ease;
+    }
+
+    .mu-units-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: .76rem;
+        font-weight: 800;
+        color: #5b21b6;
+        margin-bottom: 8px;
+    }
+
+        .mu-units-head b {
+            background: #7c3aed;
+            color: #fff;
+            border-radius: 999px;
+            padding: 1px 10px;
+            font-size: .72rem;
+        }
+
+    .mu-units-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .mu-unit-chip {
+        background: #fff;
+        border: 1px solid #ddd6fe;
+        color: #5b21b6;
+        font-weight: 800;
+        font-size: .74rem;
+        padding: 4px 10px;
+        border-radius: 8px;
+        animation: muPop .3s ease backwards;
+    }
+
+
+    /* ⭐ Toolbar layout: 30% (زرار + hint) | 70% (شريط التحديد) */
+    .mu-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        gap: 10px;
+        padding: 4px 6px 8px;
+        min-height: 62px;
+    }
+
+    .mu-left {
+        flex: 0 0 30%;
+        max-width: 30%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        min-width: 0;
+    }
+
+    .mu-right {
+        flex: 1 1 70%;
+        min-width: 0;
+    }
+
+    .mu-hint {
+        font-size: .66rem;
+        padding: 3px 8px;
+        line-height: 1.35;
+        white-space: normal;
+    }
+
+    /* الشريط بقى في نفس السطر → أصغر وأخف */
+    .mu-bar {
+        margin-top: 0;
+        padding: 6px 8px 6px 10px;
+        border-radius: 14px;
+        flex-wrap: nowrap;
+        gap: 8px;
+        box-shadow: 0 8px 20px rgba(91,33,182,.25);
+    }
+
+    .mu-bar-info {
+        flex: 1 1 auto;
+        gap: 8px;
+    }
+
+    .mu-bar-count {
+        padding: 3px 9px;
+        border-radius: 10px;
+        flex-shrink: 0;
+    }
+
+        .mu-bar-count b {
+            font-size: 1rem;
+        }
+
+    .mu-bar-range {
+        min-width: 0;
+        font-size: .8rem;
+    }
+
+        .mu-bar-range span,
+        .mu-bar-range small {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+    .mu-bar-actions {
+        flex-shrink: 0;
+        gap: 5px;
+    }
+
+        .mu-bar-actions button {
+            padding: 7px 11px;
+            font-size: .76rem;
+        }
+
+    /* على الموبايل: الصفين تحت بعض */
+    @@media (max-width: 576px) {
+        .mu-toolbar {
+            flex-wrap: wrap;
+        }
+
+        .mu-left, .mu-right {
+            flex: 1 1 100%;
+            max-width: 100%;
+        }
+    }
+
     @@media (max-width: 768px) {
         .modal-body-row {
             flex-direction: column;
@@ -550,8 +953,35 @@
     }
 </style>
 
-<div class="chart-shell">
+<div class="chart-shell" id="chartShell">
     <div class="tooth-tooltip" id="toothTooltip"></div>
+
+    <!-- ⭐ Multi-Unit toolbar: الزرار + الـ hint (30%) | شريط التحديد (70%) -->
+    <div class="mu-toolbar">
+        <div class="mu-left">
+            <button type="button" class="mu-toggle" id="muToggle" onclick="toggleMultiUnit()">
+                <span class="mu-switch"></span>
+                <i class="bi bi-diagram-3"></i> Multi-Unit
+            </button>
+            <span class="mu-hint"><i class="bi bi-hand-index"></i> Select adjacent teeth in the same arch</span>
+        </div>
+
+        <div class="mu-right">
+            <div class="mu-bar" id="muBar" hidden>
+                <div class="mu-bar-info">
+                    <div class="mu-bar-count"><b id="muBarCount">0</b><span>units</span></div>
+                    <div class="mu-bar-range">
+                        <span id="muBarRange">—</span>
+                        <small id="muBarTeeth">—</small>
+                    </div>
+                </div>
+                <div class="mu-bar-actions">
+                    <button type="button" class="mu-btn-clear" onclick="clearMultiSelection()" title="Clear"><i class="bi bi-x-lg"></i></button>
+                    <button type="button" class="mu-btn-go" onclick="openMultiUnitModal()"><i class="bi bi-clipboard2-pulse"></i> Diagnose</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="chart-canvas" id="chartCanvas">
         <svg class="bg-arcs" viewBox="0 0 620 632" preserveAspectRatio="xMidYMid meet">
@@ -583,24 +1013,26 @@
             {
                 var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((18 - i) * 45)ms" onclick="openToothModal(@i, event)">
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" data-orig="@status.ToString().ToLower()" style="animation-delay:@((18 - i) * 45)ms" onclick="onToothClick(@i, event)">
                     <div class="tooth-inner">
                         <span class="tooth-num">@(i - 10)</span>
                         <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                     <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
+                    <span class="multi-check"><i class="bi bi-check-lg"></i></span>
                 </div>
             }
             @for (int i = 21; i <= 28; i++)
             {
                 var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((i % 10) * 45 + 360)ms" onclick="openToothModal(@i, event)">
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" data-orig="@status.ToString().ToLower()" style="animation-delay:@((i % 10) * 45 + 360)ms" onclick="onToothClick(@i, event)">
                     <div class="tooth-inner">
                         <span class="tooth-num">@(i - 20)</span>
                         <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                     <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
+                    <span class="multi-check"><i class="bi bi-check-lg"></i></span>
                 </div>
             }
         </div>
@@ -611,26 +1043,43 @@
             {
                 var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((48 - i) * 45 + 720)ms" onclick="openToothModal(@i, event)">
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" data-orig="@status.ToString().ToLower()" style="animation-delay:@((48 - i) * 45 + 720)ms" onclick="onToothClick(@i, event)">
                     <div class="tooth-inner">
                         <span class="tooth-num">@(i - 40)</span>
                         <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                     <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
+                    <span class="multi-check"><i class="bi bi-check-lg"></i></span>
                 </div>
             }
             @for (int i = 31; i <= 38; i++)
             {
                 var entry = Model.DentalHistory.FirstOrDefault(d => d.ToothNumber == i);
                 var status = entry?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
-                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" style="animation-delay:@((i % 10) * 45 + 1080)ms" onclick="openToothModal(@i, event)">
+                <div class="tooth-box @status.ToString().ToLower()" data-tooth="@i" data-orig="@status.ToString().ToLower()" style="animation-delay:@((i % 10) * 45 + 1080)ms" onclick="onToothClick(@i, event)">
                     <div class="tooth-inner">
                         <span class="tooth-num">@(i - 30)</span>
                         <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
                     </div>
                     <span class="pending-flag" style="display:none;"><i class="bi bi-clock-history"></i></span>
+                    <span class="multi-check"><i class="bi bi-check-lg"></i></span>
                 </div>
             }
+        </div>
+    </div>
+
+    <!-- ⭐ Multi-Unit selection bar -->
+    <div class="mu-bar" id="muBar" hidden>
+        <div class="mu-bar-info">
+            <div class="mu-bar-count"><b id="muBarCount">0</b><span>units</span></div>
+            <div class="mu-bar-range">
+                <span id="muBarRange">—</span>
+                <small id="muBarTeeth">—</small>
+            </div>
+        </div>
+        <div class="mu-bar-actions">
+            <button type="button" class="mu-btn-clear" onclick="clearMultiSelection()"><i class="bi bi-x-lg"></i> Clear</button>
+            <button type="button" class="mu-btn-go" onclick="openMultiUnitModal()"><i class="bi bi-clipboard2-pulse"></i> Diagnose</button>
         </div>
     </div>
 
@@ -639,13 +1088,22 @@
         <div class="modal-overlay" onclick="closeToothModal()"></div>
         <div class="modal-glass-xl">
             <div class="tooth-modal-head">
-                <h5 class="text-light"><i class="bi bi-grid-3x3-gap"></i>Tooth Details<span id="selectedToothNum"></span>  </h5>
+                <h5 class="text-light"><i class="bi bi-grid-3x3-gap"></i><span id="toothModalTitle">Tooth Details</span><span id="selectedToothNum"></span>  </h5>
                 <button type="button" class="btn-close-modal" onclick="closeToothModal()"><i class="bi bi-x-lg"></i></button>
             </div>
             <div class="tooth-modal-body pb-0 mb-0">
                 <div class="modal-body-row">
                     @* Column 1: Status + Diagnosis + Notes *@
                     <div class="modal-col">
+                        @* ⭐ Multi-Unit: الأسنان اللي التشخيص هيتطبق عليها *@
+                        <div class="mu-units-strip" id="muUnitsStrip" style="display:none;">
+                            <div class="mu-units-head">
+                                <span><i class="bi bi-diagram-3"></i> Units</span>
+                                <b id="muUnitsCount">0</b>
+                            </div>
+                            <div class="mu-units-chips" id="muUnitsChips"></div>
+                        </div>
+
                         @* ⭐ Status ليه div مستقل عشان نقدر نخفيه لوحده في وضع تعديل الـ Previous Session
                            من غير ما نأثر على الـ Diagnosis / Price / Notes *@
                         <div class="form-group-v4 mb-3" id="statusFieldGroup">
@@ -743,6 +1201,12 @@
     let editingRecordUid = null;   // ⭐ تعديل ريكورد موجود في السيشن الحالي
     let historyEditCtx = null;     // ⭐ تعديل ريكورد من السجلات السابقة { vdId }
 
+    // ⭐ Multi-Unit state
+    let multiUnitOn = false;       // وضع تحديد أكتر من سن
+    let multiSel = [];             // الأسنان المحددة بترتيبها على الفك
+    let currentGroupTeeth = [];    // أسنان المجموعة المفتوحة في المودال
+    let editingGroupId = null;     // تعديل مجموعة موجودة في السيشن الحالي
+
     const STATUS_ID_TO_CLASS = {
         1: 'healthy', 2: 'decayed', 3: 'treated', 4: 'missing', 5: 'extracted', 6: 'impacted',
         7: 'crown', 8: 'bridge', 9: 'implant', 10: 'fractured', 11: 'rootcanal', 12: 'filling'
@@ -752,6 +1216,12 @@
         7: 'Crown', 8: 'Bridge', 9: 'Implant', 10: 'Fractured', 11: 'Root Canal', 12: 'Filling'
     };
 
+    // ⭐ ترتيب الأسنان الفعلي على امتداد كل فك — نفس ترتيب السيرفر (IsContiguousGroup)
+    const ARCH_ORDERS = [
+        [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28],
+        [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]
+    ];
+
     window.toothInfoMap = @Html.Raw(ViewBag.ToothInfoMap ?? "{}");
 
     // ⭐ نفس منطق الترقيم في الـ Razor: 28→UR-8, 15→UL-5
@@ -760,9 +1230,39 @@
         return ({ 1: 'UL', 2: 'UR', 3: 'LL', 4: 'LR' })[q] + '-' + p;
     }
 
-    function genUid() { return 'r' + Date.now() + '_' + Math.floor(Math.random() * 10000); }
+    let uidSeq = 0;
+    function genUid() { return 'r' + Date.now() + '_' + (++uidSeq) + '_' + Math.floor(Math.random() * 10000); }
+    function genGuid() {
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+    }
+
     function getPendingForTooth(num) {
         return window.pendingToothRecords.filter(r => r.ToothNumber === num);
+    }
+
+    // ── Arch helpers ──
+    function archOf(num) { return ARCH_ORDERS.find(a => a.includes(num)) || null; }
+    function rangeBetween(a, b) {
+        const arch = archOf(a);
+        const i = arch.indexOf(a), j = arch.indexOf(b);
+        return arch.slice(Math.min(i, j), Math.max(i, j) + 1);
+    }
+    function sortByArch(teeth) {
+        if (!teeth.length) return [];
+        const arch = archOf(teeth[0]);
+        return teeth.slice().sort((a, b) => arch.indexOf(a) - arch.indexOf(b));
+    }
+    function groupRangeLabel(teeth) {
+        if (!teeth.length) return '—';
+        if (teeth.length === 1) return toothLabelJs(teeth[0]);
+        return `${toothLabelJs(teeth[0])} → ${toothLabelJs(teeth[teeth.length - 1])}`;
+    }
+    function getGroupTeeth(groupId) {
+        return sortByArch(window.pendingToothRecords.filter(r => r.GroupId === groupId).map(r => r.ToothNumber));
     }
 
     function onDiagnosisChange() {
@@ -770,23 +1270,122 @@
         const badge = document.getElementById('diagnosisPriceBadge');
         const selectedOption = select.options[select.selectedIndex];
         const price = selectedOption ? parseFloat(selectedOption.dataset.price || 0) : 0;
-        badge.textContent = price.toLocaleString('en-EG') + ' EGP';
+        const units = currentGroupTeeth.length;
+
+        if (units > 1) {
+            // ⭐ السعر للسن الواحد × عدد الوحدات
+            badge.classList.add('multi');
+            badge.innerHTML = `${(price * units).toLocaleString('en-EG')} EGP<small>${price.toLocaleString('en-EG')} × ${units}</small>`;
+        } else {
+            badge.classList.remove('multi');
+            badge.textContent = price.toLocaleString('en-EG') + ' EGP';
+        }
         badge.classList.remove('updated');
         void badge.offsetWidth;
         badge.classList.add('updated');
     }
 
-    function openToothModal(num, evt, uid = null, hist = null) {
+    // ════════════════════════════════════════════════
+    // ⭐ Multi-Unit selection
+    // ════════════════════════════════════════════════
+    function toggleMultiUnit() {
+        multiUnitOn = !multiUnitOn;
+        document.getElementById('muToggle').classList.toggle('on', multiUnitOn);
+        document.getElementById('chartShell').classList.toggle('mu-on', multiUnitOn);
+        if (!multiUnitOn) clearMultiSelection();
+    }
+
+    function onToothClick(num, evt) {
+        if (!multiUnitOn) { openToothModal(num, evt); return; }
+        if (evt) { evt.preventDefault(); evt.stopPropagation(); }
+
+        const arch = archOf(num);
+        if (!multiSel.length) {
+            multiSel = [num];
+        } else if (archOf(multiSel[0]) !== arch) {
+            // الوحدات لازم تكون في نفس الفك → نبدأ تحديد جديد
+            multiSel = [num];
+            muToast('Units must be in the same arch — selection restarted', 'info');
+        } else if (multiSel.includes(num)) {
+            const first = multiSel[0], last = multiSel[multiSel.length - 1];
+            if (num === first) multiSel.shift();
+            else if (num === last) multiSel.pop();
+            else multiSel = rangeBetween(first, num); // ضغطة في النص = قص المدى لحد السن ده
+        } else {
+            // ⭐ أي سن في نفس الفك = مد المدى لحده تلقائيًا (بيضمن التجاور دايمًا)
+            const first = multiSel[0], last = multiSel[multiSel.length - 1];
+            multiSel = arch.indexOf(num) < arch.indexOf(first)
+                ? rangeBetween(num, last)
+                : rangeBetween(first, num);
+        }
+        renderMultiSelection();
+    }
+
+    function renderMultiSelection() {
+        document.querySelectorAll('#chartCanvas .tooth-box').forEach(el => {
+            el.classList.toggle('multi-picked', multiSel.includes(parseInt(el.dataset.tooth)));
+        });
+
+        const bar = document.getElementById('muBar');
+        if (!multiSel.length) { bar.hidden = true; return; }
+
+        const sorted = sortByArch(multiSel);
+        multiSel = sorted;
+        bar.hidden = false;
+        document.getElementById('muBarCount').textContent = sorted.length;
+        document.getElementById('muBarRange').textContent = groupRangeLabel(sorted);
+        document.getElementById('muBarTeeth').textContent = sorted.map(toothLabelJs).join(' · ');
+    }
+
+    function clearMultiSelection() {
+        multiSel = [];
+        renderMultiSelection();
+    }
+
+    function openMultiUnitModal() {
+        if (!multiSel.length) return;
+        if (multiSel.length === 1) { openToothModal(multiSel[0], null); return; }
+        openToothModal(multiSel[0], null, null, null, multiSel);
+    }
+
+    function muToast(title, icon) {
+        Swal.fire({ toast: true, position: 'top-end', icon: icon || 'success', title, showConfirmButton: false, timer: 1600, customClass: { popup: 'rounded-4' } });
+    }
+
+    document.addEventListener('keydown', e => {
+        const modalOpen = document.getElementById('toothModal').classList.contains('dc-show');
+        if (e.key === 'Escape' && multiUnitOn && !modalOpen && multiSel.length) clearMultiSelection();
+    });
+
+    // ════════════════════════════════════════════════
+    // Modal
+    // ════════════════════════════════════════════════
+    function openToothModal(num, evt, uid = null, hist = null, groupTeeth = null) {
         if (evt) { evt.preventDefault(); evt.stopPropagation(); }
 
         currentToothNumber = num;
         editingRecordUid = uid;
         historyEditCtx = hist;
 
-        document.getElementById('selectedToothNum').textContent =
-            ' (' + toothLabelJs(num) + ')' + (hist ? ' — Edit History' : '');
-
         const existing = uid ? window.pendingToothRecords.find(r => r.uid === uid) : null;
+
+        // ⭐ تحديد هل ده Multi-Unit (مجموعة جديدة أو تعديل مجموعة موجودة)
+        editingGroupId = existing && existing.GroupId ? existing.GroupId : null;
+        currentGroupTeeth = groupTeeth
+            ? sortByArch(groupTeeth)
+            : (editingGroupId ? getGroupTeeth(editingGroupId) : []);
+        const isGroup = currentGroupTeeth.length > 1;
+
+        // في المجموعة: الأشعة متخزنة على أول سجل بس
+        const xraySource = editingGroupId
+            ? (window.pendingToothRecords.find(r => r.GroupId === editingGroupId && r.XRays && r.XRays.length) || existing)
+            : existing;
+
+        document.getElementById('toothModalTitle').textContent = isGroup ? 'Multi-Unit Diagnosis' : 'Tooth Details';
+        document.getElementById('selectedToothNum').textContent = isGroup
+            ? ` (${groupRangeLabel(currentGroupTeeth)} · ${currentGroupTeeth.length} units)`
+            : ' (' + toothLabelJs(num) + ')' + (hist ? ' — Edit History' : '');
+
         document.getElementById('toothStatus').value = existing ? existing.Status : 2;
         document.getElementById('toothProcedure').value = existing ? (existing.ProcedureCode || '') : '';
         document.getElementById('toothDiagnosis').value =
@@ -798,15 +1397,28 @@
             cb.checked = existing ? (existing.Surfaces || []).some(s => s.Surface === cb.value) : false;
         });
 
-        currentXrayFiles = existing && existing.XRays ? existing.XRays.map(x => ({ ...x })) : [];
+        currentXrayFiles = xraySource && xraySource.XRays
+            ? xraySource.XRays.map(x => ({ fileName: x.FileName || x.fileName, base64: x.Base64 || x.base64, notes: x.Notes || x.notes || '' }))
+            : [];
         renderXrayFilesList();
+
+        // ⭐ شريط الوحدات
+        const strip = document.getElementById('muUnitsStrip');
+        strip.style.display = isGroup ? '' : 'none';
+        if (isGroup) {
+            document.getElementById('muUnitsCount').textContent = currentGroupTeeth.length;
+            document.getElementById('muUnitsChips').innerHTML = currentGroupTeeth
+                .map((t, i) => `<span class="mu-unit-chip" style="animation-delay:${i * 40}ms">${toothLabelJs(t)}</span>`).join('');
+        }
+        document.getElementById('toothModal').classList.toggle('mu-mode', isGroup);
+
         onDiagnosisChange();
 
         // نص زرار الحفظ حسب الوضع
         const btnText = document.getElementById('btnApplyToothText');
         if (hist) btnText.textContent = 'Update Record';
         else if (uid) btnText.textContent = 'Save Changes';
-        else btnText.textContent = 'Add to Session';
+        else btnText.textContent = isGroup ? `Add ${currentGroupTeeth.length} Units` : 'Add to Session';
 
         // ⭐ في وضع تعديل التاريخ (Previous Sessions): خبي بس الـ Status
         // والـ X-Rays — واسيب الـ Diagnosis/Price/Notes ظاهرين عشان دي أساس التعديل
@@ -814,8 +1426,10 @@
         document.getElementById('colXray').style.display = hist ? 'none' : '';
 
         document.querySelectorAll('#chartCanvas .tooth-box').forEach(t => t.classList.remove('selected'));
-        const target = document.querySelector('#chartCanvas [data-tooth="' + num + '"]');
-        if (target) target.classList.add('selected');
+        (isGroup ? currentGroupTeeth : [num]).forEach(n => {
+            const target = document.querySelector('#chartCanvas [data-tooth="' + n + '"]');
+            if (target) target.classList.add('selected');
+        });
 
         hideToothTooltip();
 
@@ -840,6 +1454,8 @@
         currentToothNumber = null;
         editingRecordUid = null;
         historyEditCtx = null;
+        currentGroupTeeth = [];
+        editingGroupId = null;
     }
 
     const toothModalEl = document.getElementById('toothModal');
@@ -869,10 +1485,10 @@
             const row = document.createElement('div');
             row.className = 'xray-file-row';
             row.innerHTML = `
-                            <img src="${xr.base64}" class="xray-thumb" />
-                            <input type="text" class="form-glass-v4 xray-note-input" placeholder="Note..." value="${xr.notes || ''}" />
-                            <button type="button" class="xray-remove-btn"><i class="bi bi-x"></i></button>
-                        `;
+                                <img src="${xr.base64}" class="xray-thumb" />
+                                <input type="text" class="form-glass-v4 xray-note-input" placeholder="Note..." value="${xr.notes || ''}" />
+                                <button type="button" class="xray-remove-btn"><i class="bi bi-x"></i></button>
+                            `;
             row.querySelector('.xray-note-input').addEventListener('input', function() {
                 currentXrayFiles[idx].notes = this.value;
             });
@@ -884,37 +1500,65 @@
         });
     }
 
-    /* ⭐ الحفظ: Insert دايمًا للجديد — Update بس لو فيه editingRecordUid */
-    function applyToothChanges() {
-        if (historyEditCtx) { saveHistoryEdit(); return; }
-        if (!currentToothNumber) return;
+    // ⭐ شكل السن = آخر ريكورد pending عليه، ولو مفيش يرجع لحالته الأصلية
+    function refreshToothVisual(num) {
+        const toothEl = document.querySelector(`#chartCanvas [data-tooth="${num}"]`);
+        if (!toothEl) return;
+        const records = getPendingForTooth(num);
+        const newClass = records.length
+            ? (STATUS_ID_TO_CLASS[records[records.length - 1].Status] || 'healthy')
+            : (toothEl.dataset.orig || 'healthy');
+        toothEl.className = toothEl.className.split(' ')
+            .filter(c => !Object.values(STATUS_ID_TO_CLASS).includes(c) && c !== 'selected')
+            .join(' ');
+        toothEl.classList.add(newClass);
+        if (window.updateToothStatusOverlay) window.updateToothStatusOverlay(toothEl);
+        updateToothFlag(num);
+    }
 
-        const statusId = parseInt(document.getElementById('toothStatus').value);
-        const surfaces = Array.from(document.querySelectorAll('.surf-check-v4 input:checked'))
-            .map(cb => ({ Surface: cb.value, Condition: 'Treated' }));
-
+    function readModalValues() {
         const diagSelect = document.getElementById('toothDiagnosis');
         const diagOption = diagSelect.options[diagSelect.selectedIndex];
         const diagId = diagSelect.value;
-        const diagPrice = diagOption ? parseFloat(diagOption.dataset.price || 0) : 0;
-        const diagName = diagOption ? diagOption.textContent : null;
+        const surfaces = Array.from(document.querySelectorAll('.surf-check-v4 input:checked'))
+            .map(cb => ({ Surface: cb.value, Condition: 'Treated' }));
+        return {
+            statusId: parseInt(document.getElementById('toothStatus').value),
+            surfaces,
+            diagId: diagId ? parseInt(diagId) : null,
+            diagPrice: diagOption && diagId ? parseFloat(diagOption.dataset.price || 0) : 0,
+            diagName: diagOption && diagId ? diagOption.textContent : null,
+            notes: document.getElementById('diagnosisNotes').value,
+            procedure: document.getElementById('toothProcedure').value,
+            xrays: currentXrayFiles.map(x => ({ FileName: x.fileName, Base64: x.base64, Notes: x.notes }))
+        };
+    }
 
+    /* ⭐ الحفظ: Insert دايمًا للجديد — Update بس لو فيه editingRecordUid */
+    function applyToothChanges() {
+        if (historyEditCtx) { saveHistoryEdit(); return; }
+        if (currentGroupTeeth.length > 1) { applyGroupChanges(); return; }
+        if (!currentToothNumber) return;
+
+        const v = readModalValues();
         const rec = {
             uid: editingRecordUid || genUid(),
+            GroupId: null,
             ToothNumber: currentToothNumber,
-            Status: statusId,
-            Surfaces: surfaces,
-            ProcedureCode: document.getElementById('toothProcedure').value,
-            Notes: document.getElementById('diagnosisNotes').value,
-            DiagnosisCatalogId: diagId ? parseInt(diagId) : null,
-            DiagnosisName: diagName,
-            DiagnosisPrice: diagId ? diagPrice : 0,
-            DiagnosisSurface: surfaces.map(s => s.Surface).join(','),
-            DiagnosisNotes: document.getElementById('diagnosisNotes').value,
-            XRays: currentXrayFiles.map(x => ({ FileName: x.fileName, Base64: x.base64, Notes: x.notes })),
+            Status: v.statusId,
+            Surfaces: v.surfaces,
+            ProcedureCode: v.procedure,
+            Notes: v.notes,
+            DiagnosisCatalogId: v.diagId,
+            DiagnosisName: v.diagName,
+            DiagnosisPrice: v.diagPrice,
+            DiagnosisSurface: v.surfaces.map(s => s.Surface).join(','),
+            DiagnosisNotes: v.notes,
+            XRays: v.xrays,
             PrescriptionItems: []
         };
 
+        const toothNum = currentToothNumber;
         const wasEdit = !!editingRecordUid;
         if (wasEdit) {
             const idx = window.pendingToothRecords.findIndex(r => r.uid === editingRecordUid);
@@ -923,27 +1567,61 @@
             window.pendingToothRecords.push(rec); // ✅ Insert — حتى لو نفس السن
         }
 
-        // شكل السن = آخر ريكورد عليه
-        const toothEl = document.querySelector(`#chartCanvas [data-tooth="${currentToothNumber}"]`);
-        const records = getPendingForTooth(currentToothNumber);
-        const lastRec = records[records.length - 1];
-        const newClass = STATUS_ID_TO_CLASS[lastRec.Status] || 'healthy';
-        toothEl.className = toothEl.className.split(' ').filter(c => !Object.values(STATUS_ID_TO_CLASS).includes(c) && c !== 'selected').join(' ');
-        toothEl.classList.add(newClass);
-        if (window.updateToothStatusOverlay) window.updateToothStatusOverlay(toothEl);
-        updateToothFlag(currentToothNumber);
+        refreshToothVisual(toothNum);
+        if (multiSel.length) clearMultiSelection();
 
         if (window.renderRecordsTable) window.renderRecordsTable();
         closeToothModal();
 
-        Swal.fire({
-            toast: true, position: 'top-end', icon: 'success',
-            title: wasEdit
-                ? 'Record updated for ' + toothLabelJs(currentToothNumber)
-                : toothLabelJs(currentToothNumber) + ' added to session',
-            showConfirmButton: false, timer: 1200,
-            customClass: { popup: 'rounded-4' }
+        muToast(wasEdit
+            ? 'Record updated for ' + toothLabelJs(toothNum)
+            : toothLabelJs(toothNum) + ' added to session');
+    }
+
+    /* ⭐ Multi-Unit: سجل لكل سن، كلهم بنفس الـ GroupId */
+    function applyGroupChanges() {
+        const v = readModalValues();
+        if (!v.diagId) {
+            Swal.fire({ title: 'Required', text: 'Please select a diagnosis for the units', icon: 'warning', confirmButtonColor: '#7c3aed' });
+            return;
+        }
+
+        const teeth = currentGroupTeeth.slice();
+        const wasEdit = !!editingGroupId;
+        const groupId = editingGroupId || genGuid();
+
+        // في التعديل: نشيل سجلات المجموعة القديمة ونكتبها من جديد بنفس الـ GroupId
+        const oldTeeth = wasEdit ? getGroupTeeth(groupId) : [];
+        if (wasEdit) window.pendingToothRecords = window.pendingToothRecords.filter(r => r.GroupId !== groupId);
+
+        teeth.forEach((num, i) => {
+            window.pendingToothRecords.push({
+                uid: genUid(),
+                GroupId: groupId,
+                ToothNumber: num,
+                Status: v.statusId,
+                Surfaces: v.surfaces,
+                ProcedureCode: v.procedure,
+                Notes: v.notes,
+                DiagnosisCatalogId: v.diagId,
+                DiagnosisName: v.diagName,
+                DiagnosisPrice: v.diagPrice,           // سعر السن الواحد → الإجمالي = السعر × الوحدات
+                DiagnosisSurface: v.surfaces.map(s => s.Surface).join(','),
+                DiagnosisNotes: v.notes,
+                XRays: i === 0 ? v.xrays : [],         // الأشعة مرة واحدة للمجموعة
+                PrescriptionItems: []
+            });
         });
+
+        [...new Set([...oldTeeth, ...teeth])].forEach(refreshToothVisual);
+        clearMultiSelection();
+
+        if (window.renderRecordsTable) window.renderRecordsTable();
+        closeToothModal();
+
+        muToast(wasEdit
+            ? `Units updated (${groupRangeLabel(teeth)})`
+            : `${teeth.length} units added (${groupRangeLabel(teeth)})`);
     }
 
     function updateToothFlag(num) {
@@ -955,12 +1633,20 @@
 
     function removePendingRecord(uid) {
         const rec = window.pendingToothRecords.find(r => r.uid === uid);
+        if (rec && rec.GroupId) { removePendingGroup(rec.GroupId); return; }
         window.pendingToothRecords = window.pendingToothRecords.filter(r => r.uid !== uid);
-        if (rec) updateToothFlag(rec.ToothNumber);
+        if (rec) refreshToothVisual(rec.ToothNumber);
         if (window.renderRecordsTable) window.renderRecordsTable();
     }
 
-    /* ⭐ تعديل ريكورد من السجلات السابقة */
+    function removePendingGroup(groupId) {
+        const teeth = getGroupTeeth(groupId);
+        window.pendingToothRecords = window.pendingToothRecords.filter(r => r.GroupId !== groupId);
+        teeth.forEach(refreshToothVisual);
+        if (window.renderRecordsTable) window.renderRecordsTable();
+    }
+
+    /* ⭐ تعديل ريكورد من السجلات السابقة (لو جزء من مجموعة السيرفر بيعدّل المجموعة كلها) */
     async function saveHistoryEdit() {
         const diagSelect = document.getElementById('toothDiagnosis');
         if (!diagSelect.value) {
@@ -984,7 +1670,10 @@
             if (data.success) {
                 closeToothModal();
                 Swal.fire({
-                    title: 'Updated!', text: 'Diagnosis & price updated successfully',
+                    title: 'Updated!',
+                    text: data.units > 1
+                        ? `Diagnosis & price updated for ${data.units} units`
+                        : 'Diagnosis & price updated successfully',
                     icon: 'success', timer: 1400, showConfirmButton: false
                 }).then(() => location.reload());
             } else {
@@ -996,7 +1685,14 @@
     }
 
     window.openToothModal = openToothModal;
+    window.onToothClick = onToothClick;
+    window.toggleMultiUnit = toggleMultiUnit;
+    window.clearMultiSelection = clearMultiSelection;
+    window.openMultiUnitModal = openMultiUnitModal;
     window.removePendingRecord = removePendingRecord;
+    window.removePendingGroup = removePendingGroup;
+    window.getGroupTeeth = getGroupTeeth;
+    window.groupRangeLabel = groupRangeLabel;
 
     // ============================================================
     // ⭐ Tooth Hover Tooltip
@@ -1028,6 +1724,10 @@
 
         html += `<div class="tt-row"><span>Status</span><b>${statusText}</b></div>`;
         if (diagnosisText) html += `<div class="tt-row"><span>Diagnosis</span><b>${diagnosisText}</b></div>`;
+        if (pending && pending.GroupId) {
+            const g = getGroupTeeth(pending.GroupId);
+            html += `<div class="tt-row"><span>Units</span><b class="tt-units">${g.length} · ${groupRangeLabel(g)}</b></div>`;
+        }
         if (extraCount > 0) html += `<div class="tt-row"><span>Records</span><b>${records.length} entries</b></div>`;
         if (notesText) html += `<div class="tt-row tt-notes-row"><span>Notes</span><span>${notesText}</span></div>`;
         if (!diagnosisText && !notesText) html += `<div class="tt-empty">No diagnosis or notes recorded</div>`;

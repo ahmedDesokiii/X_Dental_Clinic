@@ -12,12 +12,15 @@
         public bool IsActive { get; set; }
         /// <summary>
         /// مجموع أسعار المعمل للحالات داخل الفترة المحددة
-        /// (LabPriceSnapshot إن وُجد، وإلا آخر سعر من Edit Price).
+        /// (LabPriceSnapshot إن وُجد، وإلا آخر سعر من Edit Price) — لكل وحدة (سن).
         /// </summary>
         public decimal Total { get; set; }
 
-        /// <summary>عدد الحالات داخل الفترة المحددة.</summary>
+        /// <summary>عدد الحالات داخل الفترة المحددة (مجموعة Multi-Unit = حالة واحدة).</summary>
         public int CasesCount { get; set; }
+
+        /// <summary>⭐ عدد الوحدات (الأسنان) داخل الفترة المحددة.</summary>
+        public int UnitsCount { get; set; }
 
         /// <summary>الحالات (المرضى) اللي اتعملهم التشخيص ده داخل الفترة المحددة.</summary>
         public List<LaboratoryCaseDto> Cases { get; set; } = new();
@@ -30,6 +33,25 @@
         public int PatientId { get; set; }
         public string PatientName { get; set; } = string.Empty;
         public string? Mobile { get; set; }
+
+        // ⭐ Multi-Unit
+        /// <summary>عدد الوحدات (الأسنان) في الحالة دي.</summary>
+        public int Units { get; set; } = 1;
+        /// <summary>الأسنان مرتبة على امتداد الفك.</summary>
+        public List<int> Teeth { get; set; } = new();
+        public bool IsMultiUnit { get; set; }
+        /// <summary>مبلغ المعمل للحالة = مجموع LabPriceSnapshot لكل وحدة.</summary>
+        public decimal Amount { get; set; }
+    }
+
+    /// <summary>⭐ الجدول + الـ KPIs في Response واحد (بدل GetDiagnoses + GetSummary).</summary>
+    public class LaboratoryDashboardDto
+    {
+        public List<LaboratoryDiagnosisDto> Diagnoses { get; set; } = new();
+        public decimal TotalAmount { get; set; }
+        public int TotalCases { get; set; }
+        public int TotalUnits { get; set; }
+        public int DiagnosisTypes { get; set; }
     }
 
     public class LaboratoryPriceHistoryDto

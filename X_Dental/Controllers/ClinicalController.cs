@@ -99,7 +99,7 @@ namespace Dental.Controllers
 
 
             ViewBag.PreviousSessions = await GetPreviousSessionsAsync(patientId);
- 
+
             ViewBag.XRayGroups = await GetXRaysGroupedAsync(patientId);
 
             ViewBag.PatientPaymentsHistory = await (
@@ -294,16 +294,28 @@ namespace Dental.Controllers
             if (newDiag == null)
                 return Json(new { success = false, message = "Diagnosis not found." });
 
-            var oldPrice = vd.Diagnosis?.Price ?? 0;
-            vd.DiagnosisCatalogId = newDiag.Id;
-            vd.Notes = req.Notes;
+            // ⭐ لو السجل جزء من مجموعة وحدات (Multi-Unit) → التعديل بيتطبق على المجموعة كلها
+            var rows = vd.GroupId.HasValue
+                ? await _context.VisitDiagnoses
+                    .Where(x => x.GroupId == vd.GroupId && x.VisitId == vd.VisitId)
+                    .ToListAsync()
+                : new List<VisitDiagnosis> { vd };
 
-            // ⭐ تصحيح إجمالي الزيارة بالفرق بين القديم والجديد
+            var units = rows.Count;
+            var oldPrice = vd.Diagnosis?.Price ?? 0;
+
+            foreach (var r in rows)
+            {
+                r.DiagnosisCatalogId = newDiag.Id;
+                r.Notes = req.Notes;
+            }
+
+            // ⭐ تصحيح إجمالي الزيارة: (الفرق في سعر السن) × عدد الوحدات
             var visit = await _context.Visits.FindAsync(vd.VisitId);
-            if (visit != null) visit.TotalAmount += newDiag.Price - oldPrice;
+            if (visit != null) visit.TotalAmount += (newDiag.Price - oldPrice) * units;
 
             await _context.SaveChangesAsync();
-            return Json(new { success = true, price = newDiag.Price, name = newDiag.NameEn });
+            return Json(new { success = true, price = newDiag.Price, name = newDiag.NameEn, units });
         }
 
 
@@ -493,8 +505,8 @@ namespace Dental.Controllers
 
             return Json(new { success = true, data = vd });
         }
-        
-        
+
+
         [HttpPost]
         public async Task<IActionResult> AddProcedure([FromBody] AddProcedureRequest req)
         {
@@ -518,7 +530,7 @@ namespace Dental.Controllers
             if (visit != null) visit.TotalAmount += vp.TotalPrice;
 
             await _context.SaveChangesAsync();
-            return Json(new { success = true, data = vp, remaining = 0});
+            return Json(new { success = true, data = vp, remaining = 0 });
         }
 
         [HttpPost]
@@ -576,6 +588,31 @@ namespace Dental.Controllers
             if (visit == null)
                 return Json(new { success = false, message = "الزيارة غير موجودة." });
 
+            // ⭐ Multi-Unit validation قبل ما نفتح الـ Transaction
+            var unitGroups = req.ToothRecords
+                .Where(t => t.GroupId.HasValue)
+                .GroupBy(t => t.GroupId!.Value)
+                .ToList();
+
+            foreach (var g in unitGroups)
+            {
+                if (g.Select(t => t.DiagnosisCatalogId).Distinct().Count() > 1)
+                    return Json(new { success = false, message = "المجموعة الواحدة لازم يكون ليها تشخيص واحد." });
+
+                if (!IsContiguousGroup(g.Select(t => t.ToothNumber)))
+                    return Json(new { success = false, message = "أسنان المجموعة لازم تكون متجاورة في نفس الفك." });
+            }
+
+            // ⭐ تحميل التشخيصات مرة واحدة بدل Query لكل سن
+            var diagIds = req.ToothRecords
+                .Where(t => t.DiagnosisCatalogId.HasValue && t.DiagnosisCatalogId.Value > 0)
+                .Select(t => t.DiagnosisCatalogId!.Value)
+                .Distinct()
+                .ToList();
+            var diagLookup = await _context.DiagnosisCatalogs
+                .Where(d => diagIds.Contains(d.Id))
+                .ToDictionaryAsync(d => d.Id);
+
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
@@ -594,30 +631,28 @@ namespace Dental.Controllers
                         SurfacesJson = System.Text.Json.JsonSerializer.Serialize(tooth.Surfaces),
                         ProcedureCode = tooth.ProcedureCode,
                         Notes = tooth.Notes,
+                        GroupId = tooth.GroupId,          // ⭐ Multi-Unit
                         Date = DateTime.Now
                     });
 
                     // التشخيص + ربط سعره بإجمالي الزيارة
-                    if (tooth.DiagnosisCatalogId.HasValue && tooth.DiagnosisCatalogId.Value > 0)
+                    // ⭐ السعر للسن الواحد → كل سن في المجموعة بيضيف سعره (الإجمالي = السعر × عدد الوحدات)
+                    if (tooth.DiagnosisCatalogId.HasValue
+                        && diagLookup.TryGetValue(tooth.DiagnosisCatalogId.Value, out var diag))
                     {
-                        var diag = await _context.DiagnosisCatalogs
-                            .FirstOrDefaultAsync(d => d.Id == tooth.DiagnosisCatalogId.Value);
-
-                        if (diag != null)
+                        _context.VisitDiagnoses.Add(new VisitDiagnosis
                         {
-                            _context.VisitDiagnoses.Add(new VisitDiagnosis
-                            {
-                                VisitId = req.VisitId,
-                                DiagnosisCatalogId = diag.Id,
-                                ToothNumber = tooth.ToothNumber,
-                                Surface = tooth.DiagnosisSurface,
-                                Notes = tooth.DiagnosisNotes,
-                                IsPrimary = tooth.DiagnosisIsPrimary,
-                                LabPriceSnapshot = await GetCurrentLabPriceAsync(diag)   // ⭐ lab price, not diagnosis price
-                            });
+                            VisitId = req.VisitId,
+                            DiagnosisCatalogId = diag.Id,
+                            ToothNumber = tooth.ToothNumber,
+                            Surface = tooth.DiagnosisSurface,
+                            Notes = tooth.DiagnosisNotes,
+                            IsPrimary = tooth.DiagnosisIsPrimary,
+                            GroupId = tooth.GroupId,      // ⭐ Multi-Unit
+                            LabPriceSnapshot = await GetCurrentLabPriceAsync(diag)   // ⭐ lab price, not diagnosis price
+                        });
 
-                            visit.TotalAmount += diag.Price; // ⭐ الربط بالمدفوعات
-                        }
+                        visit.TotalAmount += diag.Price; // ⭐ الربط بالمدفوعات
                     }
 
                     // الأشعة (أكتر من صورة، بملاحظة مستقلة لكل واحدة)
@@ -887,12 +922,12 @@ namespace Dental.Controllers
         }
 
 
-        // ⭐ سعر المعمل الحالي للتشخيص — منفصل تمامًا عن DiagnosisCatalog.Price،
-        // بياخد آخر سعر مسجّل في LaboratoryPriceHistories، ولو لسه معمول له سعر معمل
-        // خالص، بيرجع سعر التشخيص العادي كقيمة بداية بس.
+        // ⭐ سعر المعمل وقت التشخيص (Snapshot)
+        // لو التشخيص لسه ملوش سعر معمل → 0 = "مفيش Snapshot"،
+        // والحالة تمشي مع آخر سعر معمل لحد ما يتحدد (مش بناخد سعر المريض أبدًا)
         private async Task<decimal> GetCurrentLabPriceAsync(DiagnosisCatalog diag)
         {
-            if (!diag.IsLaboratoryRelated) return diag.Price;
+            if (!diag.IsLaboratoryRelated) return 0;
 
             var lastLabPrice = await _context.LaboratoryPriceHistories
                 .Where(h => h.DiagnosisCatalogId == diag.Id)
@@ -900,7 +935,34 @@ namespace Dental.Controllers
                 .Select(h => (decimal?)h.Price)
                 .FirstOrDefaultAsync();
 
-            return lastLabPrice ?? diag.Price;
+            return lastLabPrice ?? 0;
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // ⭐ Multi-Unit helpers
+        // ════════════════════════════════════════════════════════════
+        // ترتيب الأسنان الفعلي على امتداد كل فك (من الطرف للطرف)
+        private static readonly int[] UpperArchOrder =
+            Enumerable.Range(11, 8).Reverse().Concat(Enumerable.Range(21, 8)).ToArray(); // 18..11, 21..28
+        private static readonly int[] LowerArchOrder =
+            Enumerable.Range(41, 8).Reverse().Concat(Enumerable.Range(31, 8)).ToArray(); // 48..41, 31..38
+
+        // الأسنان لازم تكون في نفس الفك ومتجاورة من غير فراغات (بيعدّي خط المنتصف عادي: 11 ↔ 21)
+        private static bool IsContiguousGroup(IEnumerable<int> teeth)
+        {
+            var list = teeth.Distinct().ToList();
+            if (list.Count < 2) return true;
+
+            foreach (var arch in new[] { UpperArchOrder, LowerArchOrder })
+            {
+                var idx = list.Select(t => Array.IndexOf(arch, t)).ToList();
+                if (idx.All(i => i >= 0))
+                {
+                    idx.Sort();
+                    return idx[^1] - idx[0] == idx.Count - 1;
+                }
+            }
+            return false; // أسنان من فكين مختلفين
         }
 
         // ─────────────────────────────────────────────
@@ -968,7 +1030,7 @@ namespace Dental.Controllers
         private static string GenerateRxVerifyToken(int prescriptionId, DateTime date)
         {
             const string secret = "DentalClinic-Rx-Verify-2024"; // غيّره لسري قوي
-            var raw = $"{prescriptionId}|{date:yyyyMMddHHmm}|{secret}";
+            var raw = $"{prescriptionId}|{date:yyyyMMdd}|{secret}";
             var hash = System.Security.Cryptography.SHA256.HashData(
                 System.Text.Encoding.UTF8.GetBytes(raw));
             return Convert.ToHexString(hash)[..16].ToLowerInvariant(); // 16 حرف كافية

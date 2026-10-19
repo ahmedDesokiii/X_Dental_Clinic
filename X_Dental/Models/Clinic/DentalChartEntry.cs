@@ -19,8 +19,9 @@
 
             public int? VisitId { get; set; }
             public Visit? Visit { get; set; }
-
-            public int ToothNumber { get; set; }              // FDI: 11-18, 21-28...
+        // null = سن واحد (الوضع الحالي). نفس القيمة = نفس المجموعة (Multi-Unit)
+        public Guid? GroupId { get; set; }
+        public int ToothNumber { get; set; }              // FDI: 11-18, 21-28...
             public ToothStatus Status { get; set; } = ToothStatus.Healthy;
 
             // JSON: [{"surface":"M","condition":"Caries"},{"surface":"O","condition":"Filling"}]

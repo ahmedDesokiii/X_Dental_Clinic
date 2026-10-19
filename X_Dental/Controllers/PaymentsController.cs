@@ -18,13 +18,19 @@ namespace Dental.Controllers
             _logger = logger;
         }
 
-        // ── صفحة البحث عن مريض للدخول على كشف حسابه ──
+        // ── صفحة البحث عن مريض للدخول على كشف حسابه + لوحة المدفوعات اليومية ──
         [HttpGet]
         public IActionResult Index()
         {
             return View();
         }
 
+        // ── صفحة البحث عن مريض لفتح كشف حسابه ──
+        [HttpGet]
+        public IActionResult Search()
+        {
+            return View();
+        }
         // ── كشف الحساب الشامل لمريض معيّن ──
         [HttpGet]
         public async Task<IActionResult> Statement(int patientId)
@@ -37,6 +43,17 @@ namespace Dental.Controllers
         public async Task<IActionResult> GetStatement(int patientId)
         {
             var result = await _paymentService.GetPatientStatementAsync(patientId);
+            if (!result.Success)
+                return Json(new { success = false, message = result.Message });
+
+            return Json(new { success = true, data = result.Data });
+        }
+
+        // ⭐ تقرير المدفوعات اليومية (dateFrom / dateTo بصيغة yyyy-MM-dd)
+        [HttpGet]
+        public async Task<IActionResult> GetDailyReport(DateTime? dateFrom, DateTime? dateTo)
+        {
+            var result = await _paymentService.GetDailyPaymentsReportAsync(dateFrom, dateTo);
             if (!result.Success)
                 return Json(new { success = false, message = result.Message });
 

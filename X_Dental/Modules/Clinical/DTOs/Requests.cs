@@ -26,7 +26,7 @@ namespace Dental.Modules.Clinical.DTOs
         public List<ToothSurfaceRequest> Surfaces { get; set; } = new();
         public string? ProcedureCode { get; set; }
         public string? Notes { get; set; }
-
+        public Guid? GroupId { get; set; }
         public int? DiagnosisCatalogId { get; set; }
         public string? DiagnosisSurface { get; set; }
         public string? DiagnosisNotes { get; set; }
@@ -53,6 +53,7 @@ namespace Dental.Modules.Clinical.DTOs
         public int VisitId { get; set; }
         public List<ToothRecordRequest> ToothRecords { get; set; } = new();
         public List<PendingPaymentRequest> Payments { get; set; } = new();
+        public Guid? GroupId { get; set; }
     }
 
     // ⭐ جديد

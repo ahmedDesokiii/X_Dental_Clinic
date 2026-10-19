@@ -16,5 +16,6 @@ namespace Dental.Modules.Payments.InterfacesPayments
 
         // ── إلغاء/تراجع عن دفعة (Soft delete + تصحيح رصيد الزيارة) ──
         Task<ServiceResult<bool>> VoidPaymentAsync(int paymentId, string? reason);
+        Task<ServiceResult<DailyPaymentsReportDto>> GetDailyPaymentsReportAsync(DateTime? dateFrom, DateTime? dateTo);
     }
 }

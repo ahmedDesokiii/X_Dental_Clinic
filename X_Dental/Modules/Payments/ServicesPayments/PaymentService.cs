@@ -18,6 +18,10 @@ namespace Dental.Modules.Payments.ServicesPayments
     {
         private readonly ApplicationDbContext _context;
 
+        // نفس القيمة المستخدمة في Statement.cshtml (category === 2 → تقويم)
+        private const int OrthoCategoryValue = 2;
+        private const int MaxReportDays = 366;
+
         public PaymentService(ApplicationDbContext context)
         {
             _context = context;
@@ -33,6 +37,10 @@ namespace Dental.Modules.Payments.ServicesPayments
             PaymentMethod.Installment => "تقسيط",
             _ => method.ToString()
         };
+
+        // Convert.ToInt32 بيشتغل سواء Category كانت enum أو int
+        private static bool IsOrthoCategory(object? category)
+            => category != null && Convert.ToInt32(category) == OrthoCategoryValue;
 
         public async Task<ServiceResult<PatientStatementDto>> GetPatientStatementAsync(int patientId)
         {
@@ -160,6 +168,180 @@ namespace Dental.Modules.Payments.ServicesPayments
 
             await _context.SaveChangesAsync();
             return ServiceResult<bool>.Ok(true, "تم إلغاء الدفعة وتصحيح رصيد الزيارة.");
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // ⭐ تقرير المدفوعات اليومية (عام / تقويم + مقارنة بالفترة السابقة)
+        // ════════════════════════════════════════════════════════════
+        public async Task<ServiceResult<DailyPaymentsReportDto>> GetDailyPaymentsReportAsync(DateTime? dateFrom, DateTime? dateTo)
+        {
+            var endDate = (dateTo ?? DateTime.Today).Date;
+            var startDate = (dateFrom ?? endDate).Date;
+            if (startDate > endDate) (startDate, endDate) = (endDate, startDate);
+
+            var days = (endDate - startDate).Days + 1;
+            if (days > MaxReportDays)
+                return ServiceResult<DailyPaymentsReportDto>.Fail($"أقصى مدة للتقرير {MaxReportDays} يوم.");
+
+            var endExclusive = endDate.AddDays(1);
+            var prevStart = startDate.AddDays(-days); // نفس طول الفترة، قبلها مباشرة
+
+            // Query واحدة بتجيب الفترة الحالية + السابقة مع بعض
+            var raw = await (
+                from p in _context.VisitPayments.AsNoTracking()
+                join v in _context.Visits.AsNoTracking() on p.VisitId equals v.Id
+                join pt in _context.Patients.AsNoTracking() on v.PatientId equals pt.Id
+                where !p.IsDeleted && v.IsActive
+                      && p.PaymentDate >= prevStart && p.PaymentDate < endExclusive
+                select new
+                {
+                    p.Id,
+                    p.Amount,
+                    p.Method,
+                    p.ReceiptNo,
+                    p.Description,
+                    p.PaymentDate,
+                    VisitId = v.Id,
+                    v.Category,
+                    PatientId = pt.Id,
+                    PatientName = pt.FullNameAr,
+                    pt.Mobile
+                }).ToListAsync();
+
+            // بنجيب الزيارات كـ Entities عشان Remaining تتحسب بنفس منطق الموديل (حتى لو NotMapped)
+            var visitIds = raw.Select(r => r.VisitId).Distinct().ToList();
+            var visitsById = await _context.Visits
+                .AsNoTracking()
+                .Where(v => visitIds.Contains(v.Id))
+                .ToDictionaryAsync(v => v.Id);
+
+            var all = raw.Select(r =>
+            {
+                var isOrtho = IsOrthoCategory(r.Category);
+                var visit = visitsById[r.VisitId];
+                return new DailyPaymentItemDto
+                {
+                    Id = r.Id,
+                    VisitId = r.VisitId,
+                    PatientId = r.PatientId,
+                    PatientName = r.PatientName ?? string.Empty,
+                    PatientMobile = r.Mobile,
+                    IsOrtho = isOrtho,
+                    CategoryText = isOrtho ? "تقويم" : "عام",
+                    Amount = r.Amount,
+                    Method = Convert.ToInt32(r.Method),
+                    MethodText = GetMethodText(r.Method),
+                    ReceiptNo = r.ReceiptNo,
+                    Description = r.Description,
+                    PaymentDate = r.PaymentDate,
+                    VisitTotal = visit.TotalAmount,
+                    VisitDiscount = visit.Discount,
+                    VisitPaid = visit.PaidAmount,
+                    VisitRemaining = visit.Remaining
+                };
+            }).ToList();
+
+            var current = all.Where(x => x.PaymentDate >= startDate)
+                             .OrderByDescending(x => x.PaymentDate)
+                             .ToList();
+            var previous = all.Where(x => x.PaymentDate < startDate).ToList();
+
+            var dayLookup = current.ToLookup(x => x.PaymentDate.Date);
+            var hourLookup = current.ToLookup(x => x.PaymentDate.Hour);
+
+            var byDay = Enumerable.Range(0, days).Select(i =>
+            {
+                var day = startDate.AddDays(i);
+                var list = dayLookup[day].ToList();
+                return new DailyPaymentsDayDto
+                {
+                    Date = day,
+                    GeneralAmount = list.Where(x => !x.IsOrtho).Sum(x => x.Amount),
+                    OrthoAmount = list.Where(x => x.IsOrtho).Sum(x => x.Amount),
+                    Amount = list.Sum(x => x.Amount),
+                    Count = list.Count
+                };
+            }).ToList();
+
+            var byHour = Enumerable.Range(0, 24).Select(h =>
+            {
+                var list = hourLookup[h].ToList();
+                return new DailyPaymentsHourDto
+                {
+                    Hour = h,
+                    GeneralAmount = list.Where(x => !x.IsOrtho).Sum(x => x.Amount),
+                    OrthoAmount = list.Where(x => x.IsOrtho).Sum(x => x.Amount),
+                    Amount = list.Sum(x => x.Amount),
+                    Count = list.Count
+                };
+            }).ToList();
+
+            var byMethod = current
+                .GroupBy(x => new { x.Method, x.MethodText })
+                .Select(g => new DailyPaymentsMethodDto
+                {
+                    Method = g.Key.Method,
+                    MethodText = g.Key.MethodText,
+                    Amount = g.Sum(x => x.Amount),
+                    Count = g.Count()
+                })
+                .OrderByDescending(x => x.Amount)
+                .ToList();
+
+            var totalAmount = current.Sum(x => x.Amount);
+            var prevAmount = previous.Sum(x => x.Amount);
+
+            // كل زيارة مرة واحدة بس (عشان الزيارة اللي عليها كذا دفعة متتحسبش مرتين)
+            var periodVisits = current
+                .GroupBy(x => x.VisitId)
+                .Select(g => g.First())
+                .ToList();
+            var generalVisits = periodVisits.Where(x => !x.IsOrtho).ToList();
+            var orthoVisits = periodVisits.Where(x => x.IsOrtho).ToList();
+
+            var dto = new DailyPaymentsReportDto
+            {
+                DateFrom = startDate,
+                DateTo = endDate,
+                Days = days,
+
+                TotalAmount = totalAmount,
+                TotalCount = current.Count,
+                AveragePayment = current.Count > 0 ? Math.Round(totalAmount / current.Count, 2) : 0,
+
+                GeneralAmount = current.Where(x => !x.IsOrtho).Sum(x => x.Amount),
+                GeneralCount = current.Count(x => !x.IsOrtho),
+                OrthoAmount = current.Where(x => x.IsOrtho).Sum(x => x.Amount),
+                OrthoCount = current.Count(x => x.IsOrtho),
+
+                VisitsCount = periodVisits.Count,
+                VisitsTotal = periodVisits.Sum(x => x.VisitTotal),
+                VisitsPaid = periodVisits.Sum(x => x.VisitPaid),
+                VisitsRemaining = periodVisits.Sum(x => x.VisitRemaining),
+
+                GeneralVisitsCount = generalVisits.Count,
+                GeneralVisitsTotal = generalVisits.Sum(x => x.VisitTotal),
+                GeneralVisitsPaid = generalVisits.Sum(x => x.VisitPaid),
+                GeneralVisitsRemaining = generalVisits.Sum(x => x.VisitRemaining),
+
+                OrthoVisitsCount = orthoVisits.Count,
+                OrthoVisitsTotal = orthoVisits.Sum(x => x.VisitTotal),
+                OrthoVisitsPaid = orthoVisits.Sum(x => x.VisitPaid),
+                OrthoVisitsRemaining = orthoVisits.Sum(x => x.VisitRemaining),
+
+                PreviousTotalAmount = prevAmount,
+                PreviousTotalCount = previous.Count,
+                ChangePercent = prevAmount > 0
+                    ? Math.Round((totalAmount - prevAmount) / prevAmount * 100, 1)
+                    : null,
+
+                ByDay = byDay,
+                ByHour = byHour,
+                ByMethod = byMethod,
+                Payments = current
+            };
+
+            return ServiceResult<DailyPaymentsReportDto>.Ok(dto);
         }
 
         // رقم إيصال تسلسلي بسيط (مناسب لحجم عيادة واحدة)، بدل الاعتماد على Random اللي ممكن يتكرر

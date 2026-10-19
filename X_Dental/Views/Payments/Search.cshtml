@@ -1,0 +1,678 @@
+﻿@{
+    ViewData["Title"] = "كشف حساب مريض";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@* 📁 File: Views/Payments/Search.cshtml — صفحة مستقلة للبحث عن مريض وفتح كشف حسابه *@
+
+<style>
+    :root {
+        --sc-teal-900: #0a4d4f;
+        --sc-teal-700: #0d7377;
+        --sc-teal-600: #0f9b8e;
+        --sc-teal-500: #14b8a6;
+        --sc-teal-100: #c7f2ea;
+        --sc-sky-50: #eafbfc;
+        --sc-sky-100: #dcf5f7;
+        --sc-coral-300: #f6c6bc;
+        --sc-ink-900: #0b2e30;
+        --sc-ink-600: #4b6b6c;
+        --brand-light: #f0fdfa;
+        --radius-lg: 18px;
+        --shadow-card: 0 20px 50px rgba(10, 77, 79, .08);
+    }
+
+    body {
+        background: radial-gradient(circle at 6% 4%, var(--sc-teal-100) 0%, transparent 38%), radial-gradient(circle at 97% 92%, var(--sc-coral-300) 0%, transparent 26%), var(--sc-sky-50);
+    }
+
+    /* ── Hero ── */
+    .ps-hero {
+        background: linear-gradient(135deg, var(--sc-teal-700), var(--sc-teal-500));
+        border-radius: var(--radius-lg);
+        padding: 24px 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        box-shadow: 0 14px 34px rgba(13, 115, 119, .28);
+        margin-bottom: 28px;
+        position: relative;
+        overflow: hidden;
+        contain: content;
+    }
+
+        .ps-hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 92% -20%, rgba(255,255,255,.3), transparent 55%);
+            pointer-events: none;
+        }
+
+    .ps-hero-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .ps-hero-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
+        background: rgba(255,255,255,.18);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        border: 1px solid rgba(255,255,255,.15);
+    }
+
+    .ps-hero h1 {
+        font-size: 1.25rem;
+        font-weight: 800;
+        margin: 0;
+        color: #fff;
+    }
+
+    .ps-hero p {
+        font-size: .85rem;
+        margin: 3px 0 0;
+        color: rgba(255,255,255,.9);
+        font-weight: 600;
+    }
+
+    .ps-back {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255,255,255,.92);
+        color: var(--sc-teal-700);
+        padding: 10px 18px;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: .85rem;
+        text-decoration: none;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+        .ps-back:hover {
+            color: var(--sc-teal-700);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(10,40,42,.2);
+        }
+
+    /* ── Search card ── */
+    .ps-card {
+        max-width: 620px;
+        margin: 0 auto;
+        background: rgba(255,255,255,.9);
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(255,255,255,.7);
+        padding: 36px;
+        box-shadow: var(--shadow-card);
+        text-align: center;
+        animation: psIn .45s cubic-bezier(.2,1,.3,1) backwards;
+    }
+
+    @@keyframes psIn {
+        from {
+            opacity: 0;
+            transform: translateY(14px);
+        }
+
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    .ps-card-icon {
+        width: 68px;
+        height: 68px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, var(--sc-teal-500), var(--sc-teal-700));
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.9rem;
+        margin: 0 auto 18px;
+        box-shadow: 0 8px 20px rgba(13,148,136,.25);
+    }
+
+    .ps-card h3 {
+        font-weight: 800;
+        color: var(--sc-ink-900);
+        margin-bottom: 6px;
+        font-size: 1.25rem;
+    }
+
+    .ps-card > p {
+        color: var(--sc-ink-600);
+        font-size: .88rem;
+        margin-bottom: 24px;
+    }
+
+    .ps-input-wrap {
+        position: relative;
+    }
+
+    .ps-input {
+        width: 100%;
+        border: 1.5px solid var(--sc-sky-100);
+        border-radius: 14px;
+        padding: 14px 48px 14px 44px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--sc-ink-900);
+        background: #fff;
+        outline: none;
+        transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+        .ps-input:focus {
+            border-color: var(--sc-teal-500);
+            box-shadow: 0 0 0 4px rgba(20,184,166,.1);
+        }
+
+    .ps-input-icon {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--sc-teal-600);
+        font-size: 1.15rem;
+        pointer-events: none;
+    }
+
+    .ps-clear {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: 8px;
+        background: var(--sc-sky-50);
+        color: var(--sc-ink-600);
+        cursor: pointer;
+        display: none;
+    }
+
+        .ps-clear.show {
+            display: block;
+        }
+
+    .ps-hint {
+        margin-top: 10px;
+        font-size: .72rem;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+
+        .ps-hint kbd {
+            background: var(--sc-sky-50);
+            color: var(--sc-ink-600);
+            border: 1px solid var(--sc-sky-100);
+            border-radius: 5px;
+            padding: 0 5px;
+            font-size: .68rem;
+        }
+
+    /* ── Results ── */
+    .ps-results {
+        text-align: right;
+        margin-top: 12px;
+        border-radius: 14px;
+        border: 1.5px solid var(--sc-sky-100);
+        background: #fff;
+        max-height: 360px;
+        overflow-y: auto;
+        display: none;
+        contain: layout paint;
+    }
+
+        .ps-results.show {
+            display: block;
+        }
+
+    .ps-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--sc-sky-100);
+        cursor: pointer;
+        transition: background-color .12s ease;
+    }
+
+        .ps-item:last-child {
+            border-bottom: none;
+        }
+
+        .ps-item:hover, .ps-item.active {
+            background: var(--brand-light);
+        }
+
+            .ps-item.active .ps-go {
+                opacity: 1;
+                transform: translateX(0);
+            }
+
+    .ps-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        flex-shrink: 0;
+        background: linear-gradient(135deg, var(--sc-teal-500), var(--sc-teal-700));
+        color: #fff;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .ps-item-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ps-item-name {
+        font-weight: 800;
+        color: var(--sc-ink-900);
+        font-size: .95rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ps-item-phone {
+        font-size: .78rem;
+        color: var(--sc-ink-600);
+        font-weight: 600;
+        direction: ltr;
+        text-align: right;
+    }
+
+    .ps-item mark {
+        background: #fef08a;
+        color: inherit;
+        padding: 0 1px;
+        border-radius: 3px;
+    }
+
+    .ps-go {
+        color: var(--sc-teal-600);
+        opacity: 0;
+        transform: translateX(6px);
+        transition: opacity .15s ease, transform .15s ease;
+    }
+
+    .ps-item:hover .ps-go {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .ps-empty {
+        padding: 22px;
+        text-align: center;
+        color: #94a3b8;
+        font-weight: 700;
+    }
+
+        .ps-empty i {
+            display: block;
+            font-size: 1.9rem;
+            margin-bottom: 6px;
+            color: var(--sc-teal-100);
+        }
+
+    .ps-skel {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--sc-sky-100);
+    }
+
+        .ps-skel .b {
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(90deg, var(--sc-sky-100) 25%, #f1fbfb 37%, var(--sc-sky-100) 63%);
+            background-size: 400% 100%;
+            animation: psShine 1.3s ease infinite;
+        }
+
+        .ps-skel .a {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+        }
+
+    @@keyframes psShine {
+        0% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0 50%;
+        }
+    }
+
+    /* ── Recent patients ── */
+    .ps-recent {
+        max-width: 620px;
+        margin: 20px auto 0;
+        animation: psIn .45s .1s cubic-bezier(.2,1,.3,1) backwards;
+    }
+
+        .ps-recent[hidden] {
+            display: none;
+        }
+
+    .ps-recent-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        font-size: .82rem;
+        font-weight: 800;
+        color: var(--sc-ink-600);
+    }
+
+        .ps-recent-head button {
+            border: none;
+            background: none;
+            color: #b91c1c;
+            font-size: .75rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+    .ps-recent-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .ps-recent-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(255,255,255,.9);
+        border: 1px solid rgba(255,255,255,.7);
+        border-radius: 14px;
+        padding: 10px 12px;
+        text-decoration: none;
+        color: var(--sc-ink-900);
+        box-shadow: 0 1px 3px rgba(15,23,42,.06);
+        transition: transform .2s ease, box-shadow .2s ease;
+        min-width: 0;
+    }
+
+        .ps-recent-item:hover {
+            color: var(--sc-ink-900);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(10,77,79,.12);
+        }
+
+    @@media (max-width: 768px) {
+        .ps-hero {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .ps-hero-content {
+            flex-direction: column;
+        }
+
+        .ps-card {
+            padding: 26px 18px;
+            margin: 0 10px;
+        }
+
+        .ps-recent {
+            margin: 20px 10px 0;
+        }
+
+        .ps-recent-list {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .ps-card, .ps-recent {
+            animation: none !important;
+        }
+    }
+</style>
+
+<!-- 🔷 Hero -->
+<div class="ps-hero" dir="ltr">
+    <div class="ps-hero-content">
+        <div class="ps-hero-icon"><i class="bi bi-person-lines-fill"></i></div>
+        <div>
+            <h1>Patient Statement</h1>
+            <p>Search for a patient to open the full account statement</p>
+        </div>
+    </div>
+    <a href="/Payments" class="ps-back"><i class="bi bi-arrow-left"></i> Daily Payments</a>
+</div>
+
+<!-- 🔷 Search -->
+<div class="ps-card" dir="rtl">
+    <div class="ps-card-icon"><i class="bi bi-search-heart"></i></div>
+    <h3>كشف حساب مريض</h3>
+    <p>ابحث باسم المريض أو رقم التليفون عشان تشوف كشف الحساب الكامل بتاعه</p>
+
+    <div class="ps-input-wrap">
+        <i class="bi bi-search ps-input-icon"></i>
+        <input type="text" id="psInput" class="ps-input" placeholder="اكتب اسم المريض أو رقم التليفون..." autocomplete="off" autofocus />
+        <button type="button" class="ps-clear" id="psClear" title="مسح"><i class="bi bi-x"></i></button>
+    </div>
+    <div class="ps-hint">استخدم <kbd>↑</kbd> <kbd>↓</kbd> للتنقل و <kbd>Enter</kbd> للفتح</div>
+
+    <div class="ps-results" id="psResults" role="listbox"></div>
+</div>
+
+<!-- 🔷 Recent -->
+<div class="ps-recent" id="psRecent" dir="rtl" hidden>
+    <div class="ps-recent-head">
+        <span><i class="bi bi-clock-history"></i> آخر مرضى اتفتح كشفهم</span>
+        <button type="button" id="psRecentClear">مسح</button>
+    </div>
+    <div class="ps-recent-list" id="psRecentList"></div>
+</div>
+
+@section Scripts {
+    <script>
+        (function() {
+            const MIN_CHARS = 2;
+            const DEBOUNCE_MS = 250;
+            const RECENT_KEY = 'dental.payments.recentPatients';
+            const RECENT_MAX = 6;
+            const CACHE_MAX = 50;
+
+            const input = document.getElementById('psInput');
+            const box = document.getElementById('psResults');
+            const clearBtn = document.getElementById('psClear');
+
+            const cache = new Map();   // term → results (بيمنع طلبات مكررة لنفس الكلمة)
+            let results = [];
+            let activeIdx = -1;
+            let timer = null;
+            let controller = null;
+            let seq = 0;
+
+            const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+            function highlight(text, term) {
+                const safe = esc(text);
+                if (!term) return safe;
+                return safe.replace(new RegExp(escRe(esc(term)), 'gi'), m => `<mark>${m}</mark>`);
+            }
+
+            function statementUrl(id) { return `/Payments/Statement?patientId=${id}`; }
+
+            // ── Recent patients (localStorage — مجرد راحة للمستخدم، الصفحة شغالة من غيرها) ──
+            function readRecent() {
+                try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; } catch { return []; }
+            }
+            function writeRecent(list) {
+                try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch { }
+            }
+            function rememberPatient(p) {
+                const list = readRecent().filter(x => x.id !== p.id);
+                list.unshift({ id: p.id, name: p.fullNameAr, phone: p.phone || '' });
+                writeRecent(list.slice(0, RECENT_MAX));
+            }
+            function renderRecent() {
+                const list = readRecent();
+                const wrap = document.getElementById('psRecent');
+                wrap.hidden = !list.length;
+                document.getElementById('psRecentList').innerHTML = list.map(p => `
+                            <a class="ps-recent-item" href="${statementUrl(p.id)}">
+                                <span class="ps-avatar">${esc((p.name || '?').trim().charAt(0))}</span>
+                                <span class="ps-item-body">
+                                    <div class="ps-item-name">${esc(p.name)}</div>
+                                    <div class="ps-item-phone">${esc(p.phone || '—')}</div>
+                                </span>
+                            </a>`).join('');
+            }
+            document.getElementById('psRecentClear').addEventListener('click', () => {
+                writeRecent([]);
+                renderRecent();
+            });
+
+            // ── Results rendering ──
+            function showSkeleton() {
+                box.innerHTML = Array.from({ length: 3 }, () => `
+                            <div class="ps-skel">
+                                <div class="b a"></div>
+                                <div style="flex:1"><div class="b" style="width:45%;margin-bottom:6px"></div><div class="b" style="width:25%"></div></div>
+                            </div>`).join('');
+                box.classList.add('show');
+            }
+
+            function showMessage(icon, text) {
+                results = []; activeIdx = -1;
+                box.innerHTML = `<div class="ps-empty"><i class="bi ${icon}"></i>${text}</div>`;
+                box.classList.add('show');
+            }
+
+            function renderResults(list, term) {
+                results = list;
+                activeIdx = list.length ? 0 : -1;
+                if (!list.length) { showMessage('bi-inbox', 'لا توجد نتائج مطابقة'); return; }
+                // innerHTML مرة واحدة + event delegation بدل listener لكل عنصر
+                box.innerHTML = list.map((p, i) => `
+                            <div class="ps-item ${i === 0 ? 'active' : ''}" data-i="${i}" role="option">
+                                <span class="ps-avatar">${esc((p.fullNameAr || '?').trim().charAt(0))}</span>
+                                <span class="ps-item-body">
+                                    <div class="ps-item-name">${highlight(p.fullNameAr, term)}</div>
+                                    <div class="ps-item-phone"><i class="bi bi-telephone"></i> ${highlight(p.phone || '—', term)}</div>
+                                </span>
+                                <i class="bi bi-chevron-left ps-go"></i>
+                            </div>`).join('');
+                box.classList.add('show');
+            }
+
+            function setActive(i) {
+                if (!results.length) return;
+                activeIdx = (i + results.length) % results.length;
+                box.querySelectorAll('.ps-item').forEach((el, idx) => el.classList.toggle('active', idx === activeIdx));
+                box.querySelector('.ps-item.active')?.scrollIntoView({ block: 'nearest' });
+            }
+
+            function openPatient(i) {
+                const p = results[i];
+                if (!p) return;
+                rememberPatient(p);
+                window.location.href = statementUrl(p.id);
+            }
+
+            box.addEventListener('click', e => {
+                const item = e.target.closest('.ps-item');
+                if (item) openPatient(+item.dataset.i);
+            });
+            box.addEventListener('mousemove', e => {
+                const item = e.target.closest('.ps-item');
+                if (item && +item.dataset.i !== activeIdx) setActive(+item.dataset.i);
+            });
+
+            // ── Search ──
+            async function doSearch(term) {
+                const key = term.toLowerCase();
+                if (cache.has(key)) { renderResults(cache.get(key), term); return; }
+
+                if (controller) controller.abort();
+                controller = new AbortController();
+                const mySeq = ++seq;
+
+                try {
+                    const res = await fetch(`/Patients/Search?term=${encodeURIComponent(term)}`, { signal: controller.signal });
+                    const list = await res.json();
+                    if (mySeq !== seq) return;
+                    if (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value);
+                    cache.set(key, list);
+                    renderResults(list, term);
+                } catch (err) {
+                    if (err.name === 'AbortError') return;
+                    console.error('Search failed', err);
+                    if (mySeq === seq) showMessage('bi-wifi-off', 'حدث خطأ في الاتصال');
+                }
+            }
+
+            function resetSearch() {
+                clearTimeout(timer);
+                if (controller) controller.abort();
+                seq++;
+                results = []; activeIdx = -1;
+                box.classList.remove('show');
+                box.innerHTML = '';
+            }
+
+            input.addEventListener('input', () => {
+                const term = input.value.trim();
+                clearBtn.classList.toggle('show', input.value.length > 0);
+                clearTimeout(timer);
+
+                if (term.length < MIN_CHARS) { resetSearch(); return; }
+
+                const key = term.toLowerCase();
+                if (cache.has(key)) { renderResults(cache.get(key), term); return; } // فوري من الكاش
+                showSkeleton();
+                timer = setTimeout(() => doSearch(term), DEBOUNCE_MS);
+            });
+
+            input.addEventListener('keydown', e => {
+                if (e.key === 'ArrowDown') { e.preventDefault(); setActive(activeIdx + 1); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(activeIdx - 1); }
+                else if (e.key === 'Enter') { e.preventDefault(); if (activeIdx > -1) openPatient(activeIdx); }
+                else if (e.key === 'Escape') { input.value = ''; clearBtn.classList.remove('show'); resetSearch(); }
+            });
+
+            clearBtn.addEventListener('click', () => {
+                input.value = '';
+                clearBtn.classList.remove('show');
+                resetSearch();
+                input.focus();
+            });
+
+            document.addEventListener('click', e => {
+                if (!e.target.closest('.ps-card')) box.classList.remove('show');
+            });
+            input.addEventListener('focus', () => { if (box.innerHTML) box.classList.add('show'); });
+
+            renderRecent();
+        })();
+    </script>
+}

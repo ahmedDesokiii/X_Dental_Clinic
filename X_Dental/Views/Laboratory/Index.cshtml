@@ -12,6 +12,8 @@
             --lb-ink-900: #0b2e30;
             --lb-ink-600: #4b6b6c;
             --lb-ink-400: #94a3b8;
+            --lb-violet-600: #7c3aed;
+            --lb-violet-100: #ede9fe;
         }
 
         body {
@@ -211,12 +213,19 @@
 
         .lb-kpi-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 14px;
             margin-bottom: 20px;
+            transition: opacity .2s ease;
         }
 
-        @@media (max-width: 1100px) {
+        @@media (max-width: 1200px) {
+            .lb-kpi-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @@media (max-width: 700px) {
             .lb-kpi-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -270,6 +279,11 @@
             .lb-kpi-icon.blue {
                 background: #eff6ff;
                 color: #1d4ed8;
+            }
+
+            .lb-kpi-icon.amber {
+                background: #fffbeb;
+                color: #d97706;
             }
 
         .lb-kpi-value {
@@ -642,6 +656,9 @@
         table.lb-table tr.lb-group-row td {
             background: #fff;
             border-top: 2px solid var(--lb-sky-100);
+        }
+
+        table.lb-table tr.lb-group-row.has-cases td {
             cursor: pointer;
         }
 
@@ -689,6 +706,14 @@
                 color: var(--lb-ink-400);
             }
 
+        .lb-units-sub {
+            display: block;
+            margin-top: 3px;
+            font-size: .68rem;
+            font-weight: 800;
+            color: var(--lb-violet-600);
+        }
+
         table.lb-table tr.lb-case-row td {
             padding-top: 7px;
             padding-bottom: 7px;
@@ -719,6 +744,128 @@
             color: var(--lb-ink-600);
             direction: ltr;
         }
+
+        .lb-case-date {
+            font-size: .78rem;
+            font-weight: 600;
+            color: var(--lb-ink-600);
+            white-space: nowrap;
+        }
+
+        /* ⭐ Multi-Unit teeth */
+        .lb-teeth {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+            .lb-teeth i {
+                color: var(--lb-violet-600);
+                font-size: .62rem;
+            }
+
+        .lb-tooth-chip {
+            font-size: .7rem;
+            font-weight: 800;
+            background: var(--lb-sky-100);
+            color: var(--lb-teal-700);
+            padding: 2px 7px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+
+            .lb-tooth-chip.multi {
+                background: var(--lb-violet-100);
+                color: #5b21b6;
+            }
+
+        .lb-units-badge {
+            font-size: .64rem;
+            font-weight: 800;
+            color: #fff;
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            padding: 2px 8px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        /* ⭐ Loading state (طلب واحد للجدول والـ KPIs) */
+        .lb-loading .table-responsive,
+        .lb-kpi-grid.lb-loading {
+            opacity: .5;
+            pointer-events: none;
+        }
+
+        .lb-section .table-responsive {
+            transition: opacity .2s ease;
+        }
+
+
+        /* ⭐ هيدر التشخيص أوضح + الحالات تحته أخف */
+table.lb-table tr.lb-group-row td {
+    background: linear-gradient(90deg, #f0fdfa 0%, #ffffff 70%);
+    border-top: 12px solid #fff;
+    border-bottom: 1px solid #ccfbf1;
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+
+    table.lb-table tr.lb-group-row td:first-child {
+        box-shadow: inset 4px 0 0 var(--lb-teal-600);
+    }
+
+table.lb-table tr.lb-group-row:not(.collapsed) td {
+    background: linear-gradient(90deg, #ccfbf1 0%, #f0fdfa 75%);
+    border-bottom: 2px solid var(--lb-teal-500);
+}
+
+    table.lb-table tr.lb-group-row:not(.collapsed) td:first-child {
+        box-shadow: inset 5px 0 0 var(--lb-teal-700);
+    }
+
+table.lb-table tr.lb-group-row.has-cases:hover td {
+    background: linear-gradient(90deg, #99f6e4 0%, #f0fdfa 75%);
+}
+
+tr.lb-group-row .lb-name-main {
+    font-size: .95rem;
+    font-weight: 800;
+    color: var(--lb-teal-700);
+}
+
+tr.lb-group-row .lb-name-sub {
+    font-weight: 600;
+}
+
+tr.lb-group-row .price-cell {
+    font-size: .92rem;
+}
+
+tr.lb-group-row .lb-toggle {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1.5px solid #99f6e4;
+    font-size: .8rem;
+}
+
+tr.lb-group-row:not(.collapsed) .lb-toggle {
+    background: var(--lb-teal-600);
+    border-color: transparent;
+    color: #fff;
+}
+
+/* الحالات تحت الهيدر: أبيض وأصغر عشان التمييز */
+table.lb-table tr.lb-case-row td {
+    background: #fff;
+    font-size: .82rem;
+}
+
+table.lb-table tr.lb-case-row:hover td {
+    background: #f8fafc;
+}
 
         @@media (max-width: 640px) {
             .lb-date-filter {
@@ -759,6 +906,13 @@
             </div>
         </div>
         <div class="lb-kpi-card">
+            <div class="lb-kpi-icon amber"><i class="bi bi-grid-3x3-gap"></i></div>
+            <div>
+                <span class="lb-kpi-value" id="kpiTotalUnits">—</span>
+                <span class="lb-kpi-label">Total Units</span>
+            </div>
+        </div>
+        <div class="lb-kpi-card">
             <div class="lb-kpi-icon green"><i class="bi bi-cash-stack"></i></div>
             <div>
                 <span class="lb-kpi-value" id="kpiTotalAmount">—</span>
@@ -789,7 +943,7 @@
                 <thead>
                     <tr>
                         <th>Diagnosis</th>
-                        <th>Count</th>
+                        <th>Units</th>
                         <th>Current Price</th>
                         <th>Total</th>
                     </tr>
@@ -802,11 +956,11 @@
             </div>
         </div>
     </div>
-    <div class="lb-section">
+    <div class="lb-section" id="lbDiagSection">
         <div class="lb-section-head">
             <h4><i class="bi bi-list-check"></i> Lab-Linked Diagnoses</h4>
             <div class="lb-search">
-                <input type="text" id="lbDiagSearch" class="text-center" placeholder="Search..." oninput="onLbDiagSearch()" />
+                <input type="text" id="lbDiagSearch" class="text-center" placeholder="Search diagnosis, patient or mobile..." autocomplete="off" />
                 <i class="bi bi-search"></i>
             </div>
         </div>
@@ -827,7 +981,7 @@
             </table>
             <div class="lb-empty" id="lbDiagEmpty" style="display:none;">
                 <i class="bi bi-flask" style="font-size:1.8rem;"></i>
-                <p class="mt-2">No diagnoses are marked as lab-linked yet. Mark some from the Diagnosis Catalog.</p>
+                <p class="mt-2" id="lbDiagEmptyText">No diagnoses are marked as lab-linked yet. Mark some from the Diagnosis Catalog.</p>
             </div>
         </div>
         <div class="lb-pagination" id="lbDiagPagination"></div>
@@ -858,21 +1012,23 @@
 @section Scripts {
     <script>
         const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-        let lbDiagAll = [];
-        let lbDiagFiltered = [];
-        let lbDiagSort = { key: 'nameEn', dir: 'asc' };
-        let lbDiagSearchTerm = '';
-        let lbDiagPage = 1;
         const LB_PAGE_SIZE = 8;
-        const lbCollapsed = new Set(); // ids of collapsed diagnosis groups
 
+        const lb = {
+            all: [],                         // التشخيصات من السيرفر
+            filtered: [],                    // [{ d, cases, forceOpen }]
+            sort: { key: 'nameEn', dir: 'asc' },
+            term: '',
+            page: 1,
+            expanded: new Set(),             // ⭐ الحالات مقفولة افتراضيًا — بتتعرض لما تفتحي التشخيص
+            ctrl: null,
+            seq: 0
+        };
+
+        // ── Helpers ──
         function escHtml(v) {
             return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            applyDateFilters();
-        });
 
         function fmtMoney(n) {
             return Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
@@ -886,6 +1042,23 @@
             return `${y}-${m}-${day}`;
         }
 
+        // نفس ترقيم الشارت: Q1=UL, Q2=UR, Q3=LL, Q4=LR
+        function toothLbl(n) {
+            const q = Math.floor(n / 10), p = n % 10;
+            return ({ 1: 'UL', 2: 'UR', 3: 'LL', 4: 'LR' })[q] ? `${({ 1: 'UL', 2: 'UR', 3: 'LL', 4: 'LR' })[q]}-${p}` : String(n);
+        }
+
+        function teethHtml(c) {
+            const teeth = c.teeth || [];
+            if (!teeth.length) return '<span class="lb-case-date">—</span>';
+            if (teeth.length === 1 && c.units <= 1)
+                return `<span class="lb-tooth-chip">${toothLbl(teeth[0])}</span>`;
+            const range = teeth.length === 1
+                ? `<span class="lb-tooth-chip multi">${toothLbl(teeth[0])}</span>`
+                : `<span class="lb-tooth-chip multi">${toothLbl(teeth[0])}</span><i class="bi bi-arrow-left-right"></i><span class="lb-tooth-chip multi">${toothLbl(teeth[teeth.length - 1])}</span>`;
+            return `<span class="lb-teeth">${range}<span class="lb-units-badge">${c.units} units</span></span>`;
+        }
+
         function getFilterParams() {
             const from = document.getElementById('filterFrom').value;
             const to = document.getElementById('filterTo').value;
@@ -895,158 +1068,273 @@
             return params;
         }
 
-        function applyDateFilters() {
-            loadDiagnoses();
-            loadSummary();
+        function setLoading(on) {
+            document.getElementById('lbKpiGrid').classList.toggle('lb-loading', on);
+            document.getElementById('lbDiagSection').classList.toggle('lb-loading', on);
         }
 
-        // ── Lab-linked diagnoses table ──
-        async function loadDiagnoses() {
-            const res = await fetch(`/Laboratory/GetDiagnoses?${getFilterParams().toString()}`);
-            const result = await res.json();
-            lbDiagAll = result.data || [];
-            applyLbDiagFilters();
-        }
+        // ── Load: طلب واحد للجدول + الـ KPIs (بدل GetDiagnoses + GetSummary) ──
+        async function loadDashboard() {
+            if (lb.ctrl) lb.ctrl.abort();           // الغي أي طلب قديم لو الفلتر اتغير بسرعة
+            lb.ctrl = new AbortController();
+            const seq = ++lb.seq;
+            setLoading(true);
 
-        function applyLbDiagFilters() {
-            let list = [...lbDiagAll];
-            if (lbDiagSearchTerm) {
-                const q = lbDiagSearchTerm.toLowerCase();
-                list = list.filter(d =>
-                    (d.nameEn || '').toLowerCase().includes(q) ||
-                    (d.nameAr || '').toLowerCase().includes(q) ||
-                    (d.code || '').toLowerCase().includes(q) ||
-                    (d.cases || []).some(c =>
-                        (c.patientName || '').toLowerCase().includes(q) ||
-                        (c.mobile || '').toLowerCase().includes(q))
-                );
+            try {
+                const res = await fetch(`/Laboratory/GetDashboard?${getFilterParams().toString()}`, { signal: lb.ctrl.signal });
+                const result = await res.json();
+                if (seq !== lb.seq) return;
+                if (!result.success) {
+                    Swal.fire({ icon: 'error', title: 'Error', text: result.message || 'Failed to load lab data' });
+                    return;
+                }
+                const d = result.data;
+                lb.all = d.diagnoses || [];
+                renderKpis(d);
+                renderSummary();
+                applyLbDiagFilters();
+            } catch (err) {
+                if (err.name === 'AbortError') return;
+                console.error('Lab dashboard failed', err);
+                if (seq === lb.seq)
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Server connection failed', showConfirmButton: false, timer: 1800 });
+            } finally {
+                if (seq === lb.seq) setLoading(false);
             }
+        }
+
+        function applyDateFilters() {
+            loadDashboard();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            applyDateFilters();
+        });
+
+        // ── KPIs ──
+        function setKpi(id, text) {
+            const el = document.getElementById(id);
+            el.textContent = text;
+            el.style.animation = 'none';
+            void el.offsetWidth;
+            el.style.animation = '';
+        }
+
+        function renderKpis(d) {
+            setKpi('kpiTotalCount', d.totalCases);
+            setKpi('kpiTotalUnits', d.totalUnits);
+            setKpi('kpiTotalAmount', fmtMoney(d.totalAmount));
+            setKpi('kpiDiagCount', d.diagnosisTypes);
+            setKpi('kpiAvgCase', fmtMoney(d.totalCases > 0 ? d.totalAmount / d.totalCases : 0));
+        }
+
+        // ── Billing breakdown (hidden section) — من نفس الداتا بدون طلب إضافي ──
+        function renderSummary() {
+            const items = lb.all.filter(x => x.unitsCount > 0).sort((a, b) => b.total - a.total);
+            const body = document.getElementById('lbSummaryBody');
+            const empty = document.getElementById('lbSummaryEmpty');
+            if (!items.length) {
+                body.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+            empty.style.display = 'none';
+            body.innerHTML = items.map((i, idx) => `
+                <tr style="animation-delay:${Math.min(idx * 0.04, 0.3)}s">
+                    <td class="lb-name-main">${escHtml(i.nameEn || i.nameAr)}</td>
+                    <td>${i.unitsCount}</td>
+                    <td>${fmtMoney(i.currentPrice)} EGP</td>
+                    <td class="price-cell">${fmtMoney(i.total)} EGP</td>
+                </tr>`).join('');
+        }
+
+        // ── Filter + sort ──
+        function applyLbDiagFilters() {
+            const q = lb.term.toLowerCase();
+
+            let list = lb.all.map(d => {
+                const cases = d.cases || [];
+                if (!q) return { d, cases, forceOpen: false };
+
+                const diagHit = [d.nameEn, d.nameAr, d.code].some(v => (v || '').toLowerCase().includes(q));
+                if (diagHit) return { d, cases, forceOpen: false };
+
+                // البحث باسم المريض أو الموبايل → يعرض الحالات المطابقة بس ويفتحها تلقائيًا
+                const matched = cases.filter(c =>
+                    (c.patientName || '').toLowerCase().includes(q) ||
+                    (c.mobile || '').toLowerCase().includes(q));
+                return matched.length ? { d, cases: matched, forceOpen: true } : null;
+            }).filter(Boolean);
+
+            const { key, dir } = lb.sort;
             list.sort((a, b) => {
-                let av = a[lbDiagSort.key], bv = b[lbDiagSort.key];
+                let av = a.d[key], bv = b.d[key];
                 if (av == null) av = '';
                 if (bv == null) bv = '';
-                if (typeof av === 'string') { av = av.toLowerCase(); bv = (bv || '').toLowerCase(); }
-                if (av < bv) return lbDiagSort.dir === 'asc' ? -1 : 1;
-                if (av > bv) return lbDiagSort.dir === 'asc' ? 1 : -1;
+                if (typeof av === 'string') { av = av.toLowerCase(); bv = String(bv).toLowerCase(); }
+                if (av < bv) return dir === 'asc' ? -1 : 1;
+                if (av > bv) return dir === 'asc' ? 1 : -1;
                 return 0;
             });
-            lbDiagFiltered = list;
-            lbDiagPage = 1;
+
+            lb.filtered = list;
+            lb.page = 1;
             renderLbDiagTable();
         }
 
-        function onLbDiagSearch() {
-            lbDiagSearchTerm = document.getElementById('lbDiagSearch').value.trim();
-            applyLbDiagFilters();
+        let lbSearchTimer;
+        document.getElementById('lbDiagSearch').addEventListener('input', function () {
+            clearTimeout(lbSearchTimer);
+            lbSearchTimer = setTimeout(() => {
+                lb.term = this.value.trim();
+                applyLbDiagFilters();
+            }, 200);
+        });
+
+        // ── Render ──
+        function groupRowHtml(item, i) {
+            const d = item.d;
+            const hasCases = item.cases.length > 0;
+            const isOpen = item.forceOpen || lb.expanded.has(d.id);
+            const unitsInfo = d.unitsCount > d.casesCount ? `<span class="lb-units-sub">${d.unitsCount} units</span>` : '';
+
+            return `
+                <tr class="lb-group-row ${hasCases ? 'has-cases' : ''} ${isOpen ? '' : 'collapsed'}" data-id="${d.id}" style="animation-delay:${Math.min(i * 0.04, 0.3)}s">
+                    <td>
+                        <div class="lb-group-name">
+                            <span class="lb-toggle" style="${hasCases ? '' : 'visibility:hidden;'}"><i class="bi bi-chevron-down"></i></span>
+                            <div>
+                                <div class="lb-name-main">${escHtml(d.nameEn || d.nameAr)}</div>
+                                ${d.nameAr && d.nameEn ? `<div class="lb-name-sub">${escHtml(d.nameAr)}</div>` : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="lb-case-count ${d.casesCount ? '' : 'zero'}">${d.casesCount ? `${d.casesCount} ${d.casesCount === 1 ? 'case' : 'cases'}` : 'No cases'}</span>
+                        ${unitsInfo}
+                    </td>
+                    <td class="price-cell">${fmtMoney(d.currentPrice)} EGP</td>
+                    <td>${d.lastUpdated ? new Date(d.lastUpdated).toLocaleDateString('en-GB') : '—'}</td>
+                    <td>${escHtml(d.updatedBy || '—')}</td>
+                    <td class="price-cell">${fmtMoney(d.total)} EGP</td>
+                    <td><button class="lb-icon-btn" data-action="edit-price" data-id="${d.id}"><i class="bi bi-pencil"></i> Edit Price</button></td>
+                </tr>`;
+        }
+
+        function caseRowHtml(c) {
+            return `
+                <tr class="lb-case-row">
+                    <td><span class="lb-case-connector"></span></td>
+                    <td>
+                        <span class="lb-patient-name">${escHtml(c.patientName || '—')}</span>
+                        <small class="lb-patient-mobile">${escHtml(c.mobile || '—')}</small>
+                    </td>
+                    <td>${teethHtml(c)}</td>
+                    <td><span class="lb-case-date">${c.visitDate ? new Date(c.visitDate).toLocaleDateString('en-GB') : '—'}</span></td>
+                    <td></td>
+                    <td class="price-cell">${fmtMoney(c.amount)} EGP</td>
+                    <td></td>
+                </tr>`;
         }
 
         function renderLbDiagTable() {
-            const totalPages = Math.max(1, Math.ceil(lbDiagFiltered.length / LB_PAGE_SIZE));
-            if (lbDiagPage > totalPages) lbDiagPage = totalPages;
-            const start = (lbDiagPage - 1) * LB_PAGE_SIZE;
-            const pageItems = lbDiagFiltered.slice(start, start + LB_PAGE_SIZE);
+            const totalPages = Math.max(1, Math.ceil(lb.filtered.length / LB_PAGE_SIZE));
+            if (lb.page > totalPages) lb.page = totalPages;
+            const start = (lb.page - 1) * LB_PAGE_SIZE;
+            const pageItems = lb.filtered.slice(start, start + LB_PAGE_SIZE);
+
             const tbody = document.getElementById('lbDiagBody');
             const empty = document.getElementById('lbDiagEmpty');
+
             if (!pageItems.length) {
                 tbody.innerHTML = '';
+                document.getElementById('lbDiagEmptyText').textContent = lb.all.length
+                    ? 'No results match your search.'
+                    : 'No diagnoses are marked as lab-linked yet. Mark some from the Diagnosis Catalog.';
                 empty.style.display = 'block';
                 document.getElementById('lbDiagPagination').innerHTML = '';
                 return;
             }
             empty.style.display = 'none';
-            tbody.innerHTML = pageItems.map((d, i) => {
-                const cases = d.cases || [];
-                const isCollapsed = lbCollapsed.has(d.id);
-                const groupRow = `
-                                <tr class="lb-group-row ${isCollapsed ? 'collapsed' : ''}" style="animation-delay:${Math.min(i * 0.04, 0.3)}s" onclick="toggleLbGroup(${d.id})">
-                                    <td>
-                                        <div class="lb-group-name">
-                                            <span class="lb-toggle" style="${cases.length ? '' : 'visibility:hidden;'}"><i class="bi bi-chevron-down"></i></span>
-                                            <div>
-                                                <div class="lb-name-main">${escHtml(d.nameEn || d.nameAr)}</div>
-                                                ${d.nameAr && d.nameEn ? `<div class="lb-name-sub">${escHtml(d.nameAr)}</div>` : ''}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td><span class="lb-case-count ${cases.length ? '' : 'zero'}">${cases.length ? `${cases.length} ${cases.length === 1 ? 'case' : 'cases'}` : 'No cases'}</span></td>
-                                    <td class="price-cell">${fmtMoney(d.currentPrice)} EGP</td>
-                                    <td>${d.lastUpdated ? new Date(d.lastUpdated).toLocaleDateString('en-GB') : '—'}</td>
-                                    <td>${escHtml(d.updatedBy || '—')}</td>
-                                    <td class="price-cell">${fmtMoney(d.total)} EGP</td>
-                                    <td><button class="lb-icon-btn" onclick="event.stopPropagation(); openPriceModal(${d.id})"><i class="bi bi-pencil"></i> Edit Price</button></td>
-                                </tr>`;
-                const caseRows = isCollapsed ? '' : cases.map(c => `
-                                <tr class="lb-case-row">
-                                    <td><span class="lb-case-connector"></span></td>
-                                    <td>
-                                        <span class="lb-patient-name">${escHtml(c.patientName || '—')}</span>
-                                        <small class="lb-patient-mobile">${escHtml(c.mobile || '—')}</small>
-                                    </td>
-                                    <td></td><td></td><td></td><td></td><td></td>
-                                </tr>`).join('');
-                return groupRow + caseRows;
+
+            // ⭐ الحالات بتترسم بس للتشخيصات المفتوحة
+            tbody.innerHTML = pageItems.map((item, i) => {
+                const isOpen = item.forceOpen || lb.expanded.has(item.d.id);
+                return groupRowHtml(item, i) + (isOpen ? item.cases.map(caseRowHtml).join('') : '');
             }).join('');
+
             renderLbDiagPagination(totalPages);
         }
 
         function renderLbDiagPagination(totalPages) {
             const wrap = document.getElementById('lbDiagPagination');
             if (totalPages <= 1) { wrap.innerHTML = ''; return; }
-            let buttons = `<button class="page-btn" ${lbDiagPage === 1 ? 'disabled' : ''} onclick="goToLbDiagPage(${lbDiagPage - 1})"><i class="bi bi-chevron-left"></i></button>`;
+            let buttons = `<button class="page-btn" ${lb.page === 1 ? 'disabled' : ''} data-page="${lb.page - 1}"><i class="bi bi-chevron-left"></i></button>`;
             for (let p = 1; p <= totalPages; p++) {
-                buttons += `<button class="page-btn ${p === lbDiagPage ? 'active' : ''}" onclick="goToLbDiagPage(${p})">${p}</button>`;
+                buttons += `<button class="page-btn ${p === lb.page ? 'active' : ''}" data-page="${p}">${p}</button>`;
             }
-            buttons += `<button class="page-btn" ${lbDiagPage === totalPages ? 'disabled' : ''} onclick="goToLbDiagPage(${lbDiagPage + 1})"><i class="bi bi-chevron-right"></i></button>`;
+            buttons += `<button class="page-btn" ${lb.page === totalPages ? 'disabled' : ''} data-page="${lb.page + 1}"><i class="bi bi-chevron-right"></i></button>`;
             wrap.innerHTML = `
-                                <span class="lb-page-info">Page ${lbDiagPage} of ${totalPages}</span>
-                                <div>${buttons}</div>
-                            `;
+                <span class="lb-page-info">Page ${lb.page} of ${totalPages}</span>
+                <div>${buttons}</div>`;
         }
 
-        window.toggleLbGroup = function(id) {
-            if (lbCollapsed.has(id)) lbCollapsed.delete(id); else lbCollapsed.add(id);
-            renderLbDiagTable();
-        };
+        // ── Event delegation (بدل onclick على كل صف) ──
+        document.getElementById('lbDiagBody').addEventListener('click', e => {
+            const editBtn = e.target.closest('[data-action="edit-price"]');
+            if (editBtn) { openPriceModal(parseInt(editBtn.dataset.id)); return; }
 
-        window.goToLbDiagPage = function(p) {
-            lbDiagPage = p;
+            const row = e.target.closest('tr.lb-group-row.has-cases');
+            if (!row) return;
+            const id = parseInt(row.dataset.id);
+            if (lb.expanded.has(id)) lb.expanded.delete(id); else lb.expanded.add(id);
             renderLbDiagTable();
-        };
+        });
+
+        document.getElementById('lbDiagPagination').addEventListener('click', e => {
+            const btn = e.target.closest('.page-btn[data-page]');
+            if (!btn || btn.disabled) return;
+            lb.page = parseInt(btn.dataset.page);
+            renderLbDiagTable();
+        });
 
         document.querySelectorAll('#lbDiagTable th[data-sort]').forEach(th => {
             th.addEventListener('click', () => {
                 const key = th.dataset.sort;
-                if (lbDiagSort.key === key) {
-                    lbDiagSort.dir = lbDiagSort.dir === 'asc' ? 'desc' : 'asc';
+                if (lb.sort.key === key) {
+                    lb.sort.dir = lb.sort.dir === 'asc' ? 'desc' : 'asc';
                 } else {
-                    lbDiagSort = { key, dir: 'asc' };
+                    lb.sort = { key, dir: 'asc' };
                 }
                 document.querySelectorAll('#lbDiagTable th[data-sort]').forEach(h => h.classList.remove('sorted'));
                 th.classList.add('sorted');
-                th.querySelector('.sort-arrow').className = `bi ${lbDiagSort.dir === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down'} sort-arrow`;
+                th.querySelector('.sort-arrow').className = `bi ${lb.sort.dir === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down'} sort-arrow`;
                 applyLbDiagFilters();
             });
         });
 
         // ── Price edit modal ──
         window.openPriceModal = async function(id) {
-            const d = lbDiagAll.find(x => x.id === id);
+            const d = lb.all.find(x => x.id === id);
             if (!d) return;
             document.getElementById('pmDiagnosisId').value = d.id;
             document.getElementById('pmDiagName').textContent = d.nameEn || d.nameAr;
             document.getElementById('pmNewPrice').value = d.currentPrice;
             document.getElementById('pmNotes').value = '';
+            document.getElementById('pmHistoryList').innerHTML =
+                '<div class="lb-timeline-item" style="justify-content:center;color:#94a3b8;">Loading...</div>';
+            document.getElementById('priceModalOverlay').classList.add('show');
+
             const res = await fetch(`/Laboratory/GetPriceHistory?diagnosisCatalogId=${d.id}`);
             const result = await res.json();
             const list = result.data || [];
             document.getElementById('pmHistoryList').innerHTML = list.length
                 ? list.map(h => `
-                                    <div class="lb-timeline-item">
-                                        <span class="tl-date">${new Date(h.effectiveDate).toLocaleDateString('en-GB')}</span>
-                                        <b>${fmtMoney(h.price)} EGP</b>
-                                    </div>`).join('')
+                    <div class="lb-timeline-item">
+                        <span class="tl-date">${new Date(h.effectiveDate).toLocaleDateString('en-GB')}</span>
+                        <b>${fmtMoney(h.price)} EGP</b>
+                    </div>`).join('')
                 : '<div class="lb-timeline-item" style="justify-content:center;color:#94a3b8;">No history yet</div>';
-            document.getElementById('priceModalOverlay').classList.add('show');
         };
 
         window.closePriceModal = function() {
@@ -1077,7 +1365,7 @@
             }
         };
 
-        // ── Date chips + Summary / KPIs ──
+        // ── Date chips ──
         function setDateRange(range) {
             const today = new Date();
             const fromEl = document.getElementById('filterFrom');
@@ -1108,31 +1396,5 @@
             chip.classList.add('active');
             setDateRange(chip.dataset.range);
         });
-
-        async function loadSummary() {
-            const res = await fetch(`/Laboratory/GetSummary?${getFilterParams().toString()}`);
-            const result = await res.json();
-            const s = result.data;
-            document.getElementById('kpiTotalCount').textContent = s.totalCount;
-            document.getElementById('kpiTotalAmount').textContent = fmtMoney(s.totalAmount);
-            document.getElementById('kpiDiagCount').textContent = s.items.length;
-            document.getElementById('kpiAvgCase').textContent = fmtMoney(s.totalCount > 0 ? s.totalAmount / s.totalCount : 0);
-            const body = document.getElementById('lbSummaryBody');
-            const empty = document.getElementById('lbSummaryEmpty');
-            if (!s.items.length) {
-                body.innerHTML = '';
-                empty.style.display = 'block';
-                return;
-            }
-            empty.style.display = 'none';
-            body.innerHTML = s.items.map((i, idx) => `
-                                <tr style="animation-delay:${Math.min(idx * 0.04, 0.3)}s">
-                                    <td class="lb-name-main">${i.nameEn || i.nameAr}</td>
-                                    <td>${i.count}</td>
-                                    <td>${fmtMoney(i.currentPrice)} EGP</td>
-                                    <td class="price-cell">${fmtMoney(i.total)} EGP</td>
-                                </tr>
-                            `).join('');
-        }
     </script>
 }

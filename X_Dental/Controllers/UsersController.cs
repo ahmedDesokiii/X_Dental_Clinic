@@ -229,8 +229,8 @@ namespace Dental.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddUser(AddUserViewModel model)
         {
-            if (!ModelState.IsValid)
-                return View(model);
+            //if (!ModelState.IsValid)
+            //    return View(model);
 
             if (!model.Roles.Any(r => r.IsSelected))
             {

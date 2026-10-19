@@ -9,6 +9,8 @@ namespace Dental.Models.Clinic
         public Visit Visit { get; set; } = null!;
         public int DiagnosisCatalogId { get; set; }
         public DiagnosisCatalog Diagnosis { get; set; } = null!;
+        // null = سن واحد (الوضع الحالي). نفس القيمة = نفس المجموعة (Multi-Unit)
+        public Guid? GroupId { get; set; }
         public int? ToothNumber { get; set; }
         public string? Surface { get; set; } // M, D, B, L, O
         public string? Notes { get; set; }

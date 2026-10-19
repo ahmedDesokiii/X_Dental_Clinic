@@ -76,6 +76,9 @@ namespace Dental.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("PricingMode")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.ToTable("DiagnosisCatalogs");
@@ -423,6 +426,9 @@ namespace Dental.Migrations
 
                     b.Property<int>("DiagnosisCatalogId")
                         .HasColumnType("int");
+
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -983,6 +989,9 @@ namespace Dental.Migrations
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");

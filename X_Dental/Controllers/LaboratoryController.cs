@@ -15,6 +15,14 @@ namespace Dental.Controllers
         [HttpGet]
         public IActionResult Index() => View();
 
+        // ⭐ الجدول + الـ KPIs في طلب واحد (الصفحة بتستخدم ده)
+        [HttpGet]
+        public async Task<IActionResult> GetDashboard([FromQuery] LaboratoryFilterDto filter)
+        {
+            var data = await _labService.GetDashboardAsync(filter);
+            return Json(new { success = true, data });
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetDiagnoses([FromQuery] LaboratoryFilterDto filter)
         {
