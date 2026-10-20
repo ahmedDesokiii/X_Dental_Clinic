@@ -449,6 +449,9 @@ namespace Dental.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal>("PriceSnapshot")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Surface")
                         .HasColumnType("nvarchar(max)");
 

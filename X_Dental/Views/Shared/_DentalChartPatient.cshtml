@@ -1,0 +1,1528 @@
+@* ============================================================
+   📁 File: Views/Shared/_DentalChartPatient.cshtml  (ملف جديد)
+   الدينتال شارت التفاعلي لصفحة المريض (Details)
+   • كل حفظ بيروح للسيرفر مباشرة (DentalRecordsController)
+   • إضافة تشخيص → زيارة سريعة جديدة | تعديل/حذف السجلات القديمة | أشعة على السن
+   • Multi-Unit بنفس منطق السيشن
+   ============================================================ *@
+@model Dental.Modules.Patients.DTOs.DentalChartDto
+@using Dental.Modules.Patients.Enums
+@using static Dental.Constants.EnumHelper
+@await Html.PartialAsync("_DentalArchStyles")
+@{
+    var pcPatientId = (int)(ViewBag.CurrentPatientId ?? 0);
+    var pcIsBoth = (bool)(ViewBag.PcIsBothType ?? false);
+    var pcDiagnoses = ViewBag.DiagnosisList as List<Dental.Models.Clinic.DiagnosisCatalog> ?? new();
+
+    Dental.Models.Patient.ToothStatus StatusOf(int n) =>
+        Model?.Teeth?.FirstOrDefault(t => t.ToothNumber == n)?.Status ?? Dental.Models.Patient.ToothStatus.Healthy;
+}
+
+<style>
+    .pc-shell {
+        position: relative;
+    }
+
+    .pc-quadrant-badge {
+        position: absolute;
+        font-size: .72rem;
+        font-weight: 800;
+        color: #0d7377;
+        background: #f0fdfa;
+        border: 1px solid #ccf3ec;
+        border-radius: 8px;
+        padding: 3px 8px;
+        z-index: 5;
+    }
+
+        .pc-quadrant-badge.ur {
+            top: 8px;
+            left: 8px;
+        }
+
+        .pc-quadrant-badge.ul {
+            top: 8px;
+            right: 8px;
+        }
+
+        .pc-quadrant-badge.lr {
+            bottom: 8px;
+            left: 8px;
+        }
+
+        .pc-quadrant-badge.ll {
+            bottom: 8px;
+            right: 8px;
+        }
+
+    .pc-shell .tooth-box {
+        animation: pcToothIn .5s cubic-bezier(.2,1.5,.4,1) backwards;
+    }
+
+    @@keyframes pcToothIn {
+        from {
+            opacity: 0;
+            transform: scale(.3) translateY(8px);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    @@keyframes pcPop {
+        from {
+            transform: scale(.4);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    @@keyframes pcSlide {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ── Toolbar (Multi-Unit) ── */
+    .pc-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 4px 6px 10px;
+        min-height: 62px;
+        max-width: 640px;
+        margin: 0 auto;
+    }
+
+    .pc-left {
+        flex: 0 0 30%;
+        max-width: 30%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    .pc-right {
+        flex: 1 1 70%;
+        min-width: 0;
+    }
+
+    .pc-toggle {
+        border: 1.5px solid #ddd6fe;
+        background: #fff;
+        color: #6d28d9;
+        font-weight: 800;
+        font-size: .78rem;
+        padding: 7px 14px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        cursor: pointer;
+        transition: all .25s ease;
+    }
+
+        .pc-toggle .sw {
+            width: 28px;
+            height: 16px;
+            border-radius: 999px;
+            background: #e2e8f0;
+            position: relative;
+            transition: background .25s;
+        }
+
+            .pc-toggle .sw::after {
+                content: '';
+                position: absolute;
+                top: 2px;
+                left: 2px;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: #fff;
+                box-shadow: 0 1px 3px rgba(0,0,0,.2);
+                transition: left .25s cubic-bezier(.3,1.4,.5,1);
+            }
+
+        .pc-toggle.on {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 6px 16px rgba(124,58,237,.3);
+        }
+
+            .pc-toggle.on .sw {
+                background: rgba(255,255,255,.35);
+            }
+
+                .pc-toggle.on .sw::after {
+                    left: 14px;
+                }
+
+    .pc-hint {
+        display: none;
+        font-size: .66rem;
+        font-weight: 700;
+        color: #6d28d9;
+        background: #f5f3ff;
+        padding: 3px 8px;
+        border-radius: 8px;
+        line-height: 1.35;
+    }
+
+    .pc-shell.mu-on .pc-hint {
+        display: inline-block;
+        animation: pcPop .25s ease;
+    }
+
+    .pc-shell.mu-on .chart-canvas {
+        box-shadow: 0 0 0 2px rgba(124,58,237,.35), 0 16px 40px rgba(124,58,237,.12);
+    }
+
+    .pc-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 6px 8px 6px 10px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #7c3aed, #5b21b6);
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(91,33,182,.25);
+        animation: pcSlide .3s cubic-bezier(.2,1.2,.3,1);
+    }
+
+        .pc-bar[hidden] {
+            display: none;
+        }
+
+    .pc-bar-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .pc-bar-count {
+        background: rgba(255,255,255,.18);
+        border-radius: 10px;
+        padding: 3px 9px;
+        text-align: center;
+        line-height: 1.1;
+        flex-shrink: 0;
+    }
+
+        .pc-bar-count b {
+            display: block;
+            font-size: 1rem;
+        }
+
+        .pc-bar-count span {
+            font-size: .6rem;
+            opacity: .85;
+        }
+
+    .pc-bar-range {
+        min-width: 0;
+        font-weight: 800;
+        font-size: .8rem;
+    }
+
+        .pc-bar-range span, .pc-bar-range small {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pc-bar-range small {
+            font-size: .68rem;
+            font-weight: 600;
+            opacity: .8;
+        }
+
+    .pc-bar-actions {
+        display: flex;
+        gap: 5px;
+        flex-shrink: 0;
+    }
+
+        .pc-bar-actions button {
+            border: none;
+            border-radius: 10px;
+            padding: 7px 11px;
+            font-weight: 800;
+            font-size: .76rem;
+            cursor: pointer;
+        }
+
+    .pc-btn-clear {
+        background: rgba(255,255,255,.16);
+        color: #fff;
+    }
+
+    .pc-btn-go {
+        background: #fff;
+        color: #6d28d9;
+    }
+
+    .multi-check {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+        color: #fff;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: .7rem;
+        z-index: 31;
+        border: 2px solid #fff;
+        box-shadow: 0 3px 8px rgba(124,58,237,.45);
+    }
+
+    .tooth-box.multi-picked {
+        z-index: 15;
+    }
+
+        .tooth-box.multi-picked .multi-check {
+            display: flex;
+            animation: pcPop .3s cubic-bezier(.2,1.5,.4,1);
+        }
+
+        .tooth-box.multi-picked .realistic-tooth {
+            transform: translateY(-3px) scale(1.1);
+            filter: drop-shadow(0 0 3px rgba(124,58,237,.75)) drop-shadow(0 0 10px rgba(124,58,237,.4));
+        }
+
+        .tooth-box.multi-picked .tooth-num {
+            background: #7c3aed;
+        }
+
+    /* ── Tooltip ── */
+    .pc-tooltip {
+        position: fixed;
+        z-index: 3000;
+        background: #0b2e30;
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: .78rem;
+        line-height: 1.6;
+        max-width: 250px;
+        min-width: 150px;
+        box-shadow: 0 14px 34px rgba(0,0,0,.28);
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(6px);
+        transition: opacity .15s ease, transform .15s ease;
+    }
+
+        .pc-tooltip.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .pc-tooltip .tt-title {
+            font-weight: 800;
+            color: #5eead4;
+            border-bottom: 1px solid rgba(255,255,255,.12);
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+        }
+
+        .pc-tooltip .tt-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+            .pc-tooltip .tt-row span {
+                color: #94a3b8;
+            }
+
+        .pc-tooltip .tt-hint {
+            color: #94a3b8;
+            font-size: .68rem;
+            margin-top: 4px;
+        }
+
+    /* ── Modal ── */
+    .pc-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1500;
+        background: rgba(10,40,42,.45);
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 10px;
+    }
+
+        .pc-modal.show {
+            display: flex;
+        }
+
+    .pc-modal-box {
+        width: 100%;
+        max-width: 1040px;
+        margin: 16px;
+        background: #fff;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 30px 70px rgba(0,0,0,.25);
+        display: flex;
+        flex-direction: column;
+        max-height: 92vh;
+        animation: pcSlide .35s cubic-bezier(.2,1.2,.3,1);
+    }
+
+    .pc-modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 22px;
+        background: linear-gradient(135deg, #0d9488, #0d7377);
+        color: #fff;
+        flex-shrink: 0;
+    }
+
+    .pc-modal.group .pc-modal-head {
+        background: linear-gradient(135deg, #7c3aed, #0d7377);
+    }
+
+    .pc-modal-head h5 {
+        margin: 0;
+        font-weight: 800;
+        font-size: 1.02rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #fff;
+    }
+
+    .pc-close {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        border: none;
+        background: rgba(255,255,255,.2);
+        color: #fff;
+        cursor: pointer;
+        transition: transform .2s;
+    }
+
+        .pc-close:hover {
+            transform: rotate(90deg);
+        }
+
+    .pc-modal-body {
+        display: flex;
+        gap: 20px;
+        padding: 20px 22px;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .pc-col {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    .pc-col-divider {
+        width: 1px;
+        background: linear-gradient(180deg, transparent, #e2e8f0, transparent);
+        flex-shrink: 0;
+    }
+
+    .pc-col-title {
+        font-size: .82rem;
+        font-weight: 800;
+        color: #0b2e30;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+    }
+
+        .pc-col-title i {
+            color: #0d9488;
+        }
+
+    /* History cards */
+    .pc-history {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 420px;
+        overflow-y: auto;
+        padding-right: 2px;
+    }
+
+    .pc-rec {
+        border: 1px solid #f1f5f9;
+        background: #fafcfd;
+        border-radius: 14px;
+        padding: 10px 12px;
+        animation: pcSlide .3s ease backwards;
+        transition: border-color .2s, box-shadow .2s;
+    }
+
+        .pc-rec:hover {
+            border-color: #ccf3ec;
+            box-shadow: 0 6px 18px rgba(10,77,79,.06);
+        }
+
+        .pc-rec.group {
+            border-right: 3px solid #7c3aed;
+        }
+
+    .pc-rec-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .pc-rec-date {
+        font-size: .72rem;
+        font-weight: 700;
+        color: #64748b;
+    }
+
+    .pc-status-chip {
+        font-size: .68rem;
+        font-weight: 800;
+        padding: 2px 9px;
+        border-radius: 999px;
+        background: #f1f5f9;
+    }
+
+    .pc-units-badge {
+        font-size: .64rem;
+        font-weight: 800;
+        color: #fff;
+        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+        padding: 2px 8px;
+        border-radius: 999px;
+    }
+
+    .pc-rec-diag {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+        margin-top: 6px;
+    }
+
+        .pc-rec-diag span {
+            font-weight: 800;
+            font-size: .86rem;
+            color: #0d7377;
+        }
+
+        .pc-rec-diag b {
+            font-size: .84rem;
+            color: #0f172a;
+            white-space: nowrap;
+        }
+
+        .pc-rec-diag small {
+            display: block;
+            font-size: .66rem;
+            color: #7c3aed;
+            font-weight: 700;
+            text-align: left;
+        }
+
+    .pc-rec-notes {
+        font-size: .74rem;
+        color: #64748b;
+        margin-top: 4px;
+    }
+
+    .pc-rec-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 4px;
+        margin-top: 6px;
+    }
+
+    .pc-icon-btn {
+        border: none;
+        background: transparent;
+        color: #94a3b8;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .pc-icon-btn:hover {
+            background: #f0fdfa;
+            color: #0d9488;
+        }
+
+        .pc-icon-btn.danger:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+    .pc-rec-edit {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed #e2e8f0;
+        display: grid;
+        gap: 6px;
+    }
+
+        .pc-rec-edit[hidden] {
+            display: none;
+        }
+
+    .pc-edit-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 6px;
+    }
+
+    .pc-empty {
+        text-align: center;
+        color: #94a3b8;
+        font-weight: 600;
+        font-size: .84rem;
+        padding: 24px 10px;
+    }
+
+        .pc-empty i {
+            display: block;
+            font-size: 1.8rem;
+            opacity: .45;
+            margin-bottom: 6px;
+        }
+
+    .pc-xray-strip {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+    }
+
+        .pc-xray-strip img {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            cursor: zoom-in;
+            transition: transform .2s;
+        }
+
+            .pc-xray-strip img:hover {
+                transform: scale(1.06);
+            }
+
+    /* Add form */
+    .pc-units-strip {
+        background: linear-gradient(135deg, #f5f3ff, #faf5ff);
+        border: 1px solid #ddd6fe;
+        border-radius: 14px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+    }
+
+        .pc-units-strip .head {
+            display: flex;
+            justify-content: space-between;
+            font-size: .76rem;
+            font-weight: 800;
+            color: #5b21b6;
+            margin-bottom: 6px;
+        }
+
+            .pc-units-strip .head b {
+                background: #7c3aed;
+                color: #fff;
+                border-radius: 999px;
+                padding: 1px 10px;
+            }
+
+    .pc-unit-chip {
+        display: inline-block;
+        background: #fff;
+        border: 1px solid #ddd6fe;
+        color: #5b21b6;
+        font-weight: 800;
+        font-size: .74rem;
+        padding: 3px 9px;
+        border-radius: 8px;
+        margin: 0 4px 4px 0;
+    }
+
+    .pc-field {
+        margin-bottom: 10px;
+    }
+
+        .pc-field label {
+            display: block;
+            font-size: .76rem;
+            font-weight: 800;
+            color: #475569;
+            margin-bottom: 5px;
+        }
+
+    .pc-input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1.5px solid #f1f5f9;
+        border-radius: 11px;
+        background: #f8fafc;
+        font-size: .88rem;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s;
+    }
+
+        .pc-input:focus {
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13,148,136,.1);
+        }
+
+    .pc-diag-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+        .pc-diag-row select {
+            flex: 1;
+            min-width: 0;
+        }
+
+    .pc-price-badge {
+        flex-shrink: 0;
+        background: linear-gradient(135deg, #0d9488, #0f766e);
+        color: #fff;
+        font-weight: 800;
+        font-size: .8rem;
+        padding: 7px 12px;
+        border-radius: 10px;
+        min-width: 80px;
+        text-align: center;
+        line-height: 1.2;
+    }
+
+        .pc-price-badge.multi {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        }
+
+        .pc-price-badge small {
+            display: block;
+            font-size: .64rem;
+            opacity: .85;
+        }
+
+    .pc-upload {
+        border: 2px dashed #cbd5e1;
+        border-radius: 12px;
+        padding: 12px;
+        text-align: center;
+        cursor: pointer;
+        color: #94a3b8;
+        font-size: .8rem;
+        font-weight: 700;
+        transition: all .2s;
+    }
+
+        .pc-upload:hover {
+            border-color: #0d9488;
+            background: #f0fdfa;
+            color: #0d9488;
+        }
+
+    .pc-files {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 8px;
+    }
+
+    .pc-file {
+        display: grid;
+        grid-template-columns: 40px 1fr 30px;
+        gap: 8px;
+        align-items: center;
+        border: 1px solid #f1f5f9;
+        border-radius: 10px;
+        padding: 5px 8px;
+    }
+
+        .pc-file img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .pc-file input {
+            padding: 6px 9px;
+            font-size: .76rem;
+        }
+
+    .pc-info-note {
+        font-size: .7rem;
+        color: #64748b;
+        font-weight: 600;
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 6px 9px;
+        margin-top: 8px;
+    }
+
+    .pc-modal-foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 22px;
+        border-top: 1px solid #f0fdfa;
+        background: #fafcfd;
+        flex-shrink: 0;
+    }
+
+    .pc-btn {
+        padding: 9px 18px;
+        border-radius: 11px;
+        font-weight: 800;
+        font-size: .82rem;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: transform .2s, box-shadow .2s;
+    }
+
+        .pc-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .pc-btn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    .pc-btn-primary {
+        background: linear-gradient(135deg, #0d9488, #0d7377);
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(13,115,119,.25);
+    }
+
+    .pc-btn-light {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .pc-btn-outline {
+        background: #fff;
+        color: #0d7377;
+        border: 1.5px solid #99f6e4;
+    }
+
+    .pc-btn-sm {
+        padding: 6px 12px;
+        font-size: .74rem;
+    }
+
+    @@media (max-width: 768px) {
+        .pc-modal-body {
+            flex-direction: column;
+        }
+
+        .pc-col-divider {
+            display: none;
+        }
+
+        .pc-toolbar {
+            flex-wrap: wrap;
+        }
+
+        .pc-left, .pc-right {
+            flex: 1 1 100%;
+            max-width: 100%;
+        }
+    }
+</style>
+
+<div class="pc-shell" id="pcShell">
+    <div class="pc-tooltip" id="pcTooltip"></div>
+
+    <!-- Toolbar -->
+    <div class="pc-toolbar">
+        <div class="pc-left">
+            <button type="button" class="pc-toggle" id="pcToggle"><span class="sw"></span><i class="bi bi-diagram-3"></i> Multi-Unit</button>
+            <span class="pc-hint"><i class="bi bi-hand-index"></i> Select adjacent teeth in the same arch</span>
+        </div>
+        <div class="pc-right">
+            <div class="pc-bar" id="pcBar" hidden>
+                <div class="pc-bar-info">
+                    <div class="pc-bar-count"><b id="pcBarCount">0</b><span>units</span></div>
+                    <div class="pc-bar-range"><span id="pcBarRange">—</span><small id="pcBarTeeth">—</small></div>
+                </div>
+                <div class="pc-bar-actions">
+                    <button type="button" class="pc-btn-clear" id="pcBarClear" title="Clear"><i class="bi bi-x-lg"></i></button>
+                    <button type="button" class="pc-btn-go" id="pcBarGo"><i class="bi bi-clipboard2-pulse"></i> Diagnose</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-canvas" id="pcChartCanvas">
+        <svg class="bg-arcs" viewBox="0 0 620 632" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <linearGradient id="pcGumUpper" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#f8d3ca" /><stop offset="100%" stop-color="#f2b6a8" />
+                </linearGradient>
+                <linearGradient id="pcGumLower" x1="0" y1="1" x2="0" y2="0">
+                    <stop offset="0%" stop-color="#f8d3ca" /><stop offset="100%" stop-color="#f2b6a8" />
+                </linearGradient>
+            </defs>
+            <path id="upperArchPath" fill="url(#pcGumUpper)"></path>
+            <path id="lowerArchPath" fill="url(#pcGumLower)"></path>
+        </svg>
+        <span class="pc-quadrant-badge ur fs-5">UR</span>
+        <span class="pc-quadrant-badge ul fs-5">UL</span>
+        <span class="pc-quadrant-badge lr fs-5">LR</span>
+        <span class="pc-quadrant-badge ll fs-5">LL</span>
+
+        <div class="arch-center-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c-2.4 0-3.6 1.3-4.8 1.3-1.6 0-2.7-1-3.5-.4-.9.7-.7 2.4-.4 3.9.4 2.2 1.1 6.6 2 9.3.5 1.5 1 2.9 2.1 2.9 1.4 0 1.4-3 2.6-3s1.2 3 2.6 3c1.1 0 1.6-1.4 2.1-2.9.9-2.7 1.6-7.1 2-9.3.3-1.5.5-3.2-.4-3.9-.8-.6-1.9.4-3.5.4C15.6 4.3 14.4 3 12 3Z" /></svg>
+        </div>
+
+        <div class="teeth-row upper">
+            @foreach (var i in Enumerable.Range(11, 8).Reverse().Concat(Enumerable.Range(21, 8)))
+            {
+                <div class="tooth-box @StatusOf(i).ToString().ToLower()" data-tooth="@i" style="animation-delay:@(Array.IndexOf(Enumerable.Range(11, 8).Reverse().Concat(Enumerable.Range(21, 8)).ToArray(), i) * 40)ms">
+                    <div class="tooth-inner">
+                        <span class="tooth-num">@(i % 10)</span>
+                        <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
+                    </div>
+                    <span class="multi-check"><i class="bi bi-check-lg"></i></span>
+                </div>
+            }
+        </div>
+        <div class="teeth-row lower">
+            @foreach (var i in Enumerable.Range(41, 8).Reverse().Concat(Enumerable.Range(31, 8)))
+            {
+                <div class="tooth-box @StatusOf(i).ToString().ToLower()" data-tooth="@i" style="animation-delay:@(640 + Array.IndexOf(Enumerable.Range(41, 8).Reverse().Concat(Enumerable.Range(31, 8)).ToArray(), i) * 40)ms">
+                    <div class="tooth-inner">
+                        <span class="tooth-num">@(i % 10)</span>
+                        <div class="tooth-body"><div class="surface top"></div><div class="surface right"></div><div class="surface bottom"></div><div class="surface left"></div><div class="surface center"></div></div>
+                    </div>
+                    <span class="multi-check"><i class="bi bi-check-lg"></i></span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Tooth Modal (بيتنقل للـ body عشان backdrop-filter بتاع التابات ميحبسوش) -->
+<div class="pc-modal" id="pcModal">
+    <div class="pc-modal-box">
+        <div class="pc-modal-head">
+            <h5><i class="bi bi-grid-3x3-gap"></i> <span id="pcModalTitle">Tooth</span></h5>
+            <button type="button" class="pc-close" id="pcModalClose"><i class="bi bi-x-lg"></i></button>
+        </div>
+
+        <div class="pc-modal-body">
+            <!-- History (سن واحد بس) -->
+            <div class="pc-col" id="pcHistoryCol">
+                <div class="pc-col-title"><span><i class="bi bi-clock-history"></i> Tooth History</span></div>
+                <div class="pc-history" id="pcHistory"></div>
+                <div class="pc-col-title" style="margin-top:14px;"><span><i class="bi bi-image"></i> X-Rays</span></div>
+                <div class="pc-xray-strip" id="pcXrayStrip"></div>
+            </div>
+
+            <div class="pc-col-divider" id="pcDivider"></div>
+
+            <!-- Add new record -->
+            <div class="pc-col">
+                <div class="pc-col-title"><span><i class="bi bi-plus-circle"></i> New Record</span></div>
+
+                <div class="pc-units-strip" id="pcUnitsStrip" style="display:none;">
+                    <div class="head"><span><i class="bi bi-diagram-3"></i> Units</span><b id="pcUnitsCount">0</b></div>
+                    <div id="pcUnitsChips"></div>
+                </div>
+
+                @if (pcIsBoth)
+                {
+                    <div class="pc-field">
+                        <label>Visit Type</label>
+                        <select class="pc-input" id="pcCategory">
+                            <option value="@((int)VisitCategory.General)">General</option>
+                            <option value="@((int)VisitCategory.Orthodontics)">Orthodontics</option>
+                        </select>
+                    </div>
+                }
+
+                <div class="pc-field">
+                    <label>Tooth Status</label>
+                    <select class="pc-input" id="pcStatus">
+                        <option value="1">Healthy</option>
+                        <option value="2" selected>Decayed</option>
+                        <option value="3">Treated</option>
+                        <option value="4">Missing</option>
+                        <option value="5">Extracted</option>
+                        <option value="6">Impacted</option>
+                        <option value="7">Crown</option>
+                        <option value="8">Bridge</option>
+                        <option value="9">Implant</option>
+                        <option value="10">Fractured</option>
+                        <option value="11">Root Canal</option>
+                        <option value="12">Filling</option>
+                    </select>
+                </div>
+
+                <div class="pc-field">
+                    <label>Diagnosis</label>
+                    <div class="pc-diag-row">
+                        <select class="pc-input" id="pcDiagnosis">
+                            <option value="">-- Select diagnosis --</option>
+                            @foreach (var d in pcDiagnoses)
+                            {
+                                <option value="@d.Id" data-price="@d.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)">@d.NameEn</option>
+                            }
+                        </select>
+                        <span class="pc-price-badge" id="pcPriceBadge">0 EGP</span>
+                    </div>
+                </div>
+
+                <div class="pc-field">
+                    <label>Notes</label>
+                    <textarea class="pc-input" id="pcNotes" rows="2" placeholder="Notes about the diagnosis / condition..."></textarea>
+                </div>
+
+                <div class="pc-field">
+                    <label>X-Rays (optional)</label>
+                    <div class="pc-upload" id="pcUploadZone">
+                        <input type="file" id="pcXrayInput" accept="image/*" multiple hidden />
+                        <i class="bi bi-cloud-arrow-up" style="font-size:1.4rem;display:block;color:#0d9488;"></i>
+                        Click to upload one or more images
+                    </div>
+                    <div class="pc-files" id="pcFiles"></div>
+                </div>
+
+                <div class="pc-info-note"><i class="bi bi-info-circle"></i> A new quick visit will be created for this record.</div>
+            </div>
+        </div>
+
+        <div class="pc-modal-foot">
+            <button type="button" class="pc-btn pc-btn-outline pc-btn-sm" id="pcXrayOnly"><i class="bi bi-image"></i> Upload X-Rays Only</button>
+            <div style="display:flex; gap:8px;">
+                <button type="button" class="pc-btn pc-btn-light" id="pcCancel">Close</button>
+                <button type="button" class="pc-btn pc-btn-primary" id="pcSave"><i class="bi bi-check-lg"></i> <span id="pcSaveText">Add Record</span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const PATIENT_ID = @pcPatientId;
+        const IS_BOTH = @(pcIsBoth ? "true" : "false");
+        const TOOTH_INFO = @Html.Raw(ViewBag.ToothInfoMap ?? "{}");
+
+        const ARCH_ORDERS = [
+            [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28],
+            [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]
+        ];
+        const STATUS_COLOR = {
+            1: '#0f9b8e', 2: '#ef4444', 3: '#3b82f6', 4: '#94a3b8', 5: '#1e293b', 6: '#6366f1',
+            7: '#a855f7', 8: '#06b6d4', 9: '#ec4899', 10: '#f97316', 11: '#f59e0b', 12: '#14b8a6'
+        };
+
+        const $ = id => document.getElementById(id);
+        const shell = $('pcShell');
+        const canvas = $('pcChartCanvas');
+        const modal = $('pcModal');
+        const tooltip = $('pcTooltip');
+
+        // ⭐ backdrop-filter على التابات بيحبس position:fixed → ننقلهم للـ body
+        document.body.appendChild(modal);
+        document.body.appendChild(tooltip);
+
+        if (window.initDentalArch) window.initDentalArch(canvas);
+
+        const st = {
+            multiOn: false,
+            multiSel: [],
+            teeth: [],            // أسنان المودال المفتوح
+            history: null,
+            xrayFiles: [],
+            dirty: false,         // اتعمل تغيير → reload عند قفل المودال
+            busy: false
+        };
+
+        // ── Helpers ──
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const fmt = n => Number(n || 0).toLocaleString('en-EG', { maximumFractionDigits: 2 });
+        const lbl = n => (({ 1: 'UL', 2: 'UR', 3: 'LL', 4: 'LR' })[Math.floor(n / 10)] || '') + '-' + (n % 10);
+        const archOf = n => ARCH_ORDERS.find(a => a.includes(n)) || null;
+        const rangeBetween = (a, b) => {
+            const arch = archOf(a), i = arch.indexOf(a), j = arch.indexOf(b);
+            return arch.slice(Math.min(i, j), Math.max(i, j) + 1);
+        };
+        const sortByArch = t => {
+            if (!t.length) return [];
+            const arch = archOf(t[0]);
+            return t.slice().sort((a, b) => arch.indexOf(a) - arch.indexOf(b));
+        };
+        const rangeLabel = t => !t.length ? '—' : t.length === 1 ? lbl(t[0]) : `${lbl(t[0])} → ${lbl(t[t.length - 1])}`;
+        const toast = (title, icon) => Swal.fire({ toast: true, position: 'top-end', icon: icon || 'success', title, showConfirmButton: false, timer: 1800, customClass: { popup: 'rounded-4' } });
+
+        async function postJson(url, body) {
+            const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            return res.json();
+        }
+
+        // ════════════════════════════════════════════════
+        // Multi-Unit selection
+        // ════════════════════════════════════════════════
+        $('pcToggle').addEventListener('click', () => {
+            st.multiOn = !st.multiOn;
+            $('pcToggle').classList.toggle('on', st.multiOn);
+            shell.classList.toggle('mu-on', st.multiOn);
+            if (!st.multiOn) clearSelection();
+        });
+
+        function clearSelection() {
+            st.multiSel = [];
+            renderSelection();
+        }
+
+        function renderSelection() {
+            canvas.querySelectorAll('.tooth-box').forEach(el =>
+                el.classList.toggle('multi-picked', st.multiSel.includes(parseInt(el.dataset.tooth))));
+            const bar = $('pcBar');
+            if (!st.multiSel.length) { bar.hidden = true; return; }
+            st.multiSel = sortByArch(st.multiSel);
+            bar.hidden = false;
+            $('pcBarCount').textContent = st.multiSel.length;
+            $('pcBarRange').textContent = rangeLabel(st.multiSel);
+            $('pcBarTeeth').textContent = st.multiSel.map(lbl).join(' · ');
+        }
+
+        function onToothClick(num) {
+            if (!st.multiOn) { openModal([num]); return; }
+
+            const arch = archOf(num);
+            if (!st.multiSel.length) st.multiSel = [num];
+            else if (archOf(st.multiSel[0]) !== arch) {
+                st.multiSel = [num];
+                toast('Units must be in the same arch — selection restarted', 'info');
+            } else if (st.multiSel.includes(num)) {
+                const first = st.multiSel[0], last = st.multiSel[st.multiSel.length - 1];
+                if (num === first) st.multiSel.shift();
+                else if (num === last) st.multiSel.pop();
+                else st.multiSel = rangeBetween(first, num);
+            } else {
+                const first = st.multiSel[0], last = st.multiSel[st.multiSel.length - 1];
+                st.multiSel = arch.indexOf(num) < arch.indexOf(first) ? rangeBetween(num, last) : rangeBetween(first, num);
+            }
+            renderSelection();
+        }
+
+        canvas.addEventListener('click', e => {
+            const box = e.target.closest('.tooth-box');
+            if (box) onToothClick(parseInt(box.dataset.tooth));
+        });
+        $('pcBarClear').addEventListener('click', clearSelection);
+        $('pcBarGo').addEventListener('click', () => { if (st.multiSel.length) openModal(st.multiSel); });
+
+        // ════════════════════════════════════════════════
+        // Modal
+        // ════════════════════════════════════════════════
+        function openModal(teeth, opts = {}) {
+            st.teeth = sortByArch(teeth);
+            const isGroup = st.teeth.length > 1;
+            hideTooltip();
+
+            $('pcModalTitle').textContent = isGroup
+                ? `Multi-Unit Diagnosis · ${rangeLabel(st.teeth)} · ${st.teeth.length} units`
+                : `Tooth ${lbl(st.teeth[0])} · FDI ${st.teeth[0]}`;
+            modal.classList.toggle('group', isGroup);
+
+            // History + أشعة فقط → للسن الواحد
+            $('pcHistoryCol').style.display = isGroup ? 'none' : '';
+            $('pcDivider').style.display = isGroup ? 'none' : '';
+            $('pcXrayOnly').style.visibility = isGroup ? 'hidden' : 'visible';
+
+            $('pcUnitsStrip').style.display = isGroup ? '' : 'none';
+            if (isGroup) {
+                $('pcUnitsCount').textContent = st.teeth.length;
+                $('pcUnitsChips').innerHTML = st.teeth.map(t => `<span class="pc-unit-chip">${lbl(t)}</span>`).join('');
+            }
+
+            resetAddForm();
+            $('pcSaveText').textContent = isGroup ? `Add ${st.teeth.length} Units` : 'Add Record';
+            modal.classList.add('show');
+
+            if (!isGroup) loadHistory(st.teeth[0], opts.editVdId);
+        }
+
+        function closeModal() {
+            modal.classList.remove('show');
+            if (st.dirty) reloadKeepTab();
+        }
+
+        function reloadKeepTab() {
+            const active = document.querySelector('.tab-panel.active');
+            if (active) location.hash = active.id;
+            location.reload();
+        }
+
+        $('pcModalClose').addEventListener('click', closeModal);
+        $('pcCancel').addEventListener('click', closeModal);
+        modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+        document.addEventListener('keydown', e => {
+            if (e.key !== 'Escape') return;
+            if (modal.classList.contains('show')) closeModal();
+            else if (st.multiOn && st.multiSel.length) clearSelection();
+        });
+
+        // ── Add form ──
+        function resetAddForm() {
+            $('pcStatus').value = '2';
+            $('pcDiagnosis').value = '';
+            $('pcNotes').value = '';
+            st.xrayFiles = [];
+            renderFiles();
+            updatePriceBadge();
+        }
+
+        function updatePriceBadge() {
+            const opt = $('pcDiagnosis').selectedOptions[0];
+            const price = opt && opt.value ? parseFloat(opt.dataset.price || 0) : 0;
+            const units = st.teeth.length;
+            const badge = $('pcPriceBadge');
+            badge.classList.toggle('multi', units > 1);
+            badge.innerHTML = units > 1
+                ? `${fmt(price * units)} EGP<small>${fmt(price)} × ${units}</small>`
+                : `${fmt(price)} EGP`;
+        }
+        $('pcDiagnosis').addEventListener('change', updatePriceBadge);
+
+        $('pcUploadZone').addEventListener('click', () => $('pcXrayInput').click());
+        $('pcXrayInput').addEventListener('change', e => {
+            Array.from(e.target.files || []).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = ev => { st.xrayFiles.push({ FileName: file.name, Base64: ev.target.result, Notes: '' }); renderFiles(); };
+                reader.readAsDataURL(file);
+            });
+            e.target.value = '';
+        });
+
+        function renderFiles() {
+            $('pcFiles').innerHTML = st.xrayFiles.map((x, i) => `
+                <div class="pc-file">
+                    <img src="${x.Base64}" />
+                    <input type="text" class="pc-input" data-i="${i}" placeholder="Note..." value="${esc(x.Notes)}" />
+                    <button type="button" class="pc-icon-btn danger" data-rm="${i}"><i class="bi bi-x"></i></button>
+                </div>`).join('');
+        }
+        $('pcFiles').addEventListener('input', e => {
+            const i = e.target.dataset.i;
+            if (i !== undefined) st.xrayFiles[i].Notes = e.target.value;
+        });
+        $('pcFiles').addEventListener('click', e => {
+            const btn = e.target.closest('[data-rm]');
+            if (btn) { st.xrayFiles.splice(+btn.dataset.rm, 1); renderFiles(); }
+        });
+
+        function setBusy(on) {
+            st.busy = on;
+            $('pcSave').disabled = on;
+            $('pcXrayOnly').disabled = on;
+        }
+
+        // ⭐ إضافة سجل → زيارة سريعة جديدة
+        $('pcSave').addEventListener('click', async () => {
+            if (st.busy) return;
+            const isGroup = st.teeth.length > 1;
+            const diagId = $('pcDiagnosis').value;
+            if (isGroup && !diagId) {
+                Swal.fire({ title: 'Required', text: 'Please select a diagnosis for the units', icon: 'warning', confirmButtonColor: '#7c3aed' });
+                return;
+            }
+
+            const payload = {
+                PatientId: PATIENT_ID,
+                Teeth: st.teeth,
+                Status: parseInt($('pcStatus').value),
+                DiagnosisCatalogId: diagId ? parseInt(diagId) : null,
+                Notes: $('pcNotes').value,
+                XRays: st.xrayFiles
+            };
+            if (IS_BOTH && $('pcCategory')) payload.Category = parseInt($('pcCategory').value);
+
+            setBusy(true);
+            try {
+                const r = await postJson('/DentalRecords/AddRecords', payload);
+                if (!r.success) { Swal.fire({ title: 'Error', text: r.message, icon: 'error' }); return; }
+                st.dirty = true;
+                toast(r.message);
+                if (isGroup) {
+                    clearSelection();
+                    closeModal();
+                } else {
+                    resetAddForm();
+                    loadHistory(st.teeth[0]);
+                }
+            } catch (err) {
+                Swal.fire({ title: 'Error', text: 'Server connection failed', icon: 'error' });
+            } finally {
+                setBusy(false);
+            }
+        });
+
+        // ⭐ أشعة بس على السن (من غير زيارة جديدة)
+        $('pcXrayOnly').addEventListener('click', async () => {
+            if (st.busy) return;
+            if (!st.xrayFiles.length) {
+                Swal.fire({ title: 'No images', text: 'Upload one or more X-ray images first', icon: 'info', confirmButtonColor: '#0d9488' });
+                return;
+            }
+            setBusy(true);
+            try {
+                const r = await postJson('/DentalRecords/AddXRays', { PatientId: PATIENT_ID, ToothNumber: st.teeth[0], XRays: st.xrayFiles });
+                if (!r.success) { Swal.fire({ title: 'Error', text: r.message, icon: 'error' }); return; }
+                st.dirty = true;
+                st.xrayFiles = [];
+                renderFiles();
+                toast(r.message);
+                loadHistory(st.teeth[0]);
+            } catch (err) {
+                Swal.fire({ title: 'Error', text: 'Server connection failed', icon: 'error' });
+            } finally {
+                setBusy(false);
+            }
+        });
+
+        // ════════════════════════════════════════════════
+        // History (تعديل / حذف)
+        // ════════════════════════════════════════════════
+        async function loadHistory(tooth, editVdId) {
+            $('pcHistory').innerHTML = '<div class="pc-empty"><i class="bi bi-hourglass-split"></i>Loading...</div>';
+            $('pcXrayStrip').innerHTML = '';
+            try {
+                const res = await fetch(`/DentalRecords/GetToothHistory?patientId=${PATIENT_ID}&tooth=${tooth}`);
+                const r = await res.json();
+                st.history = r.data;
+                renderHistory();
+                if (editVdId) startEdit(editVdId);
+            } catch (err) {
+                $('pcHistory').innerHTML = '<div class="pc-empty"><i class="bi bi-wifi-off"></i>Could not load history</div>';
+            }
+        }
+
+        function recordHtml(r, i) {
+            const isGroup = r.units > 1;
+            const color = STATUS_COLOR[r.status] || '#64748b';
+            const price = r.visitDiagnosisId > 0
+                ? `<b>${fmt(r.price * r.units)} EGP${isGroup ? `<small>${fmt(r.price)} × ${r.units}</small>` : ''}</b>`
+                : '';
+            return `
+                <div class="pc-rec ${isGroup ? 'group' : ''}" data-idx="${i}" style="animation-delay:${Math.min(i * 0.04, 0.3)}s">
+                    <div class="pc-rec-top">
+                        <span class="pc-rec-date"><i class="bi bi-calendar-event"></i> ${new Date(r.date).toLocaleDateString('en-GB')}</span>
+                        <span style="display:flex; gap:5px; align-items:center;">
+                            ${isGroup ? `<span class="pc-units-badge">${esc(rangeLabel(r.groupTeeth))} · ${r.units} units</span>` : ''}
+                            ${r.statusText ? `<span class="pc-status-chip" style="color:${color};">${esc(r.statusText)}</span>` : ''}
+                        </span>
+                    </div>
+                    <div class="pc-rec-diag">
+                        <span>${esc(r.diagnosisName || (r.visitDiagnosisId > 0 ? '-' : 'Status record'))}</span>
+                        ${price}
+                    </div>
+                    ${r.notes ? `<div class="pc-rec-notes">${esc(r.notes)}</div>` : ''}
+                    <div class="pc-rec-actions">
+                        ${r.visitDiagnosisId > 0 ? `<button type="button" class="pc-icon-btn" data-act="edit" title="Edit"><i class="bi bi-pencil-square"></i></button>` : ''}
+                        <button type="button" class="pc-icon-btn danger" data-act="delete" title="Delete"><i class="bi bi-trash3"></i></button>
+                    </div>
+                    <div class="pc-rec-edit" hidden>
+                        <select class="pc-input" data-f="diag">${$('pcDiagnosis').innerHTML}</select>
+                        <select class="pc-input" data-f="status">${$('pcStatus').innerHTML}</select>
+                        <textarea class="pc-input" data-f="notes" rows="2" placeholder="Notes..."></textarea>
+                        <div class="pc-edit-actions">
+                            <button type="button" class="pc-btn pc-btn-light pc-btn-sm" data-act="cancel">Cancel</button>
+                            <button type="button" class="pc-btn pc-btn-primary pc-btn-sm" data-act="save"><i class="bi bi-check-lg"></i> Save${isGroup ? ` (${r.units} units)` : ''}</button>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function renderHistory() {
+            const h = st.history || { records: [], xRays: [] };
+            const records = h.records || [];
+            $('pcHistory').innerHTML = records.length
+                ? records.map(recordHtml).join('')
+                : '<div class="pc-empty"><i class="bi bi-inbox"></i>No records for this tooth yet</div>';
+
+            const xrays = h.xRays || h.xrays || [];
+            $('pcXrayStrip').innerHTML = xrays.length
+                ? xrays.map(x => `<img src="${esc(x.filePath)}" title="${esc(x.notes || '')}" data-src="${esc(x.filePath)}" loading="lazy" />`).join('')
+                : '<span class="pc-rec-notes">No X-rays for this tooth.</span>';
+        }
+
+        function cardOf(vdId) {
+            const records = (st.history && st.history.records) || [];
+            const idx = records.findIndex(r => r.visitDiagnosisId === vdId);
+            return idx > -1 ? $('pcHistory').querySelector(`.pc-rec[data-idx="${idx}"]`) : null;
+        }
+
+        function startEdit(vdId) {
+            const card = cardOf(vdId);
+            if (!card) return;
+            const r = st.history.records[+card.dataset.idx];
+            const form = card.querySelector('.pc-rec-edit');
+            form.querySelector('[data-f="diag"]').value = r.diagnosisCatalogId || '';
+            form.querySelector('[data-f="status"]').value = r.status || '2';
+            form.querySelector('[data-f="notes"]').value = r.notes || '';
+            form.hidden = false;
+            card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+
+        $('pcHistory').addEventListener('click', async e => {
+            const btn = e.target.closest('[data-act]');
+            if (!btn) return;
+            const card = btn.closest('.pc-rec');
+            const r = st.history.records[+card.dataset.idx];
+            const act = btn.dataset.act;
+
+            if (act === 'edit') {
+                startEdit(r.visitDiagnosisId);
+            } else if (act === 'cancel') {
+                card.querySelector('.pc-rec-edit').hidden = true;
+            } else if (act === 'save') {
+                const form = card.querySelector('.pc-rec-edit');
+                const diagId = form.querySelector('[data-f="diag"]').value;
+                if (!diagId) { toast('Select a diagnosis', 'warning'); return; }
+                btn.disabled = true;
+                try {
+                    const res = await postJson('/DentalRecords/UpdateRecord', {
+                        VisitDiagnosisId: r.visitDiagnosisId,
+                        DiagnosisCatalogId: parseInt(diagId),
+                        Status: parseInt(form.querySelector('[data-f="status"]').value),
+                        Notes: form.querySelector('[data-f="notes"]').value
+                    });
+                    if (!res.success) { Swal.fire({ title: 'Error', text: res.message, icon: 'error' }); return; }
+                    st.dirty = true;
+                    toast(res.message);
+                    loadHistory(st.teeth[0]);
+                } finally {
+                    btn.disabled = false;
+                }
+            } else if (act === 'delete') {
+                await deleteRecord(r);
+            }
+        });
+
+        async function deleteRecord(r) {
+            const isGroup = r.units > 1;
+            const hasMoney = r.visitDiagnosisId > 0 && r.price > 0;
+            const confirm = await Swal.fire({
+                title: isGroup ? `Delete all ${r.units} units?` : 'Delete this record?',
+                html: (r.diagnosisName ? `<b>${esc(r.diagnosisName)}</b>` : 'Status record')
+                    + (isGroup ? `<br><small>${esc(rangeLabel(r.groupTeeth))}</small>` : '')
+                    + (hasMoney ? `<br><small style="color:#b45309;">The visit total will decrease by ${fmt(r.price * r.units)} EGP. If it was already paid, a refund entry will be recorded.</small>` : ''),
+                icon: 'warning',
+                input: r.visitDiagnosisId > 0 ? 'text' : undefined,
+                inputPlaceholder: 'Reason (optional)',
+                showCancelButton: true,
+                confirmButtonText: 'Delete',
+                cancelButtonText: 'Back',
+                confirmButtonColor: '#dc2626',
+                reverseButtons: true
+            });
+            if (!confirm.isConfirmed) return;
+
+            try {
+                const res = await postJson('/DentalRecords/DeleteRecord', {
+                    VisitDiagnosisId: r.visitDiagnosisId,
+                    ChartEntryId: r.chartEntryId,
+                    Reason: confirm.value || null
+                });
+                if (!res.success) { Swal.fire({ title: 'Error', text: res.message, icon: 'error' }); return; }
+                st.dirty = true;
+                Swal.fire({ title: 'Deleted', text: res.message, icon: 'success', timer: 1800, showConfirmButton: false });
+                loadHistory(st.teeth[0]);
+            } catch (err) {
+                Swal.fire({ title: 'Error', text: 'Server connection failed', icon: 'error' });
+            }
+        }
+
+        // فتح الأشعة في الـ Lightbox بتاع تبويب الأشعة لو موجود
+        $('pcXrayStrip').addEventListener('click', e => {
+            const img = e.target.closest('img[data-src]');
+            if (!img) return;
+            if (window.openXrayViewer) window.openXrayViewer(img.dataset.src);
+            else window.open(img.dataset.src, '_blank');
+        });
+
+        // ⭐ توافق مع زرار التعديل في تبويب Previous Records (_PreviousSessionsTable)
+        window.openToothModal = function (num, evt, uid, hist) {
+            if (evt && evt.stopPropagation) evt.stopPropagation();
+            if (!num || num <= 0) {
+                Swal.fire({ title: 'Not available', text: 'This record is not linked to a tooth.', icon: 'info', confirmButtonColor: '#0d9488' });
+                return;
+            }
+            openModal([num], { editVdId: hist ? hist.vdId : null });
+        };
+
+        // ════════════════════════════════════════════════
+        // Tooltip
+        // ════════════════════════════════════════════════
+        function hideTooltip() { tooltip.classList.remove('show'); }
+
+        canvas.addEventListener('mousemove', e => {
+            const box = e.target.closest('.tooth-box');
+            if (!box) { hideTooltip(); return; }
+            const num = parseInt(box.dataset.tooth);
+            const info = TOOTH_INFO[num];
+            tooltip.innerHTML = `
+                <div class="tt-title"><i class="bi bi-grid-3x3-gap"></i> ${lbl(num)} <small style="color:#94a3b8;">FDI ${num}</small></div>
+                <div class="tt-row"><span>Status</span><b>${esc(info ? info.status : 'Healthy')}</b></div>
+                ${info && info.diagnosis ? `<div class="tt-row"><span>Diagnosis</span><b>${esc(info.diagnosis)}</b></div>` : ''}
+                <div class="tt-hint">${st.multiOn ? 'Click to select' : 'Click to view / edit'}</div>`;
+            tooltip.classList.add('show');
+            const off = 14, rect = tooltip.getBoundingClientRect();
+            let x = e.clientX + off, y = e.clientY + off;
+            if (x + rect.width > innerWidth - 10) x = e.clientX - rect.width - off;
+            if (y + rect.height > innerHeight - 10) y = e.clientY - rect.height - off;
+            tooltip.style.left = x + 'px';
+            tooltip.style.top = y + 'px';
+        });
+        canvas.addEventListener('mouseleave', hideTooltip);
+    })();
+</script>

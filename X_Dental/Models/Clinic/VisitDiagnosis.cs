@@ -18,5 +18,8 @@ namespace Dental.Models.Clinic
         // ⭐ NEW — snapshot لسعر التشخيص وقت تسجيله فعليًا في السيشن
         // (بيتسجل مرة واحدة وقت الإنشاء ومبيتغيرش لو سعر الكتالوج اتغير بعدين)
         public decimal? LabPriceSnapshot { get; set; }
+
+        /// <summary>سعر السن الواحد وقت التشخيص.</summary>
+        public decimal PriceSnapshot { get; set; }
     }
 }

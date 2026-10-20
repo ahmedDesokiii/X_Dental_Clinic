@@ -20,6 +20,7 @@
     };
 
     ViewBag.CurrentPatientId = patient.Id;   // used by _DocumentsManager
+    ViewBag.PcIsBothType = patient.PatientType == PatientType.Both;
 
     var totalBilled = Model.TotalPaid + Model.TotalDue;
     var paidPercentKpi = totalBilled > 0 ? (int)Math.Round((Model.TotalPaid / totalBilled) * 100) : 0;
@@ -1369,20 +1370,8 @@
 
             <!-- Tab: Dental Chart -->
             <div class="tab-panel" id="teeth">
-                @if (Model.DentalChart != null && Model.DentalChart.Teeth.Any())
-                {
-                    @await Html.PartialAsync("_DentalChartReadOnly", Model.DentalChart)
-                }
-                else
-                {
-                    <div class="placeholder-glass">
-                        <div class="placeholder-icon-glass"><i class="bi bi-grid-3x3-gap"></i></div>
-                        <h3>No Dental Chart Recorded Yet</h3>
-                        <a asp-action="NewSession" asp-route-patientId="@patient.Id" class="btn-hero glass" style="display:inline-flex;">
-                            <i class="bi bi-clipboard-pulse"></i> Start a Session to Record the Chart
-                        </a>
-                    </div>
-                }
+                @await Html.PartialAsync("_DentalChartPatient",
+                    Model.DentalChart ?? new Dental.Modules.Patients.DTOs.DentalChartDto { PatientId = patient.Id })
             </div>
 
             <!-- Tab: Treatment Plans -->
@@ -1685,6 +1674,13 @@
         window.onAppointmentCreated = function() {
             setTimeout(() => location.reload(), 1200);
         };
+
+        document.addEventListener('DOMContentLoaded', () => {
+        const tab = location.hash.replace('#', '');
+            if (!tab) return;
+            const btn = document.querySelector(`.tab-pill[onclick*="'${tab}'"]`);
+            if (btn) switchTab(tab, btn);
+        });
 
         document.addEventListener('DOMContentLoaded', loadPaymentsTab);
     </script>

@@ -2,6 +2,7 @@
 using Dental.Models.Clinic;
 using Dental.Models.Patient;
 using Dental.Modules.Clinical.DTOs;    // ✅ الـ DTOs الجديدة
+using Dental.Modules.Clinical.Interfaces;
 using Dental.Modules.Clinical.ViewModels;
 using Dental.Modules.Patients.DTOs;
 using Dental.Modules.Patients.Enums;
@@ -18,17 +19,20 @@ namespace Dental.Controllers
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment _env;
         private readonly ILogger<ClinicalController> _logger;
+        private readonly IClinicalRecordService _records;
 
         public ClinicalController(
             ApplicationDbContext context,
             IMapper mapper,
             IWebHostEnvironment env,
-            ILogger<ClinicalController> logger)   // ⬅ ضيف البراميتر ده
+            ILogger<ClinicalController> logger,
+            IClinicalRecordService records)   // ⬅ ضيف البراميتر ده
         {
             _context = context;
             _mapper = mapper;
             _env = env;
             _logger = logger;                      // ⬅ وضيف السطر ده
+            _records = records;
         }
 
 
@@ -284,40 +288,14 @@ namespace Dental.Controllers
         [HttpPost]
         public async Task<IActionResult> UpdateVisitDiagnosis([FromBody] UpdateVisitDiagnosisRequest req)
         {
-            var vd = await _context.VisitDiagnoses
-                .Include(x => x.Diagnosis)
-                .FirstOrDefaultAsync(x => x.Id == req.Id);
-            if (vd == null)
-                return Json(new { success = false, message = "Diagnosis record not found." });
-
-            var newDiag = await _context.DiagnosisCatalogs.FindAsync(req.DiagnosisCatalogId);
-            if (newDiag == null)
-                return Json(new { success = false, message = "Diagnosis not found." });
-
-            // ⭐ لو السجل جزء من مجموعة وحدات (Multi-Unit) → التعديل بيتطبق على المجموعة كلها
-            var rows = vd.GroupId.HasValue
-                ? await _context.VisitDiagnoses
-                    .Where(x => x.GroupId == vd.GroupId && x.VisitId == vd.VisitId)
-                    .ToListAsync()
-                : new List<VisitDiagnosis> { vd };
-
-            var units = rows.Count;
-            var oldPrice = vd.Diagnosis?.Price ?? 0;
-
-            foreach (var r in rows)
+            var result = await _records.UpdateRecordAsync(new ChartUpdateRecordRequest
             {
-                r.DiagnosisCatalogId = newDiag.Id;
-                r.Notes = req.Notes;
-            }
-
-            // ⭐ تصحيح إجمالي الزيارة: (الفرق في سعر السن) × عدد الوحدات
-            var visit = await _context.Visits.FindAsync(vd.VisitId);
-            if (visit != null) visit.TotalAmount += (newDiag.Price - oldPrice) * units;
-
-            await _context.SaveChangesAsync();
-            return Json(new { success = true, price = newDiag.Price, name = newDiag.NameEn, units });
+                VisitDiagnosisId = req.Id,
+                DiagnosisCatalogId = req.DiagnosisCatalogId,
+                Notes = req.Notes
+            });
+            return Json(new { success = result.Success, message = result.Message, units = result.Data });
         }
-
 
 
         [HttpPost]
@@ -649,6 +627,7 @@ namespace Dental.Controllers
                             Notes = tooth.DiagnosisNotes,
                             IsPrimary = tooth.DiagnosisIsPrimary,
                             GroupId = tooth.GroupId,      // ⭐ Multi-Unit
+                            PriceSnapshot = diag.Price,
                             LabPriceSnapshot = await GetCurrentLabPriceAsync(diag)   // ⭐ lab price, not diagnosis price
                         });
 

@@ -1597,8 +1597,8 @@
             </div>
             <div class="dp-kpi-value"><span id="dpKpiTotal">0</span> <small>ج.م</small></div>
             <div class="dp-kpi-split">
-                <div><span>المدفوع</span><b class="paid" id="dpKpiPaid">0</b></div>
-                <div><span>الباقي</span><b class="remain" id="dpKpiRemain">0</b></div>
+                <div><span>المدفوع</span><b class="paid fs-5" id="dpKpiPaid">0</b></div>
+                <div><span>الباقي</span><b class="remain fs-5" id="dpKpiRemain">0</b></div>
             </div>
             <div class="dp-kpi-sub">
                 <span>تحصيل الفترة: <b id="dpKpiCollected">0</b> ج.م</span>
@@ -1620,8 +1620,8 @@
             </div>
             <div class="dp-kpi-value"><span id="dpKpiGeneral">0</span> <small>ج.م</small></div>
             <div class="dp-kpi-split">
-                <div><span>المدفوع</span><b class="paid" id="dpKpiGeneralPaid">0</b></div>
-                <div><span>الباقي</span><b class="remain" id="dpKpiGeneralRemain">0</b></div>
+                <div><span>المدفوع</span><b class="paid fs-5" id="dpKpiGeneralPaid">0</b></div>
+                <div><span>الباقي</span><b class="remain fs-5" id="dpKpiGeneralRemain">0</b></div>
             </div>
             <div class="dp-kpi-track"><div class="dp-kpi-fill" id="dpKpiGeneralBar"></div></div>
             <div class="dp-kpi-sub" id="dpKpiGeneralSub">—</div>
@@ -1633,11 +1633,66 @@
             </div>
             <div class="dp-kpi-value"><span id="dpKpiOrtho">0</span> <small>ج.م</small></div>
             <div class="dp-kpi-split">
-                <div><span>المدفوع</span><b class="paid" id="dpKpiOrthoPaid">0</b></div>
-                <div><span>الباقي</span><b class="remain" id="dpKpiOrthoRemain">0</b></div>
+                <div><span>المدفوع</span><b class="paid fs-5" id="dpKpiOrthoPaid">0</b></div>
+                <div><span>الباقي</span><b class="remain fs-5" id="dpKpiOrthoRemain">0</b></div>
             </div>
             <div class="dp-kpi-track"><div class="dp-kpi-fill" id="dpKpiOrthoBar"></div></div>
             <div class="dp-kpi-sub" id="dpKpiOrthoSub">—</div>
+        </div>
+    </div>
+   
+
+    <!-- Methods + Table -->
+    <div class="dp-grid-2" style="grid-template-columns: 1fr 2.4fr;">
+        <div class="dp-card">
+            <div class="dp-card-head">
+                <h5><i class="bi bi-wallet2"></i> طرق الدفع</h5>
+            </div>
+            <div class="dp-methods" id="dpMethods"></div>
+        </div>
+
+        <div class="dp-card">
+            <div class="dp-card-head">
+                <h5><i class="bi bi-list-ul"></i> تفاصيل الدفعات</h5>
+                <div class="dp-table-tools">
+                    <div class="dp-chips" id="dpCatChips">
+                        <button type="button" class="dp-chip active" data-cat="all">الكل <b id="dpCntAll">0</b></button>
+                        <button type="button" class="dp-chip" data-cat="general">عام <b id="dpCntGeneral">0</b></button>
+                        <button type="button" class="dp-chip ortho" data-cat="ortho">تقويم <b id="dpCntOrtho">0</b></button>
+                    </div>
+                    <div class="dp-search">
+                        <input type="text" id="dpSearch" placeholder="مريض / موبايل / إيصال..." autocomplete="off" />
+                        <i class="bi bi-search"></i>
+                    </div>
+                    <button type="button" class="dp-icon-btn small" id="dpExport" title="تصدير Excel"><i class="bi bi-file-earmark-spreadsheet"></i> تصدير</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="dp-table">
+                    <thead>
+                        <tr>
+                            <th>الوقت</th>
+                            <th>المريض</th>
+                            <th>النوع</th>
+                            <th>الدفعة</th>
+                            <th>المطلوب</th>
+                            <th>المدفوع</th>
+                            <th>الخصم</th>
+                            <th>الباقي</th>
+                            <th>الطريقة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dpTbody"></tbody>
+                </table>
+                <div class="dp-empty" id="dpEmpty" style="display:none;">
+                    <i class="bi bi-inbox"></i>
+                    لا توجد دفعات في الفترة دي
+                </div>
+            </div>
+            <div class="dp-table-foot">
+                <span class="dp-table-sum" id="dpTableSum">—</span>
+                <button type="button" class="dp-load-more" id="dpLoadMore" style="display:none;">عرض المزيد <i class="bi bi-chevron-down"></i></button>
+            </div>
         </div>
     </div>
 
@@ -1720,61 +1775,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Methods + Table -->
-    <div class="dp-grid-2" style="grid-template-columns: 1fr 2.4fr;">
-        <div class="dp-card">
-            <div class="dp-card-head">
-                <h5><i class="bi bi-wallet2"></i> طرق الدفع</h5>
-            </div>
-            <div class="dp-methods" id="dpMethods"></div>
-        </div>
-
-        <div class="dp-card">
-            <div class="dp-card-head">
-                <h5><i class="bi bi-list-ul"></i> تفاصيل الدفعات</h5>
-                <div class="dp-table-tools">
-                    <div class="dp-chips" id="dpCatChips">
-                        <button type="button" class="dp-chip active" data-cat="all">الكل <b id="dpCntAll">0</b></button>
-                        <button type="button" class="dp-chip" data-cat="general">عام <b id="dpCntGeneral">0</b></button>
-                        <button type="button" class="dp-chip ortho" data-cat="ortho">تقويم <b id="dpCntOrtho">0</b></button>
-                    </div>
-                    <div class="dp-search">
-                        <input type="text" id="dpSearch" placeholder="مريض / موبايل / إيصال..." autocomplete="off" />
-                        <i class="bi bi-search"></i>
-                    </div>
-                    <button type="button" class="dp-icon-btn small" id="dpExport" title="تصدير Excel"><i class="bi bi-file-earmark-spreadsheet"></i> تصدير</button>
-                </div>
-            </div>
-            <div class="table-responsive">
-                <table class="dp-table">
-                    <thead>
-                        <tr>
-                            <th>الوقت</th>
-                            <th>المريض</th>
-                            <th>النوع</th>
-                            <th>الدفعة</th>
-                            <th>المطلوب</th>
-                            <th>المدفوع</th>
-                            <th>الخصم</th>
-                            <th>الباقي</th>
-                            <th>الطريقة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dpTbody"></tbody>
-                </table>
-                <div class="dp-empty" id="dpEmpty" style="display:none;">
-                    <i class="bi bi-inbox"></i>
-                    لا توجد دفعات في الفترة دي
-                </div>
-            </div>
-            <div class="dp-table-foot">
-                <span class="dp-table-sum" id="dpTableSum">—</span>
-                <button type="button" class="dp-load-more" id="dpLoadMore" style="display:none;">عرض المزيد <i class="bi bi-chevron-down"></i></button>
-            </div>
-        </div>
-    </div>
-
     <div class="dp-tip" id="dpTip"></div>
 </section>
 

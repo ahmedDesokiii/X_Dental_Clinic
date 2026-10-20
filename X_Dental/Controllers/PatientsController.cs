@@ -442,6 +442,13 @@ namespace Dental.Controllers
                 .Where(d => d.IsActive)
                 .ToListAsync();
 
+
+            ViewBag.DiagnosisList = await _context.DiagnosisCatalogs
+    .AsNoTracking()
+    .Where(d => d.IsActive)
+    .OrderBy(d => d.NameEn)
+    .ToListAsync();
+
             return View(model);
         }
 
