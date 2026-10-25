@@ -1,69 +1,349 @@
 @* ============================================================
-   📁 File: Views/Clinical/_OrthoSessionPanel.cshtml  (ملف جديد)
+   📁 File: Views/Clinical/_OrthoSessionPanel.cshtml
    شاشة سيشن التقويم — بتحل محل الدينتال شارت في Session.cshtml (مريض التقويم بس)
    • أول سيشن: تحديد الفك + الإجمالي (Setup)
    • كل سيشن: كارت لكل فك (Upper / Lower) → تشخيص تقويم + Comment
    • المدفوعات: شاشة _PaymentsCompact الحالية زي ما هي (الأرقام بتيجي من الـ Anchor Visit)
    • window.pendingToothRecords بتشيل مسودة التقويم عشان الـ Bottom Bar والـ Badge يشتغلوا من غير تعديل
+   • السجلات المرحّلة من النظام القديم بتبقى Arch = Both (3) وبتظهر على الفكين
    ============================================================ *@
 @model Dental.Modules.Clinical.ViewModels.SessionViewModel
 
 <style>
-    .os-shell { padding: 14px; }
-    .os-head { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
-    .os-head h3 { margin:0; font-size:1rem; font-weight:800; color:var(--dc-ink-900); display:flex; align-items:center; gap:8px; }
-    .os-badge { font-size:.72rem; font-weight:800; padding:3px 11px; border-radius:999px; background:#ede9fe; color:#6d28d9; }
+    .os-shell {
+        padding: 14px;
+    }
+
+    .os-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+
+        .os-head h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--dc-ink-900);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+    .os-badge {
+        font-size: .72rem;
+        font-weight: 800;
+        padding: 3px 11px;
+        border-radius: 999px;
+        background: #ede9fe;
+        color: #6d28d9;
+    }
 
     /* Setup */
-    .os-setup { background:linear-gradient(160deg,#f5f3ff,#faf5ff); border:1px solid #ddd6fe; border-radius:18px; padding:18px; }
-    .os-setup h4 { margin:0 0 4px; font-size:.95rem; font-weight:800; color:#5b21b6; }
-    .os-setup p { margin:0 0 14px; font-size:.78rem; color:#64748b; font-weight:600; }
-    .os-label { display:block; font-size:.76rem; font-weight:800; color:#475569; margin:12px 0 6px; }
-    .os-arch-pick { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-    .os-arch-opt { border:2px solid #e9e5ff; background:#fff; border-radius:14px; padding:12px 6px; text-align:center; font-weight:800; font-size:.82rem; color:#475569; cursor:pointer; transition:all .2s; }
-    .os-arch-opt i { display:block; font-size:1.3rem; margin-bottom:4px; color:#8b5cf6; }
-    .os-arch-opt:hover { border-color:#8b5cf6; transform:translateY(-2px); }
-    .os-arch-opt.selected { background:linear-gradient(135deg,#7c3aed,#6d28d9); color:#fff; border-color:transparent; box-shadow:0 8px 20px rgba(124,58,237,.3); }
-    .os-arch-opt.selected i { color:#fff; }
-    .os-input { width:100%; padding:10px 14px; border:1.5px solid #ede9fe; border-radius:12px; background:#fff; font-size:.92rem; outline:none; transition:border-color .2s, box-shadow .2s; }
-    .os-input:focus { border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,.12); }
-    .os-btn { border:none; border-radius:12px; padding:10px 20px; font-weight:800; font-size:.84rem; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:transform .2s, box-shadow .2s; }
-    .os-btn:hover { transform:translateY(-1px); }
-    .os-btn:disabled { opacity:.6; cursor:not-allowed; transform:none; }
-    .os-btn-primary { background:linear-gradient(135deg,#7c3aed,#6d28d9); color:#fff; box-shadow:0 8px 20px rgba(124,58,237,.3); }
-    .os-btn-ghost { background:#f5f3ff; color:#6d28d9; }
+    .os-setup {
+        background: linear-gradient(160deg,#f5f3ff,#faf5ff);
+        border: 1px solid #ddd6fe;
+        border-radius: 18px;
+        padding: 18px;
+    }
+
+        .os-setup h4 {
+            margin: 0 0 4px;
+            font-size: .95rem;
+            font-weight: 800;
+            color: #5b21b6;
+        }
+
+        .os-setup p {
+            margin: 0 0 14px;
+            font-size: .78rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+    .os-label {
+        display: block;
+        font-size: .76rem;
+        font-weight: 800;
+        color: #475569;
+        margin: 12px 0 6px;
+    }
+
+    .os-arch-pick {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: 8px;
+    }
+
+    .os-arch-opt {
+        border: 2px solid #e9e5ff;
+        background: #fff;
+        border-radius: 14px;
+        padding: 12px 6px;
+        text-align: center;
+        font-weight: 800;
+        font-size: .82rem;
+        color: #475569;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+        .os-arch-opt i {
+            display: block;
+            font-size: 1.3rem;
+            margin-bottom: 4px;
+            color: #8b5cf6;
+        }
+
+        .os-arch-opt:hover {
+            border-color: #8b5cf6;
+            transform: translateY(-2px);
+        }
+
+        .os-arch-opt.selected {
+            background: linear-gradient(135deg,#7c3aed,#6d28d9);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 8px 20px rgba(124,58,237,.3);
+        }
+
+            .os-arch-opt.selected i {
+                color: #fff;
+            }
+
+    .os-input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid #ede9fe;
+        border-radius: 12px;
+        background: #fff;
+        font-size: .92rem;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s;
+    }
+
+        .os-input:focus {
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124,58,237,.12);
+        }
+
+    .os-btn {
+        border: none;
+        border-radius: 12px;
+        padding: 10px 20px;
+        font-weight: 800;
+        font-size: .84rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        transition: transform .2s, box-shadow .2s;
+    }
+
+        .os-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .os-btn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    .os-btn-primary {
+        background: linear-gradient(135deg,#7c3aed,#6d28d9);
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(124,58,237,.3);
+    }
+
+    .os-btn-ghost {
+        background: #f5f3ff;
+        color: #6d28d9;
+    }
 
     /* Case summary */
-    .os-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
-    .os-sum-box { background:#fff; border:1px solid #f1f5f9; border-radius:14px; padding:10px; text-align:center; }
-    .os-sum-box span { display:block; font-size:.68rem; font-weight:700; color:#94a3b8; }
-    .os-sum-box b { font-size:1rem; font-weight:800; color:var(--dc-ink-900); }
-    .os-sum-box.paid b { color:#16a34a; }
-    .os-sum-box.remaining b { color:#dc2626; }
+    .os-summary {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    .os-sum-box {
+        background: #fff;
+        border: 1px solid #f1f5f9;
+        border-radius: 14px;
+        padding: 10px;
+        text-align: center;
+    }
+
+        .os-sum-box span {
+            display: block;
+            font-size: .68rem;
+            font-weight: 700;
+            color: #94a3b8;
+        }
+
+        .os-sum-box b {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--dc-ink-900);
+        }
+
+        .os-sum-box.paid b {
+            color: #16a34a;
+        }
+
+        .os-sum-box.remaining b {
+            color: #dc2626;
+        }
 
     /* Arch cards */
-    .os-arch-card { border:1.5px solid #ede9fe; background:#fff; border-radius:18px; padding:14px; margin-bottom:12px; transition:border-color .2s, box-shadow .2s; animation:fadeInUp .4s ease backwards; }
-    .os-arch-card.filled { border-color:#7c3aed; box-shadow:0 10px 26px rgba(124,58,237,.12); }
-    .os-arch-card.upper .os-arch-title i { color:#0f9b8e; }
-    .os-arch-card.lower .os-arch-title i { color:#f59e0b; }
-    .os-arch-title { display:flex; align-items:center; justify-content:space-between; font-weight:800; font-size:.92rem; color:var(--dc-ink-900); margin-bottom:10px; }
-    .os-arch-title span { display:flex; align-items:center; gap:8px; }
-    .os-last { font-size:.7rem; font-weight:700; color:#7c3aed; background:#f5f3ff; border-radius:8px; padding:5px 9px; margin-bottom:10px; }
-    .os-clear { border:none; background:transparent; color:#94a3b8; font-size:.74rem; font-weight:700; cursor:pointer; }
-    .os-clear:hover { color:#dc2626; }
-    .os-note { font-size:.72rem; color:#64748b; font-weight:600; background:#f8fafc; border-radius:10px; padding:7px 10px; }
+    .os-arch-card {
+        border: 1.5px solid #ede9fe;
+        background: #fff;
+        border-radius: 18px;
+        padding: 14px;
+        margin-bottom: 12px;
+        transition: border-color .2s, box-shadow .2s;
+        animation: fadeInUp .4s ease backwards;
+    }
+
+        .os-arch-card.filled {
+            border-color: #7c3aed;
+            box-shadow: 0 10px 26px rgba(124,58,237,.12);
+        }
+
+        .os-arch-card.upper .os-arch-title i {
+            color: #0f9b8e;
+        }
+
+        .os-arch-card.lower .os-arch-title i {
+            color: #f59e0b;
+        }
+
+    .os-arch-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: 800;
+        font-size: .92rem;
+        color: var(--dc-ink-900);
+        margin-bottom: 10px;
+    }
+
+        .os-arch-title span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+    .os-last {
+        font-size: .7rem;
+        font-weight: 700;
+        color: #7c3aed;
+        background: #f5f3ff;
+        border-radius: 8px;
+        padding: 5px 9px;
+        margin-bottom: 10px;
+    }
+
+    .os-clear {
+        border: none;
+        background: transparent;
+        color: #94a3b8;
+        font-size: .74rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+        .os-clear:hover {
+            color: #dc2626;
+        }
+
+    .os-note {
+        font-size: .72rem;
+        color: #64748b;
+        font-weight: 600;
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 7px 10px;
+    }
 
     /* Timeline */
-    .ot-visit { border:1px solid #f1f5f9; background:#fafcfd; border-radius:14px; padding:10px 14px; margin-bottom:8px; }
-    .ot-date { font-size:.78rem; font-weight:800; color:#0d7377; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
-    .ot-row { display:flex; align-items:baseline; gap:8px; padding:5px 0; border-top:1px dashed #e2e8f0; font-size:.8rem; }
-    .ot-row:first-of-type { border-top:none; }
-    .ot-arch { font-size:.68rem; font-weight:800; padding:2px 9px; border-radius:999px; flex-shrink:0; }
-    .ot-arch.upper { background:#ccfbf1; color:#0f766e; }
-    .ot-arch.lower { background:#fef3c7; color:#b45309; }
-    .ot-proc { font-weight:800; color:#0f172a; }
-    .ot-comment { color:#64748b; font-weight:600; }
-    .ot-changes { margin-top:12px; font-size:.74rem; color:#64748b; font-weight:600; }
+    .ot-visit {
+        border: 1px solid #f1f5f9;
+        background: #fafcfd;
+        border-radius: 14px;
+        padding: 10px 14px;
+        margin-bottom: 8px;
+    }
+
+    .ot-date {
+        font-size: .78rem;
+        font-weight: 800;
+        color: #0d7377;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .ot-row {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        padding: 5px 0;
+        border-top: 1px dashed #e2e8f0;
+        font-size: .8rem;
+    }
+
+        .ot-row:first-of-type {
+            border-top: none;
+        }
+
+    .ot-arch {
+        font-size: .68rem;
+        font-weight: 800;
+        padding: 2px 9px;
+        border-radius: 999px;
+        flex-shrink: 0;
+    }
+
+        .ot-arch.upper {
+            background: #ccfbf1;
+            color: #0f766e;
+        }
+
+        .ot-arch.lower {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .ot-arch.both {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+    .ot-proc {
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .ot-comment {
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    .ot-changes {
+        margin-top: 12px;
+        font-size: .74rem;
+        color: #64748b;
+        font-weight: 600;
+    }
 </style>
 
 <div class="os-shell" id="orthoRoot">
@@ -71,7 +351,7 @@
 </div>
 
 <script>
-    (function () {
+    (function() {
         const PATIENT_ID = @Model.Patient.Id;
         const VISIT_ID = @Model.Visit.Id;
         const UPPER = 1, LOWER = 2, BOTH = 3;
@@ -81,7 +361,7 @@
         const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         const fmt = n => Number(n || 0).toLocaleString('en-EG');
         const archName = a => a === UPPER ? 'Upper' : a === LOWER ? 'Lower' : 'Upper + Lower';
-        const archKey = a => a === UPPER ? 'upper' : 'lower';
+        const archKey = a => a === UPPER ? 'upper' : a === LOWER ? 'lower' : 'both';
         const toast = (title, icon) => Swal.fire({ toast: true, position: 'top-end', icon: icon || 'success', title, showConfirmButton: false, timer: 1700, customClass: { popup: 'rounded-4' } });
 
         const st = {
@@ -99,8 +379,10 @@
         // ════════ Load ════════
         async function load() {
             try {
-                const res = await fetch(`/Ortho/GetCase?patientId=${PATIENT_ID}`);
+                const res = await fetch(`/Ortho/GetCase?patientId=${PATIENT_ID}&visitId=${VISIT_ID}`);
                 const r = await res.json();
+                // ⭐ الحالة اتبنت/اتصححت من السجلات القديمة → reload عشان أرقام الدفع والـ Bottom Bar (من السيرفر) تتحدث
+                if (r.created) { window.location.reload(); return; }
                 st.data = r.hasCase ? r.data : null;
                 st.catalog = r.catalog || [];
                 if (st.data) initDraft();
@@ -110,12 +392,14 @@
             }
         }
 
-        // لو السيشن ده اتحفظ قبل كده (إعادة فتح) → نملا المسودة من اللي اتسجل
+        // لو السيشن ده اتحفظ قبل كده (إعادة فتح) → نملا المسودة من اللي اتسجل (Upper / Lower بس)
         function initDraft() {
             st.draft = { [UPPER]: { proc: '', comment: '' }, [LOWER]: { proc: '', comment: '' } };
-            (st.data.entries || []).filter(e => e.visitId === VISIT_ID).forEach(e => {
-                st.draft[e.arch] = { proc: e.orthoProcedureId ? String(e.orthoProcedureId) : '', comment: e.comment || '' };
-            });
+            (st.data.entries || [])
+                .filter(e => e.visitId === VISIT_ID && (e.arch === UPPER || e.arch === LOWER))
+                .forEach(e => {
+                    st.draft[e.arch] = { proc: e.orthoProcedureId ? String(e.orthoProcedureId) : '', comment: e.comment || '' };
+                });
         }
 
         function caseArches() {
@@ -133,24 +417,24 @@
 
         function renderSetup() {
             root.innerHTML = `
-                <div class="os-setup">
-                    <h4><i class="bi bi-braces"></i> Start Orthodontic Case</h4>
-                    <p>Choose the arch(es) and the total agreed amount. This is done once — you can change both later.</p>
+                    <div class="os-setup">
+                        <h4><i class="bi bi-braces"></i> Start Orthodontic Case</h4>
+                        <p>Choose the arch(es) and the total agreed amount. This is done once — you can change both later.</p>
 
-                    <label class="os-label">Arch</label>
-                    <div class="os-arch-pick" id="osArchPick">
-                        <div class="os-arch-opt ${st.setupArch === UPPER ? 'selected' : ''}" data-arch="${UPPER}"><i class="bi bi-arrow-up-circle"></i>Upper</div>
-                        <div class="os-arch-opt ${st.setupArch === LOWER ? 'selected' : ''}" data-arch="${LOWER}"><i class="bi bi-arrow-down-circle"></i>Lower</div>
-                        <div class="os-arch-opt ${st.setupArch === BOTH ? 'selected' : ''}" data-arch="${BOTH}"><i class="bi bi-arrow-down-up"></i>Both</div>
-                    </div>
+                        <label class="os-label">Arch</label>
+                        <div class="os-arch-pick" id="osArchPick">
+                            <div class="os-arch-opt ${st.setupArch === UPPER ? 'selected' : ''}" data-arch="${UPPER}"><i class="bi bi-arrow-up-circle"></i>Upper</div>
+                            <div class="os-arch-opt ${st.setupArch === LOWER ? 'selected' : ''}" data-arch="${LOWER}"><i class="bi bi-arrow-down-circle"></i>Lower</div>
+                            <div class="os-arch-opt ${st.setupArch === BOTH ? 'selected' : ''}" data-arch="${BOTH}"><i class="bi bi-arrow-down-up"></i>Both</div>
+                        </div>
 
-                    <label class="os-label">Total Payment Required (EGP)</label>
-                    <input type="number" min="0" step="0.01" class="os-input" id="osTotal" placeholder="0" />
+                        <label class="os-label">Total Payment Required (EGP)</label>
+                        <input type="number" min="0" step="0.01" class="os-input" id="osTotal" placeholder="0" />
 
-                    <div style="margin-top:16px; display:flex; justify-content:flex-end;">
-                        <button type="button" class="os-btn os-btn-primary" id="osStart"><i class="bi bi-check2-circle"></i> Start Case</button>
-                    </div>
-                </div>`;
+                        <div style="margin-top:16px; display:flex; justify-content:flex-end;">
+                            <button type="button" class="os-btn os-btn-primary" id="osStart"><i class="bi bi-check2-circle"></i> Start Case</button>
+                        </div>
+                    </div>`;
 
             $('osArchPick').addEventListener('click', e => {
                 const opt = e.target.closest('.os-arch-opt');
@@ -166,8 +450,9 @@
                 `<option value="${p.id}" ${String(p.id) === String(selected) ? 'selected' : ''}>${esc(p.nameEn || p.nameAr)}</option>`).join('');
         }
 
+        // آخر سجل للفك ده من زيارة سابقة (السجل المرحّل Both بيتحسب للفكين)
         function lastEntry(arch) {
-            return (st.data.entries || []).find(e => e.arch === arch && e.visitId !== VISIT_ID);
+            return (st.data.entries || []).find(e => (e.arch & arch) !== 0 && e.visitId !== VISIT_ID);
         }
 
         function renderCase() {
@@ -177,31 +462,31 @@
                 const last = lastEntry(a);
                 const filled = dr.proc || (dr.comment || '').trim();
                 return `
-                <div class="os-arch-card ${archKey(a)} ${filled ? 'filled' : ''}" data-arch="${a}" style="animation-delay:${i * 80}ms">
-                    <div class="os-arch-title">
-                        <span><i class="bi ${a === UPPER ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'}"></i> ${archName(a)} Arch</span>
-                        <button type="button" class="os-clear" data-clear="${a}"><i class="bi bi-x-circle"></i> Skip this visit</button>
-                    </div>
-                    ${last ? `<div class="os-last"><i class="bi bi-clock-history"></i> Last (${new Date(last.date).toLocaleDateString('en-GB')}): ${esc(last.procedureName || '—')}${last.comment ? ' — ' + esc(last.comment) : ''}</div>` : ''}
-                    <label class="os-label" style="margin-top:0;">Diagnosis</label>
-                    <select class="os-input" data-proc="${a}">${procOptions(dr.proc)}</select>
-                    <label class="os-label">Comment</label>
-                    <textarea class="os-input" rows="2" data-comment="${a}" placeholder="Notes for this visit...">${esc(dr.comment)}</textarea>
-                </div>`;
+                    <div class="os-arch-card ${archKey(a)} ${filled ? 'filled' : ''}" data-arch="${a}" style="animation-delay:${i * 80}ms">
+                        <div class="os-arch-title">
+                            <span><i class="bi ${a === UPPER ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'}"></i> ${archName(a)} Arch</span>
+                            <button type="button" class="os-clear" data-clear="${a}"><i class="bi bi-x-circle"></i> Skip this visit</button>
+                        </div>
+                        ${last ? `<div class="os-last"><i class="bi bi-clock-history"></i> Last (${new Date(last.date).toLocaleDateString('en-GB')}): ${esc(last.procedureName || '—')}${last.comment ? ' — ' + esc(last.comment) : ''}</div>` : ''}
+                        <label class="os-label" style="margin-top:0;">Diagnosis</label>
+                        <select class="os-input" data-proc="${a}">${procOptions(dr.proc)}</select>
+                        <label class="os-label">Comment</label>
+                        <textarea class="os-input" rows="2" data-comment="${a}" placeholder="Notes for this visit...">${esc(dr.comment)}</textarea>
+                    </div>`;
             }).join('');
 
             root.innerHTML = `
-                <div class="os-head">
-                    <h3><i class="bi bi-braces"></i> Orthodontic Session <span class="os-badge">${archName(d.archType)}</span></h3>
-                    <button type="button" class="os-btn os-btn-ghost" id="osEdit"><i class="bi bi-pencil-square"></i> Edit case</button>
-                </div>
-                <div class="os-summary">
-                    <div class="os-sum-box"><span>Total</span><b>${fmt(d.totalRequired)}</b></div>
-                    <div class="os-sum-box paid"><span>Paid</span><b>${fmt(d.paid)}</b></div>
-                    <div class="os-sum-box remaining"><span>Remaining</span><b>${fmt(d.remaining)}</b></div>
-                </div>
-                ${cards}
-                <div class="os-note"><i class="bi bi-info-circle"></i> You can record one arch or both. Leave an arch empty to skip it. Payments are added from the Payments tab.</div>`;
+                    <div class="os-head">
+                        <h3><i class="bi bi-braces"></i> Orthodontic Session <span class="os-badge">${archName(d.archType)}</span></h3>
+                        <button type="button" class="os-btn os-btn-ghost" id="osEdit"><i class="bi bi-pencil-square"></i> Edit case</button>
+                    </div>
+                    <div class="os-summary">
+                        <div class="os-sum-box"><span>Total</span><b>${fmt(d.totalRequired)}</b></div>
+                        <div class="os-sum-box paid"><span>Paid</span><b>${fmt(d.paid)}</b></div>
+                        <div class="os-sum-box remaining"><span>Remaining</span><b>${fmt(d.remaining)}</b></div>
+                    </div>
+                    ${cards}
+                    <div class="os-note"><i class="bi bi-info-circle"></i> You can record one arch or both. Leave an arch empty to skip it. Payments are added from the Payments tab.</div>`;
 
             $('osEdit').addEventListener('click', editCase);
 
@@ -256,15 +541,15 @@
                 `<div><i class="bi bi-arrow-repeat"></i> ${new Date(c.changedAt).toLocaleDateString('en-GB')}: ${fmt(c.oldTotal)} → <b>${fmt(c.newTotal)}</b>${c.reason ? ' — ' + esc(c.reason) : ''}</div>`).join('');
 
             host.innerHTML = (visits.length ? visits.map(v => `
-                <div class="ot-visit">
-                    <div class="ot-date"><i class="bi bi-calendar-event"></i> ${new Date(v.date).toLocaleDateString('en-GB')}</div>
-                    ${v.rows.sort((a, b) => a.arch - b.arch).map(r => `
-                        <div class="ot-row">
-                            <span class="ot-arch ${archKey(r.arch)}">${archName(r.arch)}</span>
-                            <span class="ot-proc">${esc(r.procedureName || '—')}</span>
-                            ${r.comment ? `<span class="ot-comment">${esc(r.comment)}</span>` : ''}
-                        </div>`).join('')}
-                </div>`).join('')
+                    <div class="ot-visit">
+                        <div class="ot-date"><i class="bi bi-calendar-event"></i> ${new Date(v.date).toLocaleDateString('en-GB')}</div>
+                        ${v.rows.sort((a, b) => a.arch - b.arch).map(r => `
+                            <div class="ot-row">
+                                <span class="ot-arch ${archKey(r.arch)}">${archName(r.arch)}</span>
+                                <span class="ot-proc">${esc(r.procedureName || '—')}</span>
+                                ${r.comment ? `<span class="ot-comment">${esc(r.comment)}</span>` : ''}
+                            </div>`).join('')}
+                    </div>`).join('')
                 : '<div class="empty-state"><i class="bi bi-inbox"></i><p>No orthodontic visits recorded yet.</p></div>')
                 + (changes ? `<div class="ot-changes"><b>Total changes</b>${changes}</div>` : '');
         }
@@ -294,18 +579,18 @@
             const { value: v, isConfirmed } = await Swal.fire({
                 title: 'Edit orthodontic case',
                 html: `
-                    <div style="text-align:right;">
-                        <label class="os-label">Arch</label>
-                        <select id="ocArch" class="os-input">
-                            <option value="${UPPER}" ${d.archType === UPPER ? 'selected' : ''}>Upper</option>
-                            <option value="${LOWER}" ${d.archType === LOWER ? 'selected' : ''}>Lower</option>
-                            <option value="${BOTH}" ${d.archType === BOTH ? 'selected' : ''}>Upper + Lower</option>
-                        </select>
-                        <label class="os-label">Total required (EGP)</label>
-                        <input id="ocTotal" type="number" min="0" step="0.01" class="os-input" value="${d.totalRequired}" />
-                        <label class="os-label">Reason (required if total changes)</label>
-                        <input id="ocReason" type="text" class="os-input" placeholder="e.g. added lower arch" />
-                    </div>`,
+                        <div style="text-align:right;">
+                            <label class="os-label">Arch</label>
+                            <select id="ocArch" class="os-input">
+                                <option value="${UPPER}" ${d.archType === UPPER ? 'selected' : ''}>Upper</option>
+                                <option value="${LOWER}" ${d.archType === LOWER ? 'selected' : ''}>Lower</option>
+                                <option value="${BOTH}" ${d.archType === BOTH ? 'selected' : ''}>Upper + Lower</option>
+                            </select>
+                            <label class="os-label">Total required (EGP)</label>
+                            <input id="ocTotal" type="number" min="0" step="0.01" class="os-input" value="${d.totalRequired}" />
+                            <label class="os-label">Reason (required if total changes)</label>
+                            <input id="ocReason" type="text" class="os-input" placeholder="e.g. added lower arch" />
+                        </div>`,
                 showCancelButton: true,
                 confirmButtonText: 'Save',
                 confirmButtonColor: '#7c3aed',

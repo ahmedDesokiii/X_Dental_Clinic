@@ -10,7 +10,8 @@
         (Model.Patient.FullNameAr ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(x => x[0]));
 
     var sessionStatusClass = Model.Visit.Status switch
-    {        VisitStatus.Completed => "success",
+    {
+        VisitStatus.Completed => "success",
         VisitStatus.Cancelled => "danger",
         _ => "warning"
     };
@@ -578,7 +579,7 @@
         z-index: 100;
         transform: translateY(100%);
         transition: transform 0.4s cubic-bezier(0.2,0.8,0.3,1);
-        margin-bottom :7px;
+        margin-bottom: 7px;
     }
 
         .bottom-action-bar.visible {
@@ -879,9 +880,6 @@
         flex-shrink: 0;
     }
 
-
-
-
 </style>
 <style>
     /* ⭐ Shine sweep across hero */
@@ -897,6 +895,7 @@
         animation: heroShine 6s ease-in-out infinite;
         pointer-events: none;
     }
+
     @@keyframes heroShine {
         0%, 100% {
             right: -40%;
@@ -915,6 +914,7 @@
         animation: particleFloat linear infinite;
         pointer-events: none;
     }
+
     @@keyframes particleFloat {
         0% {
             transform: translateY(20px) scale(1);
@@ -961,6 +961,7 @@
         position: relative;
         overflow: hidden;
     }
+
     @@keyframes btnShine {
         0% {
             left: -80%;
@@ -974,6 +975,62 @@
             left: 130%;
         }
     }
+</style>
+<style>
+    /* ⭐ Ortho — تمييز شاشة الدفع والـ Bottom Bar (سيشن التقويم بس) */
+    .ortho-pay-banner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: linear-gradient(135deg, #f5f3ff, #faf5ff);
+        border: 1px solid #ddd6fe;
+        border-right: 4px solid #7c3aed;
+        border-radius: 16px;
+        padding: 12px 16px;
+        margin-bottom: 14px;
+    }
+
+        .ortho-pay-banner .opb-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            box-shadow: 0 6px 16px rgba(124,58,237,.3);
+        }
+
+        .ortho-pay-banner b {
+            display: block;
+            font-size: .86rem;
+            font-weight: 800;
+            color: #5b21b6;
+        }
+
+        .ortho-pay-banner span {
+            font-size: .74rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+    .tab-ortho .dc-tab-btn.active {
+        color: #6d28d9;
+        box-shadow: 0 4px 16px rgba(124,58,237,.14);
+    }
+
+    .bottom-action-bar.ortho {
+        border-top: 2px solid #ddd6fe;
+    }
+
+        .bottom-action-bar.ortho .btn-finish {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            box-shadow: 0 8px 24px rgba(124,58,237,.3);
+            animation: none;
+        }
 </style>
 
 
@@ -1016,15 +1073,15 @@
                     <i class="bi bi-arrow-right"></i>
                 </a>
             </div>
-            </div>
         </div>
+    </div>
 
     @* ====== BOTTOM STICKY ACTION BAR ====== *@
-    <div class="bottom-action-bar rounded-4" id="bottomBar">
+    <div class="bottom-action-bar rounded-4 @(isOrtho ? "ortho" : "")" id="bottomBar">
         <div class="bottom-stats">
             <div class="bottom-stat">
                 <span class="bottom-stat-value" id="barTotal">@Model.Visit.TotalAmount.ToString("N0")</span>
-                <span class="bottom-stat-label">Total Amount</span>
+                <span class="bottom-stat-label">@(isOrtho ? "Case Total" : "Total Amount")</span>
             </div>
             <div class="bottom-stat paid">
                 <span class="bottom-stat-value" id="barPaid">@Model.Visit.PaidAmount.ToString("N0")</span>
@@ -1044,40 +1101,40 @@
         </button>
     </div>
 
-        <div class="hero-metrics" hidden>
-            <div class="metric-glass anim-fade-up anim-d1">
-                <span class="metric-value">@Model.Visit.TotalAmount.ToString("N0")</span>
-                <span class="metric-label">الإجمالي (م.ج)</span>
-            </div>
-            <div class="metric-glass anim-fade-up anim-d2">
-                <span class="metric-value">@Model.Visit.Discount.ToString("N0")</span>
-                <span class="metric-label">الخصم</span>
-            </div>
-            <div class="metric-glass anim-fade-up anim-d3">
-                <span class="metric-value">@Model.Visit.PaidAmount.ToString("N0")</span>
-                <span class="metric-label">المدفوع</span>
-            </div>
-            <div class="metric-glass anim-fade-up anim-d4">
-                <span class="metric-value">@Model.Visit.Remaining.ToString("N0")</span>
-                <span class="metric-label">المتبقي</span>
-            </div>
+    <div class="hero-metrics" hidden>
+        <div class="metric-glass anim-fade-up anim-d1">
+            <span class="metric-value">@Model.Visit.TotalAmount.ToString("N0")</span>
+            <span class="metric-label">الإجمالي (م.ج)</span>
         </div>
-
-        <div class="payment-progress-hero" hidden>
-            <div class="progress-label-row">
-                <span>نسبة السداد</span>
-                <b>@paidPercent%</b>
-            </div>
-            <div class="progress-track">
-                <div class="progress-fill"></div>
-            </div>
+        <div class="metric-glass anim-fade-up anim-d2">
+            <span class="metric-value">@Model.Visit.Discount.ToString("N0")</span>
+            <span class="metric-label">الخصم</span>
+        </div>
+        <div class="metric-glass anim-fade-up anim-d3">
+            <span class="metric-value">@Model.Visit.PaidAmount.ToString("N0")</span>
+            <span class="metric-label">المدفوع</span>
+        </div>
+        <div class="metric-glass anim-fade-up anim-d4">
+            <span class="metric-value">@Model.Visit.Remaining.ToString("N0")</span>
+            <span class="metric-label">المتبقي</span>
         </div>
     </div>
 
-    @* ====== MAIN DASHBOARD GRID ====== *@
-    <div class="dashboard-grid">
+    <div class="payment-progress-hero" hidden>
+        <div class="progress-label-row">
+            <span>نسبة السداد</span>
+            <b>@paidPercent%</b>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill"></div>
+        </div>
+    </div>
+</div>
 
-        @* --- LEFT: Chart --- *@
+@* ====== MAIN DASHBOARD GRID ====== *@
+<div class="dashboard-grid">
+
+    @* --- LEFT: Chart --- *@
     <div class="chart-panel">
         @if (isOrtho)
         {
@@ -1087,90 +1144,98 @@
         {
             @await Html.PartialAsync("_DentalChartInteractive", Model)
             <div class="chart-legend-compact">
-               
-                    <span class="legend-item-sm"><span class="legend-dot" style="background:#fff;border:2px solid #0f9b8e;"></span> Healthy</span>
-                    <span class="legend-item-sm"><span class="legend-dot" style="background:#ef4444;"></span> Decayed</span>
-                    <span class="legend-item-sm"><span class="legend-dot" style="background:#3b82f6;"></span> Treated</span>
-                    <span class="legend-item-sm"><span class="legend-dot" style="background:#cbd5e1;"></span> Missing</span>
-                    <span class="legend-item-sm"><span class="legend-dot" style="background:#cbd5e1;"></span> Extracted</span>
-                    <span class="legend-item-sm"><span class="legend-dot" style="background:#f59e0b;"></span> RootCanal</span>
-                    <span class="legend-item-sm"><span class="legend-dot" style="background:#a855f7;"></span> Crown</span>
-                    <span class="legend-item-sm"><span class="legend-dot" style="background:#ec4899;"></span> Impants</span>
+
+                <span class="legend-item-sm"><span class="legend-dot" style="background:#fff;border:2px solid #0f9b8e;"></span> Healthy</span>
+                <span class="legend-item-sm"><span class="legend-dot" style="background:#ef4444;"></span> Decayed</span>
+                <span class="legend-item-sm"><span class="legend-dot" style="background:#3b82f6;"></span> Treated</span>
+                <span class="legend-item-sm"><span class="legend-dot" style="background:#cbd5e1;"></span> Missing</span>
+                <span class="legend-item-sm"><span class="legend-dot" style="background:#cbd5e1;"></span> Extracted</span>
+                <span class="legend-item-sm"><span class="legend-dot" style="background:#f59e0b;"></span> RootCanal</span>
+                <span class="legend-item-sm"><span class="legend-dot" style="background:#a855f7;"></span> Crown</span>
+                <span class="legend-item-sm"><span class="legend-dot" style="background:#ec4899;"></span> Impants</span>
             </div>
         }
     </div>
 
 
 
-    
-
-        @* --- RIGHT: Tabs Content --- *@
-        <div class="content-panel">
-            <div class="dc-tabs-bar">
-
-                @if (!isOrtho)
-                {
-                    <button type="button" class="dc-tab-btn active" onclick="switchTab('tabCurrent', this)">
-                        <i class="bi bi-table"></i> Current Session
-                        <span class="tab-badge" id="tabBadgeCurrent">0</span>
-                    </button>
-                }
-                <button type="button" class="dc-tab-btn @(isOrtho ? "active" : "")" onclick="switchTab('tabPayments', this)">
-                    <i class="bi bi-credit-card-2-front"></i> Payments
-                </button>
 
 
-               
-                <button type="button" class="dc-tab-btn" onclick="switchTab('tabPrev', this)">
-                    <i class="bi bi-clock-history"></i> Previous Sessions
-                </button>
-                <button type="button" class="dc-tab-btn" onclick="switchTab('tabXray', this)">
-                    <i class="bi bi-image"></i> X-Rays
-                </button>
-                <button type="button" class="dc-tab-btn" onclick="switchTab('tabFollow', this)">
-                    <i class="bi bi-calendar-plus"></i> Follow Up
-                </button>
-            </div>
+    @* --- RIGHT: Tabs Content --- *@
+    <div class="content-panel @(isOrtho ? "tab-ortho" : "")">
+        <div class="dc-tabs-bar">
 
             @if (!isOrtho)
             {
-                <div class="dc-tab-panel active custom-scroll" id="tabCurrent" style="max-height:680px; overflow-y:auto;">
-                    @await Html.PartialAsync("_ClinicalRecordsTable", Model)
-                </div>
+                <button type="button" class="dc-tab-btn active" onclick="switchTab('tabCurrent', this)">
+                    <i class="bi bi-table"></i> Current Session
+                    <span class="tab-badge" id="tabBadgeCurrent">0</span>
+                </button>
             }
+            <button type="button" class="dc-tab-btn @(isOrtho ? "active" : "")" onclick="switchTab('tabPayments', this)">
+                <i class="bi @(isOrtho ? "bi-braces" : "bi-credit-card-2-front")"></i> @(isOrtho ? "Ortho Payments" : "Payments")
+            </button>
 
-            <div class="dc-tab-panel custom-scroll" id="tabPrev" style="max-height:680px; overflow-y:auto;">
-                @if (isOrtho)
-                {
-                    <div class="section-card" style="margin-bottom:0;">
-                        <div class="section-head"><h4><i class="bi bi-clock-history"></i> Orthodontic Visits</h4></div>
-                        <div id="orthoTimeline"></div>
-                    </div>
-                }
-                else
-                {
-                    @await Html.PartialAsync("_PreviousSessionsTable", Model)
-                }
-            </div>
-             <div class="dc-tab-panel custom-scroll" id="tabXray" style="max-height:680px; overflow-y:auto;">
-                @await Html.PartialAsync("_XRaysTable", Model)
-            </div>
 
-            <div class="dc-tab-panel custom-scroll @(isOrtho ? "active" : "")" id="tabPayments" style="max-height:680px; overflow-y:auto;">
-                @await Html.PartialAsync("_PaymentsCompact", Model)
-            </div>
 
+            <button type="button" class="dc-tab-btn" onclick="switchTab('tabPrev', this)">
+                <i class="bi bi-clock-history"></i> Previous Sessions
+            </button>
+            <button type="button" class="dc-tab-btn" onclick="switchTab('tabXray', this)">
+                <i class="bi bi-image"></i> X-Rays
+            </button>
+            <button type="button" class="dc-tab-btn" onclick="switchTab('tabFollow', this)">
+                <i class="bi bi-calendar-plus"></i> Follow Up
+            </button>
+        </div>
+
+        @* ⭐ الجدول العادي بيترسم مرة واحدة بس، وفي السيشن العادي بس
+               (كان مكرر تحت بره الـ if → سكريبته كان بيغطي على saveAndEndSession بتاع التقويم) *@
+        @if (!isOrtho)
+        {
             <div class="dc-tab-panel active custom-scroll" id="tabCurrent" style="max-height:680px; overflow-y:auto;">
                 @await Html.PartialAsync("_ClinicalRecordsTable", Model)
             </div>
-            
-            <div class="dc-tab-panel custom-scroll" id="tabFollow" style="max-height:680px; overflow-y:auto;">
-                @await Html.PartialAsync("_FollowUpPanel", Model)
-            </div>
+        }
+
+        <div class="dc-tab-panel custom-scroll" id="tabPrev" style="max-height:680px; overflow-y:auto;">
+            @if (isOrtho)
+            {
+                <div class="section-card" style="margin-bottom:0;">
+                    <div class="section-head"><h4><i class="bi bi-clock-history"></i> Orthodontic Visits</h4></div>
+                    <div id="orthoTimeline"></div>
+                </div>
+            }
+            else
+            {
+                @await Html.PartialAsync("_PreviousSessionsTable", Model)
+            }
         </div>
-    
+        <div class="dc-tab-panel custom-scroll" id="tabXray" style="max-height:680px; overflow-y:auto;">
+            @await Html.PartialAsync("_XRaysTable", Model)
+        </div>
+
+        <div class="dc-tab-panel custom-scroll @(isOrtho ? "active" : "")" id="tabPayments" style="max-height:680px; overflow-y:auto;">
+            @if (isOrtho)
+            {
+                <div class="ortho-pay-banner">
+                    <div class="opb-icon"><i class="bi bi-braces"></i></div>
+                    <div>
+                        <b>Orthodontic case payments</b>
+                        <span>Payments and discounts here are recorded on the case agreement (total @Model.Visit.TotalAmount.ToString("N0")), not on this visit only. They are saved when you click Save Session.</span>
+                    </div>
+                </div>
+            }
+            @await Html.PartialAsync("_PaymentsCompact", Model)
+        </div>
+
+        <div class="dc-tab-panel custom-scroll" id="tabFollow" style="max-height:680px; overflow-y:auto;">
+            @await Html.PartialAsync("_FollowUpPanel", Model)
+        </div>
     </div>
-  
+
+</div>
+
 
 
 
@@ -1195,7 +1260,7 @@
             if (btnPrint) btnPrint.addEventListener("click", () => window.print());
 
             const bottomBar = document.getElementById('bottomBar');
-            
+
             function checkPendingChanges() {
                 const hasTeeth = (window.pendingToothRecords || []).length > 0;
                 const hasPayments = window.pendingPayments && window.pendingPayments.length > 0;

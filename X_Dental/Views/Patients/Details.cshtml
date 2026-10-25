@@ -19,6 +19,18 @@
         _ => "General"
     };
 
+    // ⭐ Ortho: المريض التقويم بس → تاب Ortho Case بدل Dental Chart، وسجلات التقويم في Previous Records
+    //          المريض "عام + تقويم" → كل التابات العادية زي ما هي + تاب Ortho Case إضافي
+    var isOrthoPatient = patient.PatientType == PatientType.Orthodontics;
+    var isBothPatient = patient.PatientType == PatientType.Both;
+    var hasOrtho = isOrthoPatient || isBothPatient;
+    var patientTypeIcon = patient.PatientType switch
+    {
+        PatientType.Orthodontics => "bi-braces",
+        PatientType.Both => "bi-heart-pulse",
+        _ => "bi-app-indicator"
+    };
+
     ViewBag.CurrentPatientId = patient.Id;   // used by _DocumentsManager
     ViewBag.PcIsBothType = patient.PatientType == PatientType.Both;
 
@@ -612,6 +624,10 @@
             flex-shrink: 0;
         }
 
+        .kpi-fact-chip.ortho i {
+            color: #7c3aed;
+        }
+
         .kpi-fact-chip b {
             display: block;
             font-size: .88rem;
@@ -635,7 +651,6 @@
         /* overflow: hidden; */
         border: 1px solid rgba(255,255,255,.6);
         margin-bottom: 20px;
-        
     }
 
     .tabs-pill-bar {
@@ -676,6 +691,16 @@
 
         .tab-pill i {
             font-size: 0.95rem;
+        }
+
+        /* ⭐ Ortho tab — بنفسجي عشان يتميز */
+        .tab-pill.ortho:hover {
+            color: #6d28d9;
+        }
+
+        .tab-pill.ortho.active {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            box-shadow: 0 4px 10px rgba(124,58,237,0.3);
         }
 
     .tab-panels {
@@ -1174,7 +1199,7 @@
                     <span class="hero-tag"><i class="bi bi-telephone"></i> @patient.Mobile</span>
                     <span class="hero-tag"><i class="bi @genderIconClass"></i> @patient.Gender?.NameAr</span>
                     <span class="hero-tag"><i class="bi bi-calendar"></i> @(patient.Age) yrs</span>
-                    <span class="hero-tag"><i class="bi bi-app-indicator"></i> @patientTypeLabel</span>
+                    <span class="hero-tag"><i class="bi @patientTypeIcon"></i> @patientTypeLabel</span>
                     <span class="hero-tag"><i class="bi bi-droplet"></i> @(patient.BloodGroup?.Name ?? "-")</span>
                 </div>
             </div>
@@ -1261,13 +1286,26 @@
                     <span style="font-size:13px">Last Visit</span>
                 </div>
             </div>
-            <div class="kpi-fact-chip">
-                <i class="bi bi-grid-3x3-gap"></i>
-                <div>
-                    <b class="fs-6">@teethRecorded</b>
-                    <span style="font-size:13px">Teeth Recorded</span>
+            @if (isOrthoPatient)
+            {
+                <div class="kpi-fact-chip ortho">
+                    <i class="bi bi-braces"></i>
+                    <div>
+                        <b class="fs-6" id="kpiOrthoVisits">—</b>
+                        <span style="font-size:13px">Ortho Visits</span>
+                    </div>
                 </div>
-            </div>
+            }
+            else
+            {
+                <div class="kpi-fact-chip">
+                    <i class="bi bi-grid-3x3-gap"></i>
+                    <div>
+                        <b class="fs-6">@teethRecorded</b>
+                        <span style="font-size:13px">Teeth Recorded</span>
+                    </div>
+                </div>
+            }
             <div class="kpi-fact-chip">
                 <i class="bi bi-image"></i>
                 <div>
@@ -1290,7 +1328,18 @@
         <div class="tabs-pill-bar">
             <button class="tab-pill active" onclick="switchTab('overview', this)"><i class="bi bi-person-lines-fill"></i> Overview</button>
             <button class="tab-pill" onclick="switchTab('prevSessions', this)"><i class="bi bi-archive"></i> Previous Records</button>
-            <button class="tab-pill" onclick="switchTab('teeth', this)"><i class="bi bi-grid-3x3-gap"></i> Dental Chart</button>
+            @if (isOrthoPatient)
+            {
+                <button class="tab-pill ortho" onclick="switchTab('ortho', this)"><i class="bi bi-braces"></i> Ortho Case</button>
+            }
+            else
+            {
+                <button class="tab-pill" onclick="switchTab('teeth', this)"><i class="bi bi-grid-3x3-gap"></i> Dental Chart</button>
+                @if (isBothPatient)
+                {
+                    <button class="tab-pill ortho" onclick="switchTab('ortho', this)"><i class="bi bi-braces"></i> Ortho Case</button>
+                }
+            }
             <button class="tab-pill" onclick="switchTab('plans', this)"><i class="bi bi-clipboard-check"></i> Treatment Plan</button>
             <button class="tab-pill" onclick="switchTab('xrays', this)"><i class="bi bi-image"></i> X-Rays</button>
             <button class="tab-pill" onclick="switchTab('prescriptions', this)"><i class="bi bi-file-medical"></i> Prescriptions</button>
@@ -1354,7 +1403,12 @@
 
             <!-- Tab: Previous Sessions -->
             <div class="tab-panel" id="prevSessions">
-                @if (ViewBag.PreviousSessions is List<Dental.Modules.Clinical.DTOs.PreviousSessionRecordDto> prevSessions && prevSessions.Any())
+                @if (isOrthoPatient)
+                {
+                    @* ⭐ مريض التقويم: سجلات الفك بدل التشخيصات السنية *@
+                    <div id="orthoRecordsHost"></div>
+                }
+                else if (ViewBag.PreviousSessions is List<Dental.Modules.Clinical.DTOs.PreviousSessionRecordDto> prevSessions && prevSessions.Any())
                 {
                     @await Html.PartialAsync("_PreviousSessionsTable", new Dental.Modules.Clinical.ViewModels.SessionViewModel())
                 }
@@ -1368,11 +1422,28 @@
                 }
             </div>
 
-            <!-- Tab: Dental Chart -->
-            <div class="tab-panel" id="teeth">
-                @await Html.PartialAsync("_DentalChartPatient",
-                    Model.DentalChart ?? new Dental.Modules.Patients.DTOs.DentalChartDto { PatientId = patient.Id })
-            </div>
+            @if (!isOrthoPatient)
+            {
+                <!-- Tab: Dental Chart -->
+                <div class="tab-panel" id="teeth">
+                    @await Html.PartialAsync("_DentalChartPatient",
+                        Model.DentalChart ?? new Dental.Modules.Patients.DTOs.DentalChartDto { PatientId = patient.Id })
+                </div>
+            }
+
+            @if (hasOrtho)
+            {
+                <!-- Tab: Ortho Case -->
+                <div class="tab-panel" id="ortho">
+                    <div id="orthoCaseHost"></div>
+                    @if (isBothPatient)
+                    {
+                        @* المريض "عام + تقويم": سجلات التقويم تحت الملخص (Previous Records فاضل للعادي) *@
+                        <h5 style="font-weight:800; font-size:.95rem; margin:20px 0 10px; color:#5b21b6;"><i class="bi bi-clock-history"></i> Orthodontic Visits</h5>
+                        <div id="orthoRecordsHost"></div>
+                    }
+                </div>
+            }
 
             <!-- Tab: Treatment Plans -->
             <div class="tab-panel" id="plans">
@@ -1453,6 +1524,11 @@
 
         </div>
     </div>
+
+    @if (hasOrtho)
+    {
+        @await Html.PartialAsync("_OrthoPatientPanel", patient.Id)
+    }
 
     <!-- Add Payment Modal -->
     <div class="custom-modal-new" id="tabPayModal">
@@ -1569,30 +1645,31 @@
             document.getElementById('pmtSumRemaining').textContent = money(data.totalRemaining);
 
             document.getElementById('pmtVisitsBody').innerHTML = data.visits.length ? data.visits.map(v => `
-                        <tr>
-                            <td>${new Date(v.visitDate).toLocaleDateString('en-GB')}</td>
-                            <td>${v.category === 1 ? 'Ortho' : 'General'}</td>
-                            <td>${money(v.totalAmount)}</td>
-                            <td>${money(v.discount)}</td>
-                            <td>${money(v.paidAmount)}</td>
-                            <td>${money(v.remaining)}</td>
-                            <td>${v.isFullyPaid ? '<span class="pmt-badge-paid-new">Paid</span>' : '<span class="pmt-badge-due-new">Due</span>'}</td>
-                        </tr>`).join('') : '<tr><td colspan="7" class="pmt-empty-inline"><i class="bi bi-clipboard-x"></i>No visits recorded</td></tr>';
+                                <tr>
+                                    <td>${new Date(v.visitDate).toLocaleDateString('en-GB')}</td>
+                                    <td>${v.category === 1 ? 'Ortho' : 'General'}</td>
+                                    <td>${money(v.totalAmount)}</td>
+                                    <td>${money(v.discount)}</td>
+                                    <td>${money(v.paidAmount)}</td>
+                                    <td>${money(v.remaining)}</td>
+                                    <td>${v.isFullyPaid ? '<span class="pmt-badge-paid-new">Paid</span>' : '<span class="pmt-badge-due-new">Due</span>'}</td>
+                                </tr>`).join('') : '<tr><td colspan="7" class="pmt-empty-inline"><i class="bi bi-clipboard-x"></i>No visits recorded</td></tr>';
 
             document.getElementById('pmtPaymentsBody').innerHTML = data.payments.length ? data.payments.map(p => `
-                        <tr>
-                            <td>${new Date(p.paymentDate).toLocaleDateString('en-GB')}</td>
-                            <td>${new Date(p.visitDate).toLocaleDateString('en-GB')}</td>
-                            <td><b>${money(p.amount)}</b></td>
-                            <td><span class="pmt-method-badge ${methodBadgeClass(p.methodText)}">${p.methodText}</span></td>
-                            <td style="direction:ltr; text-align:left;">${p.receiptNo || '—'}</td>
-                            <td>${p.description || '—'}</td>
-                            <td><button class="btn-pmt-void-new" onclick="voidTabPayment(${p.id})"><i class="bi bi-x-circle"></i> Void</button></td>
-                        </tr>`).join('') : '<tr><td colspan="7" class="pmt-empty-inline"><i class="bi bi-cash"></i>No payments recorded yet</td></tr>';
+                                <tr>
+                                    <td>${new Date(p.paymentDate).toLocaleDateString('en-GB')}</td>
+                                    <td>${new Date(p.visitDate).toLocaleDateString('en-GB')}</td>
+                                    <td><b>${money(p.amount)}</b></td>
+                                    <td><span class="pmt-method-badge ${methodBadgeClass(p.methodText)}">${p.methodText}</span></td>
+                                    <td style="direction:ltr; text-align:left;">${p.receiptNo || '—'}</td>
+                                    <td>${p.description || '—'}</td>
+                                    <td><button class="btn-pmt-void-new" onclick="voidTabPayment(${p.id})"><i class="bi bi-x-circle"></i> Void</button></td>
+                                </tr>`).join('') : '<tr><td colspan="7" class="pmt-empty-inline"><i class="bi bi-cash"></i>No payments recorded yet</td></tr>';
 
+            // ⭐ Ortho: زيارة الـ Anchor بتظهر باسم "Ortho case" عشان الدفعة تروح على الاتفاق صح
             const dueVisits = data.visits.filter(v => v.remaining > 0);
             document.getElementById('tabPayVisitId').innerHTML = dueVisits.length
-                ? dueVisits.map(v => `<option value="${v.visitId}">${new Date(v.visitDate).toLocaleDateString('en-GB')} — due ${money(v.remaining)}</option>`).join('')
+                ? dueVisits.map(v => `<option value="${v.visitId}">${v.category === 1 ? 'Ortho case — ' : ''}${new Date(v.visitDate).toLocaleDateString('en-GB')} — due ${money(v.remaining)}</option>`).join('')
                 : '<option value="">No visits with a remaining balance</option>';
         }
 
@@ -1676,7 +1753,7 @@
         };
 
         document.addEventListener('DOMContentLoaded', () => {
-        const tab = location.hash.replace('#', '');
+            const tab = location.hash.replace('#', '');
             if (!tab) return;
             const btn = document.querySelector(`.tab-pill[onclick*="'${tab}'"]`);
             if (btn) switchTab(tab, btn);

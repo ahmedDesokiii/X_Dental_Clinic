@@ -1,0 +1,608 @@
+@* ============================================================
+   📁 File: Views/Patients/_OrthoPatientPanel.cshtml  (ملف جديد)
+   قسم التقويم في صفحة Details — للمريض التقويم و "General + Ortho"
+   • #orthoCaseHost    : ملخص الحالة (الفك، الإجمالي، المدفوع، المتبقي) + تايم لاين لكل فك + تعديلات الإجمالي
+   • #orthoRecordsHost : سجل زيارات التقويم (بدل Previous Records للمريض التقويم)
+   • #kpiOrthoVisits   : عدد زيارات التقويم في الـ KPI (لو موجود)
+   البيانات كلها من /Ortho/GetCase — مفيش أي تعديل على الـ Controller
+   ============================================================ *@
+@model int
+
+<style>
+    .opd-empty {
+        text-align: center;
+        padding: 40px 20px;
+        background: linear-gradient(160deg,#f5f3ff,#faf5ff);
+        border: 1px dashed #ddd6fe;
+        border-radius: 18px;
+    }
+
+        .opd-empty i {
+            font-size: 2.4rem;
+            color: #8b5cf6;
+            opacity: .6;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .opd-empty h4 {
+            margin: 0 0 6px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #5b21b6;
+        }
+
+        .opd-empty p {
+            margin: 0;
+            font-size: .85rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+    .opd-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+    }
+
+    .opd-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .opd-title-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: linear-gradient(135deg,#7c3aed,#6d28d9);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        box-shadow: 0 8px 20px rgba(124,58,237,.3);
+    }
+
+    .opd-title h3 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--dc-ink-900);
+    }
+
+    .opd-title span {
+        font-size: .76rem;
+        font-weight: 700;
+        color: #64748b;
+    }
+
+    .opd-badge {
+        font-size: .72rem;
+        font-weight: 800;
+        padding: 3px 11px;
+        border-radius: 999px;
+        background: #ede9fe;
+        color: #6d28d9;
+        margin-left: 6px;
+    }
+
+    .opd-btn {
+        border: none;
+        border-radius: 12px;
+        padding: 9px 18px;
+        font-weight: 800;
+        font-size: .82rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: #f5f3ff;
+        color: #6d28d9;
+        transition: transform .2s, background .2s;
+    }
+
+        .opd-btn:hover {
+            transform: translateY(-1px);
+            background: #ede9fe;
+        }
+
+    .opd-kpis {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .opd-kpi {
+        background: #fff;
+        border: 1px solid #f1f5f9;
+        border-radius: 14px;
+        padding: 14px;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    }
+
+        .opd-kpi span {
+            display: block;
+            font-size: .72rem;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        .opd-kpi b {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--dc-ink-900);
+        }
+
+        .opd-kpi.paid b {
+            color: #16a34a;
+        }
+
+        .opd-kpi.disc b {
+            color: #d97706;
+        }
+
+        .opd-kpi.due b {
+            color: #dc2626;
+        }
+
+    .opd-progress {
+        background: #fff;
+        border: 1px solid #f1f5f9;
+        border-radius: 14px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+    }
+
+    .opd-progress-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: .8rem;
+        font-weight: 800;
+        color: #475569;
+        margin-bottom: 8px;
+    }
+
+    .opd-track {
+        height: 10px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        overflow: hidden;
+    }
+
+    .opd-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg,#7c3aed,#a78bfa);
+        transition: width .6s cubic-bezier(.2,.8,.3,1);
+    }
+
+    .opd-meta {
+        display: flex;
+        gap: 18px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+        font-size: .75rem;
+        font-weight: 700;
+        color: #64748b;
+    }
+
+        .opd-meta i {
+            color: #7c3aed;
+            margin-right: 4px;
+        }
+
+    .opd-arches {
+        display: grid;
+        grid-template-columns: repeat(2,1fr);
+        gap: 14px;
+    }
+
+    .opd-arch {
+        background: #fff;
+        border: 1.5px solid #ede9fe;
+        border-radius: 18px;
+        padding: 14px;
+    }
+
+        .opd-arch.off {
+            opacity: .55;
+            border-style: dashed;
+        }
+
+    .opd-arch-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        font-weight: 800;
+        font-size: .92rem;
+        color: var(--dc-ink-900);
+    }
+
+        .opd-arch-head span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+    .opd-arch.upper .opd-arch-head i {
+        color: #0f9b8e;
+    }
+
+    .opd-arch.lower .opd-arch-head i {
+        color: #f59e0b;
+    }
+
+    .opd-count {
+        font-size: .7rem;
+        font-weight: 800;
+        padding: 2px 9px;
+        border-radius: 999px;
+        background: #f5f3ff;
+        color: #6d28d9;
+    }
+
+    .opd-list {
+        max-height: 320px;
+        overflow-y: auto;
+    }
+
+    .opd-item {
+        position: relative;
+        padding: 8px 0 8px 18px;
+        border-left: 2px solid #ede9fe;
+        margin-left: 6px;
+    }
+
+        .opd-item::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 13px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid #8b5cf6;
+        }
+
+        .opd-item:first-child::before {
+            background: #8b5cf6;
+        }
+
+    .opd-item-date {
+        font-size: .72rem;
+        font-weight: 800;
+        color: #7c3aed;
+    }
+
+    .opd-item-proc {
+        font-size: .85rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .opd-item-comment {
+        font-size: .78rem;
+        font-weight: 600;
+        color: #64748b;
+    }
+
+    .opd-none {
+        font-size: .8rem;
+        color: #94a3b8;
+        font-weight: 600;
+        padding: 10px 0;
+    }
+
+    .opd-changes {
+        margin-top: 14px;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 14px;
+        padding: 12px 16px;
+        font-size: .78rem;
+        font-weight: 600;
+        color: #78350f;
+    }
+
+        .opd-changes b {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 800;
+        }
+
+        .opd-changes div {
+            padding: 3px 0;
+        }
+
+    /* سجل الزيارات */
+    .opr-visit {
+        background: #fff;
+        border: 1px solid #f1f5f9;
+        border-radius: 14px;
+        padding: 12px 16px;
+        margin-bottom: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.03);
+    }
+
+    .opr-date {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: .82rem;
+        font-weight: 800;
+        color: #5b21b6;
+        margin-bottom: 6px;
+    }
+
+    .opr-row {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        padding: 6px 0;
+        border-top: 1px dashed #e2e8f0;
+        font-size: .84rem;
+    }
+
+        .opr-row:first-of-type {
+            border-top: none;
+        }
+
+    .opr-arch {
+        font-size: .7rem;
+        font-weight: 800;
+        padding: 2px 10px;
+        border-radius: 999px;
+        flex-shrink: 0;
+    }
+
+        .opr-arch.upper {
+            background: #ccfbf1;
+            color: #0f766e;
+        }
+
+        .opr-arch.lower {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .opr-arch.both {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+    .opr-proc {
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .opr-comment {
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    @@media (max-width: 900px) {
+        .opd-kpis {
+            grid-template-columns: repeat(2,1fr);
+        }
+
+        .opd-arches {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script>
+    (function() {
+        const PATIENT_ID = @Model;
+        const UPPER = 1, LOWER = 2, BOTH = 3;
+
+        const $ = id => document.getElementById(id);
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const fmt = n => Number(n || 0).toLocaleString('en-EG');
+        const dt = d => new Date(d).toLocaleDateString('en-GB');
+        const archName = a => a === UPPER ? 'Upper' : a === LOWER ? 'Lower' : 'Upper + Lower';
+        const archKey = a => a === UPPER ? 'upper' : a === LOWER ? 'lower' : 'both';
+
+        let caseData = null;
+
+        async function load() {
+            const caseHost = $('orthoCaseHost');
+            const recHost = $('orthoRecordsHost');
+            if (!caseHost && !recHost) return;
+            try {
+                const res = await fetch(`/Ortho/GetCase?patientId=${PATIENT_ID}`);
+                const r = await res.json();
+                caseData = r.hasCase ? r.data : null;
+                // ⭐ الحالة اتبنت/اتصححت من السجلات القديمة → تاب الدفع يتحدث بالأرقام الجديدة
+                if (r.created && window.loadPaymentsTab) window.loadPaymentsTab();
+                renderCase(caseHost);
+                renderRecords(recHost);
+                renderKpi();
+            } catch (e) {
+                const err = '<div class="opd-empty"><i class="bi bi-wifi-off"></i><h4>Could not load</h4><p>The orthodontic case could not be loaded.</p></div>';
+                if (caseHost) caseHost.innerHTML = err;
+                if (recHost) recHost.innerHTML = err;
+            }
+        }
+
+        function visitGroups() {
+            const by = {};
+            (caseData.entries || []).forEach(e => (by[e.visitId] = by[e.visitId] || { date: e.date, rows: [] }).rows.push(e));
+            return Object.values(by).sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
+
+        function renderKpi() {
+            const el = $('kpiOrthoVisits');
+            if (el) el.textContent = caseData ? visitGroups().length : 0;
+        }
+
+        // ════════ ملخص الحالة + تايم لاين لكل فك ════════
+        function renderCase(host) {
+            if (!host) return;
+            if (!caseData) {
+                host.innerHTML = `
+                        <div class="opd-empty">
+                            <i class="bi bi-braces"></i>
+                            <h4>No orthodontic case yet</h4>
+                            <p>Start a new orthodontics session to choose the arch and the total agreed amount.</p>
+                        </div>`;
+                return;
+            }
+
+            const d = caseData;
+            const settled = d.paid + d.discount;
+            const pct = d.totalRequired > 0 ? Math.min(100, Math.round(settled / d.totalRequired * 100)) : 0;
+            const months = Math.max(0, Math.floor((Date.now() - new Date(d.startDate)) / (1000 * 60 * 60 * 24 * 30.44)));
+            const visits = visitGroups();
+            const lastVisit = visits.length ? visits[0].date : null;
+
+            const archCard = a => {
+                const inCase = (d.archType & a) !== 0;
+                const items = (d.entries || []).filter(e => (e.arch & a) !== 0);   // سجل Both (مرحّل) بيظهر في الفكين
+                const list = items.length
+                    ? items.map(e => `
+                            <div class="opd-item">
+                                <div class="opd-item-date">${dt(e.date)}</div>
+                                <div class="opd-item-proc">${esc(e.procedureName || '—')}</div>
+                                ${e.comment ? `<div class="opd-item-comment">${esc(e.comment)}</div>` : ''}
+                            </div>`).join('')
+                    : `<div class="opd-none">${inCase ? 'No visits recorded for this arch yet.' : 'Not part of this case.'}</div>`;
+                return `
+                        <div class="opd-arch ${archKey(a)} ${inCase ? '' : 'off'}">
+                            <div class="opd-arch-head">
+                                <span><i class="bi ${a === UPPER ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'}"></i> ${archName(a)} Arch</span>
+                                <span class="opd-count">${items.length} visit(s)</span>
+                            </div>
+                            <div class="opd-list">${list}</div>
+                        </div>`;
+            };
+
+            const changes = (d.totalChanges || []).map(c =>
+                `<div><i class="bi bi-arrow-repeat"></i> ${dt(c.changedAt)}: ${fmt(c.oldTotal)} → <b style="display:inline">${fmt(c.newTotal)}</b>${c.reason ? ' — ' + esc(c.reason) : ''}</div>`).join('');
+
+            host.innerHTML = `
+                    <div class="opd-head">
+                        <div class="opd-title">
+                            <div class="opd-title-icon"><i class="bi bi-braces"></i></div>
+                            <div>
+                                <h3>Orthodontic Case <span class="opd-badge">${archName(d.archType)}</span></h3>
+                                <span>Started ${dt(d.startDate)}</span>
+                            </div>
+                        </div>
+                        <button type="button" class="opd-btn" id="opdEdit"><i class="bi bi-pencil-square"></i> Edit case</button>
+                    </div>
+
+                    <div class="opd-kpis">
+                        <div class="opd-kpi"><span>Total Required</span><b>${fmt(d.totalRequired)}</b></div>
+                        <div class="opd-kpi paid"><span>Paid</span><b>${fmt(d.paid)}</b></div>
+                        <div class="opd-kpi disc"><span>Discount</span><b>${fmt(d.discount)}</b></div>
+                        <div class="opd-kpi due"><span>Remaining</span><b>${fmt(d.remaining)}</b></div>
+                    </div>
+
+                    <div class="opd-progress">
+                        <div class="opd-progress-row"><span>Payment progress</span><span>${pct}%</span></div>
+                        <div class="opd-track"><div class="opd-fill" style="width:${pct}%"></div></div>
+                        <div class="opd-meta">
+                            <span><i class="bi bi-calendar-check"></i>${visits.length} visit(s)</span>
+                            <span><i class="bi bi-hourglass-split"></i>${months} month(s) in treatment</span>
+                            <span><i class="bi bi-clock-history"></i>Last visit: ${lastVisit ? dt(lastVisit) : '—'}</span>
+                        </div>
+                    </div>
+
+                    <div class="opd-arches">${archCard(UPPER)}${archCard(LOWER)}</div>
+
+                    ${changes ? `<div class="opd-changes"><b><i class="bi bi-cash-coin"></i> Total changes</b>${changes}</div>` : ''}`;
+
+            $('opdEdit').addEventListener('click', editCase);
+        }
+
+        // ════════ سجل زيارات التقويم ════════
+        function renderRecords(host) {
+            if (!host) return;
+            if (!caseData || !(caseData.entries || []).length) {
+                host.innerHTML = `
+                        <div class="opd-empty">
+                            <i class="bi bi-archive"></i>
+                            <h4>No orthodontic records yet</h4>
+                            <p>Arch records from orthodontic sessions will appear here.</p>
+                        </div>`;
+                return;
+            }
+            host.innerHTML = visitGroups().map(v => `
+                    <div class="opr-visit">
+                        <div class="opr-date">
+                            <span><i class="bi bi-calendar-event"></i> ${dt(v.date)}</span>
+                            <span class="opd-count">${v.rows.length} arch(es)</span>
+                        </div>
+                        ${v.rows.sort((a, b) => a.arch - b.arch).map(r => `
+                            <div class="opr-row">
+                                <span class="opr-arch ${archKey(r.arch)}">${archName(r.arch)}</span>
+                                <span class="opr-proc">${esc(r.procedureName || '—')}</span>
+                                ${r.comment ? `<span class="opr-comment">${esc(r.comment)}</span>` : ''}
+                            </div>`).join('')}
+                    </div>`).join('');
+        }
+
+        // ════════ تعديل الحالة (نفس منطق شاشة السيشن) ════════
+        async function editCase() {
+            const d = caseData;
+            const { value: v, isConfirmed } = await Swal.fire({
+                title: 'Edit orthodontic case',
+                html: `
+                        <div style="text-align:left;">
+                            <label class="form-label-custom-new">Arch</label>
+                            <select id="ocArch" class="form-control-custom-new">
+                                <option value="${UPPER}" ${d.archType === UPPER ? 'selected' : ''}>Upper</option>
+                                <option value="${LOWER}" ${d.archType === LOWER ? 'selected' : ''}>Lower</option>
+                                <option value="${BOTH}" ${d.archType === BOTH ? 'selected' : ''}>Upper + Lower</option>
+                            </select>
+                            <label class="form-label-custom-new" style="margin-top:12px;">Total required (EGP)</label>
+                            <input id="ocTotal" type="number" min="0" step="0.01" class="form-control-custom-new" value="${d.totalRequired}" />
+                            <label class="form-label-custom-new" style="margin-top:12px;">Reason (required if total changes)</label>
+                            <input id="ocReason" type="text" class="form-control-custom-new" placeholder="e.g. added lower arch" />
+                        </div>`,
+                showCancelButton: true,
+                confirmButtonText: 'Save',
+                confirmButtonColor: '#7c3aed',
+                focusConfirm: false,
+                preConfirm: () => {
+                    const arch = parseInt($('ocArch').value);
+                    const total = parseFloat($('ocTotal').value);
+                    const reason = $('ocReason').value.trim();
+                    if (isNaN(total) || total < 0) { Swal.showValidationMessage('Enter a valid total'); return false; }
+                    if (total !== d.totalRequired && !reason) { Swal.showValidationMessage('Enter the reason for changing the total'); return false; }
+                    return { arch, total, reason };
+                }
+            });
+            if (!isConfirmed || !v) return;
+
+            const body = { OrthoCaseId: d.id, Reason: v.reason || null };
+            if (v.arch !== d.archType) body.Arch = v.arch;
+            if (v.total !== d.totalRequired) body.TotalRequired = v.total;
+            if (body.Arch === undefined && body.TotalRequired === undefined) return;
+
+            try {
+                const res = await fetch('/Ortho/UpdateCase', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                const r = await res.json();
+                if (!r.success) { Swal.fire({ title: 'Error', text: r.message, icon: 'error' }); return; }
+                Swal.fire({ title: 'Updated', text: r.message, icon: 'success', timer: 1200, showConfirmButton: false });
+                await load();
+                if (window.loadPaymentsTab) window.loadPaymentsTab();   // الإجمالي اتغير → تاب الدفع يتحدث
+            } catch (e) {
+                Swal.fire({ title: 'Error', text: 'Could not reach the server', icon: 'error' });
+            }
+        }
+
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load);
+        else load();
+    })();
+</script>
