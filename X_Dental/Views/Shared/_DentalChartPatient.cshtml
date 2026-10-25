@@ -59,6 +59,10 @@
         animation: pcToothIn .5s cubic-bezier(.2,1.5,.4,1) backwards;
     }
 
+    .swal2-container {
+        z-index: 5000 !important;
+    }
+
     @@keyframes pcToothIn {
         from {
             opacity: 0;
@@ -1116,6 +1120,25 @@
             if (!st.multiOn) clearSelection();
         });
 
+
+        const STATUS_CLASS = {
+            1: 'healthy', 2: 'decayed', 3: 'treated', 4: 'missing', 5: 'extracted', 6: 'impacted',
+            7: 'crown', 8: 'bridge', 9: 'implant', 10: 'fractured', 11: 'rootcanal', 12: 'filling'
+        };
+
+        // لو مفيش ريكورد فاضل → Healthy، غير كده → حالة أحدث ريكورد
+        function paintTooth(num) {
+            const el = canvas.querySelector(`[data-tooth="${num}"]`);
+            if (!el) return;
+            const recs = (st.history && st.history.records) || [];
+            const latest = recs.find(r => r.status);
+            const cls = latest ? (STATUS_CLASS[latest.status] || 'healthy') : 'healthy';
+            el.className = el.className.split(' ')
+                .filter(c => !Object.values(STATUS_CLASS).includes(c))
+                .join(' ') + ' ' + cls;
+            if (window.updateToothStatusOverlay) window.updateToothStatusOverlay(el);
+        }
+
         function clearSelection() {
             st.multiSel = [];
             renderSelection();
@@ -1476,7 +1499,8 @@
                 if (!res.success) { Swal.fire({ title: 'Error', text: res.message, icon: 'error' }); return; }
                 st.dirty = true;
                 Swal.fire({ title: 'Deleted', text: res.message, icon: 'success', timer: 1800, showConfirmButton: false });
-                loadHistory(st.teeth[0]);
+                await loadHistory(st.teeth[0]);
+                paintTooth(st.teeth[0]);      // ⭐ ريسيت/تحديث لون السن
             } catch (err) {
                 Swal.fire({ title: 'Error', text: 'Server connection failed', icon: 'error' });
             }

@@ -20,19 +20,23 @@ namespace Dental.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly ILogger<ClinicalController> _logger;
         private readonly IClinicalRecordService _records;
+        private readonly IOrthoService _ortho;
 
+        
         public ClinicalController(
             ApplicationDbContext context,
             IMapper mapper,
             IWebHostEnvironment env,
             ILogger<ClinicalController> logger,
-            IClinicalRecordService records)   // ⬅ ضيف البراميتر ده
+            IClinicalRecordService records,
+            IOrthoService ortho)// ⬅ ضيف البراميتر ده
         {
             _context = context;
             _mapper = mapper;
             _env = env;
             _logger = logger;                      // ⬅ وضيف السطر ده
             _records = records;
+            _ortho = ortho;               // ⭐ NEW
         }
 
 
@@ -57,6 +61,11 @@ namespace Dental.Controllers
 
             if (patient == null || visit == null) return NotFound();
 
+            var isOrtho = visit.Category == VisitCategory.Orthodontics;
+            var orthoCase = isOrtho ? await _ortho.GetActiveCaseAsync(patientId) : null;
+            var orthoAnchorId = orthoCase?.AnchorVisitId ?? 0;    
+            ViewBag.IsOrthoSession = isOrtho;
+
             ViewBag.DiagnosisList = await _context.DiagnosisCatalogs.Where(d => d.IsActive).ToListAsync();
             ViewBag.ProcedureList = await _context.ProcedureCatalogs.Where(p => p.IsActive).ToListAsync();
             ViewBag.ToothList = Enumerable.Range(11, 8)
@@ -70,10 +79,30 @@ namespace Dental.Controllers
                 Patient = _mapper.Map<PatientDetailsDto>(patient),
                 Visit = _mapper.Map<VisitDto>(visit),
                 DentalHistory = await _context.DentalChartEntries
-                    .Where(d => d.PatientId == patientId)
+                    .Where(d => d.PatientId == patientId && !d.IsDeleted)
                     .OrderByDescending(d => d.Date)
                     .ToListAsync()
+
+
             };
+            // ⭐ Ortho: المبلغ المطلوب والمدفوعات كلها على الـ Anchor Visit → تاب الدفع يعرض أرقام الحالة كلها
+            if (isOrtho && orthoCase != null && orthoAnchorId != visit.Id)
+            {
+                var anchor = await _context.Visits
+                    .AsNoTracking()
+                    .Include(v => v.Payments)
+                    .FirstOrDefaultAsync(v => v.Id == orthoAnchorId);
+                if (anchor != null)
+                {
+                    var a = _mapper.Map<VisitDto>(anchor);
+                    model.Visit.TotalAmount = a.TotalAmount;
+                    model.Visit.PaidAmount = a.PaidAmount;
+                    model.Visit.Discount = a.Discount;
+                    model.Visit.Payments = a.Payments;
+                    // لو Remaining في VisitDto خاصية عادية (مش محسوبة) ضيف: model.Visit.Remaining = a.Remaining;
+                    // ولو أي خاصية من اللي فوق read-only وطلع Compile Error → شيل السطر ده وابعتلي الـ VisitDto
+                }
+            }
 
             // 📁 لو المريض "عام + تقويم" — اجمع مدفوعات كل الزيارات مقسّمة حسب النوع
             if (patient.PatientType == Models.Patient.PatientType.Both)
@@ -109,7 +138,7 @@ namespace Dental.Controllers
             ViewBag.PatientPaymentsHistory = await (
          from p in _context.VisitPayments
          join v in _context.Visits on p.VisitId equals v.Id
-         where v.PatientId == patientId && p.VisitId != visitId   // ⭐ استبعاد مدفوعات السيشن الحالي
+         where v.PatientId == patientId && p.VisitId != visitId && p.VisitId != orthoAnchorId       
          orderby p.PaymentDate descending
          select new
          {

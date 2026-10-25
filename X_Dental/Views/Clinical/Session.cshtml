@@ -3,6 +3,7 @@
 @model Dental.Modules.Clinical.ViewModels.SessionViewModel
 
 @{
+    var isOrtho = ViewBag.IsOrthoSession as bool? ?? false;
     ViewData["Title"] = $"Session — {Model.Patient.FullNameAr}";
 
     var initials = string.Join("",
@@ -1077,32 +1078,49 @@
     <div class="dashboard-grid">
 
         @* --- LEFT: Chart --- *@
-        <div class="chart-panel">
+    <div class="chart-panel">
+        @if (isOrtho)
+        {
+            @await Html.PartialAsync("_OrthoSessionPanel", Model)
+        }
+        else
+        {
             @await Html.PartialAsync("_DentalChartInteractive", Model)
             <div class="chart-legend-compact">
-            <span class="legend-item-sm"><span class="legend-dot" style="background:#fff;border:2px solid #0f9b8e;"></span> Healthy</span>
-            <span class="legend-item-sm"><span class="legend-dot" style="background:#ef4444;"></span> Decayed</span>
-            <span class="legend-item-sm"><span class="legend-dot" style="background:#3b82f6;"></span> Treated</span>
-            <span class="legend-item-sm"><span class="legend-dot" style="background:#cbd5e1;"></span> Missing</span>
-            <span class="legend-item-sm"><span class="legend-dot" style="background:#cbd5e1;"></span> Extracted</span>
-            <span class="legend-item-sm"><span class="legend-dot" style="background:#f59e0b;"></span> RootCanal</span>
-            <span class="legend-item-sm"><span class="legend-dot" style="background:#a855f7;"></span> Crown</span>
-            <span class="legend-item-sm"><span class="legend-dot" style="background:#ec4899;"></span> Impants</span>
+               
+                    <span class="legend-item-sm"><span class="legend-dot" style="background:#fff;border:2px solid #0f9b8e;"></span> Healthy</span>
+                    <span class="legend-item-sm"><span class="legend-dot" style="background:#ef4444;"></span> Decayed</span>
+                    <span class="legend-item-sm"><span class="legend-dot" style="background:#3b82f6;"></span> Treated</span>
+                    <span class="legend-item-sm"><span class="legend-dot" style="background:#cbd5e1;"></span> Missing</span>
+                    <span class="legend-item-sm"><span class="legend-dot" style="background:#cbd5e1;"></span> Extracted</span>
+                    <span class="legend-item-sm"><span class="legend-dot" style="background:#f59e0b;"></span> RootCanal</span>
+                    <span class="legend-item-sm"><span class="legend-dot" style="background:#a855f7;"></span> Crown</span>
+                    <span class="legend-item-sm"><span class="legend-dot" style="background:#ec4899;"></span> Impants</span>
             </div>
-        </div>
+        }
+    </div>
+
+
 
     
 
         @* --- RIGHT: Tabs Content --- *@
         <div class="content-panel">
             <div class="dc-tabs-bar">
-                <button type="button" class="dc-tab-btn active" onclick="switchTab('tabCurrent', this)">
-                    <i class="bi bi-table"></i> Current Session
-                    <span class="tab-badge" id="tabBadgeCurrent">0</span>
-                </button>
-                <button type="button" class="dc-tab-btn" onclick="switchTab('tabPayments', this)">
+
+                @if (!isOrtho)
+                {
+                    <button type="button" class="dc-tab-btn active" onclick="switchTab('tabCurrent', this)">
+                        <i class="bi bi-table"></i> Current Session
+                        <span class="tab-badge" id="tabBadgeCurrent">0</span>
+                    </button>
+                }
+                <button type="button" class="dc-tab-btn @(isOrtho ? "active" : "")" onclick="switchTab('tabPayments', this)">
                     <i class="bi bi-credit-card-2-front"></i> Payments
                 </button>
+
+
+               
                 <button type="button" class="dc-tab-btn" onclick="switchTab('tabPrev', this)">
                     <i class="bi bi-clock-history"></i> Previous Sessions
                 </button>
@@ -1114,23 +1132,43 @@
                 </button>
             </div>
 
+            @if (!isOrtho)
+            {
+                <div class="dc-tab-panel active custom-scroll" id="tabCurrent" style="max-height:680px; overflow-y:auto;">
+                    @await Html.PartialAsync("_ClinicalRecordsTable", Model)
+                </div>
+            }
+
+            <div class="dc-tab-panel custom-scroll" id="tabPrev" style="max-height:680px; overflow-y:auto;">
+                @if (isOrtho)
+                {
+                    <div class="section-card" style="margin-bottom:0;">
+                        <div class="section-head"><h4><i class="bi bi-clock-history"></i> Orthodontic Visits</h4></div>
+                        <div id="orthoTimeline"></div>
+                    </div>
+                }
+                else
+                {
+                    @await Html.PartialAsync("_PreviousSessionsTable", Model)
+                }
+            </div>
+             <div class="dc-tab-panel custom-scroll" id="tabXray" style="max-height:680px; overflow-y:auto;">
+                @await Html.PartialAsync("_XRaysTable", Model)
+            </div>
+
+            <div class="dc-tab-panel custom-scroll @(isOrtho ? "active" : "")" id="tabPayments" style="max-height:680px; overflow-y:auto;">
+                @await Html.PartialAsync("_PaymentsCompact", Model)
+            </div>
+
             <div class="dc-tab-panel active custom-scroll" id="tabCurrent" style="max-height:680px; overflow-y:auto;">
                 @await Html.PartialAsync("_ClinicalRecordsTable", Model)
             </div>
-            <div class="dc-tab-panel custom-scroll" id="tabPrev" style="max-height:680px; overflow-y:auto;">
-                @await Html.PartialAsync("_PreviousSessionsTable", Model)
-            </div>
-            <div class="dc-tab-panel custom-scroll" id="tabXray" style="max-height:680px; overflow-y:auto;">
-                @await Html.PartialAsync("_XRaysTable", Model)
-            </div>
-            <div class="dc-tab-panel custom-scroll" id="tabPayments" style="max-height:680px; overflow-y:auto;">
-                @await Html.PartialAsync("_PaymentsCompact", Model)
-            </div>
+            
             <div class="dc-tab-panel custom-scroll" id="tabFollow" style="max-height:680px; overflow-y:auto;">
                 @await Html.PartialAsync("_FollowUpPanel", Model)
             </div>
         </div>
-    @await Html.PartialAsync("_SessionPrescription", Model)
+    
     </div>
   
 

@@ -291,7 +291,7 @@ namespace Dental.Controllers
 
             // ── Dental Chart — مجمّع لكل سن ──
             var chartEntries = await _context.DentalChartEntries
-                .Where(d => d.PatientId == id)
+                .Where(d => d.PatientId == id && !d.IsDeleted)
                 .OrderByDescending(d => d.Date)
                 .ToListAsync();
 

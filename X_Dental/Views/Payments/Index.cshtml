@@ -2197,7 +2197,7 @@
                 const time = dt.toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' });
                 const when = state.data.days === 1 ? time : `${shortDate(p.paymentDate)}<small>${time}</small>`;
                 const cls = p.isOrtho ? 'ortho' : 'general';
-                const remain = p.visitRemaining > 0
+                const remain = p.visitRemaining 
                     ? `<span class="dp-remain due">${fmt(p.visitRemaining)}</span>`
                     : `<span class="dp-remain done"><i class="bi bi-check2"></i> مسدد</span>`;
                 return `

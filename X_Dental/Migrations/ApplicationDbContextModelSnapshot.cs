@@ -168,6 +168,142 @@ namespace Dental.Migrations
                     b.ToTable("MedicationCatalogs");
                 });
 
+            modelBuilder.Entity("Dental.Models.Clinic.OrthoCase", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AnchorVisitId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ArchType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PatientId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalRequired")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OrthoCases");
+                });
+
+            modelBuilder.Entity("Dental.Models.Clinic.OrthoProcedureCatalog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OrthoProcedureCatalogs");
+                });
+
+            modelBuilder.Entity("Dental.Models.Clinic.OrthoTotalChange", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("NewTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("OldTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("OrthoCaseId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrthoCaseId");
+
+                    b.ToTable("OrthoTotalChanges");
+                });
+
+            modelBuilder.Entity("Dental.Models.Clinic.OrthoVisitEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Arch")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("OrthoCaseId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OrthoProcedureId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VisitId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrthoCaseId");
+
+                    b.ToTable("OrthoVisitEntries");
+                });
+
             modelBuilder.Entity("Dental.Models.Clinic.Prescription", b =>
                 {
                     b.Property<int>("Id")
@@ -1934,6 +2070,28 @@ namespace Dental.Migrations
                     b.Navigation("DiagnosisCatalog");
                 });
 
+            modelBuilder.Entity("Dental.Models.Clinic.OrthoTotalChange", b =>
+                {
+                    b.HasOne("Dental.Models.Clinic.OrthoCase", "OrthoCase")
+                        .WithMany("TotalChanges")
+                        .HasForeignKey("OrthoCaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OrthoCase");
+                });
+
+            modelBuilder.Entity("Dental.Models.Clinic.OrthoVisitEntry", b =>
+                {
+                    b.HasOne("Dental.Models.Clinic.OrthoCase", "OrthoCase")
+                        .WithMany("Entries")
+                        .HasForeignKey("OrthoCaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OrthoCase");
+                });
+
             modelBuilder.Entity("Dental.Models.Clinic.Prescription", b =>
                 {
                     b.HasOne("Dental.Models.Patient.Visit", "Visit")
@@ -2250,6 +2408,13 @@ namespace Dental.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Dental.Models.Clinic.OrthoCase", b =>
+                {
+                    b.Navigation("Entries");
+
+                    b.Navigation("TotalChanges");
                 });
 
             modelBuilder.Entity("Dental.Models.Clinic.Prescription", b =>

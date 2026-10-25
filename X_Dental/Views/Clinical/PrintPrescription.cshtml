@@ -384,13 +384,9 @@
         ============================================================
         *@
 
-        <!-- الهيدر فاضي تماماً (مفيش عنوان "روشتة طبية") عشان الورق المطبوع مسبقاً -->
+        <!-- الهيدر فاضي تماماً (مفيش عنوان "روشتة طبية")    عشان الورق المطبوع مسبقاً -->
         <!-- 1) QR في المنتصف تحت الهيدر المطبوع على الورق -->
         
-      
-        <br><br>
-        <br><br>
-        <br><br>
         
         <!-- 2) بيانات المريض -->
         <div class=" border-0">
@@ -398,7 +394,7 @@
             <div class="patient-row border-0 ">
                 <div class="field grow">
                     @* <span class="label">اسم المريض</span> *@
-                    <div class="value name">@(patient?.FullNameAr ?? "—")</div>
+                    <div class="value">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @(patient?.FullNameAr ?? "—")</div>
                 </div>
                 <div class="field grow">
                     <div class="value">@(age.HasValue ? $"{age} سنة" : "—")</div>
@@ -423,6 +419,7 @@
             </div>
         </div>
         <br><br>
+        <br><br>
         <!-- 3) باقي التفاصيل -->
         <!-- التشخيص -->
         @if (!string.IsNullOrWhiteSpace(Model.Diagnosis))
@@ -432,19 +429,22 @@
                 <div class="diagnosis-text">@Model.Diagnosis</div>
             </div>
         }
+        <br><br>
 
         <!-- الأدوية -->
         <div class="section">
-            <div class="section-label"><i class="bi bi-capsule"></i> الأدوية</div>
+            <div class="section-label fs-4"><i class="bi bi-capsule fs-5"></i> الأدوية</div>
+            
             <table class="meds-table">
                 <thead>
                     <tr>
-                        <th style="width:26px;">#</th>
-                        <th>الدواء</th>
-                        <th>الجرعة</th>
-                        <th>التكرار</th>
-                        <th>المدة</th>
                         <th>التعليمات</th>
+                        <th>المدة</th>
+                        <th>التكرار</th>
+                        <th>الجرعة</th>
+                        <th>الدواء</th>
+                        <th style="width:26px;">#</th>
+        
                     </tr>
                 </thead>
                 <tbody>
@@ -454,19 +454,19 @@
                     @foreach (var item in Model.Items)
                     {
                         <tr>
-                            <td><span class="med-num">@i</span></td>
-                            <td class="med-name">@item.MedicationName</td>
-                            <td>@(item.Dosage ?? "—")</td>
-                            <td>@(item.Frequency ?? "—")</td>
-                            <td>@(item.Duration ?? "—")</td>
                             <td>@(item.Instructions ?? "—")</td>
+                            <td>@(item.Duration ?? "—")</td>
+                            <td>@(item.Frequency ?? "—")</td>
+                            <td>@(item.Dosage ?? "—")</td>
+                            <td class="med-name">@item.MedicationName</td>
+                            <td><span class="med-num">@i</span></td>
                         </tr>
                         i++;
                     }
                 </tbody>
             </table>
         </div>
-
+        <br><br>
         <!-- ملاحظات -->
         @if (!string.IsNullOrWhiteSpace(Model.Notes))
         {
@@ -496,7 +496,7 @@
             <span style="font-size:0.6rem;">امسح رمز QR للتحقق من صحة الروشتة</span>
         </div>
 
-        <div class="rx-footer">
+        <div class="rx-footer" hidden>
             @if (!string.IsNullOrEmpty(verifyUrl))
             {
                 <div class="qr-center">

@@ -155,6 +155,10 @@ namespace Dental.Data
               new DocumentType { Id = 5, NameAr = "أخرى", IsActive = true, CreatedDate = new DateTime(2026, 1, 1) }
   );
 
+            builder.Entity<OrthoCase>().Property(x => x.TotalRequired).HasPrecision(18, 2);
+            builder.Entity<OrthoTotalChange>().Property(x => x.OldTotal).HasPrecision(18, 2);
+            builder.Entity<OrthoTotalChange>().Property(x => x.NewTotal).HasPrecision(18, 2);
+
 
         }
 
@@ -197,5 +201,11 @@ namespace Dental.Data
         public DbSet<VisitPayment> VisitPayments { get; set; }
         public DbSet<DentalChartEntry> DentalChartEntries { get; set; }
         public DbSet<DocumentType> DocumentTypes { get; set; }
+
+
+        public DbSet<OrthoCase> OrthoCases => Set<OrthoCase>();
+        public DbSet<OrthoVisitEntry> OrthoVisitEntries => Set<OrthoVisitEntry>();
+        public DbSet<OrthoProcedureCatalog> OrthoProcedureCatalogs => Set<OrthoProcedureCatalog>();
+        public DbSet<OrthoTotalChange> OrthoTotalChanges => Set<OrthoTotalChange>();
     }
 }

@@ -107,6 +107,7 @@ builder.Services.AddScoped<ILaboratoryService, LaboratoryService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 
 builder.Services.AddScoped<IClinicalRecordService,ClinicalRecordService>();
+builder.Services.AddScoped<IOrthoService, OrthoService>();
 #endregion
 builder.Services.AddHttpClient();
 
