@@ -22,7 +22,7 @@ namespace Dental.Controllers
         private readonly IClinicalRecordService _records;
         private readonly IOrthoService _ortho;
 
-        
+
         public ClinicalController(
             ApplicationDbContext context,
             IMapper mapper,
@@ -63,7 +63,7 @@ namespace Dental.Controllers
 
             var isOrtho = visit.Category == VisitCategory.Orthodontics;
             var orthoCase = isOrtho ? await _ortho.GetActiveCaseAsync(patientId) : null;
-            var orthoAnchorId = orthoCase?.AnchorVisitId ?? 0;    
+            var orthoAnchorId = orthoCase?.AnchorVisitId ?? 0;
             ViewBag.IsOrthoSession = isOrtho;
 
             ViewBag.DiagnosisList = await _context.DiagnosisCatalogs.Where(d => d.IsActive).ToListAsync();
@@ -104,6 +104,20 @@ namespace Dental.Controllers
                 }
             }
 
+            // ⭐ الرصيد السابق: متبقي كل الزيارات التانية من نفس النوع (العام يشوف رصيد العام بس)
+            // التقويم: الحالة كلها على الـ Anchor اللي معروض أصلاً → مفيش رصيد سابق منفصل
+            if (!isOrtho)
+            {
+                var category = visit.Category;
+                var currentVisitId = visit.Id;
+                model.PreviousBalance = await _context.Visits
+                    .Where(v => v.PatientId == patientId
+                             && v.IsActive
+                             && v.Id != currentVisitId
+                             && v.Category == category)
+                    .SumAsync(v => (decimal?)(v.TotalAmount - v.Discount - v.PaidAmount)) ?? 0m;
+            }
+
             // 📁 لو المريض "عام + تقويم" — اجمع مدفوعات كل الزيارات مقسّمة حسب النوع
             if (patient.PatientType == Models.Patient.PatientType.Both)
             {
@@ -138,7 +152,7 @@ namespace Dental.Controllers
             ViewBag.PatientPaymentsHistory = await (
          from p in _context.VisitPayments
          join v in _context.Visits on p.VisitId equals v.Id
-         where v.PatientId == patientId && p.VisitId != visitId && p.VisitId != orthoAnchorId       
+         where v.PatientId == patientId && p.VisitId != visitId && p.VisitId != orthoAnchorId
          orderby p.PaymentDate descending
          select new
          {
@@ -730,28 +744,93 @@ namespace Dental.Controllers
                     }
                 }
 
-                // ================= 2) مدفوعات السيشن =================
-                foreach (var pay in req.Payments)
-                {
-                    if (pay.Amount <= 0 && pay.Discount <= 0) continue;
+                // ================= 2) مدفوعات السيشن (FIFO) =================
+                // القاعدة:
+                //  - الخصم كله على الزيارة الحالية.
+                //  - المبلغ يغطي متبقي الزيارة الحالية الأول.
+                //  - الزيادة تسدد الزيارات القديمة من نفس النوع (الأقدم فالأحدث) كدفعات مستقلة على كل زيارة.
+                //  - لو فضل حاجة بعد سداد كل القديم → تفضل على الزيارة الحالية (رصيد دائن للمريض).
+                var sessionPayments = req.Payments
+                    .Where(p => p.Amount > 0 || p.Discount > 0)
+                    .ToList();
 
-                    if (pay.Amount > 0)
+                foreach (var pay in sessionPayments)
+                    if (pay.Discount > 0) visit.Discount += pay.Discount;
+
+                var currentDue = Math.Max(0m, visit.TotalAmount - visit.Discount - visit.PaidAmount);
+                var totalCash = sessionPayments.Sum(p => p.Amount > 0 ? p.Amount : 0m);
+
+                // الزيارات القديمة المديونة — بترجع فاضية لو مفيش زيادة عن مطلوب اليوم
+                var hasExcess = totalCash > currentDue;
+                var currentVisitId = visit.Id;
+                var visitCategory = visit.Category;
+                var olderDue = await _context.Visits
+                    .Where(v => hasExcess
+                             && v.PatientId == req.PatientId
+                             && v.IsActive
+                             && v.Id != currentVisitId
+                             && v.Category == visitCategory
+                             && v.TotalAmount - v.Discount - v.PaidAmount > 0)
+                    .OrderBy(v => v.VisitDate)
+                    .ThenBy(v => v.Id)
+                    .ToListAsync();
+
+                var olderIdx = 0;
+                decimal settledOld = 0;
+                var sessionDate = DateTime.Now;
+
+                foreach (var pay in sessionPayments)
+                {
+                    if (pay.Amount <= 0) continue;   // خصم بس — اتسجل على الزيارة فوق
+
+                    // إيصال واحد للدفعة حتى لو اتقسمت على أكتر من زيارة
+                    var receiptNo = $"REC-{DateTime.Now:yyMMdd}-{new Random().Next(1000, 9999)}";
+                    var left = pay.Amount;
+
+                    // 1) الزيارة الحالية
+                    var toCurrent = Math.Min(left, currentDue);
+                    left -= toCurrent;
+                    currentDue -= toCurrent;
+
+                    // 2) الزيارات القديمة (الأقدم أولاً)
+                    while (left > 0 && olderIdx < olderDue.Count)
+                    {
+                        var old = olderDue[olderIdx];
+                        var oldDue = old.TotalAmount - old.Discount - old.PaidAmount;
+                        if (oldDue <= 0) { olderIdx++; continue; }
+
+                        var part = Math.Min(left, oldDue);
+                        _context.VisitPayments.Add(new VisitPayment
+                        {
+                            VisitId = old.Id,
+                            Amount = part,
+                            Discount = 0,
+                            Method = pay.Method,
+                            Description = $"سداد متأخرات — من سيشن {sessionDate:dd/MM/yyyy}"
+                                          + (string.IsNullOrWhiteSpace(pay.Description) ? "" : $" — {pay.Description}"),
+                            ReceiptNo = receiptNo
+                        });
+                        old.PaidAmount += part;
+                        left -= part;
+                        settledOld += part;
+
+                        if (old.TotalAmount - old.Discount - old.PaidAmount <= 0) olderIdx++;
+                    }
+
+                    // 3) نصيب الزيارة الحالية + أي زيادة متبقية (رصيد دائن)
+                    var currentPart = toCurrent + left;
+                    if (currentPart > 0 || pay.Discount > 0)
                     {
                         _context.VisitPayments.Add(new VisitPayment
                         {
                             VisitId = req.VisitId,
-                            Amount = pay.Amount,
+                            Amount = currentPart,
                             Discount = pay.Discount,
                             Method = pay.Method,
                             Description = pay.Description,
-                            ReceiptNo = $"REC-{DateTime.Now:yyMMdd}-{new Random().Next(1000, 9999)}"
+                            ReceiptNo = receiptNo
                         });
-                        visit.PaidAmount += pay.Amount;
-                    }
-
-                    if (pay.Discount > 0)
-                    {
-                        visit.Discount += pay.Discount;
+                        visit.PaidAmount += currentPart;
                     }
                 }
 
@@ -762,7 +841,7 @@ namespace Dental.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return Json(new { success = true });
+                return Json(new { success = true, settledOld });
             }
             catch (Exception ex)
             {

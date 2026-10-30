@@ -25,7 +25,8 @@
             return new ServiceResult<T>
             {
                 Success = false,
-                Errors = errors.ToList()
+                Errors = errors.ToList(),
+                Message = string.Join(" | ", errors)
             };
         }
     }

@@ -1,5 +1,12 @@
 @model Dental.Modules.Clinical.ViewModels.SessionViewModel
 @{
+    var isOrthoPay = ViewBag.IsOrthoSession as bool? ?? false;
+    var inv = System.Globalization.CultureInfo.InvariantCulture;
+
+    // ⭐ أرقام اليوم الأساسية (المحفوظ فعلاً على الزيارة) — الـ pending بيتضاف عليها في الـ JS
+    var todayRemainingServer = Model.Visit.TotalAmount - Model.Visit.Discount - Model.Visit.PaidAmount;
+    var patientRemainingServer = Model.PreviousBalance + todayRemainingServer;
+
     var previousPayments = (ViewBag.PatientPaymentsHistory as IEnumerable<dynamic>) ?? Enumerable.Empty<dynamic>();
     var previousPaymentsList = previousPayments.ToList();
 
@@ -78,32 +85,70 @@
                 <i class="bi bi-plus-lg"></i> New Payment
             </button>
         </div>
+        @* ⭐ تشخيصات اليوم — الـ Multi-Unit سطر واحد (السعر × الوحدات) *@
+        @if (!isOrthoPay)
+        {
+            <div class="today-diag-card" id="todayDiagCard">
+                <div class="today-diag-head">
+                    <span><i class="bi bi-clipboard2-pulse"></i> تشخيصات اليوم</span>
+                    <span class="today-diag-count" id="todayDiagCount">0</span>
+                </div>
+                <div id="todayDiagRows"></div>
+                <div class="today-diag-foot">
+                    <span>مطلوب اليوم</span>
+                    <b id="todayDiagTotal">@Model.Visit.TotalAmount.ToString("N0")</b>
+                </div>
+            </div>
+        }
+
         <div class="pay-summary-grid">
             <div class="pay-stat-box">
                 <div class="pay-stat-icon"><i class="bi bi-wallet2"></i></div>
-                <span class="pay-stat-label">الإجمالي</span>
+                <span class="pay-stat-label">@(isOrthoPay ? "الإجمالي" : "مطلوب اليوم")</span>
                 <span class="pay-stat-value" id="paySummaryTotal">@Model.Visit.TotalAmount.ToString("N0") <small>م.ج</small></span>
+            </div>
+            <div class="pay-stat-box">
+                <div class="pay-stat-icon" style="color:#16a34a;"><i class="bi bi-check-circle"></i></div>
+                <span class="pay-stat-label">@(isOrthoPay ? "المدفوع" : "مدفوع اليوم")</span>
+                <span class="pay-stat-value" style="color:#16a34a;" id="paySummaryPaid">@Model.Visit.PaidAmount.ToString("N0") <small>م.ج</small></span>
             </div>
             <div class="pay-stat-box">
                 <div class="pay-stat-icon" style="color:#f59e0b;"><i class="bi bi-percent"></i></div>
                 <span class="pay-stat-label">الخصم</span>
                 <span class="pay-stat-value" style="color:#f59e0b;" id="paySummaryDiscount">@Model.Visit.Discount.ToString("N0") <small>م.ج</small></span>
             </div>
-            <div class="pay-stat-box">
-                <div class="pay-stat-icon" style="color:#16a34a;"><i class="bi bi-check-circle"></i></div>
-                <span class="pay-stat-label">المدفوع</span>
-                <span class="pay-stat-value" style="color:#16a34a;" id="paySummaryPaid">@Model.Visit.PaidAmount.ToString("N0") <small>م.ج</small></span>
-            </div>
-            <div class="pay-stat-box highlight">
+            <div class="pay-stat-box @(isOrthoPay ? "highlight" : "")">
                 <div class="pay-stat-icon" style="color:#dc2626;"><i class="bi bi-exclamation-circle"></i></div>
-                <span class="pay-stat-label">المتبقي</span>
-                <span class="pay-stat-value" style="color:#dc2626;" id="paySummaryRemaining">@Model.Visit.Remaining.ToString("N0") <small>م.ج</small></span>
+                <span class="pay-stat-label">@(isOrthoPay ? "المتبقي" : "متبقي اليوم")</span>
+                <span class="pay-stat-value" style="color:#dc2626;" id="paySummaryRemaining">@Math.Max(0, todayRemainingServer).ToString("N0") <small>م.ج</small></span>
             </div>
         </div>
 
+        @* ⭐ رصيد المريض الكلي = رصيد الزيارات السابقة + متبقي اليوم *@
+        @if (!isOrthoPay)
+        {
+            <div class="patient-balance-strip">
+                <div class="pb-item">
+                    <span class="pb-label">رصيد سابق</span>
+                    <b class="pb-value" id="payPrevBalance">@Model.PreviousBalance.ToString("N0")</b>
+                </div>
+                <span class="pb-op">+</span>
+                <div class="pb-item">
+                    <span class="pb-label">متبقي اليوم</span>
+                    <b class="pb-value" id="payTodayRemainingStrip">@todayRemainingServer.ToString("N0")</b>
+                </div>
+                <span class="pb-op">=</span>
+                <div class="pb-item pb-total">
+                    <span class="pb-label">إجمالي المتبقي على المريض</span>
+                    <b class="pb-value" id="payPatientRemaining">@patientRemainingServer.ToString("N0") <small>م.ج</small></b>
+                </div>
+            </div>
+            <div class="pb-note" id="payOldSettleNote" style="display:none;"></div>
+        }
+
         <div style="margin-top:16px; padding-top:16px; border-top:1px solid #f1f5f9;">
             <div style="font-size:.8rem; font-weight:800; color:#475569; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-                <i class="bi bi-list-ul"></i> سجل مدفوعات السيشن
+                <i class="bi bi-list-ul"></i> سجل مدفوعات المريض
             </div>
             <div class="pay-history custom-scroll" style="max-height:220px; overflow-y:auto;">
                 <div id="pendingPaymentsRows"></div>
@@ -200,6 +245,19 @@
             <button class="dc-modal-close" onclick="closePaymentModal()"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="dc-modal-body">
+            @* ⭐ اختصارات المبلغ: متبقي اليوم / إجمالي المتبقي على المريض *@
+            <div class="pay-quick-fill" id="payQuickFill">
+                <button type="button" class="pay-quick-btn" onclick="fillPayAmount('today')">
+                    <span>@(isOrthoPay ? "المتبقي" : "متبقي اليوم")</span><b id="payQuickToday">0</b>
+                </button>
+                @if (!isOrthoPay)
+                {
+                    <button type="button" class="pay-quick-btn total" onclick="fillPayAmount('patient')">
+                        <span>إجمالي على المريض</span><b id="payQuickPatient">0</b>
+                    </button>
+                }
+            </div>
+
             <div class="pay-row-main">
                 <div class="pay-field amount-field">
                     <label class="pay-field-label">المبلغ</label>
@@ -230,6 +288,7 @@
             </div>
 
             <input type="text" class="dc-input-line" id="payDesc" placeholder="ملاحظة (اختياري)..." />
+            <div class="pay-excess-hint" id="payExcessHint" style="display:none;"></div>
         </div>
         <div class="dc-modal-foot">
             <button class="dc-btn dc-btn-secondary" onclick="closePaymentModal()">Cancel</button>
@@ -476,6 +535,218 @@
         color: #94a3b8;
         display: block;
         margin-top: 2px;
+    }
+
+    /* ⭐ تشخيصات اليوم */
+    .today-diag-card {
+        background: #fafcfd;
+        border: 1px solid #f1f5f9;
+        border-radius: 14px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+    }
+
+    .today-diag-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: .8rem;
+        font-weight: 800;
+        color: #475569;
+        margin-bottom: 8px;
+    }
+
+        .today-diag-head span:first-child {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+    .today-diag-count {
+        background: #ccfbf1;
+        color: #0d7377;
+        font-size: .68rem;
+        padding: 2px 9px;
+        border-radius: 999px;
+    }
+
+    .today-diag-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 0;
+        border-bottom: 1px dashed #e2e8f0;
+        font-size: .78rem;
+    }
+
+    .td-name {
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .td-teeth {
+        font-size: .68rem;
+        color: #64748b;
+        display: block;
+        margin-top: 2px;
+    }
+
+    .td-mu {
+        font-size: .62rem;
+        font-weight: 800;
+        color: #6d28d9;
+        background: #ede9fe;
+        padding: 1px 7px;
+        border-radius: 6px;
+        margin-inline-start: 6px;
+    }
+
+    .td-amount {
+        text-align: left;
+        white-space: nowrap;
+    }
+
+        .td-amount b {
+            color: #0d7377;
+            font-size: .85rem;
+        }
+
+        .td-amount small {
+            display: block;
+            font-size: .65rem;
+            color: #94a3b8;
+        }
+
+    .today-diag-row.saved .td-name {
+        color: #64748b;
+    }
+
+    .today-diag-empty {
+        font-size: .75rem;
+        color: #94a3b8;
+        padding: 4px 0 8px;
+    }
+
+    .today-diag-foot {
+        display: flex;
+        justify-content: space-between;
+        padding-top: 8px;
+        font-size: .82rem;
+        font-weight: 800;
+        color: #0d7377;
+    }
+
+    /* ⭐ رصيد المريض الكلي */
+    .patient-balance-strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 10px;
+        padding: 10px 14px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #fef2f2, #fff7ed);
+        border: 1px solid #fecaca;
+    }
+
+    .pb-item {
+        text-align: center;
+        flex: 1;
+    }
+
+    .pb-label {
+        display: block;
+        font-size: .66rem;
+        font-weight: 700;
+        color: #94a3b8;
+        margin-bottom: 3px;
+    }
+
+    .pb-value {
+        font-size: .95rem;
+        font-weight: 800;
+        color: #475569;
+    }
+
+        .pb-value small {
+            font-size: .65rem;
+            opacity: .7;
+        }
+
+    .pb-total .pb-label {
+        color: #b91c1c;
+    }
+
+    .pb-total .pb-value {
+        font-size: 1.2rem;
+        color: #dc2626;
+    }
+
+    .pb-op {
+        font-weight: 800;
+        color: #cbd5e1;
+        font-size: 1rem;
+    }
+
+    .pb-note {
+        margin-top: 6px;
+        font-size: .72rem;
+        font-weight: 700;
+        color: #15803d;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 10px;
+        padding: 6px 10px;
+    }
+
+    /* ⭐ اختصارات المبلغ في المودال */
+    .pay-quick-fill {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+
+    .pay-quick-btn {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        border: 1.5px dashed #99f6e4;
+        background: #f0fdfa;
+        color: #0d7377;
+        border-radius: 10px;
+        padding: 6px;
+        cursor: pointer;
+        font-size: .66rem;
+        font-weight: 700;
+        transition: all .2s;
+    }
+
+        .pay-quick-btn b {
+            font-size: .85rem;
+        }
+
+        .pay-quick-btn.total {
+            border-color: #fecaca;
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .pay-quick-btn:hover {
+            transform: translateY(-1px);
+        }
+
+    .pay-excess-hint {
+        margin-top: 10px;
+        font-size: .72rem;
+        font-weight: 700;
+        color: #15803d;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 10px;
+        padding: 7px 10px;
     }
 
     .badge-pending-pay {
@@ -740,7 +1011,150 @@
 <script>
     window.pendingPayments = window.pendingPayments || [];
 
+    // ════════════════════════════════════════════════
+    // ⭐ مصدر واحد للأرقام — تاب المدفوعات + المودال + الـ Bottom Bar
+    // ════════════════════════════════════════════════
+    window.SESSION_PAY_BASE = {
+        total: @Model.Visit.TotalAmount.ToString(inv),
+        paid: @Model.Visit.PaidAmount.ToString(inv),
+        discount: @Model.Visit.Discount.ToString(inv),
+        prevBalance: @Model.PreviousBalance.ToString(inv),
+        isOrtho: @(isOrthoPay ? "true" : "false")
+        };
+
+    function payPendingRecords() {
+        const r = window.pendingToothRecords;
+        if (!r) return [];
+        return Array.isArray(r) ? r : Object.values(r);
+    }
+
+    window.computeSessionTotals = function() {
+        const b = window.SESSION_PAY_BASE;
+        const pays = window.pendingPayments || [];
+
+        // كل سن في الـ Multi-Unit سجل لوحده بسعره → المجموع = السعر × عدد الوحدات تلقائيًا
+        const pendingDiag = payPendingRecords().reduce((s, t) => s + (t.DiagnosisPrice || 0), 0);
+        const pendingPaid = pays.reduce((s, p) => s + (p.Amount || 0), 0);
+        const pendingDiscount = pays.reduce((s, p) => s + (p.Discount || 0), 0);
+
+        const todayTotal = b.total + pendingDiag;
+        const todayDiscount = b.discount + pendingDiscount;
+        const todayPaid = b.paid + pendingPaid;
+        const todayNet = todayTotal - todayDiscount - todayPaid;      // ممكن يبقى سالب لو دفع زيادة
+        const prevBalance = b.isOrtho ? 0 : b.prevBalance;
+
+        // الزيادة عن مطلوب اليوم بتسدد الزيارات القديمة (FIFO في FinishSession)
+        const excess = todayNet < 0 ? -todayNet : 0;
+        const settlesOld = Math.min(excess, Math.max(0, prevBalance));
+
+        return {
+            todayTotal, todayDiscount, todayPaid,
+            todayRemaining: Math.max(0, todayNet),
+            todayNet,
+            prevBalance,
+            settlesOld,
+            patientRemaining: prevBalance + todayNet
+        };
+    };
+
+    const payFmt = n => (Math.round(n * 100) / 100).toLocaleString('en-EG');
+    const payEsc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    // ⭐ تشخيصات اليوم: المجموعة (GroupId) سطر واحد — التشخيص العادي سطر لكل سجل
+    function renderTodayDiagnoses() {
+        const wrap = document.getElementById('todayDiagRows');
+        if (!wrap) return;
+
+        const lines = [];
+        const groups = new Map();
+        payPendingRecords().forEach(r => {
+            if (!r.DiagnosisCatalogId && !(r.DiagnosisPrice > 0)) return; // سجل حالة بس من غير تشخيص
+            if (r.GroupId) {
+                if (!groups.has(r.GroupId)) {
+                    const g = { name: r.DiagnosisName, price: r.DiagnosisPrice || 0, teeth: [] };
+                    groups.set(r.GroupId, g);
+                    lines.push(g);
+                }
+                groups.get(r.GroupId).teeth.push(r.ToothNumber);
+            } else {
+                lines.push({ name: r.DiagnosisName, price: r.DiagnosisPrice || 0, teeth: [r.ToothNumber] });
+            }
+        });
+
+        const b = window.SESSION_PAY_BASE;
+        let html = '';
+
+        // اللي اتحفظ قبل كده على نفس الزيارة (مثلاً من شاشة المريض)
+        if (b.total > 0) {
+            html += `<div class="today-diag-row saved">
+                            <div><span class="td-name">مسجّل مسبقًا على الزيارة</span></div>
+                            <div class="td-amount"><b>${payFmt(b.total)}</b></div>
+                         </div>`;
+        }
+
+        lines.forEach(l => {
+            const units = l.teeth.length;
+            const isGroup = units > 1;
+            const teethLabel = isGroup && window.groupRangeLabel
+                ? window.groupRangeLabel(l.teeth)
+                : l.teeth.join(' · ');
+            html += `<div class="today-diag-row">
+                            <div>
+                                <span class="td-name">${payEsc(l.name || 'تشخيص')}</span>${isGroup ? `<span class="td-mu">${units} units</span>` : ''}
+                                <span class="td-teeth"><i class="bi bi-grid-3x3-gap"></i> ${payEsc(teethLabel)}</span>
+                            </div>
+                            <div class="td-amount">
+                                <b>${payFmt(l.price * units)}</b>
+                                ${isGroup ? `<small>${payFmt(l.price)} × ${units}</small>` : ''}
+                            </div>
+                         </div>`;
+        });
+
+        if (!html) html = `<div class="today-diag-empty">لسه مفيش تشخيصات في السيشن دي.</div>`;
+        wrap.innerHTML = html;
+
+        const countEl = document.getElementById('todayDiagCount');
+        if (countEl) countEl.textContent = lines.reduce((s, l) => s + l.teeth.length, 0);
+        const totalEl = document.getElementById('todayDiagTotal');
+        if (totalEl) totalEl.textContent = payFmt(window.computeSessionTotals().todayTotal);
+    }
+    window.renderTodayDiagnoses = renderTodayDiagnoses;
+
+    function fillPayAmount(kind) {
+        const t = window.computeSessionTotals();
+        const v = kind === 'patient' ? Math.max(0, t.patientRemaining) : t.todayRemaining;
+        document.getElementById('payAmount').value = v > 0 ? v : '';
+        updateExcessHint();
+    }
+    window.fillPayAmount = fillPayAmount;
+
+    // ⭐ تنبيه لو المبلغ أكبر من متبقي اليوم → الزيادة هتسدد زيارات قديمة
+    function updateExcessHint() {
+        const hint = document.getElementById('payExcessHint');
+        if (!hint) return;
+        const t = window.computeSessionTotals();
+        const amount = parseFloat(document.getElementById('payAmount').value) || 0;
+        const discount = parseFloat(document.getElementById('payDiscount').value) || 0;
+        const dueToday = Math.max(0, t.todayRemaining - discount);
+        const excess = amount - dueToday;
+
+        if (!t.prevBalance || t.prevBalance <= 0 || excess <= 0 || window.SESSION_PAY_BASE.isOrtho) {
+            hint.style.display = 'none';
+            return;
+        }
+        const toOld = Math.min(excess, Math.max(0, t.prevBalance - t.settlesOld));
+        hint.innerHTML = `<i class="bi bi-arrow-repeat"></i> ${payFmt(Math.min(amount, dueToday))} لليوم + ${payFmt(toOld)} لسداد زيارات سابقة (الأقدم أولاً)`;
+        hint.style.display = '';
+    }
+
     function openPaymentModal() {
+        const t = window.computeSessionTotals();
+        const qToday = document.getElementById('payQuickToday');
+        const qPatient = document.getElementById('payQuickPatient');
+        if (qToday) qToday.textContent = payFmt(t.todayRemaining);
+        if (qPatient) qPatient.textContent = payFmt(Math.max(0, t.patientRemaining));
+        updateExcessHint();
+
         document.getElementById('paymentModal').style.display = 'flex';
         document.getElementById('payAmount').focus();
     }
@@ -749,7 +1163,12 @@
         document.getElementById('payAmount').value = '';
         document.getElementById('payDiscount').value = '';
         document.getElementById('payDesc').value = '';
+        const hint = document.getElementById('payExcessHint');
+        if (hint) hint.style.display = 'none';
     }
+
+    document.getElementById('payAmount').addEventListener('input', updateExcessHint);
+    document.getElementById('payDiscount').addEventListener('input', updateExcessHint);
 
     document.querySelectorAll('#payMethodTiles .pay-method-chip').forEach(function(tile) {
         tile.addEventListener('click', function() {
@@ -804,51 +1223,54 @@
             row.style.background = '#fffbeb';
             row.style.borderColor = '#fde68a';
             row.innerHTML = `
-                        <div class="pay-h-left">
-                            <b>${p.Amount.toLocaleString('en-EG')} م.ج</b>
-                            <span class="pay-h-method">${methodLabel(p.Method)}</span>
-                            ${p.Discount > 0 ? `<span class="pay-h-discount">خصم ${p.Discount.toLocaleString('en-EG')}</span>` : ''}
-                            <span class="badge-pending-pay">قيد الحفظ</span>
-                        </div>
-                        <div class="pay-h-right" style="display:flex; align-items:center; gap:8px;">
-                            <small style="color:#64748b;">${p.Description || '-'}</small>
-                            <button class="btn-sm danger" onclick="removePendingPayment(${idx})" title="حذف"><i class="bi bi-trash3"></i></button>
-                        </div>
-                    `;
+                            <div class="pay-h-left">
+                                <b>${p.Amount.toLocaleString('en-EG')} م.ج</b>
+                                <span class="pay-h-method">${methodLabel(p.Method)}</span>
+                                ${p.Discount > 0 ? `<span class="pay-h-discount">خصم ${p.Discount.toLocaleString('en-EG')}</span>` : ''}
+                                <span class="badge-pending-pay">قيد الحفظ</span>
+                            </div>
+                            <div class="pay-h-right" style="display:flex; align-items:center; gap:8px;">
+                                <small style="color:#64748b;">${p.Description || '-'}</small>
+                                <button class="btn-sm danger" onclick="removePendingPayment(${idx})" title="حذف"><i class="bi bi-trash3"></i></button>
+                            </div>
+                        `;
             wrap.appendChild(row);
         });
     }
     window.renderPendingPaymentsRows = renderPendingPaymentsRows;
 
     function renderPendingPaymentsSummary() {
-        const baseTotal = @(Model.Visit.TotalAmount.ToString(System.Globalization.CultureInfo.InvariantCulture));
-        const basePaid = @(Model.Visit.PaidAmount.ToString(System.Globalization.CultureInfo.InvariantCulture));
-        const baseDiscount = @(Model.Visit.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        const t = window.computeSessionTotals();
+        const setHtml = (id, v) => { const el = document.getElementById(id); if (el) el.innerHTML = payFmt(v) + ' <small>م.ج</small>'; };
+        const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = payFmt(v); };
 
-        const pendingDiagnosisTotal = window.pendingToothRecords
-            ? Object.values(window.pendingToothRecords).reduce((sum, t) => sum + (t.DiagnosisPrice || 0), 0)
-            : 0;
-        const pendingPaidTotal = window.pendingPayments.reduce((sum, p) => sum + p.Amount, 0);
-        const pendingDiscountTotal = window.pendingPayments.reduce((sum, p) => sum + (p.Discount || 0), 0);
+        setHtml('paySummaryTotal', t.todayTotal);
+        setHtml('paySummaryPaid', t.todayPaid);
+        setHtml('paySummaryDiscount', t.todayDiscount);
+        setHtml('paySummaryRemaining', t.todayRemaining);
 
-        const newTotal = baseTotal + pendingDiagnosisTotal;
-        const newDiscount = baseDiscount + pendingDiscountTotal;
-        const newPaid = basePaid + pendingPaidTotal;
-        const newRemaining = newTotal - newDiscount - newPaid;
+        // رصيد المريض الكلي
+        setText('payPrevBalance', t.prevBalance);
+        setText('payTodayRemainingStrip', t.todayNet);
+        setHtml('payPatientRemaining', t.patientRemaining);
 
-        const fmt = n => n.toLocaleString('en-EG');
-        const totalEl = document.getElementById('paySummaryTotal');
-        const paidEl = document.getElementById('paySummaryPaid');
-        const remainingEl = document.getElementById('paySummaryRemaining');
-        const discountEl = document.getElementById('paySummaryDiscount');
-        if (totalEl) totalEl.innerHTML = fmt(newTotal) + ' <small>م.ج</small>';
-        if (paidEl) paidEl.innerHTML = fmt(newPaid) + ' <small>م.ج</small>';
-        if (remainingEl) remainingEl.innerHTML = fmt(newRemaining) + ' <small>م.ج</small>';
-        if (discountEl) discountEl.innerHTML = fmt(newDiscount) + ' <small>م.ج</small>';
+        const note = document.getElementById('payOldSettleNote');
+        if (note) {
+            if (t.settlesOld > 0) {
+                note.innerHTML = `<i class="bi bi-arrow-repeat"></i> ${payFmt(t.settlesOld)} م.ج من مدفوع اليوم هتسدد زيارات سابقة عند حفظ السيشن (الأقدم أولاً)`;
+                note.style.display = '';
+            } else {
+                note.style.display = 'none';
+            }
+        }
 
+        renderTodayDiagnoses();
         renderPendingPaymentsRows();
     }
     window.renderPendingPaymentsSummary = renderPendingPaymentsSummary;
 
-    document.addEventListener('DOMContentLoaded', renderPendingPaymentsRows);
+    document.addEventListener('DOMContentLoaded', () => {
+        renderPendingPaymentsRows();
+        renderTodayDiagnoses();
+    });
 </script>

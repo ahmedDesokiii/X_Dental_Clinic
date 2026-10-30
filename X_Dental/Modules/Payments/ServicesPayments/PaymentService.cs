@@ -208,17 +208,36 @@ namespace Dental.Modules.Payments.ServicesPayments
                     pt.Mobile
                 }).ToListAsync();
 
-            // بنجيب الزيارات كـ Entities عشان Remaining تتحسب بنفس منطق الموديل (حتى لو NotMapped)
-            var visitIds = raw.Select(r => r.VisitId).Distinct().ToList();
-            var visitsById = await _context.Visits
+            // ⭐ كل الزيارات النشطة لمرضى التقرير (مش بس الزيارات اللي عليها دفعات في الفترة)
+            //    عشان نحسب رصيد المريض الكلي — نفس منطق كشف الحساب (Sum of Visit.Remaining).
+            //    بنجيبها كـ Entities عشان Remaining تتحسب بنفس منطق الموديل (حتى لو NotMapped).
+            var patientIds = raw.Select(r => r.PatientId).Distinct().ToList();
+            var patientVisits = await _context.Visits
                 .AsNoTracking()
-                .Where(v => visitIds.Contains(v.Id))
-                .ToDictionaryAsync(v => v.Id);
+                .Where(v => patientIds.Contains(v.PatientId) && v.IsActive)
+                .ToListAsync();
+
+            var visitsById = patientVisits.ToDictionary(v => v.Id);
+
+            // مدفوعات كل زيارة في نفس يوم الدفعة (بنستخدمها للتقويم بدل الإجمالي التراكمي)
+            var paidPerVisitDay = raw
+                .GroupBy(r => (r.VisitId, Day: r.PaymentDate.Date))
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.Amount));
+
+            var patientBalances = patientVisits
+                .GroupBy(v => v.PatientId)
+                .ToDictionary(g => g.Key, g => new
+                {
+                    Total = g.Sum(v => v.TotalAmount),
+                    Remaining = g.Sum(v => v.Remaining),
+                    OpenVisits = g.Count(v => v.Remaining > 0)
+                });
 
             var all = raw.Select(r =>
             {
                 var isOrtho = IsOrthoCategory(r.Category);
                 var visit = visitsById[r.VisitId];
+                var bal = patientBalances[r.PatientId];
                 return new DailyPaymentItemDto
                 {
                     Id = r.Id,
@@ -236,8 +255,14 @@ namespace Dental.Modules.Payments.ServicesPayments
                     PaymentDate = r.PaymentDate,
                     VisitTotal = visit.TotalAmount,
                     VisitDiscount = visit.Discount,
-                    VisitPaid = visit.PaidAmount,
-                    VisitRemaining = visit.Remaining
+                    // التقويم: المدفوع في نفس اليوم فقط (المطلوب إجمالي للحالة مش بالزيارة)
+                    VisitPaid = isOrtho
+                        ? paidPerVisitDay.GetValueOrDefault((r.VisitId, r.PaymentDate.Date))
+                        : visit.PaidAmount,
+                    VisitRemaining = visit.Remaining,
+                    PatientTotal = bal.Total,
+                    PatientRemaining = bal.Remaining,
+                    PatientOpenVisits = bal.OpenVisits
                 };
             }).ToList();
 
@@ -314,10 +339,11 @@ namespace Dental.Modules.Payments.ServicesPayments
                 OrthoAmount = current.Where(x => x.IsOrtho).Sum(x => x.Amount),
                 OrthoCount = current.Count(x => x.IsOrtho),
 
-                VisitsCount = periodVisits.Count,
-                VisitsTotal = periodVisits.Sum(x => x.VisitTotal),
-                VisitsPaid = periodVisits.Sum(x => x.VisitPaid),
-                VisitsRemaining = periodVisits.Sum(x => x.VisitRemaining),
+                // كارت "إجمالي المطلوب" وحلقة السداد للعام فقط — التقويم مطلوبه إجمالي للحالة مش بالزيارة
+                VisitsCount = generalVisits.Count,
+                VisitsTotal = generalVisits.Sum(x => x.VisitTotal),
+                VisitsPaid = generalVisits.Sum(x => x.VisitPaid),
+                VisitsRemaining = generalVisits.Sum(x => x.VisitRemaining),
 
                 GeneralVisitsCount = generalVisits.Count,
                 GeneralVisitsTotal = generalVisits.Sum(x => x.VisitTotal),
@@ -326,7 +352,7 @@ namespace Dental.Modules.Payments.ServicesPayments
 
                 OrthoVisitsCount = orthoVisits.Count,
                 OrthoVisitsTotal = orthoVisits.Sum(x => x.VisitTotal),
-                OrthoVisitsPaid = orthoVisits.Sum(x => x.VisitPaid),
+                OrthoVisitsPaid = current.Where(x => x.IsOrtho).Sum(x => x.Amount),
                 OrthoVisitsRemaining = orthoVisits.Sum(x => x.VisitRemaining),
 
                 PreviousTotalAmount = prevAmount,

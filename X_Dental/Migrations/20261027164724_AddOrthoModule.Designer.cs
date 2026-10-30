@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Dental.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261025113004_AddOrthoModule")]
+    [Migration("20261027164724_AddOrthoModule")]
     partial class AddOrthoModule
     {
         /// <inheritdoc />

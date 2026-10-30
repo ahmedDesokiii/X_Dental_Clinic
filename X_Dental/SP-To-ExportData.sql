@@ -1,86 +1,12 @@
-/* =========================================================
-   usp_MigrateLegacyClinicData
-   [FamilyDB]  ->  [X_FamilyDental_DB_v01]
-
-   إجراء واحد بيعمل كل حاجة في Transaction واحدة.
-
-   الاستخدام:
-     EXEC dbo.usp_MigrateLegacyClinicData @Commit = 0;                      -- تجربة (Dry run): ينفّذ، يعرض النتايج، ثم ROLLBACK
-     EXEC dbo.usp_MigrateLegacyClinicData @Commit = 1;                      -- تنفيذ فعلي: COMMIT بس لو كل الفحوصات الحرجة = 0
-     EXEC dbo.usp_MigrateLegacyClinicData @Commit = 0, @RebuildTeeth = 1;   -- تجربة إعادة بناء الأسنان
-     EXEC dbo.usp_MigrateLegacyClinicData @Commit = 1, @RebuildTeeth = 1;   -- إعادة بناء الأسنان فعليًا (مرة واحدة)
-
-   الافتراضي @Commit = 0 و @RebuildTeeth = 0 (أمان).
-
-   ملاحظات:
-   - Patient_T      -> PatientCode 'GD-{patient_Code}'  , PatientType = 1
-   - Orthodontics_T -> PatientCode 'ORT-{orth_Code}'    , PatientType = 2
-   - Next Session: Appointment واحدة لكل مريض (أحدث تاريخ مستقبلي).
-   - التجربة بتستهلك أرقام Identity (الأرقام بتكمّل بعد الـ Rollback)، ده طبيعي ومش بيأثر على الداتا.
-   - جدولي Migration_Legacy*Map بيمنعوا التكرار لو اتشغّل تاني بعد COMMIT.
-     لو عملت Reset للداتا، امسحهم كمان (وامسح ERP_PatientContacts).
-   - صور الأشعة (PatientRays_T / OrthoRays_T) مش داخلة هنا (محتاجة تصدير ملفات).
-
-   -- تعديلات الجولات السابقة --
-   1) Orthodontics_T: orth_RequiredAmount بتتسجل زي المصدر على كل زيارة، وفي D.1 بتتصفّر على كل
-      زيارات المريض ما عدا أول زيارة تاريخيًا (على كل الزيارات المهاجَرة، القديمة والجديدة).
-   2) DentalChartEntries: Status = 2 (Decayed).
-   3) DentalChartEntries: تحويل ترقيم الأسنان من صيغة الربع القديمة (U.L#5 -> 15 ... إلخ).
-   4) DentalChartEntries.Notes = اسم التشخيص (متطابق مع DiagnosisCatalogs.NameAr).
-   5) ERP_Patients.Notes (PatientType = 1): كل قيم patient_MedicalHistory المختلفة مضمومة بترتيب أول ظهور.
-   6) VisitDiagnoses.ToothNumber بنفس منطق تطبيع الشارت (صف لكل سن، أو NULL لو مفيش).
-   7) C.1 و C.3 بيشتغلوا على كل زيارات Patient_T المهاجَرة (تصحيح رجعي).
-   8) Gender: الربط بأول حرف (M/F) + B.2 تصحيح رجعي للـ NULL + فحص حرج.
-   9) ترقيم الأسنان: parsing set-based في C.0 (UL=1 , UR=2 , LL=3 , LR=4).
-   10) أداء: staging مرة واحدة (#PT / #VisitChart / #ChartTeeth).
-
-   -- تعديلات الجولة دي --
-   11) تصحيح اختيار الشارت: كان الكود بياخد "آخر شارت غير فاضي في نفس التاريخ أو قبله" حتى لو
-       فيه صف تاني لنفس المريض في نفس اليوم (الصف الأكبر Id بيكسب) -> زيارة 48 كان شارتها
-       Lower Right # 6 واتسجل لها 47، وزيارات كتير ضاعت أسنانها لأن الصف الكسبان كان No Tooth Selected.
-       دلوقتي: كل زيارة بتستخدم شارتها هي الأول، ولو فاضي بس بترجع لأقرب شارت قبلها
-       (من صف تاني غير نفسها، من غير ما ياخد صف أحدث منها).
-   12) @RebuildTeeth: خطوة تشتغل مرة واحدة تمسح DentalChartEntries + VisitDiagnoses للزيارات
-       المهاجَرة من Patient_T بس وتسيب C.1 / C.3 يعيدوا بناءهم بالمنطق الصح.
-       زيارات الأبلكيشن اللي مش في Migration_LegacyVisitMap مش بتتلمس.
-       تحذير: أي تعديل يدوي (Edit History) على تشخيص/ملاحظات زيارة مهاجَرة، وأي LabPriceSnapshot
-       عليها، هيرجع لقيمة المصدر. بعد ما تعمل COMMIT مرة بـ @RebuildTeeth = 1 ارجع للافتراضي (0).
-   ========================================================= */
-
-USE [X_FamilyDental_DB_v01];
+USE [X_FamilyDental_DB_v01]
+GO
+/****** Object:  StoredProcedure [dbo].[usp_MigrateLegacyClinicData]    Script Date: 10/25/2026 7:42:28 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
 GO
 
-IF OBJECT_ID(N'dbo.Migration_LegacyDiagnosisMap', N'U') IS NULL
-    CREATE TABLE dbo.Migration_LegacyDiagnosisMap
-    (
-        LegacyDiagnosisId     INT       NOT NULL PRIMARY KEY,
-        NewDiagnosisCatalogId INT       NOT NULL,
-        MigratedDate          DATETIME2 NOT NULL DEFAULT (GETDATE())
-    );
-GO
-
-IF OBJECT_ID(N'dbo.Migration_LegacyVisitMap', N'U') IS NULL
-    CREATE TABLE dbo.Migration_LegacyVisitMap
-    (
-        SourceTable  NVARCHAR(20) NOT NULL,
-        LegacyRowId  INT          NOT NULL,
-        NewVisitId   INT          NOT NULL,
-        MigratedDate DATETIME2    NOT NULL
-            CONSTRAINT DF_Migration_LegacyVisitMap_MigratedDate DEFAULT (GETDATE()),
-        CONSTRAINT PK_Migration_LegacyVisitMap PRIMARY KEY (SourceTable, LegacyRowId)
-    );
-GO
-
--- الدالة القديمة (fn_ParseLegacyTeeth) اتشالت: كانت بطيئة جدًا. التحليل بقى set-based جوه C.0.
-IF OBJECT_ID(N'dbo.fn_ParseLegacyTeeth', N'IF') IS NOT NULL
-    DROP FUNCTION dbo.fn_ParseLegacyTeeth;
-GO
-
-IF OBJECT_ID(N'dbo.usp_MigrateLegacyClinicData', N'P') IS NOT NULL
-    DROP PROCEDURE dbo.usp_MigrateLegacyClinicData;
-GO
-
-CREATE PROCEDURE dbo.usp_MigrateLegacyClinicData
+ALTER PROCEDURE [dbo].[usp_MigrateLegacyClinicData]
     @Commit       BIT = 0,
     @RebuildTeeth BIT = 0   -- 1 = يمسح ويعيد بناء الأسنان للزيارات المهاجَرة (يتشغّل مرة واحدة)
 AS
@@ -111,7 +37,18 @@ BEGIN
             @nDiagTeethBackfilled INT = 0,
             @nGenderBackfilled    INT = 0,
             @nRebuildChartDel     INT = 0,
-            @nRebuildDiagDel      INT = 0;
+            @nRebuildDiagDel      INT = 0,
+            @nOrthoCases          INT = 0,   -- ⭐ Ortho: حالات اتعملت في الـ run ده
+            @nOrthoEntries        INT = 0,   -- ⭐ Ortho: سجلات زيارات اتعملت
+            @nOrthoPayMoved       INT = 0,   -- ⭐ Ortho: دفعات اتنقلت للـ Anchor
+            @nOrthoAnchorFixed    INT = 0,   -- ⭐ Ortho: Anchor اتظبط إجماليها
+            @nOrthoAdopted        INT = 0;   -- ⭐ Ortho: حالات اتفتحت من السيشن واتربطت بالقديم
+
+    -- ⭐ Ortho enums (لازم تطابق الـ C#):
+    --    OrthoArch: None = 0, Upper = 1, Lower = 2, Both = 3
+    --    OrthoCaseStatus.Active: ⚠️ اتأكد من القيمة في OrthoModels.cs (لو أول عضو في الـ enum ومن غير رقم = 0)
+    DECLARE @OrthoArchBoth     INT = 3,
+            @OrthoStatusActive INT = 1;
 
     DECLARE @msg NVARCHAR(200), @tStart DATETIME2 = SYSDATETIME();
 
@@ -882,7 +819,21 @@ BEGIN
 
     /* =======================================================
        D) ORTHODONTICS_T VISITS   (Category = 2)
+          + ⭐ موديول التقويم الجديد:
+            OrthoCases (حالة لكل مريض) / OrthoVisitEntries (سجل لكل زيارة)
+            والاتفاق + كل المدفوعات على الـ Anchor Visit (أول زيارة)
        ======================================================= */
+
+    -- D.0) ⭐ Staging: نسخة مفهرسة من Orthodontics_T مرة واحدة بدل القراءة من قاعدة تانية في كل خطوة
+    SELECT o.orth_Id, o.orth_Code, o.orth_SessionDate, o.orth_NextSessionDate,
+           o.orth_Comments, o.orth_RequiredAmount, o.orth_PaidAmount,
+           o.orth_Discount, o.orth_Follow,
+           o.orth_TotalAmount
+    INTO #OT
+    FROM [FamilyDB].dbo.Orthodontics_T o
+    WHERE o.orth_Code IS NOT NULL;
+
+    CREATE UNIQUE CLUSTERED INDEX IX_OT_Id ON #OT (orth_Id);
 
     DECLARE @VisitMapOrtho TABLE (LegacyRowId INT PRIMARY KEY, NewVisitId INT);
 
@@ -892,7 +843,7 @@ BEGIN
             ot.orth_Id, m.NewPatientId, ot.orth_SessionDate, ot.orth_NextSessionDate,
             ot.orth_Comments, ot.orth_RequiredAmount, ot.orth_PaidAmount,
             ot.orth_Discount, ot.orth_Follow
-        FROM [FamilyDB].dbo.Orthodontics_T ot
+        FROM #OT ot
         JOIN @PatientMap m
             ON m.SourceTable = N'Orthodontics_T'
            AND m.LegacyCode  = ot.orth_Code
@@ -940,6 +891,7 @@ BEGIN
           AND map.LegacyRowId = vm.LegacyRowId
     );
 
+    -- الدفعات بتتسجل على زيارتها الأول (بتاريخها الحقيقي)، وبعدين D.4 بينقلها للـ Anchor
     INSERT INTO dbo.VisitPayments
         (VisitId, Amount, Method, Description, PaymentDate, CreatedDate, IsDeleted, Discount)
     SELECT
@@ -950,7 +902,7 @@ BEGIN
         ISNULL(ot.orth_SessionDate, CAST(GETDATE() AS DATE)),
         GETDATE(), 0,
         ISNULL(ot.orth_Discount, 0)
-    FROM [FamilyDB].dbo.Orthodontics_T ot
+    FROM #OT ot
     JOIN @VisitMapOrtho vm ON vm.LegacyRowId = ot.orth_Id
     WHERE ISNULL(ot.orth_PaidAmount, 0) > 0;
 
@@ -965,9 +917,8 @@ BEGIN
             ot.orth_NextSessionDate,
             ROW_NUMBER() OVER (PARTITION BY ot.orth_Code
                                ORDER BY ot.orth_NextSessionDate DESC, ot.orth_Id DESC) AS rn
-        FROM [FamilyDB].dbo.Orthodontics_T ot
-        WHERE ot.orth_Code IS NOT NULL
-          AND ot.orth_NextSessionDate >= CAST(GETDATE() AS DATE)
+        FROM #OT ot
+        WHERE ot.orth_NextSessionDate >= CAST(GETDATE() AS DATE)
     )
     INSERT INTO dbo.Appointments
         (PatientId, AppointmentDate, Duration, Reason, Status, VisitId, IsReminderSent, CreatedDate, IsDeleted)
@@ -995,29 +946,187 @@ BEGIN
 
     SET @nAppts = @nAppts + @@ROWCOUNT;
 
-    -- D.1) تصحيح Visits.TotalAmount لمرضى التقويم: نسيبها بس على أول زيارة تاريخيًا لكل مريض
-    ;WITH OrthoVisitRank AS
+    SET @msg = N'>> D done (ortho visits)  (' + CAST(DATEDIFF(SECOND, @tStart, SYSDATETIME()) AS NVARCHAR(20)) + N's)';
+    RAISERROR(@msg, 0, 1) WITH NOWAIT;
+
+    -- D.1) ⭐ كل زيارات التقويم المهاجَرة (كل الـ runs) مرتبة لكل مريض — أول زيارة = Anchor
+    SELECT
+        v.Id        AS VisitId,
+        v.PatientId,
+        v.VisitDate,
+        ot.orth_Comments,
+        -- ⭐ الإجمالي من orth_TotalAmount، ولو صفر/NULL بنرجع للمطلوب القديم (سلوك الـ SP الحالي)
+        CAST(COALESCE(NULLIF(ot.orth_TotalAmount, 0), ot.orth_RequiredAmount, 0) AS DECIMAL(18,2)) AS RequiredAmount,
+        ROW_NUMBER() OVER (PARTITION BY v.PatientId ORDER BY v.VisitDate ASC, v.Id ASC) AS rn
+    INTO #OrthoVis
+    FROM dbo.Migration_LegacyVisitMap map
+    JOIN #OT ot        ON ot.orth_Id = map.LegacyRowId
+    JOIN dbo.Visits v  ON v.Id = map.NewVisitId
+    WHERE map.SourceTable = N'Orthodontics_T';
+
+    CREATE UNIQUE CLUSTERED INDEX IX_OrthoVis ON #OrthoVis (PatientId, rn);
+    CREATE UNIQUE NONCLUSTERED INDEX IX_OrthoVis_Visit ON #OrthoVis (VisitId);
+
+    -- D.2) ⭐ OrthoCases: حالة واحدة لكل مريض تقويم مهاجَر (لو مالوش حالة أصلاً)
+    --      ArchType = Both ، Total = أول قيمة مطلوب > 0 بترتيب التاريخ ، Anchor = أول زيارة
+    INSERT INTO dbo.OrthoCases
+        (PatientId, ArchType, TotalRequired, AnchorVisitId, StartDate, Status, Notes, IsDeleted)
+    SELECT
+        a.PatientId,
+        @OrthoArchBoth,
+        ISNULL(ft.FirstTotal, 0),
+        a.VisitId,
+        a.VisitDate,
+        @OrthoStatusActive,
+        N'مرحّلة من النظام القديم (Orthodontics_T)',
+        0
+    FROM #OrthoVis a
+    OUTER APPLY
     (
-        SELECT
-            v.Id AS VisitId,
-            ROW_NUMBER() OVER (PARTITION BY v.PatientId ORDER BY v.VisitDate ASC, v.Id ASC) AS rn
-        FROM dbo.Visits v
-        JOIN dbo.ERP_Patients ep ON ep.Id = v.PatientId
-        JOIN dbo.Migration_LegacyVisitMap map
-            ON map.SourceTable = N'Orthodontics_T'
-           AND map.NewVisitId = v.Id
-        WHERE ep.PatientType = 2
-    )
+        SELECT TOP (1) x.RequiredAmount AS FirstTotal
+        FROM #OrthoVis x
+        WHERE x.PatientId = a.PatientId
+          AND x.RequiredAmount > 0
+        ORDER BY x.rn
+    ) ft
+    WHERE a.rn = 1
+      AND NOT EXISTS
+      (
+          SELECT 1 FROM dbo.OrthoCases c
+          WHERE c.PatientId = a.PatientId
+            AND c.IsDeleted = 0
+      );
+
+    SET @nOrthoCases = @@ROWCOUNT;
+
+    -- D.2b) ⭐ حالة اتفتحت من شاشة السيشن (Anchor = زيارة جديدة) لمريض عنده تاريخ قديم:
+    --       الحالة بتتربط بالقديم → Anchor = أول زيارة قديمة ، الإجمالي = الإجمالي القديم
+    --       (لو القديم ملوش مبلغ مطلوب → بيفضل الإجمالي اللي اتكتب). التغيير بيتسجل في OrthoTotalChanges.
+    SELECT c.Id AS CaseId, f.VisitId, f.VisitDate,
+           c.TotalRequired AS OldTotal,
+           ISNULL(ft.FirstTotal, c.TotalRequired) AS NewTotal
+    INTO #Adopt
+    FROM dbo.OrthoCases c
+    JOIN #OrthoVis f    ON f.PatientId = c.PatientId AND f.rn = 1
+    JOIN dbo.Visits av  ON av.Id = c.AnchorVisitId
+    OUTER APPLY
+    (
+        SELECT TOP (1) x.RequiredAmount AS FirstTotal
+        FROM #OrthoVis x
+        WHERE x.PatientId = c.PatientId
+          AND x.RequiredAmount > 0
+        ORDER BY x.rn
+    ) ft
+    WHERE c.IsDeleted = 0
+      AND NOT EXISTS (SELECT 1 FROM #OrthoVis ov WHERE ov.VisitId = c.AnchorVisitId)
+      AND f.VisitDate <= av.VisitDate;
+
+    INSERT INTO dbo.OrthoTotalChanges (OrthoCaseId, OldTotal, NewTotal, Reason, ChangedAt)
+    SELECT a.CaseId, a.OldTotal, a.NewTotal, N'ربط الحالة بسجلات النظام القديم', GETDATE()
+    FROM #Adopt a
+    WHERE a.OldTotal <> a.NewTotal;
+
+    UPDATE c
+    SET c.AnchorVisitId = a.VisitId,
+        c.StartDate     = a.VisitDate,
+        c.TotalRequired = a.NewTotal
+    FROM dbo.OrthoCases c
+    JOIN #Adopt a ON a.CaseId = c.Id;
+
+    SET @nOrthoAdopted = @@ROWCOUNT;
+
+    -- النطاق: الحالات اللي الـ Anchor بتاعها زيارة مهاجَرة
+    -- (حالة اتفتحت من الأبلكيشن على زيارة جديدة مش بتتلمس)
+    SELECT c.Id AS CaseId, c.PatientId, c.AnchorVisitId, c.TotalRequired
+    INTO #CaseScope
+    FROM dbo.OrthoCases c
+    WHERE c.IsDeleted = 0
+      AND EXISTS (SELECT 1 FROM #OrthoVis ov WHERE ov.VisitId = c.AnchorVisitId);
+
+    CREATE UNIQUE CLUSTERED INDEX IX_CaseScope ON #CaseScope (PatientId);
+
+    -- D.3) ⭐ الإجمالي على الـ Anchor بس (= TotalRequired) وباقي زيارات التقويم المهاجَرة = 0
+    UPDATE v
+    SET v.TotalAmount = cs.TotalRequired
+    FROM dbo.Visits v
+    JOIN #CaseScope cs ON cs.AnchorVisitId = v.Id
+    WHERE v.TotalAmount <> cs.TotalRequired;
+
+    SET @nOrthoAnchorFixed = @@ROWCOUNT;
+
     UPDATE v
     SET v.TotalAmount = 0
     FROM dbo.Visits v
-    JOIN OrthoVisitRank r ON r.VisitId = v.Id
-    WHERE r.rn > 1
+    JOIN #CaseScope cs  ON cs.PatientId = v.PatientId
+    WHERE v.Category = 2          -- ⭐ كل زيارات التقويم (مهاجَرة + من الأبلكيشن)
+      AND v.IsDeleted = 0
+      AND v.Id <> cs.AnchorVisitId
       AND v.TotalAmount <> 0;
 
     SET @nOrthoTotals = @@ROWCOUNT;
 
-    SET @msg = N'>> D done (orthodontics)  (' + CAST(DATEDIFF(SECOND, @tStart, SYSDATETIME()) AS NVARCHAR(20)) + N's)';
+    -- D.4) ⭐ المدفوعات والخصم على الـ Anchor (تاريخ الدفع الحقيقي PaymentDate مش بيتغير)
+    --      rerun-safe: بعد أول run الزيارات التانية بتبقى 0 ومفيش عليها دفعات → مفيش حاجة تتنقل
+    SELECT v.Id AS VisitId, cs.AnchorVisitId, v.PaidAmount, v.Discount
+    INTO #OrthoMove
+    FROM dbo.Visits v
+    JOIN #CaseScope cs  ON cs.PatientId = v.PatientId
+    WHERE v.Category = 2          -- ⭐ كل زيارات التقويم (مهاجَرة + من الأبلكيشن)
+      AND v.IsDeleted = 0
+      AND v.Id <> cs.AnchorVisitId
+      AND (   v.PaidAmount <> 0
+           OR v.Discount   <> 0
+           OR EXISTS (SELECT 1 FROM dbo.VisitPayments vp WHERE vp.VisitId = v.Id));
+
+    CREATE UNIQUE CLUSTERED INDEX IX_OrthoMove ON #OrthoMove (VisitId);
+
+    UPDATE vp
+    SET vp.VisitId = m.AnchorVisitId
+    FROM dbo.VisitPayments vp
+    JOIN #OrthoMove m ON m.VisitId = vp.VisitId;
+
+    SET @nOrthoPayMoved = @@ROWCOUNT;
+
+    UPDATE a
+    SET a.PaidAmount = a.PaidAmount + s.Paid,
+        a.Discount   = a.Discount   + s.Disc
+    FROM dbo.Visits a
+    JOIN
+    (
+        SELECT AnchorVisitId, SUM(PaidAmount) AS Paid, SUM(Discount) AS Disc
+        FROM #OrthoMove
+        GROUP BY AnchorVisitId
+    ) s ON s.AnchorVisitId = a.Id;
+
+    UPDATE v
+    SET v.PaidAmount = 0,
+        v.Discount   = 0
+    FROM dbo.Visits v
+    JOIN #OrthoMove m ON m.VisitId = v.Id;
+
+    -- D.5) ⭐ OrthoVisitEntries: سجل لكل زيارة تقويم مهاجَرة (Arch = Both، الملاحظات = orth_Comments)
+    INSERT INTO dbo.OrthoVisitEntries
+        (OrthoCaseId, VisitId, Arch, OrthoProcedureId, Comment, [Date], IsDeleted)
+    SELECT
+        cs.CaseId,
+        ov.VisitId,
+        @OrthoArchBoth,
+        NULL,
+        ISNULL(NULLIF(LTRIM(RTRIM(ov.orth_Comments)), N''), N'زيارة تقويم (مرحّلة)'),
+        ov.VisitDate,
+        0
+    FROM #OrthoVis ov
+    JOIN #CaseScope cs ON cs.PatientId = ov.PatientId
+    WHERE NOT EXISTS
+    (
+        SELECT 1 FROM dbo.OrthoVisitEntries e
+        WHERE e.VisitId = ov.VisitId
+          AND e.IsDeleted = 0
+    );
+
+    SET @nOrthoEntries = @@ROWCOUNT;
+
+    SET @msg = N'>> D.1-D.5 done (ortho cases / anchor / entries)  (' + CAST(DATEDIFF(SECOND, @tStart, SYSDATETIME()) AS NVARCHAR(20)) + N's)';
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
     /* =======================================================
@@ -1031,13 +1140,14 @@ BEGIN
                   WHERE pt.patient_Code IS NOT NULL), 0)
         + ISNULL((SELECT SUM(CASE WHEN ot.orth_PaidAmount > 0
                                   THEN CAST(ot.orth_PaidAmount AS DECIMAL(18,2)) ELSE 0 END)
-                  FROM [FamilyDB].dbo.Orthodontics_T ot
-                  WHERE ot.orth_Code IS NOT NULL), 0);
+                  FROM #OT ot), 0);   -- ⭐ #OT = Orthodontics_T WHERE orth_Code IS NOT NULL
 
     DECLARE @NewPaid DECIMAL(18,2) =
           ISNULL((SELECT SUM(vp.Amount)
                   FROM dbo.VisitPayments vp
-                  JOIN dbo.Migration_LegacyVisitMap map ON map.NewVisitId = vp.VisitId), 0);
+                  JOIN dbo.Migration_LegacyVisitMap map ON map.NewVisitId = vp.VisitId
+                  -- ⭐ الدفعات المرحّلة بس: دفعات الأبلكيشن الجديدة ممكن تتسجل على الـ Anchor (زيارة مهاجَرة)
+                  WHERE vp.Description LIKE N'مرحّل من النظام القديم%'), 0);
 
     -- ---- Critical checks (لازم كلها = 0) ----
     INSERT INTO @Checks (Check_, Cnt, IsCritical)
@@ -1094,8 +1204,7 @@ BEGIN
     FROM
     (
         SELECT orth_Code, MAX(orth_SessionDate) AS LastLegacy
-        FROM [FamilyDB].dbo.Orthodontics_T
-        WHERE orth_Code IS NOT NULL
+        FROM #OT
         GROUP BY orth_Code
     ) l
     JOIN
@@ -1143,6 +1252,34 @@ BEGIN
     INSERT INTO @Checks (Check_, Cnt, IsCritical)
     SELECT N'Payments total mismatch (legacy vs migrated): 1 = mismatch',
            CASE WHEN @LegacyPaid <> @NewPaid THEN 1 ELSE 0 END, 1;
+
+    -- ⭐ Ortho module checks
+    INSERT INTO @Checks (Check_, Cnt, IsCritical)
+    SELECT N'Ortho patients (migrated) without an orthodontic case', COUNT(DISTINCT ov.PatientId), 1
+    FROM #OrthoVis ov
+    WHERE NOT EXISTS (SELECT 1 FROM dbo.OrthoCases c WHERE c.PatientId = ov.PatientId AND c.IsDeleted = 0);
+
+    INSERT INTO @Checks (Check_, Cnt, IsCritical)
+    SELECT N'Ortho visits (migrated) without an OrthoVisitEntries row', COUNT(*), 1
+    FROM #OrthoVis ov
+    JOIN #CaseScope cs ON cs.PatientId = ov.PatientId
+    WHERE NOT EXISTS (SELECT 1 FROM dbo.OrthoVisitEntries e WHERE e.VisitId = ov.VisitId AND e.IsDeleted = 0);
+
+    INSERT INTO @Checks (Check_, Cnt, IsCritical)
+    SELECT N'Ortho cases: anchor TotalAmount differs from case TotalRequired', COUNT(*), 1
+    FROM #CaseScope cs
+    JOIN dbo.OrthoCases c ON c.Id = cs.CaseId
+    JOIN dbo.Visits v     ON v.Id = cs.AnchorVisitId
+    WHERE v.TotalAmount <> c.TotalRequired;
+
+    INSERT INTO @Checks (Check_, Cnt, IsCritical)
+    SELECT N'Ortho non-anchor visits still holding money (total/paid/discount/payments)', COUNT(*), 1
+    FROM #OrthoVis ov
+    JOIN #CaseScope cs ON cs.PatientId = ov.PatientId
+    JOIN dbo.Visits v  ON v.Id = ov.VisitId
+    WHERE v.Id <> cs.AnchorVisitId
+      AND (   v.TotalAmount <> 0 OR v.PaidAmount <> 0 OR v.Discount <> 0
+           OR EXISTS (SELECT 1 FROM dbo.VisitPayments vp WHERE vp.VisitId = v.Id));
 
     INSERT INTO @Checks (Check_, Cnt, IsCritical)
     SELECT N'Ortho patients: TotalAmount assigned on more than one visit', COUNT(*), 1
@@ -1202,6 +1339,19 @@ BEGIN
     SELECT N'THIS RUN: ortho visits', COUNT(*), 0 FROM @VisitMapOrtho
     UNION ALL
     SELECT N'THIS RUN: ortho TotalAmount duplicates corrected (zeroed)', @nOrthoTotals, 0
+    UNION ALL
+    SELECT N'THIS RUN: ortho cases created (OrthoCases)', @nOrthoCases, 0
+    UNION ALL
+    SELECT N'THIS RUN: ortho visit entries created (OrthoVisitEntries)', @nOrthoEntries, 0
+    UNION ALL
+    SELECT N'THIS RUN: ortho payments moved to anchor visit', @nOrthoPayMoved, 0
+    UNION ALL
+    SELECT N'THIS RUN: ortho anchor TotalAmount set from case', @nOrthoAnchorFixed, 0
+    UNION ALL
+    SELECT N'THIS RUN: app-created ortho cases linked to legacy history', @nOrthoAdopted, 0
+    UNION ALL
+    SELECT N'INFO ortho cases with TotalRequired = 0 (no legacy required amount)', COUNT(*), 0
+    FROM #CaseScope cs WHERE cs.TotalRequired = 0
     UNION ALL
     SELECT N'THIS RUN: REBUILD removed DentalChartEntries rows', @nRebuildChartDel, 0
     UNION ALL
@@ -1287,31 +1437,33 @@ BEGIN
     ELSE
     BEGIN
         ROLLBACK TRANSACTION;
-        SELECT CASE WHEN @Commit = 0
+        SELECT CASE WHEN @Commit = 1
                     THEN N'DRY RUN - rolled back, nothing was saved'
                     ELSE N'ROLLED BACK - critical checks failed, nothing was saved'
                END AS Outcome;
     END
 END
+
+
+/* =======================================================
+Ortho Diagnoses
+======================================================= */
+DECLARE @base INT = ISNULL((SELECT MAX([SortOrder]) FROM [dbo].[OrthoProcedureCatalogs]), 0);
+
+INSERT INTO [dbo].[OrthoProcedureCatalogs] ([NameAr], [NameEn], [IsActive], [SortOrder])
+SELECT v.[Name], v.[Name], 1, @base + v.[Ord]
+FROM (VALUES
+    (1,  N'Low ni ti 12'),
+    (2,  N'Low ni ti 14'),
+    (3,  N'Low ni ti 16'),
+    (4,  N'Low ni ti 18'),
+    (5,  N'Low ni ti 16*22'),
+    (6,  N'Low ni ti 17*25'),
+    (7,  N'Low St.St 16*22'),
+    (8,  N'Low St.st 17*25'),
+    (9,  N'Low St.St 16*22 with power chain'),
+    (10, N'Upper St.St 17-25 with power chain'),
+    (11, N'Other Diagnoses')
+) AS v([Ord], [Name])
+ORDER BY v.[Ord];
 GO
-
-/* =========================================================
-   التشغيل (بالترتيب):
-
-   -- 1) تجربة إعادة بناء الأسنان (بتتراجع في الآخر)
-   EXEC dbo.usp_MigrateLegacyClinicData @Commit = 0, @RebuildTeeth = 1;
-
-   -- 2) لو الفحوصات كلها OK: تنفيذ فعلي (مرة واحدة)
-   EXEC dbo.usp_MigrateLegacyClinicData @Commit = 1, @RebuildTeeth = 1;
-
-   -- بعد كده أي تشغيل عادي من غير @RebuildTeeth:
-   -- EXEC dbo.usp_MigrateLegacyClinicData @Commit = 1;
-
-   للتأكد بعد التنفيذ:
-   -- زيارة 48 المفروض تبقى 46 مش 47
-   SELECT VisitId, ToothNumber FROM dbo.DentalChartEntries WHERE VisitId IN (48, 171, 179, 196, 259);
-   SELECT VisitId, ToothNumber FROM dbo.VisitDiagnoses     WHERE VisitId IN (48, 171, 179, 196, 259);
-
-   بعد ما تخلّص الـ Migration نهائيًا (اختياري):
-   DROP PROCEDURE dbo.usp_MigrateLegacyClinicData;
-   ========================================================= */

@@ -39,6 +39,10 @@
     var paidPercent = Model.Visit.TotalAmount > 0
         ? Math.Min(100, (int)Math.Round((Model.Visit.PaidAmount / Model.Visit.TotalAmount) * 100))
         : 100;
+
+    // ⭐ متبقي اليوم + إجمالي المتبقي على المريض (القيم الأولية قبل أي pending)
+    var todayRemainingInit = Model.Visit.TotalAmount - Model.Visit.Discount - Model.Visit.PaidAmount;
+    var patientRemainingInit = Model.PreviousBalance + todayRemainingInit;
 }
 
 <style>
@@ -618,6 +622,21 @@
         color: #16a34a;
     }
 
+    /* ⭐ إجمالي المتبقي على المريض */
+    .bottom-stat.balance {
+        padding-inline-start: 24px;
+        border-inline-start: 1px solid #e2e8f0;
+    }
+
+        .bottom-stat.balance .bottom-stat-value {
+            color: #b91c1c;
+            font-size: 1.25rem;
+        }
+
+        .bottom-stat.balance .bottom-stat-label {
+            color: #b91c1c;
+        }
+
     .btn-finish {
         background: linear-gradient(135deg, var(--dc-teal-600), var(--dc-teal-700));
         color: #fff;
@@ -847,6 +866,10 @@
         .bottom-stat-label {
             font-size: 0.6rem;
         }
+
+        .bottom-stat.balance {
+            padding-inline-start: 12px;
+        }
     }
 
     @@media print {
@@ -976,62 +999,6 @@
         }
     }
 </style>
-<style>
-    /* ⭐ Ortho — تمييز شاشة الدفع والـ Bottom Bar (سيشن التقويم بس) */
-    .ortho-pay-banner {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        background: linear-gradient(135deg, #f5f3ff, #faf5ff);
-        border: 1px solid #ddd6fe;
-        border-right: 4px solid #7c3aed;
-        border-radius: 16px;
-        padding: 12px 16px;
-        margin-bottom: 14px;
-    }
-
-        .ortho-pay-banner .opb-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #7c3aed, #6d28d9);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            flex-shrink: 0;
-            box-shadow: 0 6px 16px rgba(124,58,237,.3);
-        }
-
-        .ortho-pay-banner b {
-            display: block;
-            font-size: .86rem;
-            font-weight: 800;
-            color: #5b21b6;
-        }
-
-        .ortho-pay-banner span {
-            font-size: .74rem;
-            font-weight: 600;
-            color: #64748b;
-        }
-
-    .tab-ortho .dc-tab-btn.active {
-        color: #6d28d9;
-        box-shadow: 0 4px 16px rgba(124,58,237,.14);
-    }
-
-    .bottom-action-bar.ortho {
-        border-top: 2px solid #ddd6fe;
-    }
-
-        .bottom-action-bar.ortho .btn-finish {
-            background: linear-gradient(135deg, #7c3aed, #6d28d9);
-            box-shadow: 0 8px 24px rgba(124,58,237,.3);
-            animation: none;
-        }
-</style>
 
 
 <div dir="ltr"
@@ -1077,24 +1044,31 @@
     </div>
 
     @* ====== BOTTOM STICKY ACTION BAR ====== *@
-    <div class="bottom-action-bar rounded-4 @(isOrtho ? "ortho" : "")" id="bottomBar">
+    <div class="bottom-action-bar rounded-4" id="bottomBar">
         <div class="bottom-stats">
             <div class="bottom-stat">
                 <span class="bottom-stat-value" id="barTotal">@Model.Visit.TotalAmount.ToString("N0")</span>
-                <span class="bottom-stat-label">@(isOrtho ? "Case Total" : "Total Amount")</span>
+                <span class="bottom-stat-label">@(isOrtho ? "Total Amount" : "Today Total")</span>
             </div>
             <div class="bottom-stat paid">
                 <span class="bottom-stat-value" id="barPaid">@Model.Visit.PaidAmount.ToString("N0")</span>
                 <span class="bottom-stat-label">Paid Amount</span>
             </div>
             <div class="bottom-stat ">
-                <span class="bottom-stat-value text-warning">@Model.Visit.Discount.ToString("N0")</span>
+                <span class="bottom-stat-value text-warning" id="barDiscount">@Model.Visit.Discount.ToString("N0")</span>
                 <span class="bottom-stat-label"> Discount</span>
             </div>
             <div class="bottom-stat remaining">
-                <span class="bottom-stat-value" id="barRemaining">@Model.Visit.Remaining.ToString("N0")</span>
-                <span class="bottom-stat-label">Remaining</span>
+                <span class="bottom-stat-value" id="barRemaining">@Math.Max(0, todayRemainingInit).ToString("N0")</span>
+                <span class="bottom-stat-label">@(isOrtho ? "Remaining" : "Today Remaining")</span>
             </div>
+            @if (!isOrtho)
+            {
+                <div class="bottom-stat balance">
+                    <span class="bottom-stat-value" id="barPatientBalance">@patientRemainingInit.ToString("N0")</span>
+                    <span class="bottom-stat-label">Patient Total Remaining</span>
+                </div>
+            }
         </div>
         <button type="button" class="btn-finish" onclick="window.saveAndEndSession()">
             <i class="bi bi-check2-circle"></i> Save Session
@@ -1162,7 +1136,7 @@
 
 
     @* --- RIGHT: Tabs Content --- *@
-    <div class="content-panel @(isOrtho ? "tab-ortho" : "")">
+    <div class="content-panel">
         <div class="dc-tabs-bar">
 
             @if (!isOrtho)
@@ -1173,7 +1147,7 @@
                 </button>
             }
             <button type="button" class="dc-tab-btn @(isOrtho ? "active" : "")" onclick="switchTab('tabPayments', this)">
-                <i class="bi @(isOrtho ? "bi-braces" : "bi-credit-card-2-front")"></i> @(isOrtho ? "Ortho Payments" : "Payments")
+                <i class="bi bi-credit-card-2-front"></i> Payments
             </button>
 
 
@@ -1189,8 +1163,6 @@
             </button>
         </div>
 
-        @* ⭐ الجدول العادي بيترسم مرة واحدة بس، وفي السيشن العادي بس
-               (كان مكرر تحت بره الـ if → سكريبته كان بيغطي على saveAndEndSession بتاع التقويم) *@
         @if (!isOrtho)
         {
             <div class="dc-tab-panel active custom-scroll" id="tabCurrent" style="max-height:680px; overflow-y:auto;">
@@ -1216,17 +1188,11 @@
         </div>
 
         <div class="dc-tab-panel custom-scroll @(isOrtho ? "active" : "")" id="tabPayments" style="max-height:680px; overflow-y:auto;">
-            @if (isOrtho)
-            {
-                <div class="ortho-pay-banner">
-                    <div class="opb-icon"><i class="bi bi-braces"></i></div>
-                    <div>
-                        <b>Orthodontic case payments</b>
-                        <span>Payments and discounts here are recorded on the case agreement (total @Model.Visit.TotalAmount.ToString("N0")), not on this visit only. They are saved when you click Save Session.</span>
-                    </div>
-                </div>
-            }
             @await Html.PartialAsync("_PaymentsCompact", Model)
+        </div>
+
+        <div class="dc-tab-panel active custom-scroll" id="tabCurrent" style="max-height:680px; overflow-y:auto;">
+            @await Html.PartialAsync("_ClinicalRecordsTable", Model)
         </div>
 
         <div class="dc-tab-panel custom-scroll" id="tabFollow" style="max-height:680px; overflow-y:auto;">
@@ -1272,6 +1238,9 @@
                 if (origRender) origRender();
                 checkPendingChanges();
                 updateTabBadge();
+                // ⭐ أي تشخيص جديد/متعدّل/متشال → حدّث تاب المدفوعات + الـ Bottom Bar فورًا
+                if (window.renderPendingPaymentsSummary) window.renderPendingPaymentsSummary();
+                else updateBottomBar();
             };
             const origRenderPay = window.renderPendingPaymentsSummary;
             window.renderPendingPaymentsSummary = function() {
@@ -1291,27 +1260,18 @@
             }
 
 
+            // ⭐ نفس أرقام تاب المدفوعات بالظبط (window.computeSessionTotals من _PaymentsCompact)
             function updateBottomBar() {
-                const baseTotal = @(Model.Visit.TotalAmount.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                const basePaid = @(Model.Visit.PaidAmount.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                const baseDiscount = @(Model.Visit.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                const pendingDiagnosisTotal = (window.pendingToothRecords || [])
-                    .reduce((sum, t) => sum + (t.DiagnosisPrice || 0), 0);
-                const pendingPaidTotal = window.pendingPayments ? window.pendingPayments.reduce((sum, p) => sum + p.Amount, 0) : 0;
-                const pendingDiscountTotal = window.pendingPayments ? window.pendingPayments.reduce((sum, p) => sum + (p.Discount || 0), 0) : 0;
+                if (!window.computeSessionTotals) return;
+                const t = window.computeSessionTotals();
 
-                const newTotal = baseTotal + pendingDiagnosisTotal;
-                const newDiscount = baseDiscount + pendingDiscountTotal;
-                const newPaid = basePaid + pendingPaidTotal;
-                const newRemaining = newTotal - newDiscount - newPaid;
-
-                const fmt = n => n.toLocaleString('en-EG');
-                const elTotal = document.getElementById('barTotal');
-                const elPaid = document.getElementById('barPaid');
-                const elRem = document.getElementById('barRemaining');
-                if (elTotal) elTotal.textContent = fmt(newTotal);
-                if (elPaid) elPaid.textContent = fmt(newPaid);
-                if (elRem) elRem.textContent = fmt(newRemaining);
+                const fmt = n => (Math.round(n * 100) / 100).toLocaleString('en-EG');
+                const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = fmt(v); };
+                set('barTotal', t.todayTotal);
+                set('barPaid', t.todayPaid);
+                set('barDiscount', t.todayDiscount);
+                set('barRemaining', t.todayRemaining);
+                set('barPatientBalance', t.patientRemaining);
             }
 
             setTimeout(checkPendingChanges, 500);

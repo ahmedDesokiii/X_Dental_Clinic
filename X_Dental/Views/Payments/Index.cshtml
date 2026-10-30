@@ -6,6 +6,7 @@
 <style>
     :root {
         --sc-teal-900: #0a4d4f;
+        --sc-teal-800: #0b5f62;
         --sc-teal-700: #0d7377;
         --sc-teal-600: #0f9b8e;
         --sc-teal-500: #14b8a6;
@@ -15,124 +16,45 @@
         --sc-coral-300: #f6c6bc;
         --sc-ink-900: #0b2e30;
         --sc-ink-600: #4b6b6c;
-        --brand: #0d9488;
-        --brand-dark: #0f766e;
+        --sc-ink-400: #8aa5a6;
         --brand-light: #f0fdfa;
-        --radius-lg: 18px;
-        --radius-md: 12px;
-        --shadow-soft: 0 1px 3px rgba(15, 23, 42, 0.06);
-        --shadow-hover: 0 10px 26px rgba(10, 77, 79, 0.12);
-        --shadow-card: 0 20px 50px rgba(10, 77, 79, .08);
-        /* ⭐ ألوان لوحة المدفوعات اليومية */
+        --radius-lg: 20px;
+        --radius-md: 14px;
+        --shadow-soft: 0 1px 2px rgba(15,23,42,.04), 0 4px 14px rgba(10,77,79,.06);
+        --shadow-hover: 0 14px 34px rgba(10,77,79,.14);
+        --shadow-card: 0 1px 2px rgba(15,23,42,.04), 0 18px 44px rgba(10,77,79,.08);
         --dp-general: #0f9b8e;
-        --dp-general-2: #14b8a6;
+        --dp-general-2: #2dd4bf;
         --dp-ortho: #7c3aed;
         --dp-ortho-2: #a78bfa;
+        --dp-paid: #047857;
+        --dp-due: #b91c1c;
+        --dp-disc: #b45309;
     }
 
     body {
         background: radial-gradient(circle at 6% 4%, var(--sc-teal-100) 0%, transparent 38%), radial-gradient(circle at 97% 92%, var(--sc-coral-300) 0%, transparent 26%), var(--sc-sky-50);
     }
 
-    /* ── Hero ── */
-    .payments-hero {
-        background: linear-gradient(135deg, var(--sc-teal-700), var(--sc-teal-500));
-        border-radius: var(--radius-lg);
-        padding: 28px 32px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        box-shadow: 0 14px 34px rgba(13, 115, 119, .28);
-        margin-bottom: 28px;
-        flex-wrap: wrap;
-        gap: 16px;
-        position: relative;
-        overflow: hidden;
-        contain: content;
-    }
-
-        .payments-hero::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at 92% -20%, rgba(255,255,255,.32), transparent 55%);
-            pointer-events: none;
-        }
-
-        .payments-hero .hero-content {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .payments-hero .hero-icon {
-            width: 56px;
-            height: 56px;
-            background: rgba(255,255,255,.18);
-            color: #fff;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.6rem;
-            flex-shrink: 0;
-            backdrop-filter: blur(6px);
-            border: 1px solid rgba(255,255,255,.15);
-        }
-
-        .payments-hero h1 {
-            font-size: 1.3rem;
-            font-weight: 800;
-            margin: 0;
-            color: #fff;
-        }
-
-        .payments-hero p {
-            font-size: 0.85rem;
-            margin: 4px 0 0;
-            color: rgba(255,255,255,.9);
-            font-weight: 600;
-        }
-
-    .btn-hero-search {
-        position: relative;
-        z-index: 1;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: rgba(255,255,255,.92);
-        color: var(--sc-teal-700);
-        padding: 11px 20px;
-        border-radius: 12px;
-        font-weight: 800;
-        font-size: .88rem;
-        text-decoration: none;
-        box-shadow: 0 4px 12px rgba(10,40,42,.15);
-        transition: transform .2s ease, box-shadow .2s ease;
-    }
-
-        .btn-hero-search:hover {
-            color: var(--sc-teal-700);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 22px rgba(10,40,42,.22);
-        }
-
-   
-    /* ══════════════════════════════════════════════
-           ⭐ Daily Payments Dashboard
-           ══════════════════════════════════════════════ */
     .dp-shell {
-        margin-top: 36px;
         position: relative;
-        animation: dpRise .6s .15s cubic-bezier(.2,1,.3,1) backwards;
+        animation: dpRise .6s cubic-bezier(.2,1,.3,1) backwards;
+    }
+
+    .dp-num, .dp-kpi-value, .dp-date {
+        font-variant-numeric: tabular-nums;
+    }
+
+    .dp-date {
+        direction: ltr;
+        unicode-bidi: isolate;
+        display: inline-block;
     }
 
     @@keyframes dpRise {
         from {
             opacity: 0;
-            transform: translateY(24px);
+            transform: translateY(20px);
         }
 
         to {
@@ -141,17 +63,320 @@
         }
     }
 
-    /* شريط تحميل علوي */
+    @@keyframes dpPop {
+        from {
+            opacity: 0;
+            transform: scale(.92);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    /* ══════════ Hero + toolbar ══════════ */
+    .dp-hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 24px;
+        padding: 26px 30px 86px;
+        background: radial-gradient(circle at 88% -10%, rgba(255,255,255,.22), transparent 42%), radial-gradient(circle at 8% 120%, rgba(167,139,250,.35), transparent 45%), linear-gradient(135deg, var(--sc-teal-900) 0%, var(--sc-teal-700) 55%, var(--sc-teal-600) 100%);
+        box-shadow: 0 22px 50px rgba(10,77,79,.28);
+        color: #fff;
+    }
+
+        .dp-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(255,255,255,.09) 1px, transparent 1px);
+            background-size: 18px 18px;
+            mask-image: linear-gradient(180deg, #000 0%, transparent 85%);
+            -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 85%);
+            pointer-events: none;
+        }
+
+    .dp-hero-row {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .dp-hero-brand {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .dp-hero-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        background: rgba(255,255,255,.14);
+        border: 1px solid rgba(255,255,255,.2);
+        backdrop-filter: blur(6px);
+        flex-shrink: 0;
+    }
+
+    .dp-hero h1 {
+        margin: 0;
+        font-size: 1.45rem;
+        font-weight: 800;
+        letter-spacing: .2px;
+        text-transform: capitalize;
+    }
+
+    .dp-hero-brand p {
+        margin: 3px 0 0;
+        font-size: .84rem;
+        font-weight: 600;
+        color: rgba(255,255,255,.82);
+    }
+
+    .btn-hero-search {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #fff;
+        color: var(--sc-teal-800);
+        padding: 11px 20px;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: .88rem;
+        text-decoration: none;
+        box-shadow: 0 6px 18px rgba(0,0,0,.16);
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+        .btn-hero-search:hover {
+            color: var(--sc-teal-800);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 26px rgba(0,0,0,.22);
+        }
+
+    .dp-toolbar {
+        position: relative;
+        z-index: 1;
+        margin-top: 22px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255,255,255,.14);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .dp-title h3 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .dp-title p {
+        margin: 4px 0 0;
+        font-size: .82rem;
+        font-weight: 700;
+        color: rgba(255,255,255,.8);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .dp-live {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        font-size: .68rem;
+        font-weight: 800;
+        color: #bbf7d0;
+        background: rgba(34,197,94,.18);
+        border: 1px solid rgba(34,197,94,.35);
+        padding: 2px 10px;
+        border-radius: 999px;
+    }
+
+        .dp-live.on {
+            display: inline-flex;
+        }
+
+    .dp-live-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #4ade80;
+        position: relative;
+    }
+
+        .dp-live-dot::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: dpPing 1.6s cubic-bezier(0,0,.2,1) infinite;
+        }
+
+    @@keyframes dpPing {
+        75%, 100% {
+            transform: scale(2.6);
+            opacity: 0;
+        }
+    }
+
+    .dp-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .dp-seg {
+        position: relative;
+        display: inline-flex;
+        background: rgba(255,255,255,.1);
+        border: 1px solid rgba(255,255,255,.18);
+        border-radius: 14px;
+        padding: 4px;
+        backdrop-filter: blur(8px);
+    }
+
+        .dp-seg button {
+            position: relative;
+            z-index: 1;
+            border: none;
+            background: none;
+            padding: 8px 16px;
+            font-weight: 800;
+            font-size: .82rem;
+            color: rgba(255,255,255,.85);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: color .25s ease;
+            white-space: nowrap;
+        }
+
+            .dp-seg button.active {
+                color: var(--sc-teal-800);
+            }
+
+    .dp-seg-glider {
+        position: absolute;
+        top: 4px;
+        bottom: 4px;
+        left: 4px;
+        width: 0;
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 6px 16px rgba(0,0,0,.18);
+        transition: left .4s cubic-bezier(.3,1.35,.5,1), width .4s cubic-bezier(.3,1.35,.5,1);
+        z-index: 0;
+    }
+
+    .dp-custom {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,.1);
+        border: 1px solid rgba(255,255,255,.18);
+        border-radius: 12px;
+        padding: 5px 8px;
+        animation: dpPop .25s ease;
+    }
+
+        .dp-custom[hidden] {
+            display: none;
+        }
+
+        .dp-custom input {
+            border: none;
+            border-radius: 8px;
+            padding: 6px 8px;
+            font-size: .8rem;
+            color: var(--sc-ink-900);
+            background: #fff;
+            outline: none;
+        }
+
+        .dp-custom span {
+            font-size: .78rem;
+            font-weight: 700;
+            color: rgba(255,255,255,.85);
+        }
+
+    .dp-icon-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,.22);
+        background: rgba(255,255,255,.1);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: transform .2s ease, background .2s ease, color .2s ease;
+    }
+
+        .dp-icon-btn:hover {
+            background: #fff;
+            color: var(--sc-teal-800);
+            transform: translateY(-2px);
+        }
+
+        .dp-icon-btn.small {
+            width: auto;
+            height: 34px;
+            padding: 0 12px;
+            gap: 6px;
+            font-size: .8rem;
+            font-weight: 800;
+        }
+
+        .dp-icon-btn.light {
+            border-color: var(--sc-sky-100);
+            background: #fff;
+            color: var(--sc-teal-700);
+        }
+
+            .dp-icon-btn.light:hover {
+                background: var(--sc-teal-600);
+                color: #fff;
+            }
+
+    .dp-shell.loading #dpRefresh i {
+        animation: dpSpin .8s linear infinite;
+    }
+
+    @@keyframes dpSpin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
     .dp-progress {
         position: absolute;
-        top: -10px;
         left: 0;
         right: 0;
+        bottom: 0;
         height: 3px;
-        border-radius: 3px;
         overflow: hidden;
         opacity: 0;
         transition: opacity .2s;
+        z-index: 2;
     }
 
         .dp-progress::before {
@@ -159,7 +384,7 @@
             position: absolute;
             inset: 0;
             width: 40%;
-            background: linear-gradient(90deg, transparent, var(--sc-teal-500), var(--dp-ortho-2), transparent);
+            background: linear-gradient(90deg, transparent, #5eead4, #c4b5fd, transparent);
             animation: dpIndeterminate 1.1s ease-in-out infinite;
         }
 
@@ -179,270 +404,54 @@
 
     .dp-shell.loading .dp-kpi-value,
     .dp-shell.loading .dp-bars,
-    .dp-shell.loading .dp-donut-wrap {
+    .dp-shell.loading .dp-donut-wrap,
+    .dp-shell.loading .dp-table {
         opacity: .45;
         transition: opacity .2s;
     }
 
-    /* Head */
-    .dp-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
+    /* ══════════ KPI cards (overlap hero) ══════════ */
+    .dp-body {
+        position: relative;
+        z-index: 2;
+        margin-top: -62px;
+        padding: 0 14px;
+    }
+
+    .dp-kpis {
+        display: grid;
+        grid-template-columns: 1.55fr 1fr 1fr 1fr;
         gap: 14px;
         margin-bottom: 18px;
     }
 
-    .dp-title {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-    }
-
-    .dp-title-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 14px;
-        background: linear-gradient(135deg, var(--sc-teal-500), var(--sc-teal-700));
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.35rem;
-        box-shadow: 0 8px 20px rgba(13,148,136,.28);
-        flex-shrink: 0;
-    }
-
-    .dp-title h3 {
-        margin: 0;
-        font-weight: 800;
-        font-size: 1.2rem;
-        color: var(--sc-ink-900);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .dp-title p {
-        margin: 3px 0 0;
-        font-size: .8rem;
-        color: var(--sc-ink-600);
-        font-weight: 700;
-    }
-
-    .dp-live {
-        display: none;
-        align-items: center;
-        gap: 6px;
-        font-size: .7rem;
-        font-weight: 800;
-        color: #15803d;
-        background: #dcfce7;
-        padding: 3px 10px;
-        border-radius: 999px;
-    }
-
-        .dp-live.on {
-            display: inline-flex;
-        }
-
-    .dp-live-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #22c55e;
-        position: relative;
-    }
-
-        .dp-live-dot::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 50%;
-            background: #22c55e;
-            animation: dpPing 1.6s cubic-bezier(0,0,.2,1) infinite;
-        }
-
-    @@keyframes dpPing {
-        75%, 100% {
-            transform: scale(2.6);
-            opacity: 0;
-        }
-    }
-
-    .dp-controls {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-
-    /* Segmented control بـ glider متحرك */
-    .dp-seg {
-        position: relative;
-        display: inline-flex;
-        background: rgba(255,255,255,.88);
-        border: 1px solid var(--sc-sky-100);
-        border-radius: 14px;
-        padding: 4px;
-        box-shadow: var(--shadow-soft);
-    }
-
-        .dp-seg button {
-            position: relative;
-            z-index: 1;
-            border: none;
-            background: none;
-            padding: 8px 16px;
-            font-weight: 800;
-            font-size: .82rem;
-            color: var(--sc-ink-600);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: color .25s ease;
-            white-space: nowrap;
-        }
-
-            .dp-seg button.active {
-                color: #fff;
-            }
-
-    .dp-seg-glider {
-        position: absolute;
-        top: 4px;
-        bottom: 4px;
-        left: 4px;
-        width: 0;
-        border-radius: 10px;
-        background: linear-gradient(135deg, var(--sc-teal-600), var(--sc-teal-700));
-        box-shadow: 0 6px 14px rgba(13,148,136,.32);
-        transition: left .4s cubic-bezier(.3,1.35,.5,1), width .4s cubic-bezier(.3,1.35,.5,1);
-        z-index: 0;
-    }
-
-    .dp-custom {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(255,255,255,.88);
-        border: 1px solid var(--sc-sky-100);
-        border-radius: 12px;
-        padding: 5px 8px;
-        animation: dpPop .25s ease;
-    }
-
-        .dp-custom[hidden] {
-            display: none;
-        }
-
-        .dp-custom input {
-            border: 1px solid var(--sc-sky-100);
-            border-radius: 8px;
-            padding: 5px 8px;
-            font-size: .8rem;
-            color: var(--sc-ink-900);
-            outline: none;
-        }
-
-            .dp-custom input:focus {
-                border-color: var(--sc-teal-500);
-            }
-
-        .dp-custom span {
-            font-size: .78rem;
-            font-weight: 700;
-            color: var(--sc-ink-600);
-        }
-
-    @@keyframes dpPop {
-        from {
-            opacity: 0;
-            transform: scale(.92);
-        }
-
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
-    }
-
-    .dp-icon-btn {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-        border: 1px solid var(--sc-sky-100);
-        background: rgba(255,255,255,.88);
-        color: var(--sc-teal-700);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: transform .2s ease, background .2s ease, color .2s ease, box-shadow .2s ease;
-    }
-
-        .dp-icon-btn:hover {
-            background: var(--sc-teal-600);
-            color: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 18px rgba(13,148,136,.28);
-        }
-
-        .dp-icon-btn.small {
-            width: auto;
-            padding: 0 12px;
-            gap: 6px;
-            font-size: .8rem;
-            font-weight: 800;
-            height: 36px;
-        }
-
-    .dp-shell.loading #dpRefresh i {
-        animation: dpSpin .8s linear infinite;
-    }
-
-    @@keyframes dpSpin {
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    /* KPI cards */
-    .dp-kpis {
-        display: grid;
-        grid-template-columns: 1.35fr 1fr 1fr 1fr;
-        gap: 14px;
-        margin-bottom: 16px;
-    }
-
     .dp-kpi {
         position: relative;
-        background: rgba(255,255,255,.85);
-        backdrop-filter: blur(14px);
-        border: 1px solid rgba(255,255,255,.6);
-        border-radius: 18px;
+        background: rgba(255,255,255,.96);
+        border: 1px solid rgba(255,255,255,.8);
+        border-radius: var(--radius-lg);
         padding: 18px;
-        box-shadow: var(--shadow-soft);
+        box-shadow: var(--shadow-card);
         overflow: hidden;
         transition: transform .25s ease, box-shadow .25s ease;
         animation: dpRise .5s cubic-bezier(.2,1,.3,1) backwards;
+        min-width: 0;
     }
 
         .dp-kpi:nth-child(1) {
-            animation-delay: .2s;
+            animation-delay: .1s;
         }
 
         .dp-kpi:nth-child(2) {
-            animation-delay: .27s;
+            animation-delay: .17s;
         }
 
         .dp-kpi:nth-child(3) {
-            animation-delay: .34s;
+            animation-delay: .24s;
         }
 
         .dp-kpi:nth-child(4) {
-            animation-delay: .41s;
+            animation-delay: .31s;
         }
 
         .dp-kpi:hover {
@@ -450,12 +459,35 @@
             box-shadow: var(--shadow-hover);
         }
 
+        .dp-kpi::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--sc-teal-500), var(--sc-teal-700));
+            opacity: .9;
+        }
+
+        .dp-kpi.general::after {
+            background: linear-gradient(90deg, var(--dp-general-2), var(--dp-general));
+        }
+
+        .dp-kpi.ortho::after {
+            background: linear-gradient(90deg, var(--dp-ortho-2), var(--dp-ortho));
+        }
+
+        .dp-kpi.count::after {
+            background: linear-gradient(90deg, #fbbf24, #d97706);
+        }
+
     .dp-kpi-top {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 8px;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
 
     .dp-kpi-label {
@@ -465,13 +497,13 @@
     }
 
     .dp-kpi-icon {
-        width: 36px;
-        height: 36px;
+        width: 34px;
+        height: 34px;
         border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1rem;
+        font-size: .95rem;
         background: var(--sc-sky-50);
         color: var(--sc-teal-600);
     }
@@ -486,12 +518,17 @@
         color: var(--dp-ortho);
     }
 
+    .dp-kpi.count .dp-kpi-icon {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
     .dp-kpi-value {
-        font-size: 1.55rem;
+        font-size: 1.5rem;
         font-weight: 800;
         color: var(--sc-ink-900);
         line-height: 1.2;
-        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
     }
 
         .dp-kpi-value small {
@@ -501,10 +538,20 @@
         }
 
     .dp-kpi-sub {
-        margin-top: 6px;
+        margin-top: 8px;
         font-size: .74rem;
         font-weight: 700;
         color: var(--sc-ink-600);
+    }
+
+    .dp-kpi-chip {
+        font-size: .7rem;
+        font-weight: 800;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: var(--sc-sky-50);
+        color: var(--sc-teal-700);
+        white-space: nowrap;
     }
 
     .dp-kpi-split {
@@ -518,71 +565,30 @@
             background: var(--sc-sky-50);
             border-radius: 10px;
             padding: 6px 10px;
+            min-width: 0;
         }
 
         .dp-kpi-split span {
             display: block;
-            font-size: .68rem;
+            font-size: .66rem;
             font-weight: 800;
             color: var(--sc-ink-600);
         }
 
         .dp-kpi-split b {
-            font-size: .92rem;
+            font-size: .95rem;
             font-weight: 800;
             font-variant-numeric: tabular-nums;
+            white-space: nowrap;
         }
 
             .dp-kpi-split b.paid {
-                color: #047857;
+                color: var(--dp-paid);
             }
 
             .dp-kpi-split b.remain {
-                color: #b91c1c;
+                color: var(--dp-due);
             }
-
-    .dp-kpi-chip {
-        font-size: .7rem;
-        font-weight: 800;
-        padding: 3px 9px;
-        border-radius: 999px;
-        background: var(--sc-sky-50);
-        color: var(--sc-teal-700);
-    }
-
-    /* نسخة الكارت الرئيسي (خلفية غامقة) */
-    .dp-kpi-hero .dp-kpi-split > div {
-        background: rgba(255,255,255,.12);
-    }
-
-    .dp-kpi-hero .dp-kpi-split span {
-        color: rgba(255,255,255,.8);
-    }
-
-    .dp-kpi-hero .dp-kpi-split b.paid {
-        color: #bbf7d0;
-    }
-
-    .dp-kpi-hero .dp-kpi-split b.remain {
-        color: #fecaca;
-    }
-
-    .dp-kpi-hero .dp-kpi-chip {
-        background: rgba(255,255,255,.16);
-        color: #fff;
-    }
-
-    .dp-kpi-hero .dp-kpi-sub {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 8px;
-        margin-top: 10px;
-    }
-
-        .dp-kpi-hero .dp-kpi-sub b {
-            color: #fff;
-        }
 
     .dp-kpi-track {
         margin-top: 10px;
@@ -607,111 +613,124 @@
         background: linear-gradient(90deg, var(--dp-ortho-2), var(--dp-ortho));
     }
 
-    /* الكارت الرئيسي */
-    .dp-kpi-hero {
-        background: linear-gradient(135deg, var(--sc-teal-900), var(--sc-teal-600));
-        border: none;
-        color: #fff;
-        box-shadow: 0 16px 36px rgba(10,77,79,.3);
+    /* الكارت الرئيسي + حلقة نسبة السداد */
+    .dp-kpi-main {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 14px;
+        align-items: center;
     }
 
-        .dp-kpi-hero .dp-kpi-label,
-        .dp-kpi-hero .dp-kpi-sub,
-        .dp-kpi-hero .dp-kpi-value small {
-            color: rgba(255,255,255,.85);
+        .dp-kpi-main .dp-kpi-value {
+            font-size: 1.85rem;
         }
 
-        .dp-kpi-hero .dp-kpi-value {
-            color: #fff;
-            font-size: 1.9rem;
-        }
-
-        .dp-kpi-hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -40%;
-            width: 45%;
-            height: 200%;
-            background: linear-gradient(105deg, transparent, rgba(255,255,255,.18), transparent);
-            transform: rotate(14deg);
-            animation: dpShine 5s ease-in-out infinite;
-            pointer-events: none;
-        }
-
-    @@keyframes dpShine {
-        0%, 100% {
-            right: -40%;
-        }
-
-        50% {
-            right: 110%;
-        }
+    .dp-ring {
+        position: relative;
+        width: 92px;
+        height: 92px;
+        flex-shrink: 0;
     }
 
-    .dp-kpi-bg {
+        .dp-ring svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .dp-ring circle {
+            fill: none;
+            stroke-width: 9;
+        }
+
+    .dp-ring-track {
+        stroke: var(--sc-sky-100);
+    }
+
+    .dp-ring-arc {
+        stroke: url(#dpRingGrad);
+        stroke-linecap: round;
+        stroke-dasharray: 0 214;
+        transition: stroke-dasharray 1.1s cubic-bezier(.3,1,.4,1);
+    }
+
+    .dp-ring-center {
         position: absolute;
-        left: -6px;
-        bottom: -14px;
-        font-size: 5.2rem;
-        color: rgba(255,255,255,.08);
-        pointer-events: none;
-        animation: dpFloat 5s ease-in-out infinite;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        line-height: 1.1;
     }
 
-    @@keyframes dpFloat {
-        0%, 100% {
-            transform: translateY(0) rotate(-8deg);
+        .dp-ring-center b {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--sc-ink-900);
         }
 
-        50% {
-            transform: translateY(-8px) rotate(-3deg);
+        .dp-ring-center span {
+            font-size: .62rem;
+            font-weight: 800;
+            color: var(--sc-ink-600);
         }
+
+    .dp-kpi-foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px dashed var(--sc-sky-100);
+        font-size: .76rem;
+        font-weight: 700;
+        color: var(--sc-ink-600);
     }
+
+        .dp-kpi-foot b {
+            color: var(--sc-ink-900);
+        }
 
     .dp-trend {
         display: inline-flex;
         align-items: center;
         gap: 4px;
-        font-size: .72rem;
+        font-size: .7rem;
         font-weight: 800;
         padding: 3px 9px;
         border-radius: 999px;
+        white-space: nowrap;
         animation: dpPop .35s ease;
     }
 
         .dp-trend.up {
-            background: rgba(34,197,94,.22);
-            color: #bbf7d0;
+            background: #dcfce7;
+            color: #15803d;
         }
 
         .dp-trend.down {
-            background: rgba(239,68,68,.25);
-            color: #fecaca;
+            background: #fee2e2;
+            color: #b91c1c;
         }
 
         .dp-trend.flat {
-            background: rgba(255,255,255,.16);
-            color: rgba(255,255,255,.85);
+            background: var(--sc-sky-50);
+            color: var(--sc-ink-600);
         }
 
-    /* Cards */
-    .dp-grid-2 {
-        display: grid;
-        grid-template-columns: 1.9fr 1fr;
-        gap: 14px;
-        margin-bottom: 16px;
-    }
-
+    /* ══════════ Cards ══════════ */
     .dp-card {
-        background: rgba(255,255,255,.85);
+        background: rgba(255,255,255,.9);
         backdrop-filter: blur(16px);
-        border: 1px solid rgba(255,255,255,.6);
-        border-radius: 18px;
+        border: 1px solid rgba(255,255,255,.7);
+        border-radius: var(--radius-lg);
         box-shadow: var(--shadow-card);
         padding: 18px 20px;
-        animation: dpRise .55s .3s cubic-bezier(.2,1,.3,1) backwards;
+        animation: dpRise .55s .25s cubic-bezier(.2,1,.3,1) backwards;
         min-width: 0;
+        margin-bottom: 16px;
     }
 
     .dp-card-head {
@@ -726,22 +745,45 @@
         .dp-card-head h5 {
             margin: 0;
             font-weight: 800;
-            font-size: .95rem;
+            font-size: .98rem;
             color: var(--sc-ink-900);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 9px;
         }
 
-            .dp-card-head h5 i {
+            .dp-card-head h5 .hicon {
+                width: 30px;
+                height: 30px;
+                border-radius: 9px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: var(--sc-sky-50);
                 color: var(--sc-teal-600);
+                font-size: .9rem;
             }
 
         .dp-card-head small {
+            display: block;
+            margin-top: 2px;
+            margin-right: 39px;
             font-size: .74rem;
             color: var(--sc-ink-600);
             font-weight: 700;
         }
+
+    .dp-grid-2 {
+        display: grid;
+        grid-template-columns: 1.9fr 1fr;
+        gap: 16px;
+    }
+
+    .dp-side {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
 
     .dp-legend {
         display: flex;
@@ -772,408 +814,7 @@
         background: var(--dp-ortho);
     }
 
-    /* Bar chart */
-    .dp-bars-wrap {
-        position: relative;
-        background-image: repeating-linear-gradient(to top, var(--sc-sky-100) 0 1px, transparent 1px 25%);
-        background-size: 100% calc(100% - 22px);
-        background-repeat: no-repeat;
-        border-radius: 8px;
-    }
-
-    .dp-bars {
-        display: flex;
-        align-items: stretch;
-        gap: 6px;
-        height: 230px;
-        padding: 4px 2px 0;
-    }
-
-    .dp-bar-col {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        cursor: pointer;
-    }
-
-    .dp-bar-stack {
-        flex: 1;
-        width: 100%;
-        max-width: 38px;
-        display: flex;
-        flex-direction: column-reverse;
-        border-radius: 8px 8px 3px 3px;
-        transition: background .2s ease, transform .2s ease;
-    }
-
-    .dp-bar-col:hover .dp-bar-stack {
-        background: rgba(13,148,136,.07);
-        transform: translateY(-2px);
-    }
-
-    .dp-bar-seg {
-        height: 0;
-        flex-shrink: 0;
-        transition: height .85s cubic-bezier(.2,1.25,.35,1);
-        transition-delay: calc(var(--i, 0) * 28ms);
-    }
-
-    .dp-bars.ready .dp-bar-seg {
-        height: var(--h);
-    }
-
-    .dp-bar-seg.general {
-        background: linear-gradient(180deg, var(--dp-general-2), var(--dp-general));
-        border-radius: 0 0 3px 3px;
-    }
-
-        .dp-bar-seg.general.solo {
-            border-radius: 7px 7px 3px 3px;
-        }
-
-    .dp-bar-seg.ortho {
-        background: linear-gradient(180deg, var(--dp-ortho-2), var(--dp-ortho));
-        border-radius: 7px 7px 0 0;
-    }
-
-    .dp-bar-label {
-        font-size: .64rem;
-        color: var(--sc-ink-600);
-        font-weight: 800;
-        margin-top: 6px;
-        height: 16px;
-        white-space: nowrap;
-    }
-
-    .dp-bar-col.is-today .dp-bar-label {
-        color: var(--sc-teal-700);
-    }
-
-    /* Tooltip (متضاف للـ body عشان backdrop-filter مايحبسوش) */
-    .dp-tip {
-        position: fixed;
-        z-index: 3000;
-        background: #0b2e30;
-        color: #fff;
-        padding: 10px 14px;
-        border-radius: 12px;
-        font-size: .78rem;
-        line-height: 1.7;
-        min-width: 170px;
-        box-shadow: 0 14px 34px rgba(0,0,0,.28);
-        pointer-events: none;
-        opacity: 0;
-        transform: translateY(6px);
-        transition: opacity .15s ease, transform .15s ease;
-        direction: rtl;
-    }
-
-        .dp-tip.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .dp-tip .tt-h {
-            font-weight: 800;
-            color: #5eead4;
-            border-bottom: 1px solid rgba(255,255,255,.12);
-            padding-bottom: 5px;
-            margin-bottom: 5px;
-        }
-
-        .dp-tip .tt-r {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-        }
-
-            .dp-tip .tt-r span {
-                color: #94a3b8;
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
-            }
-
-            .dp-tip .tt-r i {
-                width: 8px;
-                height: 8px;
-                border-radius: 2px;
-                display: inline-block;
-            }
-
-    /* Donut */
-    .dp-donut-wrap {
-        position: relative;
-        width: 180px;
-        height: 180px;
-        margin: 4px auto 16px;
-    }
-
-    .dp-donut {
-        width: 100%;
-        height: 100%;
-        transform: rotate(-90deg);
-    }
-
-        .dp-donut circle {
-            fill: none;
-            stroke-width: 17;
-        }
-
-    .dp-donut-track {
-        stroke: var(--sc-sky-100);
-    }
-
-    .dp-donut-arc {
-        stroke-dasharray: 0 340;
-        transition: stroke-dasharray 1.1s cubic-bezier(.3,1,.4,1), stroke-dashoffset 1.1s cubic-bezier(.3,1,.4,1);
-    }
-
-        .dp-donut-arc.general {
-            stroke: var(--dp-general);
-        }
-
-        .dp-donut-arc.ortho {
-            stroke: var(--dp-ortho);
-        }
-
-    .dp-donut-center {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-    }
-
-        .dp-donut-center b {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: var(--sc-ink-900);
-            line-height: 1.1;
-        }
-
-        .dp-donut-center span {
-            font-size: .72rem;
-            font-weight: 700;
-            color: var(--sc-ink-600);
-        }
-
-    .dp-split-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        padding: 10px 12px;
-        border-radius: 12px;
-        background: var(--sc-sky-50);
-        margin-bottom: 8px;
-        transition: transform .2s ease;
-    }
-
-        .dp-split-row:hover {
-            transform: translateX(-4px);
-        }
-
-        .dp-split-row .lbl {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 800;
-            font-size: .85rem;
-            color: var(--sc-ink-900);
-        }
-
-            .dp-split-row .lbl i {
-                width: 12px;
-                height: 12px;
-                border-radius: 4px;
-                display: inline-block;
-            }
-
-        .dp-split-row .val {
-            text-align: left;
-            font-weight: 800;
-            font-size: .88rem;
-            color: var(--sc-ink-900);
-        }
-
-            .dp-split-row .val small {
-                display: block;
-                font-size: .7rem;
-                color: var(--sc-ink-600);
-                font-weight: 700;
-            }
-
-    /* Insights */
-    .dp-insights {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 14px;
-        margin-bottom: 16px;
-    }
-
-    .dp-ins {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        background: rgba(255,255,255,.85);
-        backdrop-filter: blur(14px);
-        border: 1px solid rgba(255,255,255,.6);
-        border-radius: 16px;
-        padding: 14px 16px;
-        box-shadow: var(--shadow-soft);
-        animation: dpRise .5s cubic-bezier(.2,1,.3,1) backwards;
-        transition: transform .25s ease, box-shadow .25s ease;
-        min-width: 0;
-    }
-
-        .dp-ins:nth-child(1) {
-            animation-delay: .4s;
-        }
-
-        .dp-ins:nth-child(2) {
-            animation-delay: .46s;
-        }
-
-        .dp-ins:nth-child(3) {
-            animation-delay: .52s;
-        }
-
-        .dp-ins:nth-child(4) {
-            animation-delay: .58s;
-        }
-
-        .dp-ins:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-hover);
-        }
-
-    .dp-ins-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.1rem;
-    }
-
-        .dp-ins-icon.amber {
-            background: #fef3c7;
-            color: #d97706;
-        }
-
-        .dp-ins-icon.rose {
-            background: #ffe4e6;
-            color: #e11d48;
-        }
-
-        .dp-ins-icon.blue {
-            background: #dbeafe;
-            color: #1d4ed8;
-        }
-
-        .dp-ins-icon.green {
-            background: #dcfce7;
-            color: #16a34a;
-        }
-
-    .dp-ins-body {
-        min-width: 0;
-    }
-
-    .dp-ins-title {
-        font-size: .72rem;
-        font-weight: 800;
-        color: var(--sc-ink-600);
-    }
-
-    .dp-ins-value {
-        font-size: .98rem;
-        font-weight: 800;
-        color: var(--sc-ink-900);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .dp-ins-sub {
-        font-size: .7rem;
-        font-weight: 700;
-        color: var(--sc-ink-600);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    /* Methods */
-    .dp-methods {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .dp-method {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        animation: dpRise .4s cubic-bezier(.2,1,.3,1) backwards;
-        animation-delay: calc(var(--i, 0) * 60ms);
-    }
-
-    .dp-method-icon {
-        width: 38px;
-        height: 38px;
-        border-radius: 10px;
-        background: var(--sc-sky-50);
-        color: var(--sc-teal-700);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .dp-method-body {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .dp-method-top {
-        display: flex;
-        justify-content: space-between;
-        font-size: .84rem;
-        font-weight: 800;
-        color: var(--sc-ink-900);
-    }
-
-    .dp-method-track {
-        height: 7px;
-        border-radius: 7px;
-        background: var(--sc-sky-100);
-        overflow: hidden;
-        margin: 5px 0 3px;
-    }
-
-    .dp-method-fill {
-        height: 100%;
-        width: 0;
-        border-radius: 7px;
-        background: linear-gradient(90deg, var(--sc-teal-500), var(--sc-teal-700));
-        transition: width 1s cubic-bezier(.3,1,.4,1);
-    }
-
-    .dp-method-meta {
-        font-size: .7rem;
-        font-weight: 700;
-        color: var(--sc-ink-600);
-    }
-
-    /* Table */
+    /* ══════════ Table ══════════ */
     .dp-table-tools {
         display: flex;
         align-items: center;
@@ -1183,18 +824,20 @@
 
     .dp-chips {
         display: inline-flex;
-        gap: 6px;
-        flex-wrap: wrap;
+        gap: 4px;
+        padding: 4px;
+        background: var(--sc-sky-50);
+        border-radius: 12px;
     }
 
     .dp-chip {
-        border: 1px solid var(--sc-sky-100);
-        background: #fff;
+        border: none;
+        background: transparent;
         color: var(--sc-ink-600);
         font-weight: 800;
         font-size: .78rem;
         padding: 6px 12px;
-        border-radius: 999px;
+        border-radius: 9px;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
@@ -1203,26 +846,23 @@
     }
 
         .dp-chip b {
-            background: var(--sc-sky-50);
+            background: #fff;
             color: var(--sc-teal-700);
             border-radius: 999px;
             padding: 0 7px;
-            font-size: .7rem;
+            font-size: .68rem;
             min-width: 20px;
             text-align: center;
         }
 
         .dp-chip:hover {
-            border-color: var(--sc-teal-500);
             color: var(--sc-teal-700);
         }
 
         .dp-chip.active {
             background: linear-gradient(135deg, var(--sc-teal-600), var(--sc-teal-700));
             color: #fff;
-            border-color: transparent;
             box-shadow: 0 4px 12px rgba(13,148,136,.28);
-            animation: dpPop .2s ease;
         }
 
             .dp-chip.active b {
@@ -1244,8 +884,9 @@
             border-radius: 10px;
             padding: 7px 34px 7px 12px;
             font-size: .82rem;
-            width: 220px;
+            width: 230px;
             outline: none;
+            background: #fff;
             transition: border-color .2s, box-shadow .2s;
         }
 
@@ -1263,38 +904,62 @@
             font-size: .82rem;
         }
 
+    .dp-table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--sc-sky-100);
+        border-radius: 14px;
+    }
+
     .dp-table {
         width: 100%;
         border-collapse: collapse;
         font-size: .86rem;
+        min-width: 1040px;
     }
 
         .dp-table thead th {
             text-align: right;
-            font-size: .74rem;
+            font-size: .72rem;
             font-weight: 800;
             color: var(--sc-ink-600);
-            padding: 10px 12px;
-            border-bottom: 2px solid var(--sc-sky-100);
+            background: linear-gradient(180deg, #f6fdfd, var(--sc-sky-50));
+            padding: 11px 12px;
+            border-bottom: 1px solid var(--sc-sky-100);
             white-space: nowrap;
         }
+
+            .dp-table thead th.grp {
+                border-right: 2px solid var(--sc-sky-100);
+            }
 
         .dp-table tbody tr {
             animation: dpRowIn .35s ease backwards;
             transition: background-color .15s ease;
         }
 
+            .dp-table tbody tr:nth-child(even) {
+                background: rgba(234,251,252,.45);
+            }
+
             .dp-table tbody tr:hover {
                 background: var(--brand-light);
             }
 
+            .dp-table tbody tr:last-child td {
+                border-bottom: none;
+            }
+
         .dp-table td {
-            padding: 10px 12px;
+            padding: 11px 12px;
             border-bottom: 1px solid var(--sc-sky-100);
             color: var(--sc-ink-900);
             font-weight: 600;
             vertical-align: middle;
         }
+
+            .dp-table td.grp {
+                border-right: 2px solid var(--sc-sky-100);
+            }
 
     @@keyframes dpRowIn {
         from {
@@ -1387,6 +1052,7 @@
         border-radius: 8px;
         font-size: .74rem;
         font-weight: 800;
+        white-space: nowrap;
     }
 
         .dp-cat.general {
@@ -1401,35 +1067,29 @@
 
     .dp-amount {
         font-weight: 800 !important;
-        color: #047857 !important;
+        color: var(--dp-paid) !important;
         white-space: nowrap;
-    }
-
-    .dp-receipt {
-        direction: ltr;
-        text-align: right;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: .75rem;
-        color: var(--sc-ink-600) !important;
+        font-size: .95rem;
     }
 
     .dp-num {
         white-space: nowrap;
-        font-variant-numeric: tabular-nums;
     }
 
     .dp-disc {
-        color: #b45309 !important;
+        color: var(--dp-disc) !important;
         font-weight: 700 !important;
     }
 
     .dp-paid {
-        color: #047857 !important;
+        color: var(--dp-paid) !important;
         font-weight: 700 !important;
     }
 
     .dp-remain {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
         padding: 3px 10px;
         border-radius: 8px;
         font-size: .78rem;
@@ -1439,13 +1099,69 @@
 
         .dp-remain.due {
             background: #fee2e2;
-            color: #b91c1c;
+            color: var(--dp-due);
         }
 
         .dp-remain.done {
             background: #d1fae5;
-            color: #047857;
+            color: var(--dp-paid);
         }
+
+    .dp-settle {
+        margin-top: 5px;
+        height: 4px;
+        width: 86px;
+        border-radius: 4px;
+        background: var(--sc-sky-100);
+        overflow: hidden;
+    }
+
+        .dp-settle i {
+            display: block;
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #34d399, var(--dp-paid));
+        }
+
+    .dp-pbal {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 8px;
+        font-size: .8rem;
+        font-weight: 800;
+        white-space: nowrap;
+        background: #fee2e2;
+        color: var(--dp-due);
+        cursor: help;
+    }
+
+        .dp-pbal.more {
+            background: #fef3c7;
+            color: #92400e;
+            box-shadow: inset 0 0 0 1px #fcd34d;
+        }
+
+    .dp-pbal-note {
+        display: block;
+        margin-top: 4px;
+        font-size: .68rem;
+        font-weight: 800;
+        color: #b45309;
+        white-space: nowrap;
+    }
+
+    .dp-method-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 10px;
+        border-radius: 8px;
+        background: var(--sc-sky-50);
+        color: var(--sc-teal-800);
+        font-size: .78rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
 
     .dp-table-foot {
         display: flex;
@@ -1481,8 +1197,8 @@
 
     .dp-empty {
         text-align: center;
-        padding: 36px 10px;
-        color: #94a3b8;
+        padding: 40px 10px;
+        color: var(--sc-ink-400);
         font-weight: 700;
     }
 
@@ -1491,11 +1207,420 @@
             font-size: 2.2rem;
             margin-bottom: 8px;
             color: var(--sc-teal-100);
-            animation: dpFloat 4s ease-in-out infinite;
         }
 
-    /* ── Responsive ── */
-    @@media (max-width: 1100px) {
+    /* ══════════ Bar chart ══════════ */
+    .dp-chart {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 8px;
+    }
+
+    .dp-yaxis {
+        height: 232px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        font-size: .64rem;
+        font-weight: 800;
+        color: var(--sc-ink-400);
+        text-align: left;
+        min-width: 34px;
+        transform: translateY(-6px);
+    }
+
+    .dp-bars-wrap {
+        position: relative;
+        border-top: 1px solid var(--sc-sky-100);
+        background-image: repeating-linear-gradient(to top, var(--sc-sky-100) 0 1px, transparent 1px 25%);
+        background-size: 100% 232px;
+        background-repeat: no-repeat;
+    }
+
+    .dp-bars {
+        display: flex;
+        align-items: stretch;
+        gap: 6px;
+        height: 254px;
+        padding: 0 2px;
+    }
+
+    .dp-bar-col {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    .dp-bar-stack {
+        flex: 1;
+        width: 100%;
+        max-width: 38px;
+        display: flex;
+        flex-direction: column-reverse;
+        border-radius: 8px 8px 3px 3px;
+        transition: background .2s ease, transform .2s ease;
+    }
+
+    .dp-bar-col:hover .dp-bar-stack {
+        background: rgba(13,148,136,.08);
+        transform: translateY(-2px);
+    }
+
+    .dp-bar-seg {
+        height: 0;
+        flex-shrink: 0;
+        transition: height .85s cubic-bezier(.2,1.25,.35,1);
+        transition-delay: calc(var(--i, 0) * 28ms);
+    }
+
+    .dp-bars.ready .dp-bar-seg {
+        height: var(--h);
+    }
+
+    .dp-bar-seg.general {
+        background: linear-gradient(180deg, var(--dp-general-2), var(--dp-general));
+        border-radius: 0 0 3px 3px;
+    }
+
+        .dp-bar-seg.general.solo {
+            border-radius: 7px 7px 3px 3px;
+        }
+
+    .dp-bar-seg.ortho {
+        background: linear-gradient(180deg, var(--dp-ortho-2), var(--dp-ortho));
+        border-radius: 7px 7px 0 0;
+    }
+
+    .dp-bar-label {
+        font-size: .64rem;
+        color: var(--sc-ink-600);
+        font-weight: 800;
+        margin-top: 6px;
+        height: 16px;
+        white-space: nowrap;
+    }
+
+    .dp-bar-col.is-today .dp-bar-label {
+        color: #fff;
+        background: var(--sc-teal-600);
+        border-radius: 6px;
+        padding: 0 6px;
+    }
+
+    /* Tooltip — مضاف للـ body عشان backdrop-filter مايحبسوش */
+    .dp-tip {
+        position: fixed;
+        z-index: 3000;
+        background: rgba(11,46,48,.96);
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: .78rem;
+        line-height: 1.7;
+        min-width: 180px;
+        box-shadow: 0 14px 34px rgba(0,0,0,.28);
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(6px);
+        transition: opacity .15s ease, transform .15s ease;
+        direction: rtl;
+    }
+
+        .dp-tip.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .dp-tip .tt-h {
+            font-weight: 800;
+            color: #5eead4;
+            border-bottom: 1px solid rgba(255,255,255,.12);
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+        }
+
+        .dp-tip .tt-r {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+            .dp-tip .tt-r span {
+                color: #94a3b8;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+            }
+
+            .dp-tip .tt-r i {
+                width: 8px;
+                height: 8px;
+                border-radius: 2px;
+                display: inline-block;
+            }
+
+    /* ══════════ Donut ══════════ */
+    .dp-donut-wrap {
+        position: relative;
+        width: 170px;
+        height: 170px;
+        margin: 0 auto 14px;
+    }
+
+    .dp-donut {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+    }
+
+        .dp-donut circle {
+            fill: none;
+            stroke-width: 16;
+        }
+
+    .dp-donut-track {
+        stroke: var(--sc-sky-100);
+    }
+
+    .dp-donut-arc {
+        stroke-dasharray: 0 340;
+        transition: stroke-dasharray 1.1s cubic-bezier(.3,1,.4,1), stroke-dashoffset 1.1s cubic-bezier(.3,1,.4,1);
+    }
+
+        .dp-donut-arc.general {
+            stroke: var(--dp-general);
+        }
+
+        .dp-donut-arc.ortho {
+            stroke: var(--dp-ortho);
+        }
+
+    .dp-donut-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+        .dp-donut-center b {
+            font-size: 1.55rem;
+            font-weight: 800;
+            color: var(--sc-ink-900);
+            line-height: 1.1;
+        }
+
+        .dp-donut-center span {
+            font-size: .72rem;
+            font-weight: 700;
+            color: var(--sc-ink-600);
+        }
+
+    .dp-split-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: var(--sc-sky-50);
+        margin-bottom: 8px;
+        transition: transform .2s ease;
+    }
+
+        .dp-split-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .dp-split-row:hover {
+            transform: translateX(-4px);
+        }
+
+        .dp-split-row .lbl {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 800;
+            font-size: .85rem;
+            color: var(--sc-ink-900);
+        }
+
+            .dp-split-row .lbl i {
+                width: 12px;
+                height: 12px;
+                border-radius: 4px;
+                display: inline-block;
+            }
+
+        .dp-split-row .val {
+            text-align: left;
+            font-weight: 800;
+            font-size: .9rem;
+            color: var(--sc-ink-900);
+        }
+
+            .dp-split-row .val small {
+                display: block;
+                font-size: .7rem;
+                color: var(--sc-ink-600);
+                font-weight: 700;
+            }
+
+    /* ══════════ Methods ══════════ */
+    .dp-methods {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .dp-method {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: dpRise .4s cubic-bezier(.2,1,.3,1) backwards;
+        animation-delay: calc(var(--i, 0) * 60ms);
+    }
+
+    .dp-method-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: var(--sc-sky-50);
+        color: var(--sc-teal-700);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .dp-method-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .dp-method-top {
+        display: flex;
+        justify-content: space-between;
+        font-size: .84rem;
+        font-weight: 800;
+        color: var(--sc-ink-900);
+    }
+
+    .dp-method-track {
+        height: 7px;
+        border-radius: 7px;
+        background: var(--sc-sky-100);
+        overflow: hidden;
+        margin: 5px 0 3px;
+    }
+
+    .dp-method-fill {
+        height: 100%;
+        width: 0;
+        border-radius: 7px;
+        background: linear-gradient(90deg, var(--sc-teal-500), var(--sc-teal-700));
+        transition: width 1s cubic-bezier(.3,1,.4,1);
+    }
+
+    .dp-method-meta {
+        font-size: .7rem;
+        font-weight: 700;
+        color: var(--sc-ink-600);
+    }
+
+    /* ══════════ Insights ══════════ */
+    .dp-insights {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+
+    .dp-ins {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255,255,255,.9);
+        border: 1px solid rgba(255,255,255,.7);
+        border-radius: 16px;
+        padding: 14px 16px;
+        box-shadow: var(--shadow-soft);
+        animation: dpRise .5s cubic-bezier(.2,1,.3,1) backwards;
+        transition: transform .25s ease, box-shadow .25s ease;
+        min-width: 0;
+    }
+
+        .dp-ins:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+        }
+
+    .dp-ins-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+        .dp-ins-icon.amber {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .dp-ins-icon.rose {
+            background: #ffe4e6;
+            color: #e11d48;
+        }
+
+        .dp-ins-icon.blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .dp-ins-icon.green {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+    .dp-ins-body {
+        min-width: 0;
+    }
+
+    .dp-ins-title {
+        font-size: .72rem;
+        font-weight: 800;
+        color: var(--sc-ink-600);
+    }
+
+    .dp-ins-value, .dp-ins-sub {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .dp-ins-value {
+        font-size: .98rem;
+        font-weight: 800;
+        color: var(--sc-ink-900);
+    }
+
+    .dp-ins-sub {
+        font-size: .7rem;
+        font-weight: 700;
+        color: var(--sc-ink-600);
+    }
+
+    /* ══════════ Responsive ══════════ */
+    @@media (max-width: 1200px) {
         .dp-kpis {
             grid-template-columns: repeat(2, 1fr);
         }
@@ -1511,9 +1636,15 @@
         }
     }
 
-    
+    @@media (max-width: 576px) {
+        .dp-hero {
+            padding: 20px 18px 80px;
+        }
 
-    @@media (max-width: 520px) {
+        .dp-body {
+            padding: 0 6px;
+        }
+
         .dp-kpis, .dp-insights {
             grid-template-columns: 1fr;
         }
@@ -1521,139 +1652,193 @@
         .dp-seg button {
             padding: 7px 10px;
         }
+
+        .dp-search input {
+            width: 100%;
+        }
+
+        .dp-kpi-main {
+            grid-template-columns: 1fr;
+        }
+
+        .dp-ring {
+            margin: 0 auto;
+        }
     }
 
     @@media (prefers-reduced-motion: reduce) {
-        .search-shell-glass, .quick-stat-card, .result-item-glass,
         .dp-shell, .dp-kpi, .dp-card, .dp-ins, .dp-method, .dp-table tbody tr {
             animation: none !important;
             opacity: 1 !important;
             transform: none !important;
         }
 
-        .dp-bar-seg, .dp-donut-arc, .dp-kpi-fill, .dp-method-fill {
+        .dp-bar-seg, .dp-donut-arc, .dp-kpi-fill, .dp-method-fill, .dp-ring-arc {
             transition: none !important;
         }
     }
 </style>
 
-<!-- 🔷 Hero -->
-<div class="payments-hero" dir="ltr">
-    <div class="hero-content">
-        <div class="hero-icon"><i class="bi bi-receipt-cutoff"></i></div>
-        <div>
-            <h1 fs-1>payments</h1>
-            <p>Look for the patient and review the full account statement and payments</p>
-        </div>
-    </div>
-    <a href="/Payments/Search" class="btn-hero-search">
-        <i class="bi bi-person-lines-fill"></i> Patient Statement
-    </a>
-</div>
-
-
-
-<!-- ══════════════ ⭐ Daily Payments Dashboard ══════════════ -->
 <section class="dp-shell" id="dpShell" dir="rtl">
-    <div class="dp-progress"></div>
 
-    <div class="dp-head">
-        <div class="dp-title">
-            <div class="dp-title-icon"><i class="bi bi-calendar2-check"></i></div>
-            <div>
+    <!-- 🔷 Hero + toolbar -->
+    <div class="dp-hero">
+        <div class="dp-hero-row" dir="ltr">
+            <div class="dp-hero-brand">
+                <div class="dp-hero-icon"><i class="bi bi-receipt-cutoff"></i></div>
+                <div>
+                    <h1>Payments</h1>
+                    <p>Look for the patient and review the full account statement and payments</p>
+                </div>
+            </div>
+            <a href="/Payments/Search" class="btn-hero-search">
+                <i class="bi bi-person-lines-fill"></i> Patient Statement
+            </a>
+        </div>
+
+        <div class="dp-toolbar">
+            <div class="dp-title">
                 <h3>
+                    <i class="bi bi-calendar2-check"></i>
                     المدفوعات اليومية
                     <span class="dp-live" id="dpLive"><span class="dp-live-dot"></span> مباشر</span>
                 </h3>
-                <p id="dpRangeLabel">—</p>
+                <p><i class="bi bi-calendar3"></i> <span id="dpRangeLabel">—</span></p>
             </div>
-        </div>
 
-        <div class="dp-controls">
-            <div class="dp-seg" id="dpRangeSeg">
-                <span class="dp-seg-glider"></span>
-                <button type="button" data-range="today" class="active">اليوم</button>
-                <button type="button" data-range="week">آخر 7 أيام</button>
-                <button type="button" data-range="month">آخر 30 يوم</button>
-                <button type="button" data-range="custom"><i class="bi bi-sliders2"></i> مخصص</button>
+            <div class="dp-controls">
+                <div class="dp-seg" id="dpRangeSeg">
+                    <span class="dp-seg-glider"></span>
+                    <button type="button" data-range="today" class="active">اليوم</button>
+                    <button type="button" data-range="week">آخر 7 أيام</button>
+                    <button type="button" data-range="month">آخر 30 يوم</button>
+                    <button type="button" data-range="custom"><i class="bi bi-sliders2"></i> مخصص</button>
+                </div>
+                <div class="dp-custom" id="dpCustom" hidden>
+                    <input type="date" id="dpFrom" />
+                    <span>إلى</span>
+                    <input type="date" id="dpTo" />
+                    <button type="button" class="dp-icon-btn small" id="dpApply"><i class="bi bi-check2"></i> تطبيق</button>
+                </div>
+                <button type="button" class="dp-icon-btn" id="dpRefresh" title="تحديث"><i class="bi bi-arrow-clockwise"></i></button>
             </div>
-            <div class="dp-custom" id="dpCustom" hidden>
-                <input type="date" id="dpFrom" />
-                <span>إلى</span>
-                <input type="date" id="dpTo" />
-                <button type="button" class="dp-icon-btn small" id="dpApply"><i class="bi bi-check2"></i> تطبيق</button>
-            </div>
-            <button type="button" class="dp-icon-btn" id="dpRefresh" title="تحديث"><i class="bi bi-arrow-clockwise"></i></button>
         </div>
+        <div class="dp-progress"></div>
     </div>
 
-    <!-- KPIs -->
-    <div class="dp-kpis">
-        <div class="dp-kpi dp-kpi-hero">
-            <i class="bi bi-wallet2 dp-kpi-bg"></i>
-            <div class="dp-kpi-top">
-                <span class="dp-kpi-label">إجمالي المطلوب</span>
-                <span class="dp-kpi-chip" id="dpKpiVisits">0 زيارة</span>
-            </div>
-            <div class="dp-kpi-value"><span id="dpKpiTotal">0</span> <small>ج.م</small></div>
-            <div class="dp-kpi-split">
-                <div><span>المدفوع</span><b class="paid fs-5" id="dpKpiPaid">0</b></div>
-                <div><span>الباقي</span><b class="remain fs-5" id="dpKpiRemain">0</b></div>
-            </div>
-            <div class="dp-kpi-sub">
-                <span>تحصيل الفترة: <b id="dpKpiCollected">0</b> ج.م</span>
-                <span class="dp-trend flat" id="dpKpiTrend"><i class="bi bi-dash"></i></span>
-            </div>
-        </div>
-        <div class="dp-kpi">
-            <div class="dp-kpi-top">
-                <span class="dp-kpi-label">عدد الدفعات</span>
-                <span class="dp-kpi-icon"><i class="bi bi-receipt"></i></span>
-            </div>
-            <div class="dp-kpi-value"><span id="dpKpiCount">0</span> <small>دفعة</small></div>
-            <div class="dp-kpi-sub" id="dpKpiAvg">—</div>
-        </div>
-        <div class="dp-kpi general">
-            <div class="dp-kpi-top">
-                <span class="dp-kpi-label">عام — المطلوب</span>
-                <span class="dp-kpi-icon"><i class="bi bi-heart-pulse"></i></span>
-            </div>
-            <div class="dp-kpi-value"><span id="dpKpiGeneral">0</span> <small>ج.م</small></div>
-            <div class="dp-kpi-split">
-                <div><span>المدفوع</span><b class="paid fs-5" id="dpKpiGeneralPaid">0</b></div>
-                <div><span>الباقي</span><b class="remain fs-5" id="dpKpiGeneralRemain">0</b></div>
-            </div>
-            <div class="dp-kpi-track"><div class="dp-kpi-fill" id="dpKpiGeneralBar"></div></div>
-            <div class="dp-kpi-sub" id="dpKpiGeneralSub">—</div>
-        </div>
-        <div class="dp-kpi ortho">
-            <div class="dp-kpi-top">
-                <span class="dp-kpi-label">تقويم — المطلوب</span>
-                <span class="dp-kpi-icon"><i class="bi bi-emoji-smile"></i></span>
-            </div>
-            <div class="dp-kpi-value"><span id="dpKpiOrtho">0</span> <small>ج.م</small></div>
-            <div class="dp-kpi-split">
-                <div><span>المدفوع</span><b class="paid fs-5" id="dpKpiOrthoPaid">0</b></div>
-                <div><span>الباقي</span><b class="remain fs-5" id="dpKpiOrthoRemain">0</b></div>
-            </div>
-            <div class="dp-kpi-track"><div class="dp-kpi-fill" id="dpKpiOrthoBar"></div></div>
-            <div class="dp-kpi-sub" id="dpKpiOrthoSub">—</div>
-        </div>
-    </div>
-   
+    <div class="dp-body">
 
-    <!-- Methods + Table -->
-    <div class="dp-grid-2" style="grid-template-columns: 1fr 2.4fr;">
+        <!-- KPIs -->
+        <div class="dp-kpis">
+            <div class="dp-kpi">
+                <div class="dp-kpi-main">
+                    <div style="min-width:0">
+                        <div class="dp-kpi-top">
+                            <span class="dp-kpi-label">إجمالي المطلوب (عام)</span>
+                            <span class="dp-kpi-chip" id="dpKpiVisits">0 زيارة</span>
+                        </div>
+                        <div class="dp-kpi-value"><span id="dpKpiTotal">0</span> <small>ج.م</small></div>
+                        <div class="dp-kpi-split">
+                            <div><span>المدفوع</span><b class="paid" id="dpKpiPaid">0</b></div>
+                            <div><span>الباقي</span><b class="remain" id="dpKpiRemain">0</b></div>
+                        </div>
+                    </div>
+                    <div class="dp-ring" title="نسبة السداد">
+                        <svg viewBox="0 0 80 80">
+                            <defs>
+                                <linearGradient id="dpRingGrad" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="#2dd4bf" />
+                                    <stop offset="100%" stop-color="#0d7377" />
+                                </linearGradient>
+                            </defs>
+                            <circle class="dp-ring-track" cx="40" cy="40" r="34" />
+                            <circle class="dp-ring-arc" id="dpKpiRing" cx="40" cy="40" r="34" />
+                        </svg>
+                        <div class="dp-ring-center">
+                            <b id="dpKpiRate">0%</b>
+                            <span>نسبة السداد</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dp-kpi-foot">
+                    <span>تحصيل الفترة: <b class="dp-num" id="dpKpiCollected">0</b> ج.م</span>
+                    <span class="dp-trend flat" id="dpKpiTrend"><i class="bi bi-dash"></i></span>
+                </div>
+            </div>
+
+            <div class="dp-kpi count">
+                <div class="dp-kpi-top">
+                    <span class="dp-kpi-label">عدد الدفعات</span>
+                    <span class="dp-kpi-icon"><i class="bi bi-receipt"></i></span>
+                </div>
+                <div class="dp-kpi-value"><span id="dpKpiCount">0</span> <small>دفعة</small></div>
+                <div class="dp-kpi-sub" id="dpKpiAvg">—</div>
+            </div>
+
+            <div class="dp-kpi general">
+                <div class="dp-kpi-top">
+                    <span class="dp-kpi-label">عام — المطلوب</span>
+                    <span class="dp-kpi-icon"><i class="bi bi-heart-pulse"></i></span>
+                </div>
+                <div class="dp-kpi-value"><span id="dpKpiGeneral">0</span> <small>ج.م</small></div>
+                <div class="dp-kpi-split">
+                    <div><span>المدفوع</span><b class="paid" id="dpKpiGeneralPaid">0</b></div>
+                    <div><span>الباقي</span><b class="remain" id="dpKpiGeneralRemain">0</b></div>
+                </div>
+                <div class="dp-kpi-track"><div class="dp-kpi-fill" id="dpKpiGeneralBar"></div></div>
+                <div class="dp-kpi-sub" id="dpKpiGeneralSub">—</div>
+            </div>
+
+            <div class="dp-kpi ortho">
+                <div class="dp-kpi-top">
+                    <span class="dp-kpi-label">تقويم — المحصّل</span>
+                    <span class="dp-kpi-icon"><i class="bi bi-emoji-smile"></i></span>
+                </div>
+                <div class="dp-kpi-value"><span id="dpKpiOrtho">0</span> <small>ج.م</small></div>
+                <div class="dp-kpi-sub" id="dpKpiOrthoSub">—</div>
+            </div>
+        </div>
+
+        <!-- Insights -->
+        <div class="dp-insights">
+            <div class="dp-ins">
+                <div class="dp-ins-icon amber"><i class="bi bi-lightning-charge"></i></div>
+                <div class="dp-ins-body">
+                    <div class="dp-ins-title">ساعة الذروة</div>
+                    <div class="dp-ins-value" id="dpInsPeak">—</div>
+                    <div class="dp-ins-sub" id="dpInsPeakSub">—</div>
+                </div>
+            </div>
+            <div class="dp-ins">
+                <div class="dp-ins-icon rose"><i class="bi bi-trophy"></i></div>
+                <div class="dp-ins-body">
+                    <div class="dp-ins-title" id="dpInsBestTitle">أكبر دفعة</div>
+                    <div class="dp-ins-value" id="dpInsBest">—</div>
+                    <div class="dp-ins-sub" id="dpInsBestSub">—</div>
+                </div>
+            </div>
+            <div class="dp-ins">
+                <div class="dp-ins-icon blue"><i class="bi bi-credit-card-2-back"></i></div>
+                <div class="dp-ins-body">
+                    <div class="dp-ins-title">الطريقة الأكثر استخدامًا</div>
+                    <div class="dp-ins-value" id="dpInsMethod">—</div>
+                    <div class="dp-ins-sub" id="dpInsMethodSub">—</div>
+                </div>
+            </div>
+            <div class="dp-ins">
+                <div class="dp-ins-icon green"><i class="bi bi-calculator"></i></div>
+                <div class="dp-ins-body">
+                    <div class="dp-ins-title">متوسط الدفعة</div>
+                    <div class="dp-ins-value" id="dpInsAvg">—</div>
+                    <div class="dp-ins-sub" id="dpInsAvgSub">—</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table (full width) -->
         <div class="dp-card">
             <div class="dp-card-head">
-                <h5><i class="bi bi-wallet2"></i> طرق الدفع</h5>
-            </div>
-            <div class="dp-methods" id="dpMethods"></div>
-        </div>
-
-        <div class="dp-card">
-            <div class="dp-card-head">
-                <h5><i class="bi bi-list-ul"></i> تفاصيل الدفعات</h5>
+                <h5><span class="hicon"><i class="bi bi-list-ul"></i></span> تفاصيل الدفعات</h5>
                 <div class="dp-table-tools">
                     <div class="dp-chips" id="dpCatChips">
                         <button type="button" class="dp-chip active" data-cat="all">الكل <b id="dpCntAll">0</b></button>
@@ -1664,22 +1849,23 @@
                         <input type="text" id="dpSearch" placeholder="مريض / موبايل / إيصال..." autocomplete="off" />
                         <i class="bi bi-search"></i>
                     </div>
-                    <button type="button" class="dp-icon-btn small" id="dpExport" title="تصدير Excel"><i class="bi bi-file-earmark-spreadsheet"></i> تصدير</button>
+                    <button type="button" class="dp-icon-btn small light" id="dpExport" title="تصدير Excel"><i class="bi bi-file-earmark-spreadsheet"></i> تصدير</button>
                 </div>
             </div>
-            <div class="table-responsive">
+            <div class="dp-table-wrap">
                 <table class="dp-table">
                     <thead>
                         <tr>
-                            <th>الوقت</th>
+                            <th>التاريخ / الوقت</th>
                             <th>المريض</th>
                             <th>النوع</th>
                             <th>الدفعة</th>
-                            <th>المطلوب</th>
-                            <th>المدفوع</th>
+                            <th class="grp">مطلوب الزيارة</th>
+                            <th>مدفوع الزيارة</th>
                             <th>الخصم</th>
-                            <th>الباقي</th>
-                            <th>الطريقة</th>
+                            <th>باقي الزيارة</th>
+                            <th class="grp">رصيد المريض</th>
+                            <th class="grp">الطريقة</th>
                         </tr>
                     </thead>
                     <tbody id="dpTbody"></tbody>
@@ -1694,93 +1880,69 @@
                 <button type="button" class="dp-load-more" id="dpLoadMore" style="display:none;">عرض المزيد <i class="bi bi-chevron-down"></i></button>
             </div>
         </div>
-    </div>
 
-    <!-- Chart + Split -->
-    <div class="dp-grid-2">
-        <div class="dp-card">
-            <div class="dp-card-head">
-                <div>
-                    <h5><i class="bi bi-bar-chart-line"></i> حركة التحصيل</h5>
-                    <small id="dpChartSub">—</small>
+        <!-- Chart + side (split + methods) -->
+        <div class="dp-grid-2">
+            <div class="dp-card">
+                <div class="dp-card-head">
+                    <div>
+                        <h5><span class="hicon"><i class="bi bi-bar-chart-line"></i></span> حركة التحصيل</h5>
+                        <small id="dpChartSub">—</small>
+                    </div>
+                    <div class="dp-legend">
+                        <span><i class="dp-dot-general"></i> عام</span>
+                        <span><i class="dp-dot-ortho"></i> تقويم</span>
+                    </div>
                 </div>
-                <div class="dp-legend">
-                    <span><i class="dp-dot-general"></i> عام</span>
-                    <span><i class="dp-dot-ortho"></i> تقويم</span>
-                </div>
-            </div>
-            <div class="dp-bars-wrap">
-                <div class="dp-bars" id="dpBars"></div>
-            </div>
-        </div>
-
-        <div class="dp-card">
-            <div class="dp-card-head">
-                <h5><i class="bi bi-pie-chart"></i> عام / تقويم</h5>
-            </div>
-            <div class="dp-donut-wrap">
-                <svg class="dp-donut" viewBox="0 0 140 140">
-                    <circle class="dp-donut-track" cx="70" cy="70" r="54" />
-                    <circle class="dp-donut-arc general" id="dpArcGeneral" cx="70" cy="70" r="54" />
-                    <circle class="dp-donut-arc ortho" id="dpArcOrtho" cx="70" cy="70" r="54" />
-                </svg>
-                <div class="dp-donut-center">
-                    <b id="dpDonutCount">0</b>
-                    <span>دفعة</span>
+                <div class="dp-chart">
+                    <div class="dp-yaxis" id="dpYAxis"></div>
+                    <div class="dp-bars-wrap">
+                        <div class="dp-bars" id="dpBars"></div>
+                    </div>
                 </div>
             </div>
-            <div class="dp-split-row">
-                <span class="lbl"><i class="dp-dot-general"></i> عام</span>
-                <span class="val"><span id="dpSplitGeneral">0</span><small id="dpSplitGeneralSub">—</small></span>
-            </div>
-            <div class="dp-split-row">
-                <span class="lbl"><i class="dp-dot-ortho"></i> تقويم</span>
-                <span class="val"><span id="dpSplitOrtho">0</span><small id="dpSplitOrthoSub">—</small></span>
-            </div>
-        </div>
-    </div>
 
-    <!-- Smart insights -->
-    <div class="dp-insights">
-        <div class="dp-ins">
-            <div class="dp-ins-icon amber"><i class="bi bi-lightning-charge"></i></div>
-            <div class="dp-ins-body">
-                <div class="dp-ins-title">ساعة الذروة</div>
-                <div class="dp-ins-value" id="dpInsPeak">—</div>
-                <div class="dp-ins-sub" id="dpInsPeakSub">—</div>
-            </div>
-        </div>
-        <div class="dp-ins">
-            <div class="dp-ins-icon rose"><i class="bi bi-trophy"></i></div>
-            <div class="dp-ins-body">
-                <div class="dp-ins-title" id="dpInsBestTitle">أكبر دفعة</div>
-                <div class="dp-ins-value" id="dpInsBest">—</div>
-                <div class="dp-ins-sub" id="dpInsBestSub">—</div>
-            </div>
-        </div>
-        <div class="dp-ins">
-            <div class="dp-ins-icon blue"><i class="bi bi-credit-card-2-back"></i></div>
-            <div class="dp-ins-body">
-                <div class="dp-ins-title">الطريقة الأكثر استخدامًا</div>
-                <div class="dp-ins-value" id="dpInsMethod">—</div>
-                <div class="dp-ins-sub" id="dpInsMethodSub">—</div>
-            </div>
-        </div>
-        <div class="dp-ins">
-            <div class="dp-ins-icon green"><i class="bi bi-calculator"></i></div>
-            <div class="dp-ins-body">
-                <div class="dp-ins-title">متوسط الدفعة</div>
-                <div class="dp-ins-value" id="dpInsAvg">—</div>
-                <div class="dp-ins-sub" id="dpInsAvgSub">—</div>
+            <div class="dp-side">
+                <div class="dp-card">
+                    <div class="dp-card-head">
+                        <h5><span class="hicon"><i class="bi bi-pie-chart"></i></span> عام / تقويم</h5>
+                    </div>
+                    <div class="dp-donut-wrap">
+                        <svg class="dp-donut" viewBox="0 0 140 140">
+                            <circle class="dp-donut-track" cx="70" cy="70" r="54" />
+                            <circle class="dp-donut-arc general" id="dpArcGeneral" cx="70" cy="70" r="54" />
+                            <circle class="dp-donut-arc ortho" id="dpArcOrtho" cx="70" cy="70" r="54" />
+                        </svg>
+                        <div class="dp-donut-center">
+                            <b id="dpDonutCount">0</b>
+                            <span>دفعة</span>
+                        </div>
+                    </div>
+                    <div class="dp-split-row">
+                        <span class="lbl"><i class="dp-dot-general"></i> عام</span>
+                        <span class="val"><span id="dpSplitGeneral">0</span><small id="dpSplitGeneralSub">—</small></span>
+                    </div>
+                    <div class="dp-split-row">
+                        <span class="lbl"><i class="dp-dot-ortho"></i> تقويم</span>
+                        <span class="val"><span id="dpSplitOrtho">0</span><small id="dpSplitOrthoSub">—</small></span>
+                    </div>
+                </div>
+
+                <div class="dp-card">
+                    <div class="dp-card-head">
+                        <h5><span class="hicon"><i class="bi bi-wallet2"></i></span> طرق الدفع</h5>
+                    </div>
+                    <div class="dp-methods" id="dpMethods"></div>
+                </div>
             </div>
         </div>
     </div>
+
     <div class="dp-tip" id="dpTip"></div>
 </section>
 
 @section Scripts {
     <script>
-        
         // ══════════════════════════════════════════════
         // ⭐ Daily Payments Dashboard
         // ══════════════════════════════════════════════
@@ -1788,6 +1950,7 @@
             const PAGE = 12;
             const REFRESH_MS = 60000;
             const DONUT_C = 2 * Math.PI * 54;
+            const RING_C = 2 * Math.PI * 34;
             const METHOD_ICONS = { 0: 'bi-cash-coin', 1: 'bi-credit-card', 2: 'bi-credit-card-2-front', 3: 'bi-bank', 4: 'bi-shield-check', 5: 'bi-calendar3' };
 
             const $ = id => document.getElementById(id);
@@ -1801,20 +1964,43 @@
             // ── Helpers ──
             const fmt = n => Number(n || 0).toLocaleString('ar-EG', { maximumFractionDigits: 2 });
             const fmtInt = n => Math.round(Number(n || 0)).toLocaleString('ar-EG');
+            const compactFmt = new Intl.NumberFormat('ar-EG', { notation: 'compact', maximumFractionDigits: 1 });
+            const fmtCompact = n => compactFmt.format(n);
             const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
             const pct = (part, total) => total > 0 ? (part / total * 100) : 0;
+            const pad = n => String(n).padStart(2, '0');
 
-            // تاريخ محلي من غير UTC shift
+            // تاريخ محلي من غير UTC shift (للـ API: yyyy-MM-dd)
             function isoLocal(d) {
-                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
             }
             function todayIso() { return isoLocal(new Date()); }
+
+            // ⭐ عرض التاريخ بصيغة dd/MM/yyyy
+            function fmtDate(d) {
+                const x = d instanceof Date ? d : new Date(d);
+                return `${pad(x.getDate())}/${pad(x.getMonth() + 1)}/${x.getFullYear()}`;
+            }
+            function fmtDayMonth(d) {
+                const x = d instanceof Date ? d : new Date(d);
+                return `${pad(x.getDate())}/${pad(x.getMonth() + 1)}`;
+            }
+            const dateHtml = d => `<span class="dp-date">${fmtDate(d)}</span>`;
+            const dayName = d => new Date(d).toLocaleDateString('ar-EG', { weekday: 'long' });
+            const fmtTime = d => new Date(d).toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' });
+
             function hourLabel(h) {
                 const x = h % 12 === 0 ? 12 : h % 12;
                 return `${x.toLocaleString('ar-EG')} ${h < 12 ? 'ص' : 'م'}`;
             }
-            function shortDate(d) { return new Date(d).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' }); }
-            function longDate(d) { return new Date(d).toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); }
+
+            function niceMax(v) {
+                if (v <= 0) return 1;
+                const p = Math.pow(10, Math.floor(Math.log10(v)));
+                const n = v / p;
+                const m = n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10;
+                return m * p;
+            }
 
             function countUp(el, target, asInt) {
                 const from = parseFloat(el.dataset.val || '0');
@@ -1947,18 +2133,24 @@
             }
 
             function renderRangeLabel(d) {
-                $('dpRangeLabel').textContent = d.days === 1
-                    ? longDate(d.dateFrom)
-                    : `من ${shortDate(d.dateFrom)} إلى ${shortDate(d.dateTo)} · ${fmtInt(d.days)} يوم`;
+                $('dpRangeLabel').innerHTML = d.days === 1
+                    ? `${esc(dayName(d.dateFrom))} · ${dateHtml(d.dateFrom)}`
+                    : `من ${dateHtml(d.dateFrom)} إلى ${dateHtml(d.dateTo)} · ${fmtInt(d.days)} يوم`;
             }
 
             function renderKpis(d) {
-                // الإجمالي: مطلوب / مدفوع / باقي
                 countUp($('dpKpiTotal'), d.visitsTotal);
                 countUp($('dpKpiPaid'), d.visitsPaid);
                 countUp($('dpKpiRemain'), d.visitsRemaining);
                 countUp($('dpKpiCollected'), d.totalAmount);
                 $('dpKpiVisits').textContent = `${fmtInt(d.visitsCount)} زيارة`;
+
+                // حلقة نسبة السداد = المدفوع / (المدفوع + الباقي) — الخصم مستبعد
+                const rate = pct(d.visitsPaid, d.visitsPaid + d.visitsRemaining);
+                $('dpKpiRate').textContent = `${Math.round(rate).toLocaleString('ar-EG')}%`;
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    $('dpKpiRing').style.strokeDasharray = `${rate / 100 * RING_C} ${RING_C}`;
+                }));
 
                 const tr = $('dpKpiTrend');
                 tr.title = `الفترة السابقة: ${fmt(d.previousTotalAmount)} ج.م (${fmtInt(d.previousTotalCount)} دفعة)`;
@@ -1968,29 +2160,24 @@
                 } else {
                     const up = d.changePercent >= 0;
                     tr.className = 'dp-trend ' + (up ? 'up' : 'down');
-                    tr.innerHTML = `<i class="bi bi-arrow-${up ? 'up' : 'down'}-left"></i> ${Math.abs(d.changePercent).toLocaleString('ar-EG')}%`;
+                    tr.innerHTML = `<i class="bi bi-graph-${up ? 'up' : 'down'}-arrow"></i> ${Math.abs(d.changePercent).toLocaleString('ar-EG')}% عن الفترة السابقة`;
                 }
 
-                // عدد الدفعات
                 countUp($('dpKpiCount'), d.totalCount, true);
                 $('dpKpiAvg').textContent = `متوسط الدفعة ${fmt(d.averagePayment)} ج.م`;
 
-                // عام / تقويم: مطلوب + مدفوع + باقي + نسبة السداد
                 const settled = (paid, remain) => pct(paid, paid + remain);
 
                 countUp($('dpKpiGeneral'), d.generalVisitsTotal);
                 countUp($('dpKpiGeneralPaid'), d.generalVisitsPaid);
                 countUp($('dpKpiGeneralRemain'), d.generalVisitsRemaining);
                 const gS = settled(d.generalVisitsPaid, d.generalVisitsRemaining);
-                $('dpKpiGeneralSub').textContent = `${fmtInt(d.generalVisitsCount)} زيارة · نسبة السداد ${gS.toFixed(0)}%`;
+                $('dpKpiGeneralSub').textContent = `${fmtInt(d.generalVisitsCount)} زيارة · نسبة السداد ${Math.round(gS).toLocaleString('ar-EG')}%`;
                 setWidthAnimated($('dpKpiGeneralBar'), gS);
 
-                countUp($('dpKpiOrtho'), d.orthoVisitsTotal);
-                countUp($('dpKpiOrthoPaid'), d.orthoVisitsPaid);
-                countUp($('dpKpiOrthoRemain'), d.orthoVisitsRemaining);
-                const oS = settled(d.orthoVisitsPaid, d.orthoVisitsRemaining);
-                $('dpKpiOrthoSub').textContent = `${fmtInt(d.orthoVisitsCount)} زيارة · نسبة السداد ${oS.toFixed(0)}%`;
-                setWidthAnimated($('dpKpiOrthoBar'), oS);
+                // التقويم: المحصّل في الفترة فقط (المطلوب إجمالي للحالة مش بالزيارة)
+                countUp($('dpKpiOrtho'), d.orthoVisitsPaid);
+                $('dpKpiOrthoSub').textContent = `${fmtInt(d.orthoVisitsCount)} زيارة · ${fmtInt(d.orthoCount)} دفعة`;
             }
 
             function buildBuckets(d) {
@@ -2011,8 +2198,8 @@
                 return d.byDay.map(x => {
                     const dt = new Date(x.date);
                     return {
-                        label: d.days <= 7 ? dt.toLocaleDateString('ar-EG', { weekday: 'short' }) : dt.toLocaleDateString('ar-EG', { day: 'numeric' }),
-                        title: longDate(x.date),
+                        label: d.days <= 7 ? dt.toLocaleDateString('ar-EG', { weekday: 'short' }) : fmtDayMonth(dt),
+                        title: `${dayName(dt)} · ${fmtDate(dt)}`,
                         general: x.generalAmount, ortho: x.orthoAmount, count: x.count,
                         isToday: isoLocal(dt) === tIso
                     };
@@ -2025,10 +2212,14 @@
                 state.buckets = buckets;
                 $('dpChartSub').textContent = d.days === 1 ? 'التحصيل على مدار اليوم (بالساعة)' : 'التحصيل اليومي خلال الفترة';
 
-                const max = Math.max(1, ...buckets.map(b => b.general + b.ortho));
+                const rawMax = Math.max(0, ...buckets.map(b => b.general + b.ortho));
+                const max = niceMax(rawMax);
+                $('dpYAxis').innerHTML = [1, .75, .5, .25, 0]
+                    .map(f => `<span>${rawMax ? fmtCompact(max * f) : (f === 0 ? fmtInt(0) : '')}</span>`).join('');
+
                 const step = buckets.length > 14 ? Math.ceil(buckets.length / 10) : 1;
 
-                // تحديث صامت: نغيّر الارتفاعات بس من غير ما نعيد الأنيميشن من الصفر
+                // تحديث صامت: نغيّر الارتفاعات بس
                 if (silent && wrap.childElementCount === buckets.length) {
                     wrap.querySelectorAll('.dp-bar-col').forEach((col, i) => {
                         const b = buckets[i];
@@ -2106,7 +2297,7 @@
                 if (d.days > 1) {
                     const best = has ? d.byDay.reduce((a, b) => b.amount > a.amount ? b : a) : null;
                     $('dpInsBestTitle').textContent = 'أفضل يوم';
-                    $('dpInsBest').textContent = best ? new Date(best.date).toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'short' }) : '—';
+                    $('dpInsBest').innerHTML = best ? `${esc(dayName(best.date))} · ${dateHtml(best.date)}` : '—';
                     $('dpInsBestSub').textContent = best ? `${fmt(best.amount)} ج.م · ${fmtInt(best.count)} دفعة` : 'لا توجد بيانات';
                 } else {
                     const big = has ? d.payments.reduce((a, b) => b.amount > a.amount ? b : a) : null;
@@ -2187,37 +2378,57 @@
                 state.shown = 0;
                 $('dpTbody').innerHTML = '';
                 const sum = state.filtered.reduce((s, p) => s + p.amount, 0);
-                $('dpTableSum').textContent = `${fmtInt(state.filtered.length)} دفعة · ${fmt(sum)} ج.م`;
+                $('dpTableSum').textContent = `${fmtInt(state.filtered.length)} دفعة · إجمالي ${fmt(sum)} ج.م`;
                 $('dpEmpty').style.display = state.filtered.length ? 'none' : 'block';
                 renderMore();
             }
 
             function rowHtml(p, i) {
-                const dt = new Date(p.paymentDate);
-                const time = dt.toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' });
-                const when = state.data.days === 1 ? time : `${shortDate(p.paymentDate)}<small>${time}</small>`;
+                const time = fmtTime(p.paymentDate);
+                const when = `${dateHtml(p.paymentDate)}<small>${time}</small>`;
                 const cls = p.isOrtho ? 'ortho' : 'general';
-                const remain = p.visitRemaining 
-                    ? `<span class="dp-remain due">${fmt(p.visitRemaining)}</span>`
-                    : `<span class="dp-remain done"><i class="bi bi-check2"></i> مسدد</span>`;
+                const settle = pct(p.visitPaid, p.visitPaid + p.visitRemaining);
+                const remain = p.isOrtho
+                    ? '<span class="dp-num">—</span>'
+                    : (p.visitRemaining > 0
+                        ? `<span class="dp-remain due">${fmt(p.visitRemaining)}</span>`
+                        : `<span class="dp-remain done"><i class="bi bi-check2-circle"></i> مسدد</span>`);
                 return `
-                <tr class="${state.newIds.has(p.id) ? 'dp-row-new' : ''}" style="animation-delay:${Math.min(i * 0.03, 0.3)}s" title="${esc(p.receiptNo ? 'إيصال: ' + p.receiptNo : '')}">
-                    <td class="dp-when">${when}</td>
-                    <td>
-                        <a class="dp-patient" href="/Payments/Statement?patientId=${p.patientId}">
-                            <span class="dp-avatar ${cls}">${esc((p.patientName || '?').trim().charAt(0))}</span>
-                            <span><b>${esc(p.patientName)}</b><small>${esc(p.patientMobile || '')}</small></span>
-                        </a>
-                    </td>
-                    <td><span class="dp-cat ${cls}">${esc(p.categoryText)}</span></td>
-                    <td class="dp-amount">${fmt(p.amount)}</td>
-                    <td class="dp-num">${fmt(p.visitTotal)}</td>
-                    <td class="dp-num dp-paid">${fmt(p.visitPaid)}</td>
-                    <td class="dp-num dp-disc">${p.visitDiscount > 0 ? fmt(p.visitDiscount) : '—'}</td>
-                    <td>${remain}</td>
-                    <td><i class="bi ${METHOD_ICONS[p.method] || 'bi-wallet2'}" style="color:var(--sc-teal-600)"></i> ${esc(p.methodText)}</td>
-                </tr>`;
+                        <tr class="${state.newIds.has(p.id) ? 'dp-row-new' : ''}" style="animation-delay:${Math.min(i * 0.03, 0.3)}s" title="${esc(p.receiptNo ? 'إيصال: ' + p.receiptNo : '')}">
+                            <td class="dp-when">${when}</td>
+                            <td>
+                                <a class="dp-patient" href="/Payments/Statement?patientId=${p.patientId}">
+                                    <span class="dp-avatar ${cls}">${esc((p.patientName || '?').trim().charAt(0))}</span>
+                                    <span><b>${esc(p.patientName)}</b><small>${esc(p.patientMobile || '')}</small></span>
+                                </a>
+                            </td>
+                            <td><span class="dp-cat ${cls}">${esc(p.categoryText)}</span></td>
+                            <td class="dp-amount">${fmt(p.amount)}</td>
+                            <td class="dp-num grp">${p.isOrtho ? '—' : fmt(p.visitTotal)}</td>
+                            <td class="dp-num dp-paid">${fmt(p.visitPaid)}</td>
+                            <td class="dp-num dp-disc">${p.visitDiscount > 0 ? fmt(p.visitDiscount) : '—'}</td>
+                            <td>${remain}${p.isOrtho ? '' : `<div class="dp-settle" title="نسبة السداد ${Math.round(settle)}%"><i style="width:${settle}%"></i></div>`}</td>
+                            <td class="grp">${patientBalanceHtml(p)}</td>
+                            <td class="grp"><span class="dp-method-pill"><i class="bi ${METHOD_ICONS[p.method] || 'bi-wallet2'}"></i> ${esc(p.methodText)}</span></td>
+                        </tr>`;
             }
+
+            // ⭐ رصيد المريض الكلي (كل زياراته النشطة) — بيوضح لو فيه باقي على زيارات تانية غير اللي اتدفع عليها
+            function patientBalanceHtml(p) {
+                const pRem = Number(p.patientRemaining || 0);
+                const visitRem = Math.max(0, Number(p.visitRemaining || 0));
+                const otherDue = pRem - visitRem;
+                const tip = `إجمالي مطلوب المريض ${fmt(p.patientTotal)} ج.م · ${fmtInt(p.patientOpenVisits)} زيارة عليها باقي`;
+
+                if (pRem <= 0.009)
+                    return `<span class="dp-remain done" title="${esc(tip)}"><i class="bi bi-check2-all"></i> مسدد بالكامل</span>`;
+
+                const note = otherDue > 0.009
+                    ? `<small class="dp-pbal-note"><i class="bi bi-exclamation-circle"></i> منها ${fmt(otherDue)} على زيارات اخري</small>`
+                    : '';
+                return `<span class="dp-pbal ${otherDue > 0.009 ? 'more' : ''}" title="${esc(tip)}">${fmt(pRem)}</span>${note}`;
+            }
+
             function renderMore() {
                 const chunk = state.filtered.slice(state.shown, state.shown + PAGE);
                 $('dpTbody').insertAdjacentHTML('beforeend', chunk.map((p, i) => rowHtml(p, i)).join(''));
@@ -2232,17 +2443,17 @@
                     Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'مفيش دفعات للتصدير', showConfirmButton: false, timer: 1500 });
                     return;
                 }
-                const head = ['التاريخ', 'الوقت', 'المريض', 'الموبايل', 'النوع', 'الدفعة', 'المطلوب', 'المدفوع', 'الخصم', 'الباقي', 'طريقة الدفع', 'رقم الإيصال', 'ملاحظات'];
+                const head = ['التاريخ', 'الوقت', 'المريض', 'الموبايل', 'النوع', 'الدفعة', 'المطلوب', 'المدفوع', 'الخصم', 'باقي الزيارة', 'إجمالي مطلوب المريض', 'رصيد المريض', 'طريقة الدفع', 'رقم الإيصال', 'ملاحظات'];
                 const lines = state.filtered.map(p => {
                     const dt = new Date(p.paymentDate);
-                    return [isoLocal(dt), dt.toTimeString().slice(0, 5), p.patientName, p.patientMobile || '', p.categoryText,
-                    p.amount, p.visitTotal, p.visitPaid, p.visitDiscount, p.visitRemaining,
+                    return [fmtDate(dt), dt.toTimeString().slice(0, 5), p.patientName, p.patientMobile || '', p.categoryText,
+                    p.amount, p.visitTotal, p.visitPaid, p.visitDiscount, p.visitRemaining, p.patientTotal, p.patientRemaining,
                     p.methodText, p.receiptNo || '', p.description || ''].map(csvCell).join(',');
                 });
                 const blob = new Blob(['\uFEFF' + [head.map(csvCell).join(','), ...lines].join('\r\n')], { type: 'text/csv;charset=utf-8' });
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
-                a.download = `payments_${state.from}_${state.to}.csv`;
+                a.download = `payments_${fmtDate(state.from).replace(/\//g, '-')}_${fmtDate(state.to).replace(/\//g, '-')}.csv`;
                 document.body.appendChild(a);
                 a.click();
                 a.remove();

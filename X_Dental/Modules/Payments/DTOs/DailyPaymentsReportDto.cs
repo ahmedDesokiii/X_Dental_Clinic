@@ -93,5 +93,9 @@ namespace Dental.Modules.Payments.DTOs
         public decimal VisitDiscount { get; set; }
         public decimal VisitPaid { get; set; }
         public decimal VisitRemaining { get; set; }
+
+        public decimal PatientTotal { get; set; }      // إجمالي مطلوب كل زيارات المريض النشطة
+        public decimal PatientRemaining { get; set; }  // رصيد المريض الكلي
+        public int PatientOpenVisits { get; set; }     // عدد الزيارات اللي عليها باقي
     }
 }

@@ -16,6 +16,10 @@ namespace Dental.Modules.Clinical.ViewModels
         // 📁 تجميع المدفوعات حسب نوع الملف — يتملى بس لو المريض "عام + تقويم"
         public List<CategoryPaymentSummaryDto> CategoryBreakdown { get; set; } = new();
         public bool ShowCategoryBreakdown => Patient.PatientType == PatientType.Both;
+
+        // 💰 متبقي كل الزيارات السابقة للمريض (نفس نوع الزيارة الحالية — من غير الزيارة الحالية)
+        // إجمالي المتبقي على المريض = PreviousBalance + متبقي اليوم
+        public decimal PreviousBalance { get; set; }
     }
 
     public class CategoryPaymentSummaryDto

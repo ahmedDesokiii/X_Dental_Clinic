@@ -907,6 +907,10 @@
                 transition-duration: .01ms !important;
             }
         }
+
+        .swal2-container {
+            z-index: 2000 !important;
+        }
     </style>
 }
 
@@ -1383,59 +1387,73 @@
             });
 
             /* AJAX submit */
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const btn = document.getElementById('pmSaveBtn');
                 const originalHtml = btn.innerHTML;
+                const resetBtn = () => { btn.disabled = false; btn.innerHTML = originalHtml; };
+
                 btn.disabled = true;
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
-
                 pmBackdropEl.querySelectorAll('.invalid-msg').forEach(s => s.style.display = 'none');
 
-                const fd = new FormData(form);
+                try {
+                    const r = await fetch(form.action, {
+                        method: 'POST',
+                        body: new FormData(form),
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
 
-                fetch(form.action, {
-                    method: 'POST',
-                    body: fd,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                })
-                    .then(r => r.json())
-                    .then(res => {
-                        if (res.success) {
-                            closePatientModal();
+                    const raw = await r.text();
+                    let res = null;
+                    try { res = JSON.parse(raw); } catch { /* مش JSON */ }
+                    console.log('Patient save response:', r.status, raw);
+
+                    if (res && res.success) {
+                        closePatientModal();
+                        Swal.fire({
+                            title: 'Success', text: res.message, icon: 'success',
+                            confirmButtonColor: '#0d9488',
+                            timer: 1600, timerProgressBar: true, showConfirmButton: false
+                        }).then(() => {
+                            if (res.redirectUrl) window.location.href = res.redirectUrl;
+                            else $('#tablePatients').DataTable().ajax.reload(null, false);
+                        });
+                        return;
+                    }
+
+                    resetBtn();
+
+                    if (res && res.errors) {
+                        const unmatched = [];
+                        Object.entries(res.errors).forEach(([field, msgs]) => {
+                            const key = field.split('.').pop();
+                            const slot = pmBackdropEl.querySelector(`.invalid-msg[data-for="${key}"]`);
+                            if (slot) { slot.textContent = msgs[0]; slot.style.display = 'block'; }
+                            else unmatched.push(`${key}: ${msgs[0]}`);
+                        });
+                        if (unmatched.length) {
                             Swal.fire({
-                                title: 'Success', text: res.message, icon: 'success',
-                                confirmButtonColor: '#0d9488',
-                                timer: 1600, timerProgressBar: true, showConfirmButton: false
-                            }).then(() => {
-                                if (res.redirectUrl) window.location.href = res.redirectUrl;
-                                else $('#tablePatients').DataTable().ajax.reload(null, false);
-                            });
-                        } else if (res.errors) {
-                            btn.disabled = false;
-                            btn.innerHTML = originalHtml;
-                            Object.entries(res.errors).forEach(([field, msgs]) => {
-                                const slot = pmBackdropEl.querySelector(`.invalid-msg[data-for="${field}"]`);
-                                if (slot) { slot.textContent = msgs[0]; slot.style.display = 'block'; }
-                            });
-                        } else {
-                            closePatientModal();
-                            btn.disabled = false;
-                            btn.innerHTML = originalHtml;
-                            Swal.fire({
-                                title: 'Error', text: res.message || 'Something went wrong',
+                                title: 'Validation', text: unmatched.join(' | '),
                                 icon: 'error', confirmButtonColor: '#0d9488'
                             });
                         }
-                    })
-                    .catch(() => {
-                        btn.disabled = false;
-                        btn.innerHTML = originalHtml;
-                        Swal.fire({
-                            title: 'Error', text: 'Failed to connect to the server',
-                            icon: 'error', confirmButtonColor: '#0d9488'
-                        });
+                        return;
+                    }
+
+                    Swal.fire({
+                        title: 'Error',
+                        text: (res && res.message) || `Server returned ${r.status}: ${raw.slice(0, 150)}`,
+                        icon: 'error', confirmButtonColor: '#0d9488'
                     });
+                } catch (err) {
+                    console.error(err);
+                    resetBtn();
+                    Swal.fire({
+                        title: 'Error', text: 'Failed to connect to the server',
+                        icon: 'error', confirmButtonColor: '#0d9488'
+                    });
+                }
             });
 
             nameInput.focus();

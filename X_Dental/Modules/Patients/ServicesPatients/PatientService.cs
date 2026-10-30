@@ -108,14 +108,14 @@ namespace Dental.Modules.Patients.ServicesPatients
         // ── Create ──
         public async Task<ServiceResult<int>> CreateAsync(CreatePatientDto dto)
         {
-            if (await ExistsMobileAsync(dto.Mobile))
-                return ServiceResult<int>.Fail("رقم الموبايل مسجل بالفعل لمريض آخر.");
+            //if (await ExistsMobileAsync(dto.Mobile))
+            //    return ServiceResult<int>.Fail("رقم الموبايل مسجل بالفعل لمريض آخر.");
 
-            if (!string.IsNullOrWhiteSpace(dto.Phone) && await ExistsPhoneAsync(dto.Phone))
-                return ServiceResult<int>.Fail("رقم التليفون مسجل بالفعل لمريض آخر.");
+            //if (!string.IsNullOrWhiteSpace(dto.Phone) && await ExistsPhoneAsync(dto.Phone))
+            //    return ServiceResult<int>.Fail("رقم التليفون مسجل بالفعل لمريض آخر.");
 
-            if (!string.IsNullOrWhiteSpace(dto.NationalId) && await ExistsNationalIdAsync(dto.NationalId))
-                return ServiceResult<int>.Fail("الرقم القومي مسجل بالفعل لمريض آخر.");
+            //if (!string.IsNullOrWhiteSpace(dto.NationalId) && await ExistsNationalIdAsync(dto.NationalId))
+            //    return ServiceResult<int>.Fail("الرقم القومي مسجل بالفعل لمريض آخر.");
 
             var patient = _mapper.Map<Patient>(dto);
             patient.PatientCode = await GeneratePatientCodeAsync();
@@ -139,14 +139,14 @@ namespace Dental.Modules.Patients.ServicesPatients
             if (patient == null)
                 return ServiceResult<bool>.Fail("Patient not found.");
 
-            if (!string.IsNullOrWhiteSpace(dto.Mobile) && await ExistsMobileAsync(dto.Mobile, dto.Id))
-                return ServiceResult<bool>.Fail("رقم الموبايل مسجل بالفعل لمريض آخر.");
+            //if (!string.IsNullOrWhiteSpace(dto.Mobile) && await ExistsMobileAsync(dto.Mobile, dto.Id))
+            //    return ServiceResult<bool>.Fail("رقم الموبايل مسجل بالفعل لمريض آخر.");
 
-            if (!string.IsNullOrWhiteSpace(dto.Phone) && await ExistsPhoneAsync(dto.Phone, dto.Id))
-                return ServiceResult<bool>.Fail("رقم التليفون مسجل بالفعل لمريض آخر.");
+            //if (!string.IsNullOrWhiteSpace(dto.Phone) && await ExistsPhoneAsync(dto.Phone, dto.Id))
+            //    return ServiceResult<bool>.Fail("رقم التليفون مسجل بالفعل لمريض آخر.");
 
-            if (!string.IsNullOrWhiteSpace(dto.NationalId) && await ExistsNationalIdAsync(dto.NationalId, dto.Id))
-                return ServiceResult<bool>.Fail("الرقم القومي مسجل بالفعل لمريض آخر.");
+            //if (!string.IsNullOrWhiteSpace(dto.NationalId) && await ExistsNationalIdAsync(dto.NationalId, dto.Id))
+            //    return ServiceResult<bool>.Fail("الرقم القومي مسجل بالفعل لمريض آخر.");
 
             // Update basic info
             patient.GenderId = dto.GenderId;
