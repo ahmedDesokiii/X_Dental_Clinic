@@ -99,7 +99,7 @@
             .rx-sheet {
                 width: 170mm;
                 min-height: 250mm;
-                margin: 24px auto;
+                margin: 35px auto;
                 background: #fff;
                 padding: 28mm 14mm 12mm;
                 box-shadow: 0 8px 30px rgba(0,0,0,.12);
@@ -387,14 +387,14 @@
         <!-- الهيدر فاضي تماماً (مفيش عنوان "روشتة طبية")    عشان الورق المطبوع مسبقاً -->
         <!-- 1) QR في المنتصف تحت الهيدر المطبوع على الورق -->
         
-        
+        <br>
         <!-- 2) بيانات المريض -->
         <div class=" border-0">
             <!-- الصف 1: الاسم + العمر -->
             <div class="patient-row border-0 ">
                 <div class="field grow">
                     @* <span class="label">اسم المريض</span> *@
-                    <div class="value">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @(patient?.FullNameAr ?? "—")</div>
+                    <div class="value">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @(patient?.FullNameAr ?? "—")</div>
                 </div>
                 <div class="field grow">
                     <div class="value">@(age.HasValue ? $"{age} سنة" : "—")</div>
@@ -418,18 +418,18 @@
                 </div>
             </div>
         </div>
-        <br><br>
+        
         <br><br>
         <!-- 3) باقي التفاصيل -->
         <!-- التشخيص -->
         @if (!string.IsNullOrWhiteSpace(Model.Diagnosis))
         {
-            <div class="section">
-                <div class="section-label"><i class="bi bi-clipboard2-pulse"></i> التشخيص</div>
-                <div class="diagnosis-text">@Model.Diagnosis</div>
+            <div class="section text-start" dir="ltr" >
+                <div class="section-label "><i class="bi bi-clipboard2-pulse"></i> التشخيص</div>
+                <div class="diagnosis-text ">@Model.Diagnosis</div>
             </div>
         }
-        <br><br>
+        <br>
 
         <!-- الأدوية -->
         <div class="section">
@@ -510,9 +510,6 @@
         </div>
     </div>
 
-    <script>
-            // طباعة تلقائية اختياريًا (احذف السطر لو مش عايز)
-            // window.onload = () => setTimeout(() => window.print(), 400);
-    </script>
+
 </body>
 </html>

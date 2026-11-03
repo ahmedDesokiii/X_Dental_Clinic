@@ -1,6 +1,11 @@
+/*
+USE [X_FamilyDental_DB_v01];
+EXEC dbo.usp_MigrateLegacyClinicData @Commit = 1, @RebuildTeeth = 1;
+*/
+
 USE [X_FamilyDental_DB_v01]
 GO
-/****** Object:  StoredProcedure [dbo].[usp_MigrateLegacyClinicData]    Script Date: 10/25/2026 7:42:28 PM ******/
+/****** Object:  StoredProcedure [dbo].[usp_MigrateLegacyClinicData]    Script Date: 2026-10-31 09:20:28 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -84,7 +89,7 @@ BEGIN
             ORDER BY d.Id DESC
         ) AS rn
     INTO #DiagLegacy
-    FROM [FamilyDB].dbo.Diagonsis_T d;
+    FROM [FAMILYDB].dbo.Diagonsis_T d;
 
     SELECT
         l.*,
@@ -160,7 +165,7 @@ BEGIN
     ;WITH VisitNames AS
     (
         SELECT DISTINCT LTRIM(RTRIM(pt.patient_DiagonsisName)) COLLATE DATABASE_DEFAULT AS Nm
-        FROM [FamilyDB].dbo.Patient_T pt
+        FROM [FAMILYDB].dbo.Patient_T pt
         WHERE NULLIF(LTRIM(RTRIM(pt.patient_DiagonsisName)), N'') IS NOT NULL
     )
     INSERT INTO dbo.DiagnosisCatalogs
@@ -235,7 +240,7 @@ BEGIN
             p.patient_Phone                                     AS Phone,
             ROW_NUMBER() OVER (PARTITION BY p.patient_Code
                                ORDER BY p.patient_SessionDate DESC, p.patient_Id DESC) AS rn
-        FROM [FamilyDB].dbo.Patient_T p
+        FROM [FAMILYDB].dbo.Patient_T p
         WHERE p.patient_Code IS NOT NULL
 
         UNION ALL
@@ -252,7 +257,7 @@ BEGIN
             o.orth_Phone,
             ROW_NUMBER() OVER (PARTITION BY o.orth_Code
                                ORDER BY o.orth_SessionDate DESC, o.orth_Id DESC)
-        FROM [FamilyDB].dbo.Orthodontics_T o
+        FROM [FAMILYDB].dbo.Orthodontics_T o
         WHERE o.orth_Code IS NOT NULL
     ) s
     CROSS APPLY (SELECT REPLACE(s.Phone, N' ', N'') AS CleanPhone) c
@@ -368,7 +373,7 @@ BEGIN
             pt.patient_Code,
             LTRIM(RTRIM(pt.patient_MedicalHistory)) AS HistoryText,
             MIN(pt.patient_SessionDate) AS FirstSeenDate
-        FROM [FamilyDB].dbo.Patient_T pt
+        FROM [FAMILYDB].dbo.Patient_T pt
         WHERE pt.patient_Code IS NOT NULL
           AND NULLIF(LTRIM(RTRIM(pt.patient_MedicalHistory)), N'') IS NOT NULL
         GROUP BY pt.patient_Code, LTRIM(RTRIM(pt.patient_MedicalHistory))
@@ -409,7 +414,7 @@ BEGIN
             pt.patient_MedicalHistory, pt.patient_TeethChart, pt.patient_DiagonsisName,
             pt.patient_DiagonsisDetails, pt.patient_AmountRequired, pt.patient_AmountPaid,
             pt.patient_Discount, pt.patient_Follow
-        FROM [FamilyDB].dbo.Patient_T pt
+        FROM [FAMILYDB].dbo.Patient_T pt
         JOIN @PatientMap m
             ON m.SourceTable = N'Patient_T'
            AND m.LegacyCode  = pt.patient_Code
@@ -471,7 +476,7 @@ BEGIN
     SELECT p.patient_Id, p.patient_Code, p.patient_SessionDate,
            NULLIF(LTRIM(RTRIM(p.patient_TeethChart)), N'') AS TeethChart
     INTO #PT
-    FROM [FamilyDB].dbo.Patient_T p
+    FROM [FAMILYDB].dbo.Patient_T p
     WHERE p.patient_Code IS NOT NULL;
 
     CREATE CLUSTERED INDEX IX_PT_Code ON #PT (patient_Code, patient_SessionDate, patient_Id);
@@ -635,7 +640,7 @@ BEGIN
     (
         SELECT pt.patient_Id, map.NewVisitId, pt.patient_SessionDate, pt.patient_Code,
                pt.patient_DiagonsisName, pt.patient_DiagonsisDetails
-        FROM [FamilyDB].dbo.Patient_T pt
+        FROM [FAMILYDB].dbo.Patient_T pt
         JOIN dbo.Migration_LegacyVisitMap map
             ON map.SourceTable = N'Patient_T'
            AND map.LegacyRowId = pt.patient_Id
@@ -718,7 +723,7 @@ BEGIN
         ISNULL(pt.patient_SessionDate, CAST(GETDATE() AS DATE)),
         GETDATE(), 0,
         ISNULL(pt.patient_Discount, 0)
-    FROM [FamilyDB].dbo.Patient_T pt
+    FROM [FAMILYDB].dbo.Patient_T pt
     JOIN @VisitMap vm ON vm.LegacyPatientRowId = pt.patient_Id
     WHERE ISNULL(pt.patient_AmountPaid, 0) > 0;
 
@@ -739,7 +744,7 @@ BEGIN
         v.VisitDate,
         GETDATE(),
         0
-    FROM [FamilyDB].dbo.Patient_T pt
+    FROM [FAMILYDB].dbo.Patient_T pt
     JOIN dbo.Migration_LegacyVisitMap vm
         ON vm.SourceTable = N'Patient_T'
        AND vm.LegacyRowId = pt.patient_Id
@@ -784,7 +789,7 @@ BEGIN
             pt.patient_SessionNextDate,
             ROW_NUMBER() OVER (PARTITION BY pt.patient_Code
                                ORDER BY pt.patient_SessionNextDate DESC, pt.patient_Id DESC) AS rn
-        FROM [FamilyDB].dbo.Patient_T pt
+        FROM [FAMILYDB].dbo.Patient_T pt
         WHERE pt.patient_Code IS NOT NULL
           AND pt.patient_SessionNextDate >= CAST(GETDATE() AS DATE)
     )
@@ -830,7 +835,7 @@ BEGIN
            o.orth_Discount, o.orth_Follow,
            o.orth_TotalAmount
     INTO #OT
-    FROM [FamilyDB].dbo.Orthodontics_T o
+    FROM [FAMILYDB].dbo.Orthodontics_T o
     WHERE o.orth_Code IS NOT NULL;
 
     CREATE UNIQUE CLUSTERED INDEX IX_OT_Id ON #OT (orth_Id);
@@ -970,17 +975,18 @@ BEGIN
     -- D.2) ⭐ OrthoCases: حالة واحدة لكل مريض تقويم مهاجَر (لو مالوش حالة أصلاً)
     --      ArchType = Both ، Total = أول قيمة مطلوب > 0 بترتيب التاريخ ، Anchor = أول زيارة
     INSERT INTO dbo.OrthoCases
-        (PatientId, ArchType, TotalRequired, AnchorVisitId, StartDate, Status, Notes, IsDeleted)
-    SELECT
-        a.PatientId,
-        @OrthoArchBoth,
-        ISNULL(ft.FirstTotal, 0),
-        a.VisitId,
-        a.VisitDate,
-        @OrthoStatusActive,
-        N'مرحّلة من النظام القديم (Orthodontics_T)',
-        0
-    FROM #OrthoVis a
+    (PatientId, ArchType, TotalRequired, AnchorVisitId, StartDate, Status, Notes, IsDeleted, CreatedDate)
+SELECT
+    a.PatientId,
+    @OrthoArchBoth,
+    ISNULL(ft.FirstTotal, 0),
+    a.VisitId,
+    a.VisitDate,
+    @OrthoStatusActive,
+    N'مرحّلة من النظام القديم (Orthodontics_T)',
+    0,
+    GETDATE()
+FROM #OrthoVis a
     OUTER APPLY
     (
         SELECT TOP (1) x.RequiredAmount AS FirstTotal
@@ -1136,7 +1142,7 @@ BEGIN
     DECLARE @LegacyPaid DECIMAL(18,2) =
           ISNULL((SELECT SUM(CASE WHEN pt.patient_AmountPaid > 0
                                   THEN CAST(pt.patient_AmountPaid AS DECIMAL(18,2)) ELSE 0 END)
-                  FROM [FamilyDB].dbo.Patient_T pt
+                  FROM [FAMILYDB].dbo.Patient_T pt
                   WHERE pt.patient_Code IS NOT NULL), 0)
         + ISNULL((SELECT SUM(CASE WHEN ot.orth_PaidAmount > 0
                                   THEN CAST(ot.orth_PaidAmount AS DECIMAL(18,2)) ELSE 0 END)
@@ -1161,7 +1167,7 @@ BEGIN
 
     INSERT INTO @Checks (Check_, Cnt, IsCritical)
     SELECT N'Patient_T rows NOT migrated (no visit mapping)', COUNT(*), 1
-    FROM [FamilyDB].dbo.Patient_T pt
+    FROM [FAMILYDB].dbo.Patient_T pt
     WHERE NOT EXISTS
     (
         SELECT 1 FROM dbo.Migration_LegacyVisitMap map
@@ -1170,7 +1176,7 @@ BEGIN
 
     INSERT INTO @Checks (Check_, Cnt, IsCritical)
     SELECT N'Orthodontics_T rows NOT migrated (no visit mapping)', COUNT(*), 1
-    FROM [FamilyDB].dbo.Orthodontics_T ot
+    FROM [FAMILYDB].dbo.Orthodontics_T ot
     WHERE NOT EXISTS
     (
         SELECT 1 FROM dbo.Migration_LegacyVisitMap map
@@ -1182,7 +1188,7 @@ BEGIN
     FROM
     (
         SELECT patient_Code, MAX(patient_SessionDate) AS LastLegacy
-        FROM [FamilyDB].dbo.Patient_T
+        FROM [FAMILYDB].dbo.Patient_T
         WHERE patient_Code IS NOT NULL
         GROUP BY patient_Code
     ) l
@@ -1239,7 +1245,7 @@ BEGIN
     -- (تعديل 12) لما @RebuildTeeth = 1 الفحص ده بيغطي كل الزيارات المهاجَرة مش بس اللي اتعملت في الـ run ده
     INSERT INTO @Checks (Check_, Cnt, IsCritical)
     SELECT N'Visits with a diagnosis name but no VisitDiagnoses row', COUNT(*), 1
-    FROM [FamilyDB].dbo.Patient_T pt
+    FROM [FAMILYDB].dbo.Patient_T pt
     JOIN dbo.Migration_LegacyVisitMap vm
         ON vm.SourceTable = N'Patient_T'
        AND vm.LegacyRowId = pt.patient_Id
@@ -1304,15 +1310,15 @@ BEGIN
 
     -- ---- Info ----
     INSERT INTO @Checks (Check_, Cnt, IsCritical)
-    SELECT N'INFO legacy Patient_T rows', COUNT(*), 0 FROM [FamilyDB].dbo.Patient_T
+    SELECT N'INFO legacy Patient_T rows', COUNT(*), 0 FROM [FAMILYDB].dbo.Patient_T
     UNION ALL
-    SELECT N'INFO legacy Orthodontics_T rows', COUNT(*), 0 FROM [FamilyDB].dbo.Orthodontics_T
+    SELECT N'INFO legacy Orthodontics_T rows', COUNT(*), 0 FROM [FAMILYDB].dbo.Orthodontics_T
     UNION ALL
     SELECT N'INFO legacy Patient_T rows with NULL patient_Code (skipped)', COUNT(*), 0
-    FROM [FamilyDB].dbo.Patient_T WHERE patient_Code IS NULL
+    FROM [FAMILYDB].dbo.Patient_T WHERE patient_Code IS NULL
     UNION ALL
     SELECT N'INFO legacy Orthodontics_T rows with NULL orth_Code (skipped)', COUNT(*), 0
-    FROM [FamilyDB].dbo.Orthodontics_T WHERE orth_Code IS NULL
+    FROM [FAMILYDB].dbo.Orthodontics_T WHERE orth_Code IS NULL
     UNION ALL
     SELECT N'INFO legacy total paid', @LegacyPaid, 0
     UNION ALL
@@ -1368,7 +1374,7 @@ BEGIN
     SELECT N'THIS RUN: next-session appointments', @nAppts, 0
     UNION ALL
     SELECT N'INFO visits with a tooth chart but no tooth number parsed (all migrated)', COUNT(*), 0
-    FROM [FamilyDB].dbo.Patient_T pt
+    FROM [FAMILYDB].dbo.Patient_T pt
     JOIN dbo.Migration_LegacyVisitMap vm ON vm.SourceTable = N'Patient_T' AND vm.LegacyRowId = pt.patient_Id
     WHERE NULLIF(LTRIM(RTRIM(pt.patient_TeethChart)), N'') IS NOT NULL
       AND NOT EXISTS (SELECT 1 FROM dbo.DentalChartEntries dce WHERE dce.VisitId = vm.NewVisitId)
@@ -1407,7 +1413,7 @@ BEGIN
     BEGIN
         SELECT N'Patient_T' AS SourceTable, pt.patient_Id AS LegacyRowId,
                pt.patient_Code AS LegacyCode, pt.patient_Name AS LegacyName
-        FROM [FamilyDB].dbo.Patient_T pt
+        FROM [FAMILYDB].dbo.Patient_T pt
         WHERE NOT EXISTS
         (
             SELECT 1 FROM dbo.Migration_LegacyVisitMap map
@@ -1415,7 +1421,7 @@ BEGIN
         )
         UNION ALL
         SELECT N'Orthodontics_T', ot.orth_Id, ot.orth_Code, ot.orth_Name
-        FROM [FamilyDB].dbo.Orthodontics_T ot
+        FROM [FAMILYDB].dbo.Orthodontics_T ot
         WHERE NOT EXISTS
         (
             SELECT 1 FROM dbo.Migration_LegacyVisitMap map
@@ -1448,6 +1454,7 @@ END
 /* =======================================================
 Ortho Diagnoses
 ======================================================= */
+/*
 DECLARE @base INT = ISNULL((SELECT MAX([SortOrder]) FROM [dbo].[OrthoProcedureCatalogs]), 0);
 
 INSERT INTO [dbo].[OrthoProcedureCatalogs] ([NameAr], [NameEn], [IsActive], [SortOrder])
@@ -1467,3 +1474,4 @@ FROM (VALUES
 ) AS v([Ord], [Name])
 ORDER BY v.[Ord];
 GO
+*/
