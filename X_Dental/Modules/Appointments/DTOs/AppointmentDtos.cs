@@ -58,6 +58,9 @@ namespace Dental.Modules.Appointments.DTOs
         public int DurationMinutes { get; set; } = 30;
         public string? Reason { get; set; }
         public string? Notes { get; set; }
+
+        // لو المريض عنده موعد في نفس اليوم، السيرفر بيرجع تحذير؛ الفرونت يبعت true بعد تأكيد المستخدم
+        public bool AllowSameDay { get; set; }
     }
 
     // ── تعديل بيانات الموعد (بدون تغيير الميعاد نفسه) ──

@@ -148,6 +148,34 @@ namespace Dental.Modules.Appointments.ServicesAppointments
                 .ToListAsync();
         }
 
+        // مواعيد المريض الفعّالة في يوم معين (بدون الملغي ولم يحضر) — لتحذير الحجز المكرر في نفس اليوم
+        public async Task<List<AppointmentListDto>> GetPatientDayAppointmentsAsync(int patientId, DateTime date)
+        {
+            var dayStart = date.Date;
+            var dayEnd = dayStart.AddDays(1);
+
+            return await _context.Appointments
+                .AsNoTracking()
+                .Include(a => a.Patient)
+                .Where(a => a.PatientId == patientId
+                            && _blockingStatuses.Contains(a.Status)
+                            && a.AppointmentDate >= dayStart && a.AppointmentDate < dayEnd)
+                .OrderBy(a => a.AppointmentDate)
+                .Select(a => new AppointmentListDto
+                {
+                    Id = a.Id,
+                    PatientId = a.PatientId,
+                    PatientName = a.Patient.FullNameAr,
+                    PatientMobile = a.Patient.Mobile,
+                    AppointmentDate = a.AppointmentDate,
+                    DurationMinutes = (int)a.Duration.TotalMinutes,
+                    Status = a.Status,
+                    StatusText = GetStatusText(a.Status),
+                    Reason = a.Reason
+                })
+                .ToListAsync();
+        }
+
         public async Task<ServiceResult<AppointmentDetailsDto>> GetByIdAsync(int id)
         {
             var appointment = await _context.Appointments

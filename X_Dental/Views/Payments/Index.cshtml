@@ -1065,6 +1065,32 @@
             color: #6d28d9;
         }
 
+    /* ⭐ المرحلة 5 — دفعة موزعة على أكتر من زيارة / خصم مع الدفعة */
+
+    .dp-split {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        margin-inline-start: 6px;
+        vertical-align: middle;
+        font-size: .66rem;
+        font-weight: 800;
+        color: #4338ca;
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+        padding: 1px 7px;
+        border-radius: 8px;
+        white-space: nowrap;
+        cursor: help;
+    }
+
+        .dp-split.disc {
+            color: #b45309;
+            background: #fffbeb;
+            border-color: #fde68a;
+        }
+
+
     .dp-amount {
         font-weight: 800 !important;
         color: var(--dp-paid) !important;
@@ -1946,7 +1972,7 @@
         // ══════════════════════════════════════════════
         // ⭐ Daily Payments Dashboard
         // ══════════════════════════════════════════════
-        (function() {
+        (function () {
             const PAGE = 12;
             const REFRESH_MS = 60000;
             const DONUT_C = 2 * Math.PI * 54;
@@ -2234,13 +2260,13 @@
                 wrap.classList.remove('ready');
                 wrap.style.gap = buckets.length > 20 ? '2px' : '6px';
                 wrap.innerHTML = buckets.map((b, i) => `
-                            <div class="dp-bar-col ${b.isToday ? 'is-today' : ''}" data-i="${i}" style="--i:${i}">
-                                <div class="dp-bar-stack">
-                                    <div class="dp-bar-seg general ${b.ortho === 0 ? 'solo' : ''}" style="--h:${b.general / max * 100}%"></div>
-                                    <div class="dp-bar-seg ortho" style="--h:${b.ortho / max * 100}%"></div>
-                                </div>
-                                <span class="dp-bar-label">${i % step === 0 ? b.label : ''}</span>
-                            </div>`).join('');
+                                    <div class="dp-bar-col ${b.isToday ? 'is-today' : ''}" data-i="${i}" style="--i:${i}">
+                                        <div class="dp-bar-stack">
+                                            <div class="dp-bar-seg general ${b.ortho === 0 ? 'solo' : ''}" style="--h:${b.general / max * 100}%"></div>
+                                            <div class="dp-bar-seg ortho" style="--h:${b.ortho / max * 100}%"></div>
+                                        </div>
+                                        <span class="dp-bar-label">${i % step === 0 ? b.label : ''}</span>
+                                    </div>`).join('');
                 void wrap.offsetWidth;
                 requestAnimationFrame(() => wrap.classList.add('ready'));
             }
@@ -2254,11 +2280,11 @@
                 const b = state.buckets[+col.dataset.i];
                 if (!b) return;
                 tip.innerHTML = `
-                            <div class="tt-h">${esc(b.title)}</div>
-                            <div class="tt-r"><span><i style="background:var(--dp-general)"></i> عام</span><b>${fmt(b.general)}</b></div>
-                            <div class="tt-r"><span><i style="background:var(--dp-ortho)"></i> تقويم</span><b>${fmt(b.ortho)}</b></div>
-                            <div class="tt-r"><span>الإجمالي</span><b>${fmt(b.general + b.ortho)} ج.م</b></div>
-                            <div class="tt-r"><span>عدد الدفعات</span><b>${fmtInt(b.count)}</b></div>`;
+                                    <div class="tt-h">${esc(b.title)}</div>
+                                    <div class="tt-r"><span><i style="background:var(--dp-general)"></i> عام</span><b>${fmt(b.general)}</b></div>
+                                    <div class="tt-r"><span><i style="background:var(--dp-ortho)"></i> تقويم</span><b>${fmt(b.ortho)}</b></div>
+                                    <div class="tt-r"><span>الإجمالي</span><b>${fmt(b.general + b.ortho)} ج.م</b></div>
+                                    <div class="tt-r"><span>عدد الدفعات</span><b>${fmtInt(b.count)}</b></div>`;
                 tip.classList.add('show');
                 const off = 14, r = tip.getBoundingClientRect();
                 let x = e.clientX + off, y = e.clientY + off;
@@ -2325,14 +2351,14 @@
                 wrap.innerHTML = d.byMethod.map((m, i) => {
                     const p = pct(m.amount, d.totalAmount);
                     return `
-                                <div class="dp-method" style="--i:${i}">
-                                    <div class="dp-method-icon"><i class="bi ${METHOD_ICONS[m.method] || 'bi-wallet2'}"></i></div>
-                                    <div class="dp-method-body">
-                                        <div class="dp-method-top"><span>${esc(m.methodText)}</span><b>${fmt(m.amount)}</b></div>
-                                        <div class="dp-method-track"><div class="dp-method-fill" data-w="${p}"></div></div>
-                                        <div class="dp-method-meta">${fmtInt(m.count)} دفعة · ${p.toFixed(1)}%</div>
-                                    </div>
-                                </div>`;
+                                        <div class="dp-method" style="--i:${i}">
+                                            <div class="dp-method-icon"><i class="bi ${METHOD_ICONS[m.method] || 'bi-wallet2'}"></i></div>
+                                            <div class="dp-method-body">
+                                                <div class="dp-method-top"><span>${esc(m.methodText)}</span><b>${fmt(m.amount)}</b></div>
+                                                <div class="dp-method-track"><div class="dp-method-fill" data-w="${p}"></div></div>
+                                                <div class="dp-method-meta">${fmtInt(m.count)} دفعة · ${p.toFixed(1)}%</div>
+                                            </div>
+                                        </div>`;
                 }).join('');
                 wrap.querySelectorAll('.dp-method-fill').forEach(f => setWidthAnimated(f, f.dataset.w));
             }
@@ -2354,7 +2380,7 @@
             });
 
             let dpSearchTimer;
-            $('dpSearch').addEventListener('input', function() {
+            $('dpSearch').addEventListener('input', function () {
                 clearTimeout(dpSearchTimer);
                 dpSearchTimer = setTimeout(() => {
                     state.term = this.value.trim().toLowerCase();
@@ -2394,23 +2420,35 @@
                         ? `<span class="dp-remain due">${fmt(p.visitRemaining)}</span>`
                         : `<span class="dp-remain done"><i class="bi bi-check2-circle"></i> مسدد</span>`);
                 return `
-                        <tr class="${state.newIds.has(p.id) ? 'dp-row-new' : ''}" style="animation-delay:${Math.min(i * 0.03, 0.3)}s" title="${esc(p.receiptNo ? 'إيصال: ' + p.receiptNo : '')}">
-                            <td class="dp-when">${when}</td>
-                            <td>
-                                <a class="dp-patient" href="/Payments/Statement?patientId=${p.patientId}">
-                                    <span class="dp-avatar ${cls}">${esc((p.patientName || '?').trim().charAt(0))}</span>
-                                    <span><b>${esc(p.patientName)}</b><small>${esc(p.patientMobile || '')}</small></span>
-                                </a>
-                            </td>
-                            <td><span class="dp-cat ${cls}">${esc(p.categoryText)}</span></td>
-                            <td class="dp-amount">${fmt(p.amount)}</td>
-                            <td class="dp-num grp">${p.isOrtho ? '—' : fmt(p.visitTotal)}</td>
-                            <td class="dp-num dp-paid">${fmt(p.visitPaid)}</td>
-                            <td class="dp-num dp-disc">${p.visitDiscount > 0 ? fmt(p.visitDiscount) : '—'}</td>
-                            <td>${remain}${p.isOrtho ? '' : `<div class="dp-settle" title="نسبة السداد ${Math.round(settle)}%"><i style="width:${settle}%"></i></div>`}</td>
-                            <td class="grp">${patientBalanceHtml(p)}</td>
-                            <td class="grp"><span class="dp-method-pill"><i class="bi ${METHOD_ICONS[p.method] || 'bi-wallet2'}"></i> ${esc(p.methodText)}</span></td>
-                        </tr>`;
+                                <tr class="${state.newIds.has(p.id) ? 'dp-row-new' : ''}" style="animation-delay:${Math.min(i * 0.03, 0.3)}s" title="${esc(p.receiptNo ? 'إيصال: ' + p.receiptNo : '')}">
+                                    <td class="dp-when">${when}</td>
+                                    <td>
+                                        <a class="dp-patient" href="/Payments/Statement?patientId=${p.patientId}">
+                                            <span class="dp-avatar ${cls}">${esc((p.patientName || '?').trim().charAt(0))}</span>
+                                            <span><b>${esc(p.patientName)}</b><small>${esc(p.patientMobile || '')}</small></span>
+                                        </a>
+                                    </td>
+                                    <td><span class="dp-cat ${cls}">${esc(p.categoryText)}</span></td>
+                                    <td class="dp-amount">${fmt(p.amount)}${splitBadgeHtml(p)}</td>
+                                    <td class="dp-num grp">${p.isOrtho ? '—' : fmt(p.visitTotal)}</td>
+                                    <td class="dp-num dp-paid">${fmt(p.visitPaid)}</td>
+                                    <td class="dp-num dp-disc">${p.visitDiscount > 0 ? fmt(p.visitDiscount) : '—'}</td>
+                                    <td>${remain}${p.isOrtho ? '' : `<div class="dp-settle" title="نسبة السداد ${Math.round(settle)}%"><i style="width:${settle}%"></i></div>`}</td>
+                                    <td class="grp">${patientBalanceHtml(p)}</td>
+                                    <td class="grp"><span class="dp-method-pill"><i class="bi ${METHOD_ICONS[p.method] || 'bi-wallet2'}"></i> ${esc(p.methodText)}</span></td>
+                                </tr>`;
+            }
+
+            // ⭐ المرحلة 5 — الإيصال الواحد سطر واحد: badge لو اتوزع على أكتر من زيارة، وخصم لو اتسجل معاه
+            function splitBadgeHtml(p) {
+                let html = '';
+                if ((p.partsCount || 1) > 1) {
+                    const tip = (p.parts || []).map(x => `${fmtDate(new Date(x.visitDate))}: ${fmt(x.amount)}`).join(' · ');
+                    html += `<span class="dp-split" title="${esc('موزعة على: ' + tip)}"><i class="bi bi-diagram-3"></i> ${fmtInt(p.partsCount)} زيارات</span>`;
+                }
+                if (Number(p.discount || 0) > 0)
+                    html += `<span class="dp-split disc" title="خصم مسجّل مع الدفعة"><i class="bi bi-percent"></i> ${fmt(p.discount)}</span>`;
+                return html;
             }
 
             // ⭐ رصيد المريض الكلي (كل زياراته النشطة) — بيوضح لو فيه باقي على زيارات تانية غير اللي اتدفع عليها
@@ -2443,12 +2481,12 @@
                     Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'مفيش دفعات للتصدير', showConfirmButton: false, timer: 1500 });
                     return;
                 }
-                const head = ['التاريخ', 'الوقت', 'المريض', 'الموبايل', 'النوع', 'الدفعة', 'المطلوب', 'المدفوع', 'الخصم', 'باقي الزيارة', 'إجمالي مطلوب المريض', 'رصيد المريض', 'طريقة الدفع', 'رقم الإيصال', 'ملاحظات'];
+                const head = ['التاريخ', 'الوقت', 'المريض', 'الموبايل', 'النوع', 'الدفعة', 'المطلوب', 'المدفوع', 'الخصم', 'باقي الزيارة', 'إجمالي مطلوب المريض', 'رصيد المريض', 'طريقة الدفع', 'رقم الإيصال', 'ملاحظات', 'عدد الزيارات', 'خصم الدفعة'];
                 const lines = state.filtered.map(p => {
                     const dt = new Date(p.paymentDate);
                     return [fmtDate(dt), dt.toTimeString().slice(0, 5), p.patientName, p.patientMobile || '', p.categoryText,
                     p.amount, p.visitTotal, p.visitPaid, p.visitDiscount, p.visitRemaining, p.patientTotal, p.patientRemaining,
-                    p.methodText, p.receiptNo || '', p.description || ''].map(csvCell).join(',');
+                    p.methodText, p.receiptNo || '', p.description || '', p.partsCount || 1, p.discount || 0].map(csvCell).join(',');
                 });
                 const blob = new Blob(['\uFEFF' + [head.map(csvCell).join(','), ...lines].join('\r\n')], { type: 'text/csv;charset=utf-8' });
                 const a = document.createElement('a');

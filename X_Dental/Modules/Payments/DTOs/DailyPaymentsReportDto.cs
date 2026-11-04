@@ -94,8 +94,21 @@ namespace Dental.Modules.Payments.DTOs
         public decimal VisitPaid { get; set; }
         public decimal VisitRemaining { get; set; }
 
+        // ⭐ المرحلة 5 — الدفعة كإيصال واحد: عدد الزيارات اللي اتوزعت عليها + الخصم المسجّل معاها
+        public int PartsCount { get; set; } = 1;
+        public decimal Discount { get; set; }
+        public List<DailyPaymentPartDto> Parts { get; set; } = new();
+
         public decimal PatientTotal { get; set; }      // إجمالي مطلوب كل زيارات المريض النشطة
         public decimal PatientRemaining { get; set; }  // رصيد المريض الكلي
         public int PatientOpenVisits { get; set; }     // عدد الزيارات اللي عليها باقي
+    }
+
+    // ⭐ المرحلة 5 — جزء من إيصال اتوزع على زيارة معينة
+    public class DailyPaymentPartDto
+    {
+        public int VisitId { get; set; }
+        public DateTime VisitDate { get; set; }
+        public decimal Amount { get; set; }
     }
 }

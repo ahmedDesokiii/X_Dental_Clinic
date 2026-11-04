@@ -14,6 +14,7 @@ namespace Dental.Modules.Appointments.InterfacesAppointments
         Task<List<AppointmentListDto>> GetTodayAsync();
         Task<List<AppointmentListDto>> GetUpcomingByPatientAsync(int patientId, int take = 10);
         Task<ServiceResult<AppointmentDetailsDto>> GetByIdAsync(int id);
+        Task<List<AppointmentListDto>> GetPatientDayAppointmentsAsync(int patientId, DateTime date);
 
         // ── فحص التعارض ──
         Task<bool> HasConflictAsync(DateTime appointmentDate, int durationMinutes, int? excludeId = null);

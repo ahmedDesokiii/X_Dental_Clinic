@@ -28,7 +28,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(
     options => options.UseSqlServer(connectionString));
 
-builder.Services.AddAutoMapper(cfg =>{}, typeof(Program).Assembly);
+builder.Services.AddAutoMapper(cfg => { }, typeof(Program).Assembly);
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 #region Validation
 
@@ -106,8 +106,9 @@ builder.Services.AddScoped<IDiagnosisService, DiagnosisService>();
 builder.Services.AddScoped<ILaboratoryService, LaboratoryService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 
-builder.Services.AddScoped<IClinicalRecordService,ClinicalRecordService>();
+builder.Services.AddScoped<IClinicalRecordService, ClinicalRecordService>();
 builder.Services.AddScoped<IOrthoService, OrthoService>();
+builder.Services.AddScoped<IVisitNoteService, VisitNoteService>();   // ⭐ المرحلة 2 — ملاحظات المتابعة
 #endregion
 builder.Services.AddHttpClient();
 

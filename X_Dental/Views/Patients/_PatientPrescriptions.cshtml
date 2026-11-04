@@ -1,4 +1,13 @@
-<div class="pp-shell" data-patient-id="@ViewBag.CurrentPatientId">
+@{
+    // ⭐ المرحلة 3 — نفس المودال بيشتغل في Details وفي السيشن:
+    //   RxPatientId : رقم المريض (الافتراضي ViewBag.CurrentPatientId بتاع Details)
+    //   RxVisitId   : لو متحدد → الروشتة بتتسجل على الزيارة دي مباشرة (السيشن الحالي)
+    //   RxModalOnly : true → المودال بس من غير قائمة الروشتات (السيشن)
+    var rxPatientId = ViewData["RxPatientId"] as int? ?? (int)(ViewBag.CurrentPatientId ?? 0);
+    var rxVisitId = ViewData["RxVisitId"] as int?;
+    var rxModalOnly = ViewData["RxModalOnly"] as bool? ?? false;
+}
+<div class="pp-shell" data-patient-id="@rxPatientId" @(rxModalOnly ? "hidden" : "")>
     <div class="pp-toolbar">
         <div class="pp-title"><i class="bi bi-file-medical"></i> <span id="ppCount">Prescriptions</span></div>
         <button class="pp-btn-add" onclick="openPpModal()">
@@ -81,7 +90,12 @@
         </div>
         <div class="pp-modal-foot">
             <button class="pp-btn pp-btn-cancel" onclick="closePpModal()">Cancel</button>
-            <button class="pp-btn pp-btn-save" id="btnSavePp" onclick="submitPpPrescription()">Save Prescription</button>
+            <button class="pp-btn pp-btn-save-only" id="btnSavePp" onclick="submitPpPrescription(false)">
+                <i class="bi bi-check2"></i> <span>Save</span>
+            </button>
+            <button class="pp-btn pp-btn-save" id="btnSavePrintPp" onclick="submitPpPrescription(true)">
+                <i class="bi bi-printer"></i> <span>Save &amp; Print</span>
+            </button>
         </div>
     </div>
 </div>
@@ -558,6 +572,27 @@
         color: #475569;
     }
 
+    .pp-btn-save-only {
+        background: #fff;
+        color: #db2777;
+        border: 1.5px solid #f9a8d4 !important;
+    }
+
+        .pp-btn-save-only:hover {
+            background: #fdf2f8;
+        }
+
+        .pp-btn-save-only:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+        }
+
+    .pp-btn-save, .pp-btn-save-only {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
     .pp-btn-save {
         background: linear-gradient(135deg, #ec4899, #db2777);
         color: #fff;
@@ -593,8 +628,10 @@
 </style>
 
 <script>
-    (function() {
-        const patientId = @(ViewBag.CurrentPatientId ?? 0);
+    (function () {
+        const patientId = @rxPatientId;
+        const fixedVisitId = @(rxVisitId?.ToString() ?? "null");          // السيشن: الزيارة الحالية
+        const modalOnly = @(rxModalOnly ? "true" : "false");
         let ppVisits = [];
         let ppPrescriptions = [];
         let ppMedications = [];
@@ -654,32 +691,32 @@
             empty.style.display = 'none';
 
             list.innerHTML = ppPrescriptions.map(rx => `
-                    <div class="pp-card">
-                        <div class="pp-card-head">
-                            <div class="pp-date"><i class="bi bi-calendar3"></i> ${new Date(rx.prescriptionDate).toLocaleDateString('en-GB')}</div>
-                            <span class="pp-visit-badge">${rx.visitCategory} — ${new Date(rx.visitDate).toLocaleDateString('en-GB')}</span>
-                            <div class="pp-status ${rx.status.toLowerCase()}">${statusLabel(rx.status)}</div>
-                        </div>
-                        ${rx.diagnosis ? `<div class="pp-diagnosis"><strong>التشخيص:</strong> ${rx.diagnosis}</div>` : ''}
-                        <div class="pp-items">
-                            ${rx.items.map(item => `
-                                <div class="pp-item">
-                                    <div class="pp-drug-name"><i class="bi bi-capsule"></i> ${item.medicationName} <span class="pp-dosage">${item.dosage || ''}</span></div>
-                                    <div class="pp-instructions">
-                                        ${item.frequency ? `<span class="pp-chip"><i class="bi bi-clock"></i> ${item.frequency}</span>` : ''}
-                                        ${item.duration ? `<span class="pp-chip"><i class="bi bi-calendar-week"></i> ${item.duration}</span>` : ''}
-                                        ${item.instructions ? `<span class="pp-chip info"><i class="bi bi-info-circle"></i> ${item.instructions}</span>` : ''}
+                        <div class="pp-card">
+                            <div class="pp-card-head">
+                                <div class="pp-date"><i class="bi bi-calendar3"></i> ${new Date(rx.prescriptionDate).toLocaleDateString('en-GB')}</div>
+                                <span class="pp-visit-badge">${rx.visitCategory} — ${new Date(rx.visitDate).toLocaleDateString('en-GB')}</span>
+                                <div class="pp-status ${rx.status.toLowerCase()}">${statusLabel(rx.status)}</div>
+                            </div>
+                            ${rx.diagnosis ? `<div class="pp-diagnosis"><strong>التشخيص:</strong> ${rx.diagnosis}</div>` : ''}
+                            <div class="pp-items">
+                                ${rx.items.map(item => `
+                                    <div class="pp-item">
+                                        <div class="pp-drug-name"><i class="bi bi-capsule"></i> ${item.medicationName} <span class="pp-dosage">${item.dosage || ''}</span></div>
+                                        <div class="pp-instructions">
+                                            ${item.frequency ? `<span class="pp-chip"><i class="bi bi-clock"></i> ${item.frequency}</span>` : ''}
+                                            ${item.duration ? `<span class="pp-chip"><i class="bi bi-calendar-week"></i> ${item.duration}</span>` : ''}
+                                            ${item.instructions ? `<span class="pp-chip info"><i class="bi bi-info-circle"></i> ${item.instructions}</span>` : ''}
+                                        </div>
                                     </div>
-                                </div>
-                            `).join('')}
+                                `).join('')}
+                            </div>
+                            ${rx.notes ? `<div class="pp-footer">${rx.notes}</div>` : ''}
+                            <div class="pp-actions-bar">
+                                <span class="pp-by"><i class="bi bi-person-badge"></i> د. ${rx.prescribedBy || ''}</span>
+                                <button class="pp-btn-print" onclick="printPp(${rx.id})"><i class="bi bi-printer"></i> طباعة</button>
+                            </div>
                         </div>
-                        ${rx.notes ? `<div class="pp-footer">${rx.notes}</div>` : ''}
-                        <div class="pp-actions-bar">
-                            <span class="pp-by"><i class="bi bi-person-badge"></i> د. ${rx.prescribedBy || ''}</span>
-                            <button class="pp-btn-print" onclick="printPp(${rx.id})"><i class="bi bi-printer"></i> طباعة</button>
-                        </div>
-                    </div>
-                `).join('');
+                    `).join('');
         }
 
         async function loadPpMedications() {
@@ -723,7 +760,7 @@
             return html;
         }
 
-        window.onPpDrugSelected = function(selectEl) {
+        window.onPpDrugSelected = function (selectEl) {
             const opt = selectEl.selectedOptions[0];
             const row = selectEl.closest('.pp-item-row');
             if (!row || !opt || !opt.value) return;
@@ -742,37 +779,37 @@
 
         function getPpDrugRowHtml(idx) {
             return `
-                <div class="pp-item-row" data-index="${idx}">
-                    <span class="pp-item-count">${idx + 1}</span>
-                    <div class="pp-row-5">
-                        <div class="form-group">
-                            <label>Medication <span class="text-danger">*</span></label>
-                            <select class="pp-input pp-drug-select" onchange="onPpDrugSelected(this)">${ppDrugOptionsHtml}</select>
+                    <div class="pp-item-row" data-index="${idx}">
+                        <span class="pp-item-count">${idx + 1}</span>
+                        <div class="pp-row-5">
+                            <div class="form-group">
+                                <label>Medication <span class="text-danger">*</span></label>
+                                <select class="pp-input pp-drug-select" onchange="onPpDrugSelected(this)">${ppDrugOptionsHtml}</select>
+                            </div>
+                            <div class="form-group">
+                                <label>Dosage</label>
+                                <input type="text" class="pp-input pp-drug-dosage" placeholder="500mg" />
+                            </div>
+                            <div class="form-group">
+                                <label>Frequency</label>
+                                <input type="text" class="pp-input pp-drug-freq" placeholder="3 times daily" />
+                            </div>
+                            <div class="form-group">
+                                <label>Duration</label>
+                                <input type="text" class="pp-input pp-drug-duration" placeholder="7 days" />
+                            </div>
+                            <div class="form-group">
+                                <label>Instructions</label>
+                                <input type="text" class="pp-input pp-drug-instr" placeholder="After meals..." />
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>Dosage</label>
-                            <input type="text" class="pp-input pp-drug-dosage" placeholder="500mg" />
-                        </div>
-                        <div class="form-group">
-                            <label>Frequency</label>
-                            <input type="text" class="pp-input pp-drug-freq" placeholder="3 times daily" />
-                        </div>
-                        <div class="form-group">
-                            <label>Duration</label>
-                            <input type="text" class="pp-input pp-drug-duration" placeholder="7 days" />
-                        </div>
-                        <div class="form-group">
-                            <label>Instructions</label>
-                            <input type="text" class="pp-input pp-drug-instr" placeholder="After meals..." />
-                        </div>
-                    </div>
-                    <button type="button" class="pp-item-remove" onclick="removePpDrugRow(this)" title="Remove">
-                        <i class="bi bi-trash3"></i>
-                    </button>
-                </div>`;
+                        <button type="button" class="pp-item-remove" onclick="removePpDrugRow(this)" title="Remove">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </div>`;
         }
 
-        window.addPpDrugRow = function() {
+        window.addPpDrugRow = function () {
             const container = document.getElementById('ppItemsEditor');
             const div = document.createElement('div');
             div.innerHTML = getPpDrugRowHtml(ppDrugIndex++);
@@ -780,7 +817,7 @@
             renumberPpRows();
         };
 
-        window.removePpDrugRow = function(btn) {
+        window.removePpDrugRow = function (btn) {
             const rows = document.querySelectorAll('#ppItemsEditor .pp-item-row');
             const row = btn.closest('.pp-item-row');
             if (rows.length <= 1) {
@@ -792,7 +829,15 @@
             renumberPpRows();
         };
 
-        window.openPpModal = function() {
+        window.openPpModal = function () {
+            // ⭐ في السيشن: الروشتة على الزيارة الحالية مباشرة
+            if (fixedVisitId) {
+                ppTargetVisitId = fixedVisitId;
+                document.getElementById('ppVisitInfo').textContent = `Current session — ${new Date().toLocaleDateString('en-GB')}`;
+                document.getElementById('ppModal').style.display = 'flex';
+                if (!ppMedicationsLoaded) loadPpMedications();
+                return;
+            }
             if (!ppVisits.length) {
                 Swal.fire({ title: 'No Visits', text: 'This patient has no recorded visits yet — a visit is required before adding a prescription.', icon: 'warning' });
                 return;
@@ -807,7 +852,7 @@
             if (!ppMedicationsLoaded) loadPpMedications();
         };
 
-        window.closePpModal = function() {
+        window.closePpModal = function () {
             document.getElementById('ppModal').style.display = 'none';
             document.getElementById('ppItemsEditor').innerHTML = getPpDrugRowHtml(0);
             ppDrugIndex = 1;
@@ -816,7 +861,7 @@
             renumberPpRows();
         };
 
-        window.submitPpPrescription = async function() {
+        window.submitPpPrescription = async function (andPrint) {
             if (!ppTargetVisitId) {
                 Swal.fire({ title: 'Error', text: 'No target visit determined.', icon: 'error' });
                 return;
@@ -850,9 +895,20 @@
                 PrescribedBy: '@(User.Identity?.Name ?? "System")'
             };
 
-            const btn = document.getElementById('btnSavePp');
-            btn.disabled = true;
-            btn.textContent = 'Saving...';
+            const btnSave = document.getElementById('btnSavePp');
+            const btnPrint = document.getElementById('btnSavePrintPp');
+            const activeBtn = andPrint ? btnPrint : btnSave;
+            const activeLabel = activeBtn.querySelector('span');
+            const originalLabel = activeLabel.textContent;
+            btnSave.disabled = btnPrint.disabled = true;
+            activeLabel.textContent = 'Saving...';
+
+            // ⭐ نفتح نافذة الطباعة فورًا مع الضغطة (قبل الـ await) عشان المتصفح ميعتبرهاش popup ويمنعها
+            let printWin = null;
+            if (andPrint) {
+                printWin = window.open('', '_blank');
+                if (printWin) printWin.document.write('<p style="font-family:Tahoma;text-align:center;margin-top:40px;color:#64748b">جاري تجهيز الروشتة للطباعة...</p>');
+            }
 
             try {
                 const res = await fetch('/Clinical/AddPrescription', {
@@ -862,23 +918,41 @@
                 });
                 const result = await res.json();
                 if (result.success) {
-                    Swal.fire({ title: 'Saved', text: 'Prescription saved successfully', icon: 'success', timer: 1500, showConfirmButton: false });
+                    const rxId = result.data;
+                    if (andPrint) {
+                        const url = `/Clinical/PrintPrescription?id=${rxId}&autoprint=1`;
+                        if (printWin && !printWin.closed) printWin.location.href = url;
+                        else window.open(url, '_blank');
+                    }
+                    Swal.fire({
+                        toast: true, position: 'top-end', icon: 'success',
+                        title: andPrint ? 'Prescription saved — opening print' : 'Prescription saved',
+                        showConfirmButton: false, timer: 1800
+                    });
                     closePpModal();
-                    loadPatientPrescriptions();
+                    if (!modalOnly) loadPatientPrescriptions();
+                    if (typeof window.onPrescriptionSaved === 'function') window.onPrescriptionSaved(rxId);
                 } else {
+                    if (printWin) printWin.close();
                     Swal.fire({ title: 'Could not save', text: result.message || 'An unexpected error occurred', icon: 'error' });
                 }
             } catch (err) {
+                if (printWin) printWin.close();
                 Swal.fire({ title: 'Error', text: 'Could not connect to the server', icon: 'error' });
             } finally {
-                btn.disabled = false;
-                btn.textContent = 'Save Prescription';
+                btnSave.disabled = btnPrint.disabled = false;
+                activeLabel.textContent = originalLabel;
             }
         };
 
-        window.printPp = function(id) { window.open(`/Clinical/PrintPrescription?id=${id}`, '_blank'); };
+        window.printPp = function (id) { window.open(`/Clinical/PrintPrescription?id=${id}`, '_blank'); };
 
         window.loadPatientPrescriptions = loadPatientPrescriptions;
-        document.addEventListener('DOMContentLoaded', loadPatientPrescriptions);
+        if (!modalOnly) document.addEventListener('DOMContentLoaded', loadPatientPrescriptions);
+
+        // Esc يقفل المودال
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && document.getElementById('ppModal').style.display === 'flex') closePpModal();
+        });
     })();
 </script>

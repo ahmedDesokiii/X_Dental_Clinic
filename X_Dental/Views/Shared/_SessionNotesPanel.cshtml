@@ -1,0 +1,520 @@
+@model Dental.Modules.Clinical.ViewModels.SessionViewModel
+@* ============================================================
+   📁 Views/Shared/_SessionNotesPanel.cshtml  (ملف جديد — المرحلة 2)
+   ملاحظات المتابعة: للزيارات اللي مفيهاش تشخيص جديد.
+   الملاحظة بتتحفظ فورًا على الزيارة الحالية، واختياريًا بتتربط بتشخيص سابق.
+   ============================================================ *@
+
+<div class="sn-wrap" id="sessionNotesRoot"
+     data-patient-id="@Model.Patient.Id"
+     data-visit-id="@Model.Visit.Id">
+
+    <div class="section-head">
+        <h4><i class="bi bi-journal-medical"></i> ملاحظات المتابعة</h4>
+        <span class="section-badge" id="snCountBadge">0 ملاحظة</span>
+    </div>
+
+    <!-- ===== Composer ===== -->
+    <div class="sn-composer" id="snComposer">
+        <div class="sn-composer-top">
+            <span class="sn-mode" id="snModeLabel"><i class="bi bi-plus-circle"></i> ملاحظة جديدة على زيارة اليوم</span>
+            <button type="button" class="sn-cancel-edit" id="snCancelEdit" onclick="SessionNotes.cancelEdit()" hidden>
+                <i class="bi bi-x-lg"></i> إلغاء التعديل
+            </button>
+        </div>
+
+        <div class="sn-text-wrap">
+            <textarea id="snText" class="sn-text" rows="3" maxlength="2000"
+                      placeholder="اكتب ملاحظة المتابعة... (مثال: الحالة مستقرة، لا يوجد ألم بعد الحشو)"></textarea>
+            <span class="sn-counter" id="snCounter">0 / 2000</span>
+        </div>
+
+        <div class="sn-chips" id="snChips">
+            <button type="button" class="sn-chip" data-text="الحالة مستقرة">الحالة مستقرة</button>
+            <button type="button" class="sn-chip" data-text="تحسن ملحوظ">تحسن ملحوظ</button>
+            <button type="button" class="sn-chip" data-text="لا يوجد ألم">لا يوجد ألم</button>
+            <button type="button" class="sn-chip" data-text="ألم خفيف عند الضغط">ألم خفيف عند الضغط</button>
+            <button type="button" class="sn-chip" data-text="التئام جيد">التئام جيد</button>
+            <button type="button" class="sn-chip" data-text="يحتاج متابعة أخرى">يحتاج متابعة أخرى</button>
+        </div>
+
+        <!-- ربط بتشخيص سابق -->
+        <div class="sn-link">
+            <label class="sn-link-label"><i class="bi bi-link-45deg"></i> ربط بتشخيص سابق <small>(اختياري)</small></label>
+
+            <div class="sn-link-selected" id="snLinkSelected" hidden>
+                <div class="sn-link-selected-body" id="snLinkSelectedBody"></div>
+                <button type="button" class="sn-link-clear" title="إلغاء الربط" onclick="SessionNotes.clearLink()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="sn-picker" id="snPicker">
+                <div class="sn-picker-search">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="snPickerSearch" placeholder="ابحث برقم السن أو اسم التشخيص..." autocomplete="off" />
+                </div>
+                <div class="sn-picker-list custom-scroll" id="snPickerList">
+                    <div class="sn-empty-sm">جاري التحميل...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sn-actions">
+            <span class="sn-hint"><i class="bi bi-keyboard"></i> Ctrl + Enter للحفظ</span>
+            <button type="button" class="sn-save" id="snSaveBtn" onclick="SessionNotes.save()">
+                <i class="bi bi-check2-circle"></i> <span id="snSaveLabel">حفظ الملاحظة</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ===== Timeline ===== -->
+    <div class="sn-timeline-head">
+        <span><i class="bi bi-clock-history"></i> سجل الملاحظات</span>
+        <div class="sn-filter" id="snFilter">
+            <button type="button" class="active" data-f="all">الكل</button>
+            <button type="button" data-f="linked">مرتبطة بتشخيص</button>
+            <button type="button" data-f="today">اليوم</button>
+        </div>
+    </div>
+    <div class="sn-timeline" id="snTimeline">
+        <div class="sn-empty-sm">جاري التحميل...</div>
+    </div>
+</div>
+
+<style>
+    .sn-wrap { display: flex; flex-direction: column; gap: 14px; }
+    .sn-wrap [hidden] { display: none !important; }   /* display:flex في الكلاسات بيغطي على hidden */
+
+    .sn-composer {
+        background: linear-gradient(180deg, #ffffff 0%, #f8fffe 100%);
+        border: 1.5px solid #e2f5f2;
+        border-radius: 18px;
+        padding: 16px;
+        box-shadow: 0 6px 24px rgba(13,148,136,.06);
+        transition: border-color .25s, box-shadow .25s;
+    }
+    .sn-composer.editing { border-color: #f59e0b; box-shadow: 0 6px 24px rgba(245,158,11,.12); }
+
+    .sn-composer-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .sn-mode { font-size: .82rem; font-weight: 800; color: #0d9488; display: flex; align-items: center; gap: 6px; }
+    .sn-composer.editing .sn-mode { color: #b45309; }
+    .sn-cancel-edit {
+        border: none; background: #fff7ed; color: #b45309; font-weight: 800; font-size: .74rem;
+        padding: 5px 10px; border-radius: 10px; cursor: pointer;
+    }
+
+    .sn-text-wrap { position: relative; }
+    .sn-text {
+        width: 100%; resize: vertical; min-height: 84px;
+        border: 1.5px solid #eef2f6; background: #fbfdfe; border-radius: 14px;
+        padding: 12px 14px 26px; font-size: .92rem; line-height: 1.7; outline: none;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .sn-text:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,.1); background: #fff; }
+    .sn-counter { position: absolute; bottom: 8px; left: 12px; font-size: .68rem; color: #94a3b8; font-weight: 700; direction: ltr; }
+    .sn-counter.warn { color: #dc2626; }
+
+    .sn-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
+    .sn-chip {
+        border: 1px solid #ccf3ec; background: #f0fdfa; color: #0f766e;
+        font-size: .74rem; font-weight: 700; padding: 5px 11px; border-radius: 999px; cursor: pointer;
+        transition: all .18s ease;
+    }
+    .sn-chip:hover { background: #0d9488; color: #fff; border-color: #0d9488; transform: translateY(-1px); }
+
+    .sn-link { margin-top: 12px; }
+    .sn-link-label { font-size: .78rem; font-weight: 800; color: #475569; display: flex; align-items: center; gap: 4px; margin-bottom: 8px; }
+    .sn-link-label small { color: #94a3b8; font-weight: 600; }
+
+    .sn-link-selected {
+        display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        background: linear-gradient(135deg, #eef2ff, #f5f3ff); border: 1.5px solid #c7d2fe;
+        border-radius: 14px; padding: 10px 12px; animation: snPop .25s ease;
+    }
+    .sn-link-selected-body { display: flex; align-items: center; gap: 10px; font-size: .84rem; }
+    .sn-link-clear {
+        border: none; background: #fff; color: #6366f1; width: 28px; height: 28px; border-radius: 9px;
+        cursor: pointer; display: grid; place-items: center; box-shadow: 0 2px 6px rgba(99,102,241,.15);
+    }
+
+    .sn-picker { border: 1.5px solid #eef2f6; border-radius: 14px; overflow: hidden; background: #fff; }
+    .sn-picker-search { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid #f1f5f9; color: #94a3b8; }
+    .sn-picker-search input { border: none; outline: none; flex: 1; font-size: .84rem; background: transparent; }
+    .sn-picker-list { max-height: 190px; overflow-y: auto; padding: 6px; }
+    .sn-picker-day { font-size: .7rem; font-weight: 800; color: #64748b; padding: 6px 8px 4px; display: flex; align-items: center; gap: 5px; }
+    .sn-picker-item {
+        display: flex; align-items: center; gap: 10px; width: 100%; text-align: right;
+        border: 1px solid transparent; background: transparent; border-radius: 10px; padding: 7px 8px; cursor: pointer;
+        transition: background .15s, border-color .15s;
+    }
+    .sn-picker-item:hover { background: #f0fdfa; border-color: #ccf3ec; }
+    .sn-picker-item .sn-diag { flex: 1; font-size: .82rem; font-weight: 700; color: #0b2e30; }
+    .sn-picker-item .sn-count { font-size: .66rem; font-weight: 800; color: #6366f1; background: #eef2ff; padding: 2px 7px; border-radius: 8px; white-space: nowrap; }
+
+    .sn-tooth {
+        min-width: 46px; text-align: center; font-size: .72rem; font-weight: 800; direction: ltr;
+        background: #0d9488; color: #fff; padding: 3px 7px; border-radius: 8px;
+    }
+    .sn-tooth.none { background: #cbd5e1; color: #334155; }
+
+    .sn-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
+    .sn-hint { font-size: .7rem; color: #94a3b8; font-weight: 700; display: flex; gap: 5px; align-items: center; direction: ltr; }
+    .sn-save {
+        background: linear-gradient(135deg, #0d9488, #0891b2); color: #fff; border: none;
+        padding: 10px 22px; border-radius: 13px; font-weight: 800; font-size: .88rem; cursor: pointer;
+        display: flex; align-items: center; gap: 7px; box-shadow: 0 6px 18px rgba(13,148,136,.25);
+        transition: transform .2s, box-shadow .2s, opacity .2s;
+    }
+    .sn-save:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(13,148,136,.35); }
+    .sn-save:disabled { opacity: .6; cursor: wait; transform: none; }
+    .sn-composer.editing .sn-save { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 6px 18px rgba(245,158,11,.3); }
+
+    .sn-timeline-head { display: flex; justify-content: space-between; align-items: center; font-size: .84rem; font-weight: 800; color: #475569; }
+    .sn-timeline-head > span { display: flex; align-items: center; gap: 6px; }
+    .sn-filter { display: flex; background: #f1f5f9; border-radius: 11px; padding: 3px; gap: 2px; }
+    .sn-filter button { border: none; background: transparent; font-size: .72rem; font-weight: 800; color: #64748b; padding: 5px 11px; border-radius: 9px; cursor: pointer; }
+    .sn-filter button.active { background: #fff; color: #0d9488; box-shadow: 0 2px 6px rgba(15,23,42,.08); }
+
+    .sn-timeline { display: flex; flex-direction: column; gap: 16px; }
+    .sn-day { position: relative; padding-right: 22px; }
+    .sn-day::before { content: ''; position: absolute; right: 7px; top: 26px; bottom: 4px; width: 2px; background: linear-gradient(#ccf3ec, transparent); }
+    .sn-day-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: .8rem; font-weight: 800; color: #0b2e30; }
+    .sn-day-dot { position: absolute; right: 1px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 3px solid #0d9488; }
+    .sn-day.today .sn-day-dot { background: #0d9488; box-shadow: 0 0 0 4px rgba(13,148,136,.15); }
+    .sn-today-tag { font-size: .66rem; background: #0d9488; color: #fff; padding: 2px 8px; border-radius: 8px; }
+
+    .sn-card {
+        background: #fff; border: 1px solid #eef2f6; border-radius: 14px; padding: 11px 13px; margin-bottom: 8px;
+        box-shadow: 0 2px 10px rgba(15,23,42,.04); transition: border-color .2s, transform .2s, box-shadow .2s;
+        animation: snFade .3s ease both;
+    }
+    .sn-card:hover { border-color: #ccf3ec; transform: translateX(-2px); box-shadow: 0 6px 18px rgba(13,148,136,.08); }
+    .sn-card.flash { animation: snFlash 1.4s ease; }
+    .sn-card-text { font-size: .88rem; color: #1e293b; line-height: 1.75; white-space: pre-wrap; word-break: break-word; }
+    .sn-card-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .sn-card-link {
+        display: inline-flex; align-items: center; gap: 7px; font-size: .74rem; font-weight: 700; color: #4338ca;
+        background: #eef2ff; border-radius: 10px; padding: 3px 9px 3px 4px;
+    }
+    .sn-card-link .sn-tooth { font-size: .66rem; padding: 2px 6px; background: #6366f1; }
+    .sn-card-link small { color: #6366f1; opacity: .8; }
+    .sn-card-meta { display: flex; align-items: center; gap: 10px; margin-inline-start: auto; }
+    .sn-time { font-size: .7rem; color: #94a3b8; font-weight: 700; }
+    .sn-card-btn { border: none; background: #f8fafc; color: #64748b; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; transition: all .15s; }
+    .sn-card-btn:hover { background: #f0fdfa; color: #0d9488; }
+    .sn-card-btn.del:hover { background: #fef2f2; color: #dc2626; }
+
+    .sn-empty, .sn-empty-sm { text-align: center; color: #94a3b8; font-weight: 700; }
+    .sn-empty { padding: 28px 10px; border: 1.5px dashed #e2e8f0; border-radius: 16px; font-size: .84rem; }
+    .sn-empty i { font-size: 1.8rem; display: block; margin-bottom: 6px; color: #cbd5e1; }
+    .sn-empty-sm { padding: 12px; font-size: .78rem; }
+
+    @@keyframes snFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    @@keyframes snPop { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
+    @@keyframes snFlash { 0% { background: #ecfdf5; border-color: #34d399; } 100% { background: #fff; border-color: #eef2f6; } }
+
+    .sn-tab-badge {
+        display: none; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; margin-inline-start: 4px;
+        background: #6366f1; color: #fff; font-size: .66rem; font-weight: 800; line-height: 18px; text-align: center;
+    }
+</style>
+
+<script>
+    window.SessionNotes = (function () {
+        const root = document.getElementById('sessionNotesRoot');
+        const patientId = parseInt(root.dataset.patientId);
+        const visitId = parseInt(root.dataset.visitId);
+
+        let notes = [];
+        let diagnoses = [];
+        let linkedId = null;
+        let editingId = null;
+        let filter = 'all';
+
+        const $ = id => document.getElementById(id);
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const dayKey = d => { const x = new Date(d); return `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}`; };
+        const isToday = d => dayKey(d) === dayKey(new Date());
+        const fmtDay = d => new Date(d).toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        const fmtShort = d => new Date(d).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short', year: 'numeric' });
+        const fmtTime = d => new Date(d).toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' });
+
+        function toothLabel(n) {
+            if (!n || n <= 0) return '—';
+            const q = Math.floor(n / 10), p = n % 10;
+            return ({ 1: 'UL', 2: 'UR', 3: 'LL', 4: 'LR' }[q] || '') + (q >= 1 && q <= 4 ? '-' + p : n);
+        }
+        const toothChip = n => `<span class="sn-tooth ${n > 0 ? '' : 'none'}">${toothLabel(n)}</span>`;
+
+        async function getJson(url, opt) {
+            const res = await fetch(url, opt);
+            const text = await res.text();
+            try { return JSON.parse(text); }
+            catch { console.error(url, res.status, text.slice(0, 1500)); throw new Error(`خطأ من السيرفر (HTTP ${res.status})`); }
+        }
+
+        // ================= Load =================
+        async function load() {
+            try {
+                const [n, d] = await Promise.all([
+                    getJson(`/Clinical/GetVisitNotes?patientId=${patientId}`),
+                    getJson(`/Clinical/GetLinkableDiagnoses?patientId=${patientId}`)
+                ]);
+                notes = n.data || [];
+                diagnoses = d.data || [];
+                renderTimeline();
+                renderPicker();
+            } catch (e) {
+                $('snTimeline').innerHTML = `<div class="sn-empty"><i class="bi bi-exclamation-triangle"></i>${esc(e.message)}</div>`;
+            }
+        }
+
+        // ================= Picker (ربط بتشخيص) =================
+        function renderPicker() {
+            const term = ($('snPickerSearch').value || '').trim().toLowerCase();
+            const list = $('snPickerList');
+            const items = diagnoses.filter(d => !term
+                || (d.diagnosisName || '').toLowerCase().includes(term)
+                || toothLabel(d.toothNumber).toLowerCase().includes(term)
+                || String(d.toothNumber).includes(term));
+
+            if (!diagnoses.length) { list.innerHTML = '<div class="sn-empty-sm">لا توجد تشخيصات سابقة لهذا المريض.</div>'; return; }
+            if (!items.length) { list.innerHTML = '<div class="sn-empty-sm">لا توجد نتائج.</div>'; return; }
+
+            let html = '', lastDay = null;
+            items.forEach(d => {
+                const k = dayKey(d.date);
+                if (k !== lastDay) {
+                    html += `<div class="sn-picker-day"><i class="bi bi-calendar3"></i> ${fmtShort(d.date)}${isToday(d.date) ? ' — اليوم' : ''}</div>`;
+                    lastDay = k;
+                }
+                html += `<button type="button" class="sn-picker-item" onclick="SessionNotes.linkTo(${d.id})">
+                            ${toothChip(d.toothNumber)}
+                            <span class="sn-diag">${esc(d.diagnosisName)}</span>
+                            ${d.notesCount ? `<span class="sn-count"><i class="bi bi-chat-left-text"></i> ${d.notesCount} متابعة</span>` : ''}
+                         </button>`;
+            });
+            list.innerHTML = html;
+        }
+
+        function linkTo(id, opts) {
+            const d = diagnoses.find(x => x.id === id);
+            if (!d) return;
+            linkedId = id;
+            $('snLinkSelectedBody').innerHTML = `${toothChip(d.toothNumber)}
+                <div><b>${esc(d.diagnosisName)}</b><br><small style="color:#6366f1;">${fmtShort(d.date)}</small></div>`;
+            $('snLinkSelected').hidden = false;
+            $('snPicker').hidden = true;
+            if (opts && opts.focus) { $('snText').focus(); }
+        }
+
+        function clearLink() {
+            linkedId = null;
+            $('snLinkSelected').hidden = true;
+            $('snPicker').hidden = false;
+        }
+
+        // ================= Timeline =================
+        function renderTimeline() {
+            const badge = $('snCountBadge');
+            badge.textContent = `${notes.length} ملاحظة`;
+            const tabBadge = document.getElementById('tabBadgeNotes');
+            if (tabBadge) {
+                const todayCount = notes.filter(n => n.visitId === visitId).length;
+                tabBadge.textContent = todayCount;
+                tabBadge.style.display = todayCount ? 'inline-block' : 'none';
+            }
+
+            let list = notes;
+            if (filter === 'linked') list = notes.filter(n => n.linkedVisitDiagnosisId);
+            if (filter === 'today') list = notes.filter(n => n.visitId === visitId);
+
+            const tl = $('snTimeline');
+            if (!list.length) {
+                tl.innerHTML = `<div class="sn-empty"><i class="bi bi-journal-plus"></i>${notes.length ? 'لا توجد ملاحظات بهذا الفلتر.' : 'لا توجد ملاحظات بعد — اكتب أول ملاحظة متابعة.'}</div>`;
+                return;
+            }
+
+            // تجميع حسب يوم الزيارة
+            const groups = [];
+            list.forEach(n => {
+                const k = dayKey(n.visitDate);
+                let g = groups.find(x => x.k === k);
+                if (!g) { g = { k, date: n.visitDate, current: false, items: [] }; groups.push(g); }
+                if (n.visitId === visitId) g.current = true;
+                g.items.push(n);
+            });
+
+            tl.innerHTML = groups.map(g => `
+                <div class="sn-day ${g.current ? 'today' : ''}">
+                    <span class="sn-day-dot"></span>
+                    <div class="sn-day-head">
+                        ${fmtDay(g.date)}
+                        ${g.current ? '<span class="sn-today-tag">الزيارة الحالية</span>' : ''}
+                    </div>
+                    ${g.items.map((n, i) => `
+                        <div class="sn-card" id="snCard_${n.id}" style="animation-delay:${i * 0.04}s">
+                            <div class="sn-card-text">${esc(n.text)}</div>
+                            <div class="sn-card-foot">
+                                ${n.linkedVisitDiagnosisId ? `
+                                    <span class="sn-card-link" title="متابعة على تشخيص سابق">
+                                        ${toothChip(n.linkedToothNumber)}
+                                        ${esc(n.linkedDiagnosisName)}
+                                        <small>${n.linkedDiagnosisDate ? '· ' + fmtShort(n.linkedDiagnosisDate) : ''}</small>
+                                    </span>` : ''}
+                                <div class="sn-card-meta">
+                                    <span class="sn-time"><i class="bi bi-clock"></i> ${fmtTime(n.createdAt)}${n.modifiedAt ? ' · معدّلة' : ''}</span>
+                                    <button type="button" class="sn-card-btn" title="تعديل" onclick="SessionNotes.edit('${n.id}')"><i class="bi bi-pencil"></i></button>
+                                    <button type="button" class="sn-card-btn del" title="حذف" onclick="SessionNotes.remove('${n.id}')"><i class="bi bi-trash3"></i></button>
+                                </div>
+                            </div>
+                        </div>`).join('')}
+                </div>`).join('');
+        }
+
+        // ================= Save / Edit / Delete =================
+        async function save() {
+            const text = $('snText').value.trim();
+            if (!text) {
+                $('snText').focus();
+                Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'اكتب الملاحظة الأول', showConfirmButton: false, timer: 1800 });
+                return;
+            }
+
+            const btn = $('snSaveBtn');
+            btn.disabled = true;
+            try {
+                const data = await getJson('/Clinical/SaveVisitNote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ Id: editingId, VisitId: visitId, Text: text, LinkedVisitDiagnosisId: linkedId })
+                });
+                if (!data.success) {
+                    Swal.fire({ title: 'تعذر الحفظ', text: data.message, icon: 'error', confirmButtonColor: '#dc2626' });
+                    return;
+                }
+
+                const wasEdit = !!editingId;
+                const saved = data.data;
+                notes = notes.filter(n => n.id !== saved.id);
+                notes.unshift(saved);
+                notes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                // عدّاد المتابعات على التشخيصات
+                if (!wasEdit && saved.linkedVisitDiagnosisId) {
+                    const d = diagnoses.find(x => x.id === saved.linkedVisitDiagnosisId);
+                    if (d) d.notesCount++;
+                }
+
+                resetComposer();
+                if (filter === 'linked' && !saved.linkedVisitDiagnosisId) setFilter('all');
+                renderTimeline();
+                renderPicker();
+                const card = document.getElementById('snCard_' + saved.id);
+                if (card) { card.classList.add('flash'); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: wasEdit ? 'تم تعديل الملاحظة' : 'تم حفظ الملاحظة', showConfirmButton: false, timer: 1600 });
+            } catch (e) {
+                Swal.fire({ title: 'خطأ', text: e.message, icon: 'error', confirmButtonColor: '#dc2626' });
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function edit(id) {
+            const n = notes.find(x => x.id === id);
+            if (!n) return;
+            editingId = id;
+            $('snText').value = n.text;
+            updateCounter();
+            if (n.linkedVisitDiagnosisId && diagnoses.some(d => d.id === n.linkedVisitDiagnosisId)) linkTo(n.linkedVisitDiagnosisId);
+            else clearLink();
+
+            $('snComposer').classList.add('editing');
+            $('snModeLabel').innerHTML = `<i class="bi bi-pencil-square"></i> تعديل ملاحظة ${fmtShort(n.visitDate)}`;
+            $('snSaveLabel').textContent = 'حفظ التعديل';
+            $('snCancelEdit').hidden = false;
+            $('snComposer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            $('snText').focus();
+        }
+
+        function cancelEdit() { resetComposer(); }
+
+        function resetComposer() {
+            editingId = null;
+            $('snText').value = '';
+            updateCounter();
+            clearLink();
+            $('snPickerSearch').value = '';
+            $('snComposer').classList.remove('editing');
+            $('snModeLabel').innerHTML = '<i class="bi bi-plus-circle"></i> ملاحظة جديدة على زيارة اليوم';
+            $('snSaveLabel').textContent = 'حفظ الملاحظة';
+            $('snCancelEdit').hidden = true;
+        }
+
+        async function remove(id) {
+            const r = await Swal.fire({
+                title: 'حذف الملاحظة؟', text: 'مش هتظهر تاني في سجل المريض.', icon: 'warning',
+                showCancelButton: true, confirmButtonText: 'حذف', cancelButtonText: 'رجوع',
+                confirmButtonColor: '#dc2626', reverseButtons: true, focusCancel: true
+            });
+            if (!r.isConfirmed) return;
+            try {
+                const n = notes.find(x => x.id === id);
+                if (!n) return;
+                const data = await getJson(`/Clinical/DeleteVisitNote?visitId=${n.visitId}&id=${encodeURIComponent(id)}`, { method: 'POST' });
+                if (!data.success) { Swal.fire({ title: 'تعذر الحذف', text: data.message, icon: 'error' }); return; }
+                if (n && n.linkedVisitDiagnosisId) {
+                    const d = diagnoses.find(x => x.id === n.linkedVisitDiagnosisId);
+                    if (d && d.notesCount > 0) d.notesCount--;
+                }
+                notes = notes.filter(x => x.id !== id);
+                if (editingId === id) resetComposer();
+                renderTimeline();
+                renderPicker();
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم الحذف', showConfirmButton: false, timer: 1400 });
+            } catch (e) {
+                Swal.fire({ title: 'خطأ', text: e.message, icon: 'error' });
+            }
+        }
+
+        // يُستدعى من جدول "السجل السابق": إضافة متابعة على تشخيص معين
+        function startFor(vdId) {
+            const btn = document.querySelector('.dc-tab-btn[onclick*="tabNotes"]');
+            if (btn && window.switchTab) window.switchTab('tabNotes', btn);
+            if (editingId) resetComposer();
+            linkTo(vdId, { focus: true });
+        }
+
+        function setFilter(f) {
+            filter = f;
+            document.querySelectorAll('#snFilter button').forEach(b => b.classList.toggle('active', b.dataset.f === f));
+            renderTimeline();
+        }
+
+        function updateCounter() {
+            const len = $('snText').value.length;
+            const c = $('snCounter');
+            c.textContent = `${len} / 2000`;
+            c.classList.toggle('warn', len > 1900);
+        }
+
+        // ================= Events =================
+        $('snText').addEventListener('input', updateCounter);
+        $('snText').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); save(); } });
+        $('snPickerSearch').addEventListener('input', renderPicker);
+        document.querySelectorAll('#snFilter button').forEach(b => b.addEventListener('click', () => setFilter(b.dataset.f)));
+        document.querySelectorAll('#snChips .sn-chip').forEach(ch => ch.addEventListener('click', () => {
+            const ta = $('snText');
+            const t = ch.dataset.text;
+            ta.value = ta.value.trim() ? `${ta.value.trim()} — ${t}` : t;
+            updateCounter();
+            ta.focus();
+        }));
+
+        load();
+
+        return { save, edit, cancelEdit, remove, linkTo, clearLink, startFor, reload: load };
+    })();
+</script>

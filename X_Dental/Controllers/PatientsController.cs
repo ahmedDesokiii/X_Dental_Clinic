@@ -7,6 +7,7 @@ using Dental.Core.Pagination;
 using Dental.Models.DataTables;
 using Dental.Models.Patient;
 using Dental.Modules.Clinical.DTOs;
+using Dental.Modules.Clinical.Interfaces;
 using Dental.Modules.Patients.DTOs;
 using Dental.Modules.Patients.Enums;
 using Dental.Modules.Patients.InterfacesPatients;
@@ -28,6 +29,7 @@ namespace Dental.Controllers
         private readonly ILogger<PatientsController> _logger;
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment _env;
+        private readonly IVisitNoteService _notes;
 
         public PatientsController(
             IPatientService patientService,
@@ -35,7 +37,8 @@ namespace Dental.Controllers
             IMemoryCache cache,
             ILogger<PatientsController> logger,
             IMapper mapper,
-            IWebHostEnvironment env)   // ⭐ NEW
+            IWebHostEnvironment env,   // ⭐ NEW
+            IVisitNoteService notes)
         {
             _patientService = patientService;
             _context = context;
@@ -43,6 +46,7 @@ namespace Dental.Controllers
             _logger = logger;
             _mapper = mapper;
             _env = env;                // ⭐ NEW
+            _notes = notes;
         }
 
         #region 🚀 Index (Server-Side DataTables)
@@ -109,7 +113,7 @@ namespace Dental.Controllers
                     .Include(p => p.Gender)
                     .Include(p => p.Visits)
                     .Include(p => p.Appointments)
-                    .Where(p=>p.IsActive)
+                    .Where(p => p.IsActive)
                     .AsQueryable();
 
                 if (categoryFilter == "General")
@@ -437,6 +441,7 @@ namespace Dental.Controllers
             };
 
             ViewBag.PreviousSessions = await GetPreviousSessionsAsync(id);
+            ViewBag.VisitNotes = await _notes.GetByPatientAsync(id);   // ⭐ المرحلة 2
             ViewBag.XRayGroups = await GetXRaysGroupedAsync(id);
             ViewBag.DocumentTypes = await _context.DocumentTypes
                 .Where(d => d.IsActive)
@@ -747,7 +752,7 @@ namespace Dental.Controllers
                     patient.MedicalInfo.EmergencyNotes = dto.EmergencyNotes;
                     patient.Notes = dto.MedicalNotes;
                 }
-                    patient.DateOfBirth = dto.DateOfBirth;
+                patient.DateOfBirth = dto.DateOfBirth;
                 await _context.Patients.AddAsync(patient);
                 await _context.SaveChangesAsync();
 
@@ -821,7 +826,7 @@ namespace Dental.Controllers
                 Id = patient.Id,
                 FullNameAr = patient.FullNameAr,
                 FullNameEn = patient.FullNameEn,
-                GenderId = patient.Gender?.Id ?? 0,     
+                GenderId = patient.Gender?.Id ?? 0,
                 DateOfBirth = patient.DateOfBirth,
                 BloodGroupId = patient.BloodGroup?.Id,
                 NationalId = patient.NationalId,
@@ -900,7 +905,7 @@ namespace Dental.Controllers
                     patient.DateOfBirth = dto.DateOfBirth;
                 }
 
-                    await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
 
                 var successMessage = "تم تعديل بيانات المريض بنجاح";
                 var redirectUrl = Url.Action("Details", "Patients", new { id = dto.Id });

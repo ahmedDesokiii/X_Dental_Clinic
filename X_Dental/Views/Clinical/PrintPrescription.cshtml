@@ -93,9 +93,9 @@
             }
 
             /*
-                     * مقاس الورقة: أكبر من A5 وأصغر من A4
-                     * padding-top كبير عشان يسيب مساحة للهيدر المطبوع مسبقاً على الورق
-                     */
+                                 * مقاس الورقة: أكبر من A5 وأصغر من A4
+                                 * padding-top كبير عشان يسيب مساحة للهيدر المطبوع مسبقاً على الورق
+                                 */
             .rx-sheet {
                 width: 170mm;
                 min-height: 250mm;
@@ -386,7 +386,7 @@
 
         <!-- الهيدر فاضي تماماً (مفيش عنوان "روشتة طبية")    عشان الورق المطبوع مسبقاً -->
         <!-- 1) QR في المنتصف تحت الهيدر المطبوع على الورق -->
-        
+
         <br>
         <!-- 2) بيانات المريض -->
         <div class=" border-0">
@@ -407,7 +407,7 @@
                 </div>
             </div>
             <!-- الصف 2: التاريخ + النوع -->
-            <div class="patient-row" >
+            <div class="patient-row">
                 <div class="field grow" hidden>
                     @* <span class="label">تاريخ الروشتة</span> *@
                     <div class="value">@Model.PrescriptionDate.ToString("yy/MM/dd")</div>
@@ -418,13 +418,13 @@
                 </div>
             </div>
         </div>
-        
+
         <br><br>
         <!-- 3) باقي التفاصيل -->
         <!-- التشخيص -->
         @if (!string.IsNullOrWhiteSpace(Model.Diagnosis))
         {
-            <div class="section text-start" dir="ltr" >
+            <div class="section text-start" dir="ltr">
                 <div class="section-label "><i class="bi bi-clipboard2-pulse"></i> التشخيص</div>
                 <div class="diagnosis-text ">@Model.Diagnosis</div>
             </div>
@@ -434,7 +434,7 @@
         <!-- الأدوية -->
         <div class="section">
             <div class="section-label fs-4"><i class="bi bi-capsule fs-5"></i> الأدوية</div>
-            
+
             <table class="meds-table">
                 <thead>
                     <tr>
@@ -444,7 +444,7 @@
                         <th>الجرعة</th>
                         <th>الدواء</th>
                         <th style="width:26px;">#</th>
-        
+
                     </tr>
                 </thead>
                 <tbody>
@@ -511,5 +511,11 @@
     </div>
 
 
+    <script>
+            // ⭐ المرحلة 3 — "حفظ وطباعة": الصفحة بتفتح بـ ?autoprint=1 فتطبع لوحدها بعد ما الـ QR والخطوط تحمّل
+            if (new URLSearchParams(location.search).get('autoprint') === '1') {
+                window.addEventListener('load', () => setTimeout(() => window.print(), 400));
+            }
+    </script>
 </body>
 </html>

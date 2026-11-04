@@ -10,18 +10,43 @@
     var previousPayments = (ViewBag.PatientPaymentsHistory as IEnumerable<dynamic>) ?? Enumerable.Empty<dynamic>();
     var previousPaymentsList = previousPayments.ToList();
 
-    // ⭐ Merge: لو المريض دفع أكتر من دفعة في نفس التاريخ لنفس الزيارة → يتجمعوا في صف واحد
-    var mergedPayments = previousPaymentsList
-        .GroupBy(x => new { VisitId = (int)x.VisitId, Date = ((DateTime)x.PaymentDate).Date })
-        .Select(g => new
+    // ⭐ Merge: في نفس اليوم، أي حركات ليها نفس الزيارة أو نفس رقم الإيصال → صف واحد
+    //    (المرحلة 5: الدفعة اللي اتوزعت على أكتر من زيارة بنفس الإيصال بقت بتظهر كدفعة واحدة)
+    var paymentClusters = new List<List<dynamic>>();
+    foreach (var dayGroup in previousPaymentsList.GroupBy(x => ((DateTime)x.PaymentDate).Date))
+    {
+        var dayClusters = new List<(HashSet<int> Visits, HashSet<string> Receipts, List<dynamic> Rows)>();
+        foreach (var row in dayGroup)
         {
-            Date = g.Key.Date,
-            VisitId = g.Key.VisitId,
-            Methods = g.Select(x => (string)x.Method).Distinct().ToList(),
-            Amount = g.Sum(x => (decimal)x.Amount),
-            Discount = g.Sum(x => (decimal)x.Discount),
-            VisitTotalAmount = (decimal)g.First().VisitTotalAmount,
-            VisitRemaining = (decimal)g.First().VisitRemaining
+            int vId = (int)row.VisitId;
+            string? rNo = (string?)row.ReceiptNo;
+            var hits = dayClusters.Where(c => c.Visits.Contains(vId) || (!string.IsNullOrWhiteSpace(rNo) && c.Receipts.Contains(rNo!))).ToList();
+            var merged = (Visits: new HashSet<int> { vId }, Receipts: new HashSet<string>(), Rows: new List<dynamic> { row });
+            if (!string.IsNullOrWhiteSpace(rNo)) merged.Receipts.Add(rNo!);
+            foreach (var h in hits)
+            {
+                merged.Visits.UnionWith(h.Visits);
+                merged.Receipts.UnionWith(h.Receipts);
+                merged.Rows.AddRange(h.Rows);
+                dayClusters.Remove(h);
+            }
+            dayClusters.Add(merged);
+        }
+        paymentClusters.AddRange(dayClusters.Select(c => c.Rows));
+    }
+
+    var mergedPayments = paymentClusters
+        .Select(rows => new
+        {
+            Date = ((DateTime)rows[0].PaymentDate).Date,
+            VisitId = (int)rows[0].VisitId,
+            VisitsCount = rows.Select(x => (int)x.VisitId).Distinct().Count(),
+            Methods = rows.Select(x => (string)x.Method).Distinct().ToList(),
+            Amount = rows.Sum(x => (decimal)x.Amount),
+            Discount = rows.Sum(x => (decimal)x.Discount),
+            // أرقام الزيارة مرة واحدة لكل زيارة (مش لكل حركة)
+            VisitTotalAmount = rows.GroupBy(x => (int)x.VisitId).Sum(g => (decimal)g.First().VisitTotalAmount),
+            VisitRemaining = rows.GroupBy(x => (int)x.VisitId).Sum(g => (decimal)g.First().VisitRemaining)
         })
         .OrderByDescending(x => x.Date)
         .ToList();
@@ -208,7 +233,13 @@
                                     </span>
                                 </td>
                                 <td style="font-weight:700;color:#0d7377;">@item.VisitTotalAmount.ToString("N0")</td>
-                                <td style="color:#16a34a;font-weight:700;">@item.Amount.ToString("N0")</td>
+                                <td style="color:#16a34a;font-weight:700;">
+                                    @item.Amount.ToString("N0")
+                                    @if (item.VisitsCount > 1)
+                                    {
+                                        <span title="دفعة واحدة اتوزعت على أكتر من زيارة" style="font-size:.62rem;font-weight:800;color:#4338ca;background:#eef2ff;border:1px solid #c7d2fe;padding:1px 6px;border-radius:7px;margin-inline-start:4px;white-space:nowrap;"><i class="bi bi-diagram-3"></i> @item.VisitsCount زيارات</span>
+                                    }
+                                </td>
                                 <td style="color:#f59e0b;font-weight:700;">@item.Discount.ToString("N0")</td>
                                 <td style="color:#dc2626;font-weight:700;">@item.VisitRemaining.ToString("N0")</td>
                             </tr>
@@ -1020,7 +1051,7 @@
         discount: @Model.Visit.Discount.ToString(inv),
         prevBalance: @Model.PreviousBalance.ToString(inv),
         isOrtho: @(isOrthoPay ? "true" : "false")
-        };
+            };
 
     function payPendingRecords() {
         const r = window.pendingToothRecords;
@@ -1028,7 +1059,7 @@
         return Array.isArray(r) ? r : Object.values(r);
     }
 
-    window.computeSessionTotals = function() {
+    window.computeSessionTotals = function () {
         const b = window.SESSION_PAY_BASE;
         const pays = window.pendingPayments || [];
 
@@ -1087,9 +1118,9 @@
         // اللي اتحفظ قبل كده على نفس الزيارة (مثلاً من شاشة المريض)
         if (b.total > 0) {
             html += `<div class="today-diag-row saved">
-                            <div><span class="td-name">مسجّل مسبقًا على الزيارة</span></div>
-                            <div class="td-amount"><b>${payFmt(b.total)}</b></div>
-                         </div>`;
+                                <div><span class="td-name">مسجّل مسبقًا على الزيارة</span></div>
+                                <div class="td-amount"><b>${payFmt(b.total)}</b></div>
+                             </div>`;
         }
 
         lines.forEach(l => {
@@ -1099,15 +1130,15 @@
                 ? window.groupRangeLabel(l.teeth)
                 : l.teeth.join(' · ');
             html += `<div class="today-diag-row">
-                            <div>
-                                <span class="td-name">${payEsc(l.name || 'تشخيص')}</span>${isGroup ? `<span class="td-mu">${units} units</span>` : ''}
-                                <span class="td-teeth"><i class="bi bi-grid-3x3-gap"></i> ${payEsc(teethLabel)}</span>
-                            </div>
-                            <div class="td-amount">
-                                <b>${payFmt(l.price * units)}</b>
-                                ${isGroup ? `<small>${payFmt(l.price)} × ${units}</small>` : ''}
-                            </div>
-                         </div>`;
+                                <div>
+                                    <span class="td-name">${payEsc(l.name || 'تشخيص')}</span>${isGroup ? `<span class="td-mu">${units} units</span>` : ''}
+                                    <span class="td-teeth"><i class="bi bi-grid-3x3-gap"></i> ${payEsc(teethLabel)}</span>
+                                </div>
+                                <div class="td-amount">
+                                    <b>${payFmt(l.price * units)}</b>
+                                    ${isGroup ? `<small>${payFmt(l.price)} × ${units}</small>` : ''}
+                                </div>
+                             </div>`;
         });
 
         if (!html) html = `<div class="today-diag-empty">لسه مفيش تشخيصات في السيشن دي.</div>`;
@@ -1170,8 +1201,8 @@
     document.getElementById('payAmount').addEventListener('input', updateExcessHint);
     document.getElementById('payDiscount').addEventListener('input', updateExcessHint);
 
-    document.querySelectorAll('#payMethodTiles .pay-method-chip').forEach(function(tile) {
-        tile.addEventListener('click', function() {
+    document.querySelectorAll('#payMethodTiles .pay-method-chip').forEach(function (tile) {
+        tile.addEventListener('click', function () {
             document.querySelectorAll('#payMethodTiles .pay-method-chip').forEach(t => t.classList.remove('selected'));
             tile.classList.add('selected');
             tile.querySelector('input').checked = true;
@@ -1223,17 +1254,17 @@
             row.style.background = '#fffbeb';
             row.style.borderColor = '#fde68a';
             row.innerHTML = `
-                            <div class="pay-h-left">
-                                <b>${p.Amount.toLocaleString('en-EG')} م.ج</b>
-                                <span class="pay-h-method">${methodLabel(p.Method)}</span>
-                                ${p.Discount > 0 ? `<span class="pay-h-discount">خصم ${p.Discount.toLocaleString('en-EG')}</span>` : ''}
-                                <span class="badge-pending-pay">قيد الحفظ</span>
-                            </div>
-                            <div class="pay-h-right" style="display:flex; align-items:center; gap:8px;">
-                                <small style="color:#64748b;">${p.Description || '-'}</small>
-                                <button class="btn-sm danger" onclick="removePendingPayment(${idx})" title="حذف"><i class="bi bi-trash3"></i></button>
-                            </div>
-                        `;
+                                <div class="pay-h-left">
+                                    <b>${p.Amount.toLocaleString('en-EG')} م.ج</b>
+                                    <span class="pay-h-method">${methodLabel(p.Method)}</span>
+                                    ${p.Discount > 0 ? `<span class="pay-h-discount">خصم ${p.Discount.toLocaleString('en-EG')}</span>` : ''}
+                                    <span class="badge-pending-pay">قيد الحفظ</span>
+                                </div>
+                                <div class="pay-h-right" style="display:flex; align-items:center; gap:8px;">
+                                    <small style="color:#64748b;">${p.Description || '-'}</small>
+                                    <button class="btn-sm danger" onclick="removePendingPayment(${idx})" title="حذف"><i class="bi bi-trash3"></i></button>
+                                </div>
+                            `;
             wrap.appendChild(row);
         });
     }

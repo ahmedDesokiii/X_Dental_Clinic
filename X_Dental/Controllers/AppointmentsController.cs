@@ -73,7 +73,7 @@ namespace Dental.Controllers
 
         // ── فحص التعارض قبل الحفظ (Live check أثناء تعبئة الفورم) ──
         [HttpPost]
-        public async Task<IActionResult> CheckConflict([FromBody]  ConflictCheckRequestDto dto)
+        public async Task<IActionResult> CheckConflict([FromBody] ConflictCheckRequestDto dto)
         {
             var hasConflict = await _appointmentService.HasConflictAsync(
                 dto.AppointmentDate, dto.DurationMinutes, dto.ExcludeId);
@@ -87,6 +87,31 @@ namespace Dental.Controllers
         {
             if (!ModelState.IsValid)
                 return Json(new { success = false, message = "البيانات المدخلة غير صحيحة." });
+
+            // ⭐ تحذير الحجز المكرر: لو المريض عنده موعد فعّال في نفس اليوم نرجّع التفاصيل للفرونت
+            // وهو يسأل المستخدم؛ لو أكد بيبعت AllowSameDay = true ويتم الحجز عادي.
+            if (!dto.AllowSameDay)
+            {
+                var existing = await _appointmentService.GetPatientDayAppointmentsAsync(dto.PatientId, dto.AppointmentDate);
+                if (existing.Any())
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        duplicate = true,
+                        message = "المريض لديه موعد محجوز بالفعل في نفس اليوم.",
+                        existing = existing.Select(a => new
+                        {
+                            a.Id,
+                            a.PatientName,
+                            a.PatientMobile,
+                            a.AppointmentDate,
+                            a.StatusText,
+                            a.Reason
+                        })
+                    });
+                }
+            }
 
             var doctorName = User.Identity?.Name ?? "System";
             var result = await _appointmentService.CreateAsync(dto, doctorName);

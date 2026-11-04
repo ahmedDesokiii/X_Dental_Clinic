@@ -1408,7 +1408,8 @@
                     @* ⭐ مريض التقويم: سجلات الفك بدل التشخيصات السنية *@
                     <div id="orthoRecordsHost"></div>
                 }
-                else if (ViewBag.PreviousSessions is List<Dental.Modules.Clinical.DTOs.PreviousSessionRecordDto> prevSessions && prevSessions.Any())
+                else if ((ViewBag.PreviousSessions is List<Dental.Modules.Clinical.DTOs.PreviousSessionRecordDto> prevSessions && prevSessions.Any())
+                         || (ViewBag.VisitNotes is List<Dental.Modules.Clinical.DTOs.VisitNoteDto> prevNotes && prevNotes.Any()))
                 {
                     @await Html.PartialAsync("_PreviousSessionsTable", new Dental.Modules.Clinical.ViewModels.SessionViewModel())
                 }
@@ -1541,12 +1542,20 @@
             <div class="modal-body-new">
                 <div class="mb-3">
                     <label class="form-label-custom-new">Visit <span class="text-danger">*</span></label>
-                    <select class="form-control-custom-new" id="tabPayVisitId"></select>
+                    <select class="form-control-custom-new" id="tabPayVisitId" onchange="updateTabPayPreview()"></select>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label-custom-new">Amount <span class="text-danger">*</span></label>
-                    <input type="number" step="0.01" class="form-control-custom-new" id="tabPayAmount" />
+                <div class="mb-3" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div>
+                        <label class="form-label-custom-new">Amount <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" min="0" class="form-control-custom-new" id="tabPayAmount" placeholder="0" oninput="updateTabPayPreview()" />
+                    </div>
+                    <div>
+                        <label class="form-label-custom-new">Discount</label>
+                        <input type="number" step="0.01" min="0" class="form-control-custom-new" id="tabPayDiscount" placeholder="0" oninput="updateTabPayPreview()" />
+                    </div>
                 </div>
+                @* ⭐ المرحلة 5 — معاينة توزيع الدفعة قبل الحفظ (نفس قواعد السيرفر) *@
+                <div class="mb-3" id="tabPayPreview"></div>
                 <div class="mb-3">
                     <label class="form-label-custom-new">Payment Method</label>
                     <select class="form-control-custom-new" id="tabPayMethod">
@@ -1576,6 +1585,7 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/payments-ui.js" asp-append-version="true"></script>
     <script>
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-pill').forEach(b => b.classList.remove('active'));
@@ -1645,38 +1655,46 @@
             document.getElementById('pmtSumRemaining').textContent = money(data.totalRemaining);
 
             document.getElementById('pmtVisitsBody').innerHTML = data.visits.length ? data.visits.map(v => `
-                                <tr>
-                                    <td>${new Date(v.visitDate).toLocaleDateString('en-GB')}</td>
-                                    <td>${v.category === 1 ? 'Ortho' : 'General'}</td>
-                                    <td>${money(v.totalAmount)}</td>
-                                    <td>${money(v.discount)}</td>
-                                    <td>${money(v.paidAmount)}</td>
-                                    <td>${money(v.remaining)}</td>
-                                    <td>${v.isFullyPaid ? '<span class="pmt-badge-paid-new">Paid</span>' : '<span class="pmt-badge-due-new">Due</span>'}</td>
-                                </tr>`).join('') : '<tr><td colspan="7" class="pmt-empty-inline"><i class="bi bi-clipboard-x"></i>No visits recorded</td></tr>';
+                                        <tr>
+                                            <td>${new Date(v.visitDate).toLocaleDateString('en-GB')}</td>
+                                            <td>${v.category === 2 ? 'Ortho' : 'General'}</td>
+                                            <td>${money(v.totalAmount)}</td>
+                                            <td>${money(v.discount)}</td>
+                                            <td>${money(v.paidAmount)}</td>
+                                            <td>${money(v.remaining)}</td>
+                                            <td>${v.isFullyPaid ? '<span class="pmt-badge-paid-new">Paid</span>' : '<span class="pmt-badge-due-new">Due</span>'}</td>
+                                        </tr>`).join('') : '<tr><td colspan="7" class="pmt-empty-inline"><i class="bi bi-clipboard-x"></i>No visits recorded</td></tr>';
 
-            document.getElementById('pmtPaymentsBody').innerHTML = data.payments.length ? data.payments.map(p => `
-                                <tr>
-                                    <td>${new Date(p.paymentDate).toLocaleDateString('en-GB')}</td>
-                                    <td>${new Date(p.visitDate).toLocaleDateString('en-GB')}</td>
-                                    <td><b>${money(p.amount)}</b></td>
-                                    <td><span class="pmt-method-badge ${methodBadgeClass(p.methodText)}">${p.methodText}</span></td>
-                                    <td style="direction:ltr; text-align:left;">${p.receiptNo || '—'}</td>
-                                    <td>${p.description || '—'}</td>
-                                    <td><button class="btn-pmt-void-new" onclick="voidTabPayment(${p.id})"><i class="bi bi-x-circle"></i> Void</button></td>
-                                </tr>`).join('') : '<tr><td colspan="7" class="pmt-empty-inline"><i class="bi bi-cash"></i>No payments recorded yet</td></tr>';
+            // ⭐ المرحلة 5 — كل دفعة سطر واحد بالإجمالي (حتى لو اتوزعت على أكتر من زيارة) + تفاصيل التوزيع
+            const receipts = data.receipts || [];
+            document.getElementById('pmtPaymentsBody').innerHTML = receipts.length
+                ? DcPay.receiptRows(receipts, { lang: 'en', voidFn: 'voidTabPayment', voidClass: 'btn-pmt-void-new', methodClass: methodBadgeClass })
+                : '<tr><td colspan="7" class="pmt-empty-inline"><i class="bi bi-cash"></i>No payments recorded yet</td></tr>';
 
             // ⭐ Ortho: زيارة الـ Anchor بتظهر باسم "Ortho case" عشان الدفعة تروح على الاتفاق صح
             const dueVisits = data.visits.filter(v => v.remaining > 0);
             document.getElementById('tabPayVisitId').innerHTML = dueVisits.length
-                ? dueVisits.map(v => `<option value="${v.visitId}">${v.category === 1 ? 'Ortho case — ' : ''}${new Date(v.visitDate).toLocaleDateString('en-GB')} — due ${money(v.remaining)}</option>`).join('')
+                ? dueVisits.map(v => `<option value="${v.visitId}">${v.category === 2 ? 'Ortho case — ' : ''}${new Date(v.visitDate).toLocaleDateString('en-GB')} — due ${money(v.remaining)}</option>`).join('')
                 : '<option value="">No visits with a remaining balance</option>';
         }
 
         function openTabPaymentModal() {
             document.getElementById('tabPayAmount').value = '';
+            document.getElementById('tabPayDiscount').value = '';
             document.getElementById('tabPayDesc').value = '';
+            updateTabPayPreview();
             document.getElementById('tabPayModal').classList.add('show');
+            setTimeout(() => document.getElementById('tabPayAmount').focus(), 50);
+        }
+
+        function updateTabPayPreview() {
+            DcPay.renderPreview(
+                document.getElementById('tabPayPreview'),
+                pmtVisits,
+                parseInt(document.getElementById('tabPayVisitId').value),
+                parseFloat(document.getElementById('tabPayAmount').value) || 0,
+                parseFloat(document.getElementById('tabPayDiscount').value) || 0,
+                'en');
         }
         function closeTabPaymentModal() {
             document.getElementById('tabPayModal').classList.remove('show');
@@ -1684,13 +1702,29 @@
 
         async function submitTabPayment() {
             const visitId = parseInt(document.getElementById('tabPayVisitId').value);
-            const amount = parseFloat(document.getElementById('tabPayAmount').value);
+            const amount = parseFloat(document.getElementById('tabPayAmount').value) || 0;
+            const discount = parseFloat(document.getElementById('tabPayDiscount').value) || 0;
             const method = parseInt(document.getElementById('tabPayMethod').value);
             const description = document.getElementById('tabPayDesc').value;
 
-            if (!visitId || !amount || amount <= 0) {
-                Swal.fire({ title: 'Required', text: 'Select a visit and enter a valid amount', icon: 'warning', confirmButtonColor: '#14b8a6' });
+            if (!visitId || amount < 0 || discount < 0 || (amount <= 0 && discount <= 0)) {
+                Swal.fire({ title: 'Required', text: 'Select a visit and enter an amount or a discount', icon: 'warning', confirmButtonColor: '#14b8a6' });
                 return;
+            }
+
+            // ⭐ لو المبلغ أكبر من كل المطلوب → تأكيد قبل تسجيل رصيد دائن
+            const plan = DcPay.allocate(pmtVisits, visitId, amount, discount);
+            if (plan && plan.discountOver) {
+                Swal.fire({ title: 'Check discount', text: 'Discount is larger than the visit remaining.', icon: 'warning', confirmButtonColor: '#14b8a6' });
+                return;
+            }
+            if (plan && plan.credit > 0) {
+                const ok = await Swal.fire({
+                    title: 'Overpayment', icon: 'question',
+                    text: `${money(plan.credit)} is above everything the patient owes and will be kept as patient credit. Continue?`,
+                    showCancelButton: true, confirmButtonText: 'Yes, save', cancelButtonText: 'Back', confirmButtonColor: '#14b8a6', reverseButtons: true
+                });
+                if (!ok.isConfirmed) return;
             }
 
             const btn = document.getElementById('btnSubmitTabPay');
@@ -1702,12 +1736,12 @@
                 const res = await fetch('/Payments/AddPayment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ VisitId: visitId, Amount: amount, Method: method, Description: description })
+                    body: JSON.stringify({ VisitId: visitId, Amount: amount, Discount: discount, Method: method, Description: description })
                 });
                 const result = await res.json();
                 if (result.success) {
                     closeTabPaymentModal();
-                    Swal.fire({ title: 'Done!', text: result.message, icon: 'success', confirmButtonColor: '#14b8a6', timer: 1500, showConfirmButton: false });
+                    Swal.fire({ title: 'Done!', text: result.message, icon: 'success', confirmButtonColor: '#14b8a6', timer: 2200, showConfirmButton: false });
                     loadPaymentsTab();
                 } else {
                     Swal.fire({ title: 'Could not save', text: result.message, icon: 'error' });
@@ -1720,10 +1754,12 @@
             }
         }
 
-        async function voidTabPayment(paymentId) {
+        async function voidTabPayment(paymentId, partsCount) {
             const confirmResult = await Swal.fire({
                 title: 'Confirm Void',
-                text: 'This payment will be voided and the visit balance corrected automatically. Are you sure?',
+                text: partsCount > 1
+                    ? `This payment was split across ${partsCount} visits — the whole payment will be voided and every balance (paid + discount) corrected. Are you sure?`
+                    : 'This payment will be voided and the visit balance (paid + discount) corrected automatically. Are you sure?',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Yes, void it',
@@ -1748,7 +1784,7 @@
         }
 
         // Refresh KPIs/next appointment card after booking from the shared modal
-        window.onAppointmentCreated = function() {
+        window.onAppointmentCreated = function () {
             setTimeout(() => location.reload(), 1200);
         };
 

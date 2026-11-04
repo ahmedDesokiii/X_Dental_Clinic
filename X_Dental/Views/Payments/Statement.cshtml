@@ -267,7 +267,6 @@
         padding: 16px 20px;
         background: var(--sc-sky-50);
         border-bottom: 1px solid var(--sc-sky-100);
-
     }
 
         .section-head h5 {
@@ -780,12 +779,20 @@
             <div class="modal-body">
                 <div class="mb-3">
                     <label class="form-label-custom">الزيارة <span class="text-danger">*</span></label>
-                    <select class="form-control-custom" id="payVisitId"></select>
+                    <select class="form-control-custom" id="payVisitId" onchange="updatePayPreview()"></select>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label-custom">المبلغ <span class="text-danger">*</span></label>
-                    <input type="number" step="0.01" class="form-control-custom" id="payAmount" placeholder="0.00" />
+                <div class="mb-3" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div>
+                        <label class="form-label-custom">المبلغ <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" min="0" class="form-control-custom" id="payAmount" placeholder="0" oninput="updatePayPreview()" />
+                    </div>
+                    <div>
+                        <label class="form-label-custom">الخصم</label>
+                        <input type="number" step="0.01" min="0" class="form-control-custom" id="payDiscount" placeholder="0" oninput="updatePayPreview()" />
+                    </div>
                 </div>
+                @* ⭐ المرحلة 5 — معاينة توزيع الدفعة قبل الحفظ (نفس قواعد السيرفر) *@
+                <div class="mb-3" id="payPreview"></div>
                 <div class="mb-3">
                     <label class="form-label-custom">طريقة الدفع</label>
                     <select class="form-control-custom" id="payMethod">
@@ -812,6 +819,7 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/payments-ui.js" asp-append-version="true"></script>
     <script>
         const patientId = @patientId;
 
@@ -869,7 +877,7 @@
 
         function renderStatement(data) {
             allVisits = data.visits || [];
-            allPayments = data.payments || [];
+            allPayments = data.receipts || [];   // ⭐ المرحلة 5 — الدفعات مجمّعة بالإيصال
             paymentsShown = 0;
             visitsShown = 0;
 
@@ -893,28 +901,20 @@
 
         function visitRowHtml(v, i) {
             return `
-                        <tr style="animation-delay: ${Math.min(i * 0.04, 0.3)}s">
-                            <td>${new Date(v.visitDate).toLocaleDateString('ar-EG')}</td>
-                            <td>${v.category === 2 ? 'تقويم' : 'عام'}</td>
-                            <td>${money(v.totalAmount)}</td>
-                            <td>${money(v.discount)}</td>
-                            <td>${money(v.paidAmount)}</td>
-                            <td>${money(v.remaining)}</td>
-                            <td>${v.isFullyPaid ? '<span class="badge-paid">مسدد</span>' : '<span class="badge-due">متبقي</span>'}</td>
-                        </tr>`;
+                                <tr style="animation-delay: ${Math.min(i * 0.04, 0.3)}s">
+                                    <td>${new Date(v.visitDate).toLocaleDateString('ar-EG')}</td>
+                                    <td>${v.category === 2 ? 'تقويم' : 'عام'}</td>
+                                    <td>${money(v.totalAmount)}</td>
+                                    <td>${money(v.discount)}</td>
+                                    <td>${money(v.paidAmount)}</td>
+                                    <td>${money(v.remaining)}</td>
+                                    <td>${v.isFullyPaid ? '<span class="badge-paid">مسدد</span>' : '<span class="badge-due">متبقي</span>'}</td>
+                                </tr>`;
         }
 
+        // ⭐ المرحلة 5 — كل إيصال سطر واحد + تفاصيل التوزيع على الزيارات (payments-ui.js)
         function paymentRowHtml(p, i) {
-            return `
-                        <tr style="animation-delay: ${Math.min(i * 0.04, 0.3)}s">
-                            <td>${new Date(p.paymentDate).toLocaleDateString('ar-EG')}</td>
-                            <td>${new Date(p.visitDate).toLocaleDateString('ar-EG')}</td>
-                            <td style="font-weight:800; color:#047857;">${money(p.amount)}</td>
-                            <td>${p.methodText}</td>
-                            <td style="direction:ltr; text-align:right;">${p.receiptNo || '—'}</td>
-                            <td>${p.description || ''}</td>
-                            <td><button class="btn-void" onclick="voidPayment(${p.id})"><i class="bi bi-x-circle"></i> إلغاء</button></td>
-                        </tr>`;
+            return DcPay.receiptRows([p], { lang: 'ar', voidFn: 'voidPayment', voidClass: 'btn-void', methodBadge: 'dcp-method' });
         }
 
         function renderVisitsChunk(reset) {
@@ -958,9 +958,21 @@
         function loadMoreVisits() { renderVisitsChunk(false); }
         function loadMorePayments() { renderPaymentsChunk(false); }
 
+        function updatePayPreview() {
+            DcPay.renderPreview(
+                document.getElementById('payPreview'),
+                allVisits,
+                parseInt(document.getElementById('payVisitId').value),
+                parseFloat(document.getElementById('payAmount').value) || 0,
+                parseFloat(document.getElementById('payDiscount').value) || 0,
+                'ar');
+        }
+
         function openAddPaymentModal() {
             document.getElementById('payAmount').value = '';
+            document.getElementById('payDiscount').value = '';
             document.getElementById('payDesc').value = '';
+            updatePayPreview();
             document.getElementById('payModal').classList.add('show');
             document.body.style.overflow = 'hidden';
         }
@@ -972,25 +984,41 @@
 
         async function submitPayment() {
             const visitId = parseInt(document.getElementById('payVisitId').value);
-            const amount = parseFloat(document.getElementById('payAmount').value);
+            const amount = parseFloat(document.getElementById('payAmount').value) || 0;
+            const discount = parseFloat(document.getElementById('payDiscount').value) || 0;
             const method = parseInt(document.getElementById('payMethod').value);
             const description = document.getElementById('payDesc').value;
 
-            if (!visitId || !amount || amount <= 0) {
-                Swal.fire({ title: 'مطلوب', text: 'اختر الزيارة وادخل مبلغ صحيح', icon: 'warning', confirmButtonColor: '#14b8a6' });
+            if (!visitId || amount < 0 || discount < 0 || (amount <= 0 && discount <= 0)) {
+                Swal.fire({ title: 'مطلوب', text: 'اختر الزيارة وادخل مبلغ أو خصم', icon: 'warning', confirmButtonColor: '#14b8a6' });
                 return;
+            }
+
+            // ⭐ تأكيد لو المبلغ أكبر من كل المطلوب (رصيد دائن)
+            const plan = DcPay.allocate(allVisits, visitId, amount, discount);
+            if (plan && plan.discountOver) {
+                Swal.fire({ title: 'راجع الخصم', text: 'الخصم أكبر من متبقي الزيارة.', icon: 'warning', confirmButtonColor: '#14b8a6' });
+                return;
+            }
+            if (plan && plan.credit > 0) {
+                const ok = await Swal.fire({
+                    title: 'مبلغ زيادة', icon: 'question',
+                    text: `${money(plan.credit)} زيادة عن كل المطلوب من المريض وهتتسجل رصيد دائن. تكمل؟`,
+                    showCancelButton: true, confirmButtonText: 'أيوه، احفظ', cancelButtonText: 'رجوع', confirmButtonColor: '#14b8a6', reverseButtons: true
+                });
+                if (!ok.isConfirmed) return;
             }
 
             try {
                 const res = await fetch('/Payments/AddPayment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ VisitId: visitId, Amount: amount, Method: method, Description: description })
+                    body: JSON.stringify({ VisitId: visitId, Amount: amount, Discount: discount, Method: method, Description: description })
                 });
                 const result = await res.json();
                 if (result.success) {
                     closeAddPaymentModal();
-                    Swal.fire({ title: 'تم!', text: result.message, icon: 'success', confirmButtonColor: '#14b8a6', timer: 1500, showConfirmButton: false });
+                    Swal.fire({ title: 'تم!', text: result.message, icon: 'success', confirmButtonColor: '#14b8a6', timer: 2200, showConfirmButton: false });
                     loadStatement();
                 } else {
                     Swal.fire({ title: 'تعذر الحفظ', text: result.message, icon: 'error' });
@@ -1000,10 +1028,12 @@
             }
         }
 
-        async function voidPayment(paymentId) {
+        async function voidPayment(paymentId, partsCount) {
             const confirm = await Swal.fire({
                 title: 'تأكيد الإلغاء',
-                text: 'هيتم إلغاء الدفعة دي وتصحيح رصيد الزيارة تلقائيًا. متأكد؟',
+                text: partsCount > 1
+                    ? `الدفعة دي متوزعة على ${partsCount} زيارات — هيتم إلغاؤها بالكامل وتصحيح كل الأرصدة (المدفوع والخصم). متأكد؟`
+                    : 'هيتم إلغاء الدفعة دي وتصحيح رصيد الزيارة تلقائيًا (المدفوع والخصم). متأكد؟',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'أيوه، إلغاء',

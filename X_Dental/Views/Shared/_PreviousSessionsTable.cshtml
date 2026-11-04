@@ -1,6 +1,9 @@
 @model Dental.Modules.Clinical.ViewModels.SessionViewModel
 @{
     var previousSessions = ViewBag.PreviousSessions as List<Dental.Modules.Clinical.DTOs.PreviousSessionRecordDto> ?? new();
+    // ⭐ المرحلة 2 — ملاحظات المتابعة (بتظهر جوه بلوك يومها، والأيام اللي فيها ملاحظات بس بتظهر برضه)
+    var visitNotes = ViewBag.VisitNotes as List<Dental.Modules.Clinical.DTOs.VisitNoteDto> ?? new();
+    var isSessionContext = Model?.Visit != null;   // في السيشن: زر "متابعة" على كل تشخيص
 
     // عرض رقم السن — 0 أو قيم غير قياسية تظهر كـ "—"
     string TLbl(int n)
@@ -21,21 +24,28 @@
     // → كل التشخيصات/الأسنان اللي حصلت في نفس اليوم تظهر في بلوك واحد
     // الماليات: مجموع مميز لكل VisitId في اليوم (من غير تكرار)
     // ============================================================
-    var groupedSessions = previousSessions
-        .GroupBy(r => r.Date.Date)
-        .OrderByDescending(g => g.Key)
-        .Select(g =>
+    var allDays = previousSessions.Select(r => r.Date.Date)
+        .Concat(visitNotes.Select(n => n.VisitDate.Date))
+        .Distinct()
+        .OrderByDescending(d => d)
+        .ToList();
+
+    var groupedSessions = allDays
+        .Select(day =>
         {
+            var g = previousSessions.Where(r => r.Date.Date == day).ToList();
             var distinctVisits = g
                 .GroupBy(x => x.VisitId)
                 .Select(vg => vg.First())
                 .ToList();
+            var dayNotes = visitNotes.Where(n => n.VisitDate.Date == day).OrderBy(n => n.CreatedAt).ToList();
 
             return new
             {
-                Date = g.Key,
+                Date = day,
                 // أول VisitId للـ panel id فقط (للـ accordion)
-                PrimaryVisitId = distinctVisits.First().VisitId,
+                PrimaryVisitId = distinctVisits.FirstOrDefault()?.VisitId ?? dayNotes.First().VisitId,
+                Notes = dayNotes,
                 VisitIds = distinctVisits.Select(v => v.VisitId).ToList(),
                 Teeth = g.OrderBy(x => x.ToothNumber == 0 ? int.MaxValue : x.ToothNumber)
                          .ThenBy(x => x.DiagnosisName)
@@ -90,7 +100,7 @@
                     var teethWithNumber = grp.Teeth.Count(t => t.ToothNumber > 0);
                     var teethLabel = teethWithNumber > 0
                         ? $"{teethWithNumber} سن"
-                        : $"{grp.Teeth.Count} سجل";
+                        : grp.Teeth.Any() ? $"{grp.Teeth.Count} سجل" : "متابعة";
                     <div class="ps-session-block">
                         <button type="button" class="ps-session-head" onclick="togglePsPanel(this)" data-target="@panelId">
                             <div class="ps-session-date">
@@ -98,13 +108,20 @@
                                 <i class="bi bi-calendar-event"></i>
                                 <b>@grp.Date.ToString("dd/MM/yyyy")</b>
                                 <span class="ps-teeth-count">@teethLabel</span>
+                                @if (grp.Notes.Any())
+                                {
+                                    <span class="ps-notes-count" title="ملاحظات متابعة"><i class="bi bi-journal-text"></i> @grp.Notes.Count</span>
+                                }
                             </div>
-                            <div class="ps-session-financials">
-                                <span class="ps-fin-chip total"><i class="bi bi-wallet2"></i> @grp.VisitTotalAmount.ToString("N0")</span>
-                                <span class="ps-fin-chip paid"><i class="bi bi-check-circle"></i> @grp.VisitPaidAmount.ToString("N0")</span>
-                                <span class="ps-fin-chip discount"><i class="bi bi-percent"></i> @grp.VisitDiscount.ToString("N0")</span>
-                                <span class="ps-fin-chip remaining"><i class="bi bi-exclamation-circle"></i> @grp.VisitRemaining.ToString("N0")</span>
-                            </div>
+                            @if (grp.Teeth.Any())
+                            {
+                                <div class="ps-session-financials">
+                                    <span class="ps-fin-chip total"><i class="bi bi-wallet2"></i> @grp.VisitTotalAmount.ToString("N0")</span>
+                                    <span class="ps-fin-chip paid"><i class="bi bi-check-circle"></i> @grp.VisitPaidAmount.ToString("N0")</span>
+                                    <span class="ps-fin-chip discount"><i class="bi bi-percent"></i> @grp.VisitDiscount.ToString("N0")</span>
+                                    <span class="ps-fin-chip remaining"><i class="bi bi-exclamation-circle"></i> @grp.VisitRemaining.ToString("N0")</span>
+                                </div>
+                            }
                         </button>
 
                         <div class="ps-teeth-list" id="@panelId" style="display:none;">
@@ -123,7 +140,21 @@
                                             <span class="ps-diag-notes">@r.DiagnosisNotes</span>
                                         }
                                     </div>
+                                    @{
+                                        var followCount = r.VisitDiagnosisId > 0 ? visitNotes.Count(n => n.LinkedVisitDiagnosisId == r.VisitDiagnosisId) : 0;
+                                    }
+                                    @if (followCount > 0)
+                                    {
+                                        <span class="ps-follow-badge" title="عدد ملاحظات المتابعة على التشخيص ده"><i class="bi bi-chat-left-text"></i> @followCount</span>
+                                    }
                                     <span class="ps-diag-price">@(r.DiagnosisPrice > 0 ? r.DiagnosisPrice.ToString("N0") + " م.ج" : "-")</span>
+                                    @if (isSessionContext && r.VisitDiagnosisId > 0)
+                                    {
+                                        <button type="button" class="btn-sm ps-follow-btn" title="إضافة ملاحظة متابعة على التشخيص ده"
+                                                onclick="event.stopPropagation(); window.SessionNotes && SessionNotes.startFor(@r.VisitDiagnosisId)">
+                                            <i class="bi bi-journal-plus"></i>
+                                        </button>
+                                    }
                                     @if (r.VisitDiagnosisId > 0)
                                     {
                                         <button type="button" class="btn-sm" title="تعديل التشخيص والسعر"
@@ -139,10 +170,40 @@
                             }
                         </div>
 
-                        <div class="ps-session-subtotal">
-                            <span>إجمالي تشخيصات هذا اليوم</span>
-                            <b>@grp.DiagnosisTotal.ToString("N0") م.ج</b>
-                        </div>
+                        @if (grp.Notes.Any())
+                        {
+                            <div class="ps-notes-block" data-panel="@panelId" style="display:none;">
+                                <div class="ps-notes-title"><i class="bi bi-journal-medical"></i> ملاحظات المتابعة</div>
+                                @foreach (var n in grp.Notes)
+                                {
+                                    <div class="ps-note">
+                                        <div class="ps-note-text">@n.Text</div>
+                                        <div class="ps-note-foot">
+                                            @if (n.LinkedVisitDiagnosisId.HasValue)
+                                            {
+                                                <span class="ps-note-link">
+                                                    <span class="tooth-chip @(n.LinkedToothNumber <= 0 ? "tooth-chip-empty" : "")">@TLbl(n.LinkedToothNumber)</span>
+                                                    @n.LinkedDiagnosisName
+                                                    @if (n.LinkedDiagnosisDate.HasValue)
+                                                    {
+                                                        <small>· @n.LinkedDiagnosisDate.Value.ToString("dd/MM/yyyy")</small>
+                                                    }
+                                                </span>
+                                            }
+                                            <span class="ps-note-time"><i class="bi bi-clock"></i> @n.CreatedAt.ToString("hh:mm tt")</span>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        @if (grp.Teeth.Any())
+                        {
+                            <div class="ps-session-subtotal">
+                                <span>إجمالي تشخيصات هذا اليوم</span>
+                                <b>@grp.DiagnosisTotal.ToString("N0") م.ج</b>
+                            </div>
+                        }
                     </div>
                 }
             </div>
@@ -158,6 +219,104 @@
 </div>
 
 <style>
+    /* ⭐ المرحلة 2 — ملاحظات المتابعة */
+    .ps-notes-count {
+        font-size: .68rem;
+        font-weight: 800;
+        color: #4338ca;
+        background: #eef2ff;
+        padding: 2px 9px;
+        border-radius: 999px;
+        border: 1px solid #c7d2fe;
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+    }
+
+    .ps-follow-badge {
+        font-size: .66rem;
+        font-weight: 800;
+        color: #4338ca;
+        background: #eef2ff;
+        padding: 2px 7px;
+        border-radius: 8px;
+        white-space: nowrap;
+        display: inline-flex;
+        gap: 3px;
+        align-items: center;
+    }
+
+    .ps-follow-btn {
+        color: #6366f1 !important;
+    }
+
+    .ps-notes-block {
+        margin: 4px 14px 12px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #f8faff, #f5f3ff);
+        border: 1px solid #e0e7ff;
+    }
+
+    .ps-notes-title {
+        font-size: .76rem;
+        font-weight: 800;
+        color: #4338ca;
+        margin-bottom: 8px;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .ps-note {
+        background: #fff;
+        border: 1px solid #eef2ff;
+        border-radius: 11px;
+        padding: 8px 11px;
+        margin-bottom: 6px;
+    }
+
+        .ps-note:last-child {
+            margin-bottom: 0;
+        }
+
+    .ps-note-text {
+        font-size: .84rem;
+        color: #1e293b;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .ps-note-foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-top: 5px;
+        flex-wrap: wrap;
+    }
+
+    .ps-note-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: .72rem;
+        font-weight: 700;
+        color: #4338ca;
+    }
+
+        .ps-note-link small {
+            color: #6366f1;
+        }
+
+    .ps-note-time {
+        font-size: .68rem;
+        color: #94a3b8;
+        font-weight: 700;
+        margin-inline-start: auto;
+    }
+
     .ps-groups {
         display: flex;
         flex-direction: column;
@@ -416,6 +575,9 @@
         const isOpen = panel.style.display !== 'none';
         panel.style.display = isOpen ? 'none' : 'flex';
         block.classList.toggle('open', !isOpen);
+        // ⭐ ملاحظات المتابعة بتفتح/تقفل مع نفس اليوم
+        const notesBlock = block.querySelector(`.ps-notes-block[data-panel="${targetId}"]`);
+        if (notesBlock) notesBlock.style.display = isOpen ? 'none' : 'block';
     }
     window.togglePsPanel = togglePsPanel;
 

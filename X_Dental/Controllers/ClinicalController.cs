@@ -6,6 +6,8 @@ using Dental.Modules.Clinical.Interfaces;
 using Dental.Modules.Clinical.ViewModels;
 using Dental.Modules.Patients.DTOs;
 using Dental.Modules.Patients.Enums;
+using Dental.Modules.Payments.DTOs;
+using Dental.Modules.Payments.InterfacesPayments;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +23,8 @@ namespace Dental.Controllers
         private readonly ILogger<ClinicalController> _logger;
         private readonly IClinicalRecordService _records;
         private readonly IOrthoService _ortho;
+        private readonly IVisitNoteService _notes;
+        private readonly IPaymentService _payments;
 
 
         public ClinicalController(
@@ -29,7 +33,9 @@ namespace Dental.Controllers
             IWebHostEnvironment env,
             ILogger<ClinicalController> logger,
             IClinicalRecordService records,
-            IOrthoService ortho)// ⬅ ضيف البراميتر ده
+            IOrthoService ortho,
+            IVisitNoteService notes,
+            IPaymentService payments)
         {
             _context = context;
             _mapper = mapper;
@@ -37,6 +43,8 @@ namespace Dental.Controllers
             _logger = logger;                      // ⬅ وضيف السطر ده
             _records = records;
             _ortho = ortho;               // ⭐ NEW
+            _notes = notes;
+            _payments = payments;
         }
 
 
@@ -53,8 +61,8 @@ namespace Dental.Controllers
             var visit = await _context.Visits
                 .Include(v => v.Diagnoses).ThenInclude(d => d.Diagnosis)
                 .Include(v => v.Procedures).ThenInclude(p => p.Procedure)
-                .Include(v => v.Payments)
-                //.Include(v => v.TreatmentSessions)
+                .Include(v => v.Payments.Where(p => !p.IsDeleted))   // ⭐ الدفعات الملغية متظهرش في سجل الزيارة
+                                                                     //.Include(v => v.TreatmentSessions)
                 .Include(v => v.XRays)
                 .Include(v => v.Prescriptions)
                 .FirstOrDefaultAsync(v => v.Id == visitId);
@@ -90,7 +98,7 @@ namespace Dental.Controllers
             {
                 var anchor = await _context.Visits
                     .AsNoTracking()
-                    .Include(v => v.Payments)
+                    .Include(v => v.Payments.Where(p => !p.IsDeleted))   // ⭐ استبعاد الملغي
                     .FirstOrDefaultAsync(v => v.Id == orthoAnchorId);
                 if (anchor != null)
                 {
@@ -146,6 +154,7 @@ namespace Dental.Controllers
 
 
             ViewBag.PreviousSessions = await GetPreviousSessionsAsync(patientId);
+            ViewBag.VisitNotes = await _notes.GetByPatientAsync(patientId);
 
             ViewBag.XRayGroups = await GetXRaysGroupedAsync(patientId);
 
@@ -153,6 +162,7 @@ namespace Dental.Controllers
          from p in _context.VisitPayments
          join v in _context.Visits on p.VisitId equals v.Id
          where v.PatientId == patientId && p.VisitId != visitId && p.VisitId != orthoAnchorId
+               && !p.IsDeleted && v.IsActive   // ⭐ الدفعات الملغية (Void) متتحسبش في المدفوعات السابقة
          orderby p.PaymentDate descending
          select new
          {
@@ -161,6 +171,7 @@ namespace Dental.Controllers
              Method = p.Method.ToString(),
              p.Description,
              p.PaymentDate,
+             p.ReceiptNo,          // ⭐ المرحلة 5 — تجميع الإيصال الواحد في صف واحد
              p.VisitId,
              VisitTotalAmount = v.TotalAmount,
              VisitPaidAmount = v.PaidAmount,
@@ -554,29 +565,59 @@ namespace Dental.Controllers
             return Json(new { success = true, data = vp, remaining = 0 });
         }
 
+        // ⭐ المرحلة 5 — Endpoint قديم: بقى يمر على نفس محرك الدفع الموحّد بدل ما يكتب الحركة بنفسه
         [HttpPost]
         public async Task<IActionResult> AddPayment([FromBody] AddPaymentRequest req)
         {
-            var payment = new VisitPayment
+            var result = await _payments.AddPaymentAsync(new AddPaymentDto
             {
                 VisitId = req.VisitId,
                 Amount = req.Amount,
-                Method = req.Method,               // ✅ من Models.Patients
-                Description = req.Description,
-                ReceiptNo = $"REC-{DateTime.Now:yyMMdd}-{new Random().Next(1000, 9999)}"
-            };
-            _context.VisitPayments.Add(payment);
+                Method = req.Method,
+                Description = req.Description
+            });
+            if (!result.Success)
+                return Json(new { success = false, message = result.Message });
 
-            var visit = await _context.Visits.FindAsync(req.VisitId);
-            if (visit != null) visit.PaidAmount += req.Amount;
-
-            await _context.SaveChangesAsync();
-            return Json(new { success = true, data = payment, remaining = 0 });
+            return Json(new { success = true, message = result.Message, receiptNo = result.Data!.ReceiptNo, remaining = result.Data.VisitRemaining });
         }
 
 
 
 
+
+        // ============================================================
+        // ⭐ المرحلة 2 — ملاحظات المتابعة (بتتحفظ فورًا، مستقلة عن FinishSession)
+        // ============================================================
+        [HttpGet]
+        public async Task<IActionResult> GetVisitNotes(int patientId)
+        {
+            var data = await _notes.GetByPatientAsync(patientId);
+            return Json(new { success = true, data });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetLinkableDiagnoses(int patientId)
+        {
+            var data = await _notes.GetLinkableDiagnosesAsync(patientId);
+            return Json(new { success = true, data });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SaveVisitNote([FromBody] SaveVisitNoteRequest req)
+        {
+            if (req == null)
+                return Json(new { success = false, message = "بيانات غير صالحة." });
+            var result = await _notes.SaveAsync(req);
+            return Json(new { success = result.Success, message = result.Message, data = result.Data });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteVisitNote(int visitId, string id)
+        {
+            var result = await _notes.DeleteAsync(visitId, id);
+            return Json(new { success = result.Success, message = result.Message });
+        }
 
         [HttpPost]
         public async Task<IActionResult> FinishSession()
@@ -744,94 +785,24 @@ namespace Dental.Controllers
                     }
                 }
 
-                // ================= 2) مدفوعات السيشن (FIFO) =================
-                // القاعدة:
-                //  - الخصم كله على الزيارة الحالية.
+                // ================= 2) مدفوعات السيشن =================
+                // ⭐ المرحلة 5 — نفس محرك الدفع الموحّد بتاع الـ Details وكشف الحساب (PaymentService.AllocateAsync):
+                //  - الخصم على الزيارة الحالية.
                 //  - المبلغ يغطي متبقي الزيارة الحالية الأول.
-                //  - الزيادة تسدد الزيارات القديمة من نفس النوع (الأقدم فالأحدث) كدفعات مستقلة على كل زيارة.
+                //  - الزيادة تسدد الزيارات القديمة من نفس النوع (الأقدم فالأحدث) بنفس رقم الإيصال.
                 //  - لو فضل حاجة بعد سداد كل القديم → تفضل على الزيارة الحالية (رصيد دائن للمريض).
-                var sessionPayments = req.Payments
-                    .Where(p => p.Amount > 0 || p.Discount > 0)
-                    .ToList();
-
-                foreach (var pay in sessionPayments)
-                    if (pay.Discount > 0) visit.Discount += pay.Discount;
-
-                var currentDue = Math.Max(0m, visit.TotalAmount - visit.Discount - visit.PaidAmount);
-                var totalCash = sessionPayments.Sum(p => p.Amount > 0 ? p.Amount : 0m);
-
-                // الزيارات القديمة المديونة — بترجع فاضية لو مفيش زيادة عن مطلوب اليوم
-                var hasExcess = totalCash > currentDue;
-                var currentVisitId = visit.Id;
-                var visitCategory = visit.Category;
-                var olderDue = await _context.Visits
-                    .Where(v => hasExcess
-                             && v.PatientId == req.PatientId
-                             && v.IsActive
-                             && v.Id != currentVisitId
-                             && v.Category == visitCategory
-                             && v.TotalAmount - v.Discount - v.PaidAmount > 0)
-                    .OrderBy(v => v.VisitDate)
-                    .ThenBy(v => v.Id)
-                    .ToListAsync();
-
-                var olderIdx = 0;
                 decimal settledOld = 0;
                 var sessionDate = DateTime.Now;
-
-                foreach (var pay in sessionPayments)
+                foreach (var pay in req.Payments.Where(p => p.Amount > 0 || p.Discount > 0))
                 {
-                    if (pay.Amount <= 0) continue;   // خصم بس — اتسجل على الزيارة فوق
-
-                    // إيصال واحد للدفعة حتى لو اتقسمت على أكتر من زيارة
-                    var receiptNo = $"REC-{DateTime.Now:yyMMdd}-{new Random().Next(1000, 9999)}";
-                    var left = pay.Amount;
-
-                    // 1) الزيارة الحالية
-                    var toCurrent = Math.Min(left, currentDue);
-                    left -= toCurrent;
-                    currentDue -= toCurrent;
-
-                    // 2) الزيارات القديمة (الأقدم أولاً)
-                    while (left > 0 && olderIdx < olderDue.Count)
-                    {
-                        var old = olderDue[olderIdx];
-                        var oldDue = old.TotalAmount - old.Discount - old.PaidAmount;
-                        if (oldDue <= 0) { olderIdx++; continue; }
-
-                        var part = Math.Min(left, oldDue);
-                        _context.VisitPayments.Add(new VisitPayment
-                        {
-                            VisitId = old.Id,
-                            Amount = part,
-                            Discount = 0,
-                            Method = pay.Method,
-                            Description = $"سداد متأخرات — من سيشن {sessionDate:dd/MM/yyyy}"
-                                          + (string.IsNullOrWhiteSpace(pay.Description) ? "" : $" — {pay.Description}"),
-                            ReceiptNo = receiptNo
-                        });
-                        old.PaidAmount += part;
-                        left -= part;
-                        settledOld += part;
-
-                        if (old.TotalAmount - old.Discount - old.PaidAmount <= 0) olderIdx++;
-                    }
-
-                    // 3) نصيب الزيارة الحالية + أي زيادة متبقية (رصيد دائن)
-                    var currentPart = toCurrent + left;
-                    if (currentPart > 0 || pay.Discount > 0)
-                    {
-                        _context.VisitPayments.Add(new VisitPayment
-                        {
-                            VisitId = req.VisitId,
-                            Amount = currentPart,
-                            Discount = pay.Discount,
-                            Method = pay.Method,
-                            Description = pay.Description,
-                            ReceiptNo = receiptNo
-                        });
-                        visit.PaidAmount += currentPart;
-                    }
+                    var alloc = await _payments.AllocateAsync(
+                        visit,
+                        Math.Max(0m, pay.Amount),
+                        Math.Max(0m, pay.Discount),
+                        pay.Method,
+                        pay.Description,
+                        sessionDate);
+                    settledOld += alloc.SettledOld;
                 }
 
                 // ================= 3) إنهاء الزيارة =================

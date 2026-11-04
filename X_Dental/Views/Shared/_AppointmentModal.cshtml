@@ -30,7 +30,7 @@
                             <label>التاريخ <span class="req">*</span></label>
                             <input type="date" class="apm-input" id="apmDate" onchange="AppointmentModal.loadSameDay()" />
                         </div>
-                        <div class="apm-field"hidden>
+                        <div class="apm-field" hidden>
                             <label>الوقت <span class="req">*</span></label>
                             <input type="time" class="apm-input" id="apmTime" />
                         </div>
@@ -71,6 +71,12 @@
 </div>
 
 <style>
+    /* المودال z-index بتاعه 9999 وتنبيهات SweetAlert افتراضيًا 1060 — فكانت بتظهر تحته.
+           نرفع SweetAlert فوق المودال عشان تحذير الموعد المكرر ورسائل الخطأ تبان. */
+    .swal2-container {
+        z-index: 10050 !important;
+    }
+
     .apm-modal {
         display: none;
         position: fixed;
@@ -368,7 +374,7 @@
 </style>
 
 <script>
-    window.AppointmentModal = (function() {
+    window.AppointmentModal = (function () {
         let searchTimer = null;
         let selectedPatientId = null;
 
@@ -418,10 +424,10 @@
                         return;
                     }
                     resultsEl.innerHTML = data.map(p => `
-                            <div class="apm-search-item" onclick="AppointmentModal.pickPatient(${p.id}, '${(p.fullNameAr || '').replace(/'/g, "\\'")}')">
-                                <b>${p.fullNameAr}</b>
-                                <span>${p.patientCode || ''} ${p.phone ? '· ' + p.phone : ''}</span>
-                            </div>`).join('');
+                                <div class="apm-search-item" onclick="AppointmentModal.pickPatient(${p.id}, '${(p.fullNameAr || '').replace(/'/g, "\\'")}')">
+                                    <b>${p.fullNameAr}</b>
+                                    <span>${p.patientCode || ''} ${p.phone ? '· ' + p.phone : ''}</span>
+                                </div>`).join('');
                     resultsEl.classList.add('show');
                 } catch (e) {
                     resultsEl.innerHTML = '<div class="apm-search-item"><span>تعذر البحث</span></div>';
@@ -459,11 +465,11 @@
                     row.style.animation = `fadeInUp 0.3s ${idx * 0.05}s ease forwards`;
                     row.style.opacity = '0';
                     row.innerHTML = `
-                            <div class="apm-sd-info">
-                                <span class="apm-sd-name">${ap.patientName}</span>
-                                <span class="apm-sd-phone"><i class="bi bi-telephone-fill"></i> ${ap.patientMobile || '-'}</span>
-                            </div>
-                            <span class="apm-sd-status ${ap.statusColorClass}">${ap.statusText}</span>`;
+                                <div class="apm-sd-info">
+                                    <span class="apm-sd-name">${ap.patientName}</span>
+                                    <span class="apm-sd-phone"><i class="bi bi-telephone-fill"></i> ${ap.patientMobile || '-'}</span>
+                                </div>
+                                <span class="apm-sd-status ${ap.statusColorClass}">${ap.statusText}</span>`;
                     listEl.appendChild(row);
                 });
             } catch (e) {
@@ -487,19 +493,16 @@
                 return;
             }
 
-            const appointmentDate = new Date(`${date}T${time}`);
             try {
-                const res = await fetch('/Appointments/Create', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        PatientId: patientId,
-                        AppointmentDate: appointmentDate.toISOString(),
-                        DurationMinutes: duration,
-                        Reason: reason
-                    })
+                // تاريخ محلي مباشر (من غير toISOString) عشان ميحصلش UTC shift في اليوم أو الساعة
+                if (!window.DcBooking) throw new Error('ملف site.js القديم لسه محمّل — اعملي Ctrl+F5');
+                const result = await DcBooking.create({
+                    PatientId: patientId,
+                    AppointmentDate: `${date}T${time}:00`,
+                    DurationMinutes: duration,
+                    Reason: reason
                 });
-                const result = await res.json();
+                if (result === null) return; // لغى بعد تحذير الموعد المكرر
                 if (result.success) {
                     close();
                     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'تم حجز الموعد', showConfirmButton: false, timer: 2000 });
@@ -508,7 +511,8 @@
                     Swal.fire({ title: 'خطأ', text: result.message || 'فشل الحفظ', icon: 'error', confirmButtonColor: '#dc2626' });
                 }
             } catch (e) {
-                Swal.fire({ title: 'خطأ', text: 'مشكلة في الاتصال', icon: 'error', confirmButtonColor: '#dc2626' });
+                console.error('Appointment save failed:', e);
+                Swal.fire({ title: 'خطأ', text: e.message || 'مشكلة في الاتصال', icon: 'error', confirmButtonColor: '#dc2626' });
             }
         }
 

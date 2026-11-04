@@ -177,18 +177,18 @@
             }
 
             listEl.innerHTML = '';
-            data.data.forEach(function(ap, idx) {
+            data.data.forEach(function (ap, idx) {
                 const row = document.createElement('div');
                 row.className = 'same-day-item';
                 row.style.animation = `fadeInUp 0.3s ${idx * 0.05}s ease forwards`;
                 row.style.opacity = '0';
                 row.innerHTML = `
-                        <div class="same-day-info">
-                            <span class="same-day-name">${ap.patientName}</span>
-                            <span class="same-day-phone"><i class="bi bi-telephone-fill"></i> ${ap.patientMobile || '-'}</span>
-                        </div>
-                        <span class="same-day-status ${ap.statusColorClass}">${ap.statusText}</span>
-                    `;
+                            <div class="same-day-info">
+                                <span class="same-day-name">${ap.patientName}</span>
+                                <span class="same-day-phone"><i class="bi bi-telephone-fill"></i> ${ap.patientMobile || '-'}</span>
+                            </div>
+                            <span class="same-day-status ${ap.statusColorClass}">${ap.statusText}</span>
+                        `;
                 listEl.appendChild(row);
             });
         } catch (err) {
@@ -205,22 +205,27 @@
             return;
         }
 
-        // مفيش تعارض وقت بقى — كل المرضى بيتسجلوا في نفس اليوم بأي عدد بوقت رمزي ثابت.
+        // مفيش تعارض وقت بقى — كل المرضى بيتسجلوا في نفس اليوم بأي عدد بوقت رمزي ثابت (12 الظهر).
+        // لو الحجز النهارده وعدّينا 12، السيرفر هيرفضه كـ "وقت ماضي" — فنستخدم الوقت الحالي بدلها.
+        let time = '12:00:00';
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        if (date === todayStr && now.getHours() >= 12) {
+            time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
+        }
+
         const payload = {
             PatientId: @Model.Patient.Id,
-            AppointmentDate: date + 'T12:00:00',
+            AppointmentDate: `${date}T${time}`,
             DurationMinutes: 15,
             Reason: 'متابعة سيشن',
             Notes: notes || null
         };
 
         try {
-            const res = await fetch('/Appointments/Create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
+            if (!window.DcBooking) throw new Error('ملف site.js القديم لسه محمّل — اعملي Ctrl+F5');
+            const data = await DcBooking.create(payload);
+            if (data === null) return; // لغى بعد تحذير الموعد المكرر
 
             if (data.success) {
                 Swal.fire({
@@ -233,7 +238,8 @@
                 Swal.fire({ title: 'خطأ', text: data.message || 'تعذر حجز الموعد', icon: 'error', confirmButtonColor: '#dc2626', customClass: { popup: 'rounded-4' } });
             }
         } catch (err) {
-            Swal.fire({ title: 'خطأ', text: 'تعذر الاتصال بالسيرفر', icon: 'error', confirmButtonColor: '#dc2626', customClass: { popup: 'rounded-4' } });
+            console.error('Follow-up booking failed:', err);
+            Swal.fire({ title: 'خطأ', text: err.message || 'تعذر الاتصال بالسيرفر', icon: 'error', confirmButtonColor: '#dc2626', customClass: { popup: 'rounded-4' } });
         }
     }
 </script>

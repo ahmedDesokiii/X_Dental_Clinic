@@ -1027,13 +1027,9 @@
                 </div>
             </div>
             <div class="hero-actions">
-                <button type="button" id="btnAddRxSession" class="btn-hero glass" onclick="openRxModal()">
+                <button type="button" id="btnAddRxSession" class="btn-hero glass" onclick="openPpModal()">
                     Prescription
                     <i class="bi bi-file-earmark-medical"></i>
-                </button>
-                <button type="button" id="btnPrintSession" class="btn-hero glass">
-                    Print
-                    <i class="bi bi-printer"></i>
                 </button>
                 <a asp-controller="Patients" asp-action="Details" asp-route-id="@Model.Patient.Id" class="btn-hero glass">
                     Back
@@ -1158,6 +1154,10 @@
             <button type="button" class="dc-tab-btn" onclick="switchTab('tabXray', this)">
                 <i class="bi bi-image"></i> X-Rays
             </button>
+            <button type="button" class="dc-tab-btn" onclick="switchTab('tabNotes', this)">
+                <i class="bi bi-journal-medical"></i> Notes
+                <span class="sn-tab-badge" id="tabBadgeNotes">0</span>
+            </button>
             <button type="button" class="dc-tab-btn" onclick="switchTab('tabFollow', this)">
                 <i class="bi bi-calendar-plus"></i> Follow Up
             </button>
@@ -1195,6 +1195,10 @@
             @await Html.PartialAsync("_ClinicalRecordsTable", Model)
         </div>
 
+        <div class="dc-tab-panel custom-scroll" id="tabNotes" style="max-height:680px; overflow-y:auto;">
+            @await Html.PartialAsync("_SessionNotesPanel", Model)
+        </div>
+
         <div class="dc-tab-panel custom-scroll" id="tabFollow" style="max-height:680px; overflow-y:auto;">
             @await Html.PartialAsync("_FollowUpPanel", Model)
         </div>
@@ -1206,12 +1210,21 @@
 
 
 
+@* ⭐ المرحلة 3 — نفس مودال الروشتة بتاع Details، على زيارة السيشن الحالية.
+   برا كل الـ containers عشان أي backdrop-filter فوقه ميحبسش الـ position:fixed *@
+@await Html.PartialAsync("~/Views/Patients/_PatientPrescriptions.cshtml", null, new ViewDataDictionary(ViewData)
+{
+    ["RxPatientId"] = Model.Patient.Id,
+    ["RxVisitId"] = Model.Visit.Id,
+    ["RxModalOnly"] = true
+})
+
 @section Scripts {
     <script>
         (() => {
             "use strict";
 
-            window.switchTab = function(panelId, btn) {
+            window.switchTab = function (panelId, btn) {
                 document.querySelectorAll('.dc-tab-panel').forEach(p => p.classList.remove('active'));
                 document.querySelectorAll('.dc-tab-btn').forEach(b => b.classList.remove('active'));
                 const panel = document.getElementById(panelId);
@@ -1222,8 +1235,6 @@
                 btn.classList.add('active');
             };
 
-            const btnPrint = document.getElementById("btnPrintSession");
-            if (btnPrint) btnPrint.addEventListener("click", () => window.print());
 
             const bottomBar = document.getElementById('bottomBar');
 
@@ -1234,7 +1245,7 @@
             }
 
             const origRender = window.renderRecordsTable;
-            window.renderRecordsTable = function() {
+            window.renderRecordsTable = function () {
                 if (origRender) origRender();
                 checkPendingChanges();
                 updateTabBadge();
@@ -1243,7 +1254,7 @@
                 else updateBottomBar();
             };
             const origRenderPay = window.renderPendingPaymentsSummary;
-            window.renderPendingPaymentsSummary = function() {
+            window.renderPendingPaymentsSummary = function () {
                 if (origRenderPay) origRenderPay();
                 checkPendingChanges();
                 updateBottomBar();

@@ -213,7 +213,9 @@ namespace Dental.Modules.Clinical.Services
 
                 foreach (var v in legacyVisits.Where(v => !withEntries.Contains(v.Id)))
                 {
-                    var comment = !string.IsNullOrWhiteSpace(v.Examination) ? v.Examination!.Trim()
+                    // ⭐ Examination ممكن يكون فيه ملاحظات متابعة بصيغة JSON (المرحلة 2) → نقرأه كنص مقروء
+                    var exam = VisitNotesCodec.PlainText(v.Examination);
+                    var comment = !string.IsNullOrWhiteSpace(exam) ? exam!.Trim()
                                 : !string.IsNullOrWhiteSpace(v.Notes) ? v.Notes!.Trim()
                                 : "زيارة تقويم (مرحّلة)";
                     _context.OrthoVisitEntries.Add(new OrthoVisitEntry

@@ -14,6 +14,14 @@ namespace Dental.Modules.Payments.ServicesPayments
     // ملاحظة تصميم مهمة: Visit.PaidAmount فضل Field مخزّن (مش محسوب لايف من VisitPayments)
     // بقرار مقصود، لكن الكلاس ده هو المكان الوحيد المسموح له يعدّل فيه. أي كود تاني
     // (Controller قديم أو جديد) لازم يمر من هنا عشان الرقمين يفضلوا متزامنين دايمًا.
+    //
+    // ⭐ المرحلة 5 — محرك دفع واحد (AllocateAsync) لكل الشاشات: السيشن، الـ Details، كشف الحساب.
+    //   القاعدة (نفس اللي كانت في FinishSession):
+    //    1) الخصم كله على الزيارة المختارة.
+    //    2) الكاش يغطي متبقي الزيارة المختارة الأول.
+    //    3) الزيادة تسدد الزيارات الأقدم من نفس النوع (الأقدم فالأحدث) — حركة لكل زيارة بنفس رقم الإيصال.
+    //    4) لو فضل حاجة بعد سداد كل القديم → تفضل على الزيارة المختارة (رصيد دائن).
+    //   والعرض في كل الشاشات بيجمّع حركات الإيصال الواحد في سطر واحد.
     public class PaymentService : IPaymentService
     {
         private readonly ApplicationDbContext _context;
@@ -21,6 +29,7 @@ namespace Dental.Modules.Payments.ServicesPayments
         // نفس القيمة المستخدمة في Statement.cshtml (category === 2 → تقويم)
         private const int OrthoCategoryValue = 2;
         private const int MaxReportDays = 366;
+        private const string ArrearsPrefix = "سداد متأخرات";
 
         public PaymentService(ApplicationDbContext context)
         {
@@ -42,6 +51,21 @@ namespace Dental.Modules.Payments.ServicesPayments
         private static bool IsOrthoCategory(object? category)
             => category != null && Convert.ToInt32(category) == OrthoCategoryValue;
 
+        private static decimal Due(Visit v) => v.TotalAmount - v.Discount - v.PaidAmount;
+
+        // مفتاح الإيصال: كل حركات الإيصال الواحد (نفس المريض + نفس الرقم + نفس اليوم) = دفعة واحدة.
+        // الحركات القديمة اللي من غير رقم إيصال بتفضل كل واحدة لوحدها.
+        private static string ReceiptKey(int patientId, string? receiptNo, DateTime paymentDate, int paymentId)
+            => string.IsNullOrWhiteSpace(receiptNo)
+                ? $"id:{paymentId}"
+                : $"{patientId}|{receiptNo}|{paymentDate:yyyyMMdd}";
+
+        private static bool IsArrears(string? description)
+            => !string.IsNullOrEmpty(description) && description.StartsWith(ArrearsPrefix);
+
+        // ════════════════════════════════════════════════════════════
+        // كشف الحساب
+        // ════════════════════════════════════════════════════════════
         public async Task<ServiceResult<PatientStatementDto>> GetPatientStatementAsync(int patientId)
         {
             var patient = await _context.Patients
@@ -65,7 +89,53 @@ namespace Dental.Modules.Payments.ServicesPayments
                 .OrderByDescending(p => p.PaymentDate)
                 .ToListAsync();
 
-            var visitDateLookup = visits.ToDictionary(v => v.Id, v => v.VisitDate);
+            var visitLookup = visits.ToDictionary(v => v.Id);
+
+            var records = payments.Select(p => new PaymentRecordDto
+            {
+                Id = p.Id,
+                VisitId = p.VisitId,
+                VisitDate = visitLookup.TryGetValue(p.VisitId, out var vv) ? vv.VisitDate : default,
+                Amount = p.Amount,
+                Discount = p.Discount,
+                Method = p.Method,
+                MethodText = GetMethodText(p.Method),
+                Description = p.Description,
+                ReceiptNo = p.ReceiptNo,
+                PaymentDate = p.PaymentDate
+            }).ToList();
+
+            var receipts = records
+                .GroupBy(r => ReceiptKey(patientId, r.ReceiptNo, r.PaymentDate, r.Id))
+                .Select(g =>
+                {
+                    var parts = g.OrderBy(x => IsArrears(x.Description) ? 1 : 0).ThenBy(x => x.VisitDate).ToList();
+                    var main = parts.FirstOrDefault(x => !IsArrears(x.Description)) ?? parts[0];
+                    return new ReceiptGroupDto
+                    {
+                        Key = g.Key,
+                        PaymentId = main.Id,
+                        ReceiptNo = main.ReceiptNo,
+                        PaymentDate = parts.Max(x => x.PaymentDate),
+                        Amount = parts.Sum(x => x.Amount),
+                        Discount = parts.Sum(x => x.Discount),
+                        Method = main.Method,
+                        MethodText = main.MethodText,
+                        Description = main.Description,
+                        IsOrtho = visitLookup.TryGetValue(main.VisitId, out var mv) && IsOrthoCategory(mv.Category),
+                        Parts = parts.Select(x => new ReceiptPartDto
+                        {
+                            PaymentId = x.Id,
+                            VisitId = x.VisitId,
+                            VisitDate = x.VisitDate,
+                            Amount = x.Amount,
+                            Discount = x.Discount,
+                            IsArrears = IsArrears(x.Description)
+                        }).ToList()
+                    };
+                })
+                .OrderByDescending(r => r.PaymentDate)
+                .ToList();
 
             var dto = new PatientStatementDto
             {
@@ -90,88 +160,204 @@ namespace Dental.Modules.Payments.ServicesPayments
                     Remaining = v.Remaining
                 }).ToList(),
 
-                Payments = payments.Select(p => new PaymentRecordDto
-                {
-                    Id = p.Id,
-                    VisitId = p.VisitId,
-                    VisitDate = visitDateLookup.TryGetValue(p.VisitId, out var vd) ? vd : default,
-                    Amount = p.Amount,
-                    Method = p.Method,
-                    MethodText = GetMethodText(p.Method),
-                    Description = p.Description,
-                    ReceiptNo = p.ReceiptNo,
-                    PaymentDate = p.PaymentDate
-                }).ToList()
+                Payments = records,
+                Receipts = receipts
             };
 
             return ServiceResult<PatientStatementDto>.Ok(dto);
         }
 
+        // ════════════════════════════════════════════════════════════
+        // ⭐ محرك الدفع الموحّد — بيضيف الحركات للـ Context من غير SaveChanges
+        //    (عشان يشتغل جوه Transaction بتاعة FinishSession، والمستدعي هو اللي بيحفظ)
+        // ════════════════════════════════════════════════════════════
+        public async Task<PaymentAllocationResult> AllocateAsync(
+            Visit target, decimal cash, decimal discount, PaymentMethod method, string? description, DateTime? when = null)
+        {
+            if (cash < 0) cash = 0;
+            if (discount < 0) discount = 0;
+
+            var at = when ?? DateTime.Now;
+            var receiptNo = await GenerateReceiptNoAsync(at);
+            var result = new PaymentAllocationResult { ReceiptNo = receiptNo };
+
+            // 1) الخصم على الزيارة المختارة
+            if (discount > 0) target.Discount += discount;
+
+            // 2) متبقي الزيارة المختارة الأول
+            var left = cash;
+            var toCurrent = Math.Min(left, Math.Max(0m, Due(target)));
+            left -= toCurrent;
+
+            // 3) الزيادة → الزيارات الأقدم من نفس النوع (FIFO)
+            if (left > 0)
+            {
+                // الـ Query بتجيب الـ Instances المتتبعة لو موجودة (Identity resolution)،
+                // فالمتبقي بيتحسب من القيم اللي في الميموري حتى لو لسه متحفظتش في نفس الـ Transaction.
+                var older = await _context.Visits
+                    .Where(v => v.PatientId == target.PatientId
+                             && v.IsActive
+                             && v.Id != target.Id
+                             && v.Category == target.Category
+                             && v.TotalAmount - v.Discount - v.PaidAmount > 0)
+                    .OrderBy(v => v.VisitDate)
+                    .ThenBy(v => v.Id)
+                    .ToListAsync();
+
+                foreach (var old in older)
+                {
+                    if (left <= 0) break;
+                    var oldDue = Due(old);
+                    if (oldDue <= 0) continue;
+
+                    var part = Math.Min(left, oldDue);
+                    _context.VisitPayments.Add(new VisitPayment
+                    {
+                        VisitId = old.Id,
+                        Amount = part,
+                        Discount = 0,
+                        Method = method,
+                        Description = $"{ArrearsPrefix} — من دفعة {at:dd/MM/yyyy}"
+                                      + (string.IsNullOrWhiteSpace(description) ? "" : $" — {description}"),
+                        ReceiptNo = receiptNo,
+                        PaymentDate = at
+                    });
+                    old.PaidAmount += part;
+                    left -= part;
+                    result.SettledOld += part;
+                    result.VisitsTouched++;
+                }
+            }
+
+            // 4) نصيب الزيارة المختارة + أي زيادة متبقية (رصيد دائن)
+            var currentPart = toCurrent + left;
+            if (currentPart > 0 || discount > 0)
+            {
+                _context.VisitPayments.Add(new VisitPayment
+                {
+                    VisitId = target.Id,
+                    Amount = currentPart,
+                    Discount = discount,
+                    Method = method,
+                    Description = description,
+                    ReceiptNo = receiptNo,
+                    PaymentDate = at
+                });
+                target.PaidAmount += currentPart;
+                result.VisitsTouched++;
+            }
+
+            result.ToTarget = currentPart;
+            result.Credit = left;
+            return result;
+        }
+
+        // ── تسجيل دفعة من الـ Details / كشف الحساب — نفس محرك السيشن ──
         public async Task<ServiceResult<AddPaymentResultDto>> AddPaymentAsync(AddPaymentDto dto)
         {
-            if (dto.Amount <= 0)
-                return ServiceResult<AddPaymentResultDto>.Fail("قيمة الدفعة يجب أن تكون أكبر من صفر.");
+            if (dto.Amount < 0 || dto.Discount < 0)
+                return ServiceResult<AddPaymentResultDto>.Fail("القيم لازم تكون موجبة.");
+            if (dto.Amount <= 0 && dto.Discount <= 0)
+                return ServiceResult<AddPaymentResultDto>.Fail("ادخل مبلغ أو خصم.");
 
             var visit = await _context.Visits.FirstOrDefaultAsync(v => v.Id == dto.VisitId && v.IsActive);
             if (visit == null)
                 return ServiceResult<AddPaymentResultDto>.Fail("الزيارة غير موجودة أو غير نشطة.");
 
-            // منع تسجيل دفعة أكبر من المتبقي فعليًا على الزيارة (بيحافظ على تطابق الأرقام)
-            if (dto.Amount > visit.Remaining)
+            // الخصم مينفعش يعدّي متبقي الزيارة نفسها (غير كده الرصيد يبقى بالسالب من غير ما حد يدفع)
+            var due = Math.Max(0m, Due(visit));
+            if (dto.Discount > due)
                 return ServiceResult<AddPaymentResultDto>.Fail(
-                    $"قيمة الدفعة ({dto.Amount:N2}) أكبر من المتبقي على الزيارة ({visit.Remaining:N2}).");
+                    $"الخصم ({dto.Discount:N2}) أكبر من متبقي الزيارة ({due:N2}).");
 
-            var receiptNo = await GenerateReceiptNoAsync();
-
-            var payment = new VisitPayment
+            using var tx = await _context.Database.BeginTransactionAsync();
+            try
             {
-                VisitId = dto.VisitId,
-                Amount = dto.Amount,
-                Method = dto.Method,
-                Description = dto.Description,
-                ReceiptNo = receiptNo
-            };
+                var alloc = await AllocateAsync(visit, dto.Amount, dto.Discount, dto.Method, dto.Description);
+                await _context.SaveChangesAsync();
+                await tx.CommitAsync();
 
-            _context.VisitPayments.Add(payment);
-            visit.PaidAmount += dto.Amount;
+                var parts = new List<string>();
+                if (alloc.SettledOld > 0) parts.Add($"منها {alloc.SettledOld:N0} سداد زيارات سابقة");
+                if (alloc.Credit > 0) parts.Add($"و{alloc.Credit:N0} رصيد دائن للمريض");
+                var message = "تم تسجيل الدفعة بنجاح" + (parts.Count > 0 ? " — " + string.Join(" ", parts) : "") + ".";
 
-            await _context.SaveChangesAsync();
-
-            var result = new AddPaymentResultDto
+                var result = new AddPaymentResultDto
+                {
+                    PaymentId = 0,
+                    ReceiptNo = alloc.ReceiptNo,
+                    VisitPaidAmount = visit.PaidAmount,
+                    VisitRemaining = visit.Remaining,
+                    SettledOld = alloc.SettledOld,
+                    Credit = alloc.Credit,
+                    VisitsTouched = alloc.VisitsTouched
+                };
+                return ServiceResult<AddPaymentResultDto>.Ok(result, message);
+            }
+            catch
             {
-                PaymentId = payment.Id,
-                ReceiptNo = payment.ReceiptNo,
-                VisitPaidAmount = visit.PaidAmount,
-                VisitRemaining = visit.Remaining
-            };
-
-            return ServiceResult<AddPaymentResultDto>.Ok(result, "تم تسجيل الدفعة بنجاح.");
+                await tx.RollbackAsync();
+                throw;
+            }
         }
 
+        // ── إلغاء دفعة: بيلغي الإيصال كله (كل الزيارات اللي اتوزع عليها) ويرجّع المدفوع والخصم ──
         public async Task<ServiceResult<bool>> VoidPaymentAsync(int paymentId, string? reason)
         {
-            var payment = await _context.VisitPayments.FirstOrDefaultAsync(p => p.Id == paymentId && !p.IsDeleted);
+            var payment = await _context.VisitPayments
+                .Include(p => p.Visit)
+                .FirstOrDefaultAsync(p => p.Id == paymentId && !p.IsDeleted);
             if (payment == null)
                 return ServiceResult<bool>.Fail("الدفعة غير موجودة أو تم إلغاؤها بالفعل.");
 
-            var visit = await _context.Visits.FindAsync(payment.VisitId);
-            if (visit == null)
-                return ServiceResult<bool>.Fail("الزيارة المرتبطة بالدفعة غير موجودة.");
+            var patientId = payment.Visit.PatientId;
+            List<VisitPayment> group;
 
-            payment.IsDeleted = true;
-            payment.Description = string.IsNullOrWhiteSpace(reason)
-                ? $"{payment.Description} [ملغاة]"
-                : $"{payment.Description} [ملغاة: {reason}]";
+            if (string.IsNullOrWhiteSpace(payment.ReceiptNo))
+            {
+                group = new List<VisitPayment> { payment };
+            }
+            else
+            {
+                var dayStart = payment.PaymentDate.Date;
+                var dayEnd = dayStart.AddDays(1);
+                group = await _context.VisitPayments
+                    .Include(p => p.Visit)
+                    .Where(p => !p.IsDeleted
+                             && p.ReceiptNo == payment.ReceiptNo
+                             && p.Visit.PatientId == patientId
+                             && p.PaymentDate >= dayStart && p.PaymentDate < dayEnd)
+                    .ToListAsync();
+            }
 
-            visit.PaidAmount -= payment.Amount;
-            if (visit.PaidAmount < 0) visit.PaidAmount = 0; // حماية من انحراف الأرقام في حالات نادرة
+            var tag = string.IsNullOrWhiteSpace(reason) ? "[ملغاة]" : $"[ملغاة: {reason}]";
+            foreach (var p in group)
+            {
+                p.IsDeleted = true;
+                p.Description = string.IsNullOrWhiteSpace(p.Description) ? tag : $"{p.Description} {tag}";
+
+                // ⭐ بيرجّع المدفوع والخصم الاتنين (الخصم مكانش بيرجع قبل كده)
+                p.Visit.PaidAmount -= p.Amount;
+                if (p.Visit.PaidAmount < 0) p.Visit.PaidAmount = 0; // حماية من انحراف الأرقام في حالات نادرة
+
+                if (p.Discount > 0)
+                {
+                    p.Visit.Discount -= p.Discount;
+                    if (p.Visit.Discount < 0) p.Visit.Discount = 0;
+                }
+            }
 
             await _context.SaveChangesAsync();
-            return ServiceResult<bool>.Ok(true, "تم إلغاء الدفعة وتصحيح رصيد الزيارة.");
+
+            var msg = group.Count > 1
+                ? $"تم إلغاء الدفعة بالكامل ({group.Count} حركات على زيارات مختلفة) وتصحيح الأرصدة."
+                : "تم إلغاء الدفعة وتصحيح رصيد الزيارة.";
+            return ServiceResult<bool>.Ok(true, msg);
         }
 
         // ════════════════════════════════════════════════════════════
         // ⭐ تقرير المدفوعات اليومية (عام / تقويم + مقارنة بالفترة السابقة)
+        //    المرحلة 5: كل إيصال = سطر واحد، حتى لو اتوزع على أكتر من زيارة
         // ════════════════════════════════════════════════════════════
         public async Task<ServiceResult<DailyPaymentsReportDto>> GetDailyPaymentsReportAsync(DateTime? dateFrom, DateTime? dateTo)
         {
@@ -197,11 +383,13 @@ namespace Dental.Modules.Payments.ServicesPayments
                 {
                     p.Id,
                     p.Amount,
+                    p.Discount,
                     p.Method,
                     p.ReceiptNo,
                     p.Description,
                     p.PaymentDate,
                     VisitId = v.Id,
+                    v.VisitDate,
                     v.Category,
                     PatientId = pt.Id,
                     PatientName = pt.FullNameAr,
@@ -210,7 +398,6 @@ namespace Dental.Modules.Payments.ServicesPayments
 
             // ⭐ كل الزيارات النشطة لمرضى التقرير (مش بس الزيارات اللي عليها دفعات في الفترة)
             //    عشان نحسب رصيد المريض الكلي — نفس منطق كشف الحساب (Sum of Visit.Remaining).
-            //    بنجيبها كـ Entities عشان Remaining تتحسب بنفس منطق الموديل (حتى لو NotMapped).
             var patientIds = raw.Select(r => r.PatientId).Distinct().ToList();
             var patientVisits = await _context.Visits
                 .AsNoTracking()
@@ -233,38 +420,59 @@ namespace Dental.Modules.Payments.ServicesPayments
                     OpenVisits = g.Count(v => v.Remaining > 0)
                 });
 
-            var all = raw.Select(r =>
-            {
-                var isOrtho = IsOrthoCategory(r.Category);
-                var visit = visitsById[r.VisitId];
-                var bal = patientBalances[r.PatientId];
-                return new DailyPaymentItemDto
+            // ── تجميع الحركات بالإيصال ──
+            var all = raw
+                .GroupBy(r => ReceiptKey(r.PatientId, r.ReceiptNo, r.PaymentDate, r.Id))
+                .Select(g =>
                 {
-                    Id = r.Id,
-                    VisitId = r.VisitId,
-                    PatientId = r.PatientId,
-                    PatientName = r.PatientName ?? string.Empty,
-                    PatientMobile = r.Mobile,
-                    IsOrtho = isOrtho,
-                    CategoryText = isOrtho ? "تقويم" : "عام",
-                    Amount = r.Amount,
-                    Method = Convert.ToInt32(r.Method),
-                    MethodText = GetMethodText(r.Method),
-                    ReceiptNo = r.ReceiptNo,
-                    Description = r.Description,
-                    PaymentDate = r.PaymentDate,
-                    VisitTotal = visit.TotalAmount,
-                    VisitDiscount = visit.Discount,
-                    // التقويم: المدفوع في نفس اليوم فقط (المطلوب إجمالي للحالة مش بالزيارة)
-                    VisitPaid = isOrtho
-                        ? paidPerVisitDay.GetValueOrDefault((r.VisitId, r.PaymentDate.Date))
-                        : visit.PaidAmount,
-                    VisitRemaining = visit.Remaining,
-                    PatientTotal = bal.Total,
-                    PatientRemaining = bal.Remaining,
-                    PatientOpenVisits = bal.OpenVisits
-                };
-            }).ToList();
+                    var rows = g.ToList();
+                    var main = rows.FirstOrDefault(x => !IsArrears(x.Description)) ?? rows[0];
+                    var isOrtho = IsOrthoCategory(main.Category);
+                    var bal = patientBalances[main.PatientId];
+                    var visitIds = rows.Select(x => x.VisitId).Distinct().ToList();
+                    var visits = visitIds.Select(id => visitsById[id]).ToList();
+
+                    return new DailyPaymentItemDto
+                    {
+                        Id = main.Id,
+                        VisitId = main.VisitId,
+                        PatientId = main.PatientId,
+                        PatientName = main.PatientName ?? string.Empty,
+                        PatientMobile = main.Mobile,
+                        IsOrtho = isOrtho,
+                        CategoryText = isOrtho ? "تقويم" : "عام",
+                        Amount = rows.Sum(x => x.Amount),
+                        Discount = rows.Sum(x => x.Discount),
+                        Method = Convert.ToInt32(main.Method),
+                        MethodText = GetMethodText(main.Method),
+                        ReceiptNo = main.ReceiptNo,
+                        Description = main.Description,
+                        PaymentDate = rows.Max(x => x.PaymentDate),
+                        PartsCount = visitIds.Count,
+                        Parts = rows
+                            .GroupBy(x => x.VisitId)
+                            .Select(pg => new DailyPaymentPartDto
+                            {
+                                VisitId = pg.Key,
+                                VisitDate = pg.First().VisitDate,
+                                Amount = pg.Sum(x => x.Amount)
+                            })
+                            .OrderBy(x => x.VisitDate)
+                            .ToList(),
+                        // أرقام الزيارات اللي الإيصال اتوزع عليها (مجموعهم)
+                        VisitTotal = visits.Sum(v => v.TotalAmount),
+                        VisitDiscount = visits.Sum(v => v.Discount),
+                        // التقويم: المدفوع في نفس اليوم فقط (المطلوب إجمالي للحالة مش بالزيارة)
+                        VisitPaid = isOrtho
+                            ? visitIds.Sum(id => paidPerVisitDay.GetValueOrDefault((id, main.PaymentDate.Date)))
+                            : visits.Sum(v => v.PaidAmount),
+                        VisitRemaining = visits.Sum(v => v.Remaining),
+                        PatientTotal = bal.Total,
+                        PatientRemaining = bal.Remaining,
+                        PatientOpenVisits = bal.OpenVisits
+                    };
+                })
+                .ToList();
 
             var current = all.Where(x => x.PaymentDate >= startDate)
                              .OrderByDescending(x => x.PaymentDate)
@@ -317,12 +525,14 @@ namespace Dental.Modules.Payments.ServicesPayments
             var prevAmount = previous.Sum(x => x.Amount);
 
             // كل زيارة مرة واحدة بس (عشان الزيارة اللي عليها كذا دفعة متتحسبش مرتين)
-            var periodVisits = current
-                .GroupBy(x => x.VisitId)
-                .Select(g => g.First())
+            var currentRows = raw.Where(r => r.PaymentDate >= startDate).ToList();
+            var periodVisits = currentRows
+                .Select(r => r.VisitId)
+                .Distinct()
+                .Select(id => visitsById[id])
                 .ToList();
-            var generalVisits = periodVisits.Where(x => !x.IsOrtho).ToList();
-            var orthoVisits = periodVisits.Where(x => x.IsOrtho).ToList();
+            var generalVisits = periodVisits.Where(v => !IsOrthoCategory(v.Category)).ToList();
+            var orthoVisits = periodVisits.Where(v => IsOrthoCategory(v.Category)).ToList();
 
             var dto = new DailyPaymentsReportDto
             {
@@ -341,19 +551,19 @@ namespace Dental.Modules.Payments.ServicesPayments
 
                 // كارت "إجمالي المطلوب" وحلقة السداد للعام فقط — التقويم مطلوبه إجمالي للحالة مش بالزيارة
                 VisitsCount = generalVisits.Count,
-                VisitsTotal = generalVisits.Sum(x => x.VisitTotal),
-                VisitsPaid = generalVisits.Sum(x => x.VisitPaid),
-                VisitsRemaining = generalVisits.Sum(x => x.VisitRemaining),
+                VisitsTotal = generalVisits.Sum(v => v.TotalAmount),
+                VisitsPaid = generalVisits.Sum(v => v.PaidAmount),
+                VisitsRemaining = generalVisits.Sum(v => v.Remaining),
 
                 GeneralVisitsCount = generalVisits.Count,
-                GeneralVisitsTotal = generalVisits.Sum(x => x.VisitTotal),
-                GeneralVisitsPaid = generalVisits.Sum(x => x.VisitPaid),
-                GeneralVisitsRemaining = generalVisits.Sum(x => x.VisitRemaining),
+                GeneralVisitsTotal = generalVisits.Sum(v => v.TotalAmount),
+                GeneralVisitsPaid = generalVisits.Sum(v => v.PaidAmount),
+                GeneralVisitsRemaining = generalVisits.Sum(v => v.Remaining),
 
                 OrthoVisitsCount = orthoVisits.Count,
-                OrthoVisitsTotal = orthoVisits.Sum(x => x.VisitTotal),
+                OrthoVisitsTotal = orthoVisits.Sum(v => v.TotalAmount),
                 OrthoVisitsPaid = current.Where(x => x.IsOrtho).Sum(x => x.Amount),
-                OrthoVisitsRemaining = orthoVisits.Sum(x => x.VisitRemaining),
+                OrthoVisitsRemaining = orthoVisits.Sum(v => v.Remaining),
 
                 PreviousTotalAmount = prevAmount,
                 PreviousTotalCount = previous.Count,
@@ -370,13 +580,23 @@ namespace Dental.Modules.Payments.ServicesPayments
             return ServiceResult<DailyPaymentsReportDto>.Ok(dto);
         }
 
-        // رقم إيصال تسلسلي بسيط (مناسب لحجم عيادة واحدة)، بدل الاعتماد على Random اللي ممكن يتكرر
-        private async Task<string> GenerateReceiptNoAsync()
+        // رقم إيصال تسلسلي (مناسب لحجم عيادة واحدة).
+        // ⭐ بيحسب كمان الحركات اللي لسه متحفظتش في نفس الـ Context، عشان دفعتين في نفس السيشن
+        //    ميخدوش نفس الرقم (كل إيصال بيضيف حركة واحدة على الأقل → الرقم دايمًا بيزيد).
+        private async Task<string> GenerateReceiptNoAsync(DateTime at)
         {
-            var countToday = await _context.VisitPayments
-                .CountAsync(p => p.PaymentDate.Date == DateTime.Today);
+            var dayStart = at.Date;
+            var dayEnd = dayStart.AddDays(1);
 
-            return $"REC-{DateTime.Now:yyyyMMdd}-{(countToday + 1):D4}";
+            var countToday = await _context.VisitPayments
+                .IgnoreQueryFilters()
+                .CountAsync(p => p.PaymentDate >= dayStart && p.PaymentDate < dayEnd);
+
+            var pendingToday = _context.ChangeTracker.Entries<VisitPayment>()
+                .Count(e => e.State == EntityState.Added
+                         && e.Entity.PaymentDate >= dayStart && e.Entity.PaymentDate < dayEnd);
+
+            return $"REC-{at:yyyyMMdd}-{(countToday + pendingToday + 1):D4}";
         }
     }
 }
