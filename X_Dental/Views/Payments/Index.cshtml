@@ -1765,7 +1765,7 @@
                         </div>
                         <div class="dp-kpi-value"><span id="dpKpiTotal">0</span> <small>ج.م</small></div>
                         <div class="dp-kpi-split">
-                            <div><span>المدفوع</span><b class="paid" id="dpKpiPaid">0</b></div>
+                            <div><span>التحصيل</span><b class="paid" id="dpKpiPaid" title="المحصّل فعليًا (عام) خلال الفترة">0</b></div>
                             <div><span>الباقي</span><b class="remain" id="dpKpiRemain">0</b></div>
                         </div>
                     </div>
@@ -1808,7 +1808,7 @@
                 </div>
                 <div class="dp-kpi-value"><span id="dpKpiGeneral">0</span> <small>ج.م</small></div>
                 <div class="dp-kpi-split">
-                    <div><span>المدفوع</span><b class="paid" id="dpKpiGeneralPaid">0</b></div>
+                    <div><span>التحصيل</span><b class="paid" id="dpKpiGeneralPaid" title="المحصّل فعليًا (عام) خلال الفترة">0</b></div>
                     <div><span>الباقي</span><b class="remain" id="dpKpiGeneralRemain">0</b></div>
                 </div>
                 <div class="dp-kpi-track"><div class="dp-kpi-fill" id="dpKpiGeneralBar"></div></div>
@@ -1972,7 +1972,7 @@
         // ══════════════════════════════════════════════
         // ⭐ Daily Payments Dashboard
         // ══════════════════════════════════════════════
-        (function () {
+        (function() {
             const PAGE = 12;
             const REFRESH_MS = 60000;
             const DONUT_C = 2 * Math.PI * 54;
@@ -2166,7 +2166,7 @@
 
             function renderKpis(d) {
                 countUp($('dpKpiTotal'), d.visitsTotal);
-                countUp($('dpKpiPaid'), d.visitsPaid);
+                countUp($('dpKpiPaid'), d.generalAmount);          // التحصيل (عام) خلال الفترة
                 countUp($('dpKpiRemain'), d.visitsRemaining);
                 countUp($('dpKpiCollected'), d.totalAmount);
                 $('dpKpiVisits').textContent = `${fmtInt(d.visitsCount)} زيارة`;
@@ -2195,7 +2195,7 @@
                 const settled = (paid, remain) => pct(paid, paid + remain);
 
                 countUp($('dpKpiGeneral'), d.generalVisitsTotal);
-                countUp($('dpKpiGeneralPaid'), d.generalVisitsPaid);
+                countUp($('dpKpiGeneralPaid'), d.generalAmount);   // التحصيل (عام) خلال الفترة
                 countUp($('dpKpiGeneralRemain'), d.generalVisitsRemaining);
                 const gS = settled(d.generalVisitsPaid, d.generalVisitsRemaining);
                 $('dpKpiGeneralSub').textContent = `${fmtInt(d.generalVisitsCount)} زيارة · نسبة السداد ${Math.round(gS).toLocaleString('ar-EG')}%`;
@@ -2380,7 +2380,7 @@
             });
 
             let dpSearchTimer;
-            $('dpSearch').addEventListener('input', function () {
+            $('dpSearch').addEventListener('input', function() {
                 clearTimeout(dpSearchTimer);
                 dpSearchTimer = setTimeout(() => {
                     state.term = this.value.trim().toLowerCase();
