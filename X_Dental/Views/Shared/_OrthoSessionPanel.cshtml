@@ -1,11 +1,10 @@
 @* ============================================================
-   📁 File: Views/Clinical/_OrthoSessionPanel.cshtml
+   📁 File: Views/Clinical/_OrthoSessionPanel.cshtml  (ملف جديد)
    شاشة سيشن التقويم — بتحل محل الدينتال شارت في Session.cshtml (مريض التقويم بس)
    • أول سيشن: تحديد الفك + الإجمالي (Setup)
    • كل سيشن: كارت لكل فك (Upper / Lower) → تشخيص تقويم + Comment
    • المدفوعات: شاشة _PaymentsCompact الحالية زي ما هي (الأرقام بتيجي من الـ Anchor Visit)
    • window.pendingToothRecords بتشيل مسودة التقويم عشان الـ Bottom Bar والـ Badge يشتغلوا من غير تعديل
-   • السجلات المرحّلة من النظام القديم بتبقى Arch = Both (3) وبتظهر على الفكين
    ============================================================ *@
 @model Dental.Modules.Clinical.ViewModels.SessionViewModel
 
@@ -323,11 +322,6 @@
             color: #b45309;
         }
 
-        .ot-arch.both {
-            background: #ede9fe;
-            color: #6d28d9;
-        }
-
     .ot-proc {
         font-weight: 800;
         color: #0f172a;
@@ -361,7 +355,7 @@
         const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         const fmt = n => Number(n || 0).toLocaleString('en-EG');
         const archName = a => a === UPPER ? 'Upper' : a === LOWER ? 'Lower' : 'Upper + Lower';
-        const archKey = a => a === UPPER ? 'upper' : a === LOWER ? 'lower' : 'both';
+        const archKey = a => a === UPPER ? 'upper' : 'lower';
         const toast = (title, icon) => Swal.fire({ toast: true, position: 'top-end', icon: icon || 'success', title, showConfirmButton: false, timer: 1700, customClass: { popup: 'rounded-4' } });
 
         const st = {
@@ -379,10 +373,8 @@
         // ════════ Load ════════
         async function load() {
             try {
-                const res = await fetch(`/Ortho/GetCase?patientId=${PATIENT_ID}&visitId=${VISIT_ID}`);
+                const res = await fetch(`/Ortho/GetCase?patientId=${PATIENT_ID}`);
                 const r = await res.json();
-                // ⭐ الحالة اتبنت/اتصححت من السجلات القديمة → reload عشان أرقام الدفع والـ Bottom Bar (من السيرفر) تتحدث
-                if (r.created) { window.location.reload(); return; }
                 st.data = r.hasCase ? r.data : null;
                 st.catalog = r.catalog || [];
                 if (st.data) initDraft();
@@ -392,14 +384,12 @@
             }
         }
 
-        // لو السيشن ده اتحفظ قبل كده (إعادة فتح) → نملا المسودة من اللي اتسجل (Upper / Lower بس)
+        // لو السيشن ده اتحفظ قبل كده (إعادة فتح) → نملا المسودة من اللي اتسجل
         function initDraft() {
             st.draft = { [UPPER]: { proc: '', comment: '' }, [LOWER]: { proc: '', comment: '' } };
-            (st.data.entries || [])
-                .filter(e => e.visitId === VISIT_ID && (e.arch === UPPER || e.arch === LOWER))
-                .forEach(e => {
-                    st.draft[e.arch] = { proc: e.orthoProcedureId ? String(e.orthoProcedureId) : '', comment: e.comment || '' };
-                });
+            (st.data.entries || []).filter(e => e.visitId === VISIT_ID).forEach(e => {
+                st.draft[e.arch] = { proc: e.orthoProcedureId ? String(e.orthoProcedureId) : '', comment: e.comment || '' };
+            });
         }
 
         function caseArches() {
@@ -445,14 +435,29 @@
             $('osStart').addEventListener('click', startCase);
         }
 
-        function procOptions(selected) {
-            return '<option value="">-- Select ortho diagnosis --</option>' + st.catalog.map(p =>
+        // ⭐ فك التشخيص من أي كلمة في الاسم (مش لازم أول كلمة):
+        //    Upper / Up → 1 ، Lower / Low → 2 ، غير كده → 0 (يظهر في الفكين)
+        //    أمثلة: "Upper ni ti 12" و "Dental Upper" → Upper ، "Low ni ti 12" و "Dental Lower" → Lower ، "Other Diagnoses" → الاتنين
+        function procArch(p) {
+            const n = String(p.nameEn || p.nameAr || '').toLowerCase();
+            if (/\b(upper|up)\b/.test(n)) return UPPER;
+            if (/\b(lower|low)\b/.test(n)) return LOWER;
+            return 0;
+        }
+
+        // ⭐ الدروب داون بتاع كل فك بيعرض تشخيصات الفك ده + التشخيصات العامة
+        //    (التشخيص المختار بيفضل ظاهر حتى لو من الفك التاني — عشان الداتا القديمة متضيعش)
+        function procOptions(arch, selected) {
+            const list = st.catalog.filter(p => {
+                const pa = procArch(p);
+                return pa === 0 || pa === arch || String(p.id) === String(selected);
+            });
+            return '<option value="">-- Select ortho diagnosis --</option>' + list.map(p =>
                 `<option value="${p.id}" ${String(p.id) === String(selected) ? 'selected' : ''}>${esc(p.nameEn || p.nameAr)}</option>`).join('');
         }
 
-        // آخر سجل للفك ده من زيارة سابقة (السجل المرحّل Both بيتحسب للفكين)
         function lastEntry(arch) {
-            return (st.data.entries || []).find(e => (e.arch & arch) !== 0 && e.visitId !== VISIT_ID);
+            return (st.data.entries || []).find(e => e.arch === arch && e.visitId !== VISIT_ID);
         }
 
         function renderCase() {
@@ -469,7 +474,7 @@
                         </div>
                         ${last ? `<div class="os-last"><i class="bi bi-clock-history"></i> Last (${new Date(last.date).toLocaleDateString('en-GB')}): ${esc(last.procedureName || '—')}${last.comment ? ' — ' + esc(last.comment) : ''}</div>` : ''}
                         <label class="os-label" style="margin-top:0;">Diagnosis</label>
-                        <select class="os-input" data-proc="${a}">${procOptions(dr.proc)}</select>
+                        <select class="os-input" data-proc="${a}">${procOptions(a, dr.proc)}</select>
                         <label class="os-label">Comment</label>
                         <textarea class="os-input" rows="2" data-comment="${a}" placeholder="Notes for this visit...">${esc(dr.comment)}</textarea>
                     </div>`;
