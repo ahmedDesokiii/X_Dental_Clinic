@@ -159,6 +159,19 @@ namespace Dental.Data
             builder.Entity<OrthoTotalChange>().Property(x => x.OldTotal).HasPrecision(18, 2);
             builder.Entity<OrthoTotalChange>().Property(x => x.NewTotal).HasPrecision(18, 2);
 
+            // 🔒 A4: سجل التعديلات
+            builder.Entity<Dental.Models.Common.AuditLog>(b =>
+            {
+                b.ToTable("AuditLogs");
+                b.Property(x => x.UserName).HasMaxLength(256);
+                b.Property(x => x.EntityName).HasMaxLength(128).IsRequired();
+                b.Property(x => x.EntityId).HasMaxLength(64).IsRequired();
+                b.Property(x => x.Action).HasMaxLength(32).IsRequired();
+                b.Property(x => x.Path).HasMaxLength(512);
+                b.HasIndex(x => new { x.EntityName, x.EntityId });
+                b.HasIndex(x => x.Timestamp);
+            });
+
 
         }
 
@@ -207,5 +220,7 @@ namespace Dental.Data
         public DbSet<OrthoVisitEntry> OrthoVisitEntries => Set<OrthoVisitEntry>();
         public DbSet<OrthoProcedureCatalog> OrthoProcedureCatalogs => Set<OrthoProcedureCatalog>();
         public DbSet<OrthoTotalChange> OrthoTotalChanges => Set<OrthoTotalChange>();
+
+        public DbSet<Dental.Models.Common.AuditLog> AuditLogs => Set<Dental.Models.Common.AuditLog>();   // 🔒 A4
     }
 }

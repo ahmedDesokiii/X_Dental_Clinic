@@ -25,8 +25,12 @@ var builder = WebApplication.CreateBuilder(args);
 //Using Local pc
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
           throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(
-    options => options.UseSqlServer(connectionString));
+// 🔒 A4: سجل التعديلات + CreatedBy/ModifiedBy أوتوماتيك
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<Dental.Data.Interceptors.AuditSaveChangesInterceptor>();
+builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
+    options.UseSqlServer(connectionString)
+           .AddInterceptors(sp.GetRequiredService<Dental.Data.Interceptors.AuditSaveChangesInterceptor>()));
 
 builder.Services.AddAutoMapper(cfg => { }, typeof(Program).Assembly);
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
@@ -140,6 +144,12 @@ using (var scope = app.Services.CreateScope())
     var logger = loggerFactory.CreateLogger("app");
     try
     {
+        // تنبيه لو فيه migrations لسه ما اتطبقتش على الداتابيز (Update-Database)
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        var pending = (await db.Database.GetPendingMigrationsAsync()).ToList();
+        if (pending.Count > 0)
+            logger.LogWarning("Pending EF migrations not applied: {Migrations}", string.Join(", ", pending));
+
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
         await Dental.Seeds.DefaultRoles.SeedAsync(userManager, roleManager);
