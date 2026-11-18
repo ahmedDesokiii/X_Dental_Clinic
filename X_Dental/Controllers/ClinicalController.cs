@@ -426,7 +426,8 @@ namespace Dental.Controllers
                         var uploadsRoot = Path.Combine(_env.WebRootPath, "uploads", "xrays");
                         Directory.CreateDirectory(uploadsRoot);
 
-                        var safeName = $"{req.PatientId}_{tooth.ToothNumber}_{DateTime.Now:yyyyMMddHHmmssfff}_{Path.GetFileName(xr.FileName)}";
+                        var safeName = Dental.Core.Security.UploadSafety.XRayFileName(req.PatientId, tooth.ToothNumber, xr.FileName);
+                        if (safeName == null) continue;   // 🔒 A2: امتداد غير مسموح
                         var fullPath = Path.Combine(uploadsRoot, safeName);
 
                         var base64Data = xr.Base64.Contains(",")
@@ -729,7 +730,8 @@ namespace Dental.Controllers
                             var uploadsRoot = Path.Combine(_env.WebRootPath, "uploads", "xrays");
                             Directory.CreateDirectory(uploadsRoot);
 
-                            var safeName = $"{req.PatientId}_{tooth.ToothNumber}_{DateTime.Now:yyyyMMddHHmmssfff}_{Path.GetFileName(xr.FileName)}";
+                            var safeName = Dental.Core.Security.UploadSafety.XRayFileName(req.PatientId, tooth.ToothNumber, xr.FileName);
+                        if (safeName == null) continue;   // 🔒 A2: امتداد غير مسموح
                             var fullPath = Path.Combine(uploadsRoot, safeName);
 
                             var base64Data = xr.Base64.Contains(",")

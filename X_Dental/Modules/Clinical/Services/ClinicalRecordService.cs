@@ -478,7 +478,8 @@ namespace Dental.Modules.Clinical.Services
                     continue;
                 try
                 {
-                    var safeName = $"{patientId}_{tooth}_{DateTime.Now:yyyyMMddHHmmssfff}_{Path.GetFileName(xr.FileName)}";
+                    var safeName = Dental.Core.Security.UploadSafety.XRayFileName(patientId, tooth, xr.FileName);
+                    if (safeName == null) continue;   // 🔒 A2: امتداد غير مسموح
                     var base64Data = xr.Base64.Contains(',') ? xr.Base64[(xr.Base64.IndexOf(',') + 1)..] : xr.Base64;
                     File.WriteAllBytes(Path.Combine(uploadsRoot, safeName), Convert.FromBase64String(base64Data));
 

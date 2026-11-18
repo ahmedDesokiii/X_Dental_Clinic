@@ -166,6 +166,24 @@ else
 }
 
 //app.UseHttpsRedirection();
+
+// 🔒 A2: ملفات الأشعة والمستندات (/uploads) ما تتفتحش غير لمستخدم عامل login
+app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/uploads"), uploads =>
+{
+    uploads.UseAuthentication();
+    uploads.Use(async (ctx, next) =>
+    {
+        if (ctx.User?.Identity?.IsAuthenticated != true)
+        {
+            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return;
+        }
+        ctx.Response.Headers["Cache-Control"] = "private, no-store";
+        ctx.Response.Headers["X-Content-Type-Options"] = "nosniff";
+        await next();
+    });
+});
+
 app.UseStaticFiles();
 
 app.UseRouting();
