@@ -85,8 +85,8 @@ builder.Services.AddSignalR();
 // (الـ logging بقى من Serilog فوق)
 
 // 🛡️ A5: نسخة احتياطية يومية للداتابيز (الإعدادات في appsettings → "Backup")
-builder.Services.AddSingleton<Dental.Core.Backup.DatabaseBackupService>();
-builder.Services.AddHostedService(sp => sp.GetRequiredService<Dental.Core.Backup.DatabaseBackupService>());
+builder.Services.AddSingleton<Dental.Core.Maintenance.DatabaseBackupService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<Dental.Core.Maintenance.DatabaseBackupService>());
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
     serverOptions.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(30);
