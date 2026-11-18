@@ -68,6 +68,7 @@ namespace Dental.Filters
                     return read ? Permissions.Clinical.View : Permissions.Clinical.Manage;
 
                 case "Appointments":
+                case "Reminders":   // 💬 D3: تذكيرات واتساب = جزء من المواعيد
                     return read ? Permissions.Appointments.View : Permissions.Appointments.Manage;
 
                 case "Payments":
@@ -89,7 +90,7 @@ namespace Dental.Filters
                     return read ? Permissions.Inventory.View : Permissions.Inventory.Manage;
 
                 default:
-                    // Home, Users, Roles: ليهم حمايتهم الخاصة (Users/Roles = Admin فقط)
+                    // Home, Users, Roles, Settings: ليهم حمايتهم الخاصة (Users/Roles/Settings = Admin فقط)
                     return null;
             }
         }

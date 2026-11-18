@@ -150,6 +150,9 @@ builder.Services.AddScoped<IVisitNoteService, VisitNoteService>();   // ⭐ ال
 #endregion
 builder.Services.AddHttpClient();
 
+// ⚙️ D1: إعدادات العيادة (App_Data/clinic-settings.json)
+builder.Services.AddSingleton<Dental.Core.Settings.IClinicSettingsService, Dental.Core.Settings.ClinicSettingsService>();
+
 builder.Services.AddMemoryCache();
 
 var app = builder.Build();

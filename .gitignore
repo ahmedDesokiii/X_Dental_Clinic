@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# ⚙️ D1: إعدادات العيادة ولوجو العميل (بيانات تشغيل — مش جزء من الكود)
+X_Dental/App_Data/
+X_Dental/wwwroot/images/clinic-logo-*

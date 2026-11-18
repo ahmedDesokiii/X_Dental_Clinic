@@ -5,7 +5,9 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject RoleManager<ApplicationRole> RoleManager
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@inject Dental.Core.Settings.IClinicSettingsService ClinicSettingsService
 @{
+    var clinic = ClinicSettingsService.Get();   // ⚙️ D1
     var csrfToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
 
     // 🔒 A3: إظهار روابط القائمة حسب صلاحيات المستخدم
@@ -21,6 +23,29 @@
     var canInventory = await Can(Permissions.Inventory.View);
     var canLaboratory = await Can(Permissions.Laboratory.View);
     var canMedications = await Can(Permissions.Medications.View);
+    var canAddPatient = await Can(Permissions.Patients.Add_Patient);
+    var isAdmin = User?.IsInRole(Roles.Admin.ToString()) == true;
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+
+    // ⌨️ D2: الإجراءات السريعة اللي تظهر في البحث (حسب صلاحيات المستخدم)
+    var quickActions = new List<object>();
+    void Act(bool allowed, string title, string url, string icon, string desc = "", string keywords = "")
+    {
+        if (allowed) quickActions.Add(new { title, url, icon, desc, keywords });
+    }
+    Act(canAddPatient, "مريض جديد", "Patients/Create", "bi-person-plus-fill", "تسجيل ملف مريض", "add new patient اضافة");
+    Act(canAppointments, "تذكير مواعيد بكرة على واتساب", "Reminders", "bi-whatsapp", "رسائل جاهزة بضغطة", "whatsapp reminder تذكير رسائل");
+    Act(canAppointments, "المواعيد", "Appointments", "bi-calendar2-week-fill", "", "calendar appointments كالندر حجز");
+    Act(canPatients, "قائمة المرضى", "Patients", "bi-people-fill", "", "patients");
+    Act(canPaymentsView, "كشف حساب مريض", "Payments/Search", "bi-receipt", "", "statement payments فلوس حساب");
+    Act(canPaymentsReports, "تقرير الإيرادات", "Payments", "bi-graph-up-arrow", "اليوم / الأسبوع / الشهر", "report revenue دخل");
+    Act(canDiagnosis, "التشخيصات والأسعار", "Diagnosis", "bi-clipboard2-pulse-fill", "", "diagnosis prices اسعار");
+    Act(canLaboratory, "المعمل", "Laboratory", "bi-prescription2", "", "lab");
+    Act(canInventory, "المخزن", "Inventory", "bi-box-seam-fill", "", "inventory stock");
+    Act(canMedications, "الأدوية", "Medications", "bi-capsule-pill", "", "medications drugs");
+    Act(true, "لوحة التحكم", "", "bi-grid-1x2-fill", "", "dashboard home الرئيسية");
+    Act(isAdmin, "إعدادات العيادة", "Settings", "bi-gear-fill", "الاسم، اللوجو، رسالة التذكير", "settings");
+    Act(isAdmin, "المستخدمين", "Users", "bi-person-badge-fill", "", "users");
 }
 
 <!DOCTYPE html>
@@ -41,7 +66,7 @@
     <meta name="format-detection" content="telephone=no" />
     <link rel="manifest" href="~/manifest.json" />
     <link rel="apple-touch-icon" href="~/icons/apple-touch-icon.png" />
-    <title>@ViewData["Title"] - Dental Clinic</title>
+    <title>@ViewData["Title"] - @clinic.ClinicName</title>
 
     <!-- Local Fonts -->
     <style>
@@ -84,6 +109,9 @@
     <link rel="stylesheet" href="~/lib/datatables/dataTables.dataTables.min.css" />
     <link rel="stylesheet" href="~/lib/datatables/columnControl.dataTables.css" />
 
+    <!-- ✨ D: الشاشات الجديدة + البحث السريع + زرار ➕ -->
+    <link rel="stylesheet" href="~/css/features.css" asp-append-version="true" />
+
     <!-- 📱 C2: تحسينات الموبايل (آخر CSS عشان تكسب) -->
     <link rel="stylesheet" href="~/css/mobile.css" asp-append-version="true" />
 
@@ -109,13 +137,20 @@
         <aside class="app-sidebar" id="appSidebar">
             <div class="sidebar-brand">
                 <span class="mark">
+                    @if (!string.IsNullOrEmpty(clinic.LogoPath))
+                    {
+                        <img src="@Url.Content("~" + clinic.LogoPath)" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;" />
+                    }
+                    else
+                    {
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 2C9.6 2 8.1 3.2 6.7 3.2c-1.7 0-3.2 1.5-3.2 4 0 2.1.6 3.9 1.1 5.9.5 2 .9 4.3 1.6 5.9.5 1.2 1.1 2 1.9 2 1.1 0 1.3-2.5 1.6-4.2.2-1.2.6-2.1 1.3-2.1s1.1.9 1.3 2.1c.3 1.7.5 4.2 1.6 4.2.8 0 1.4-.8 1.9-2 .7-1.6 1.1-3.9 1.6-5.9.5-2 1.1-3.8 1.1-5.9 0-2.5-1.5-4-3.2-4C15.9 3.2 14.4 2 12 2z" fill="white" />
                     </svg>
+                    }
                 </span>
                 <div class="brand-text">
-                    <strong>Dr/ Mohammed El.Kholy</strong>
-                    <span>Dental Suite</span>
+                    <strong>@clinic.DoctorName</strong>
+                    <span>@clinic.ClinicName</span>
                 </div>
             </div>
             <nav class="sidebar-nav">
@@ -139,6 +174,10 @@
                         <a asp-controller="Appointments" asp-action="index" title="Calendar" class="sidebar-link" data-title="Appointments">
                             <i class="bi bi-calendar2-week-fill fs-5"></i>
                             <span>Appointments</span>
+                        </a>
+                        <a asp-controller="Reminders" asp-action="Index" title="WhatsApp Reminders" class="sidebar-link" data-title="Reminders">
+                            <i class="bi bi-whatsapp fs-5"></i>
+                            <span>Reminders</span>
                         </a>
                     }
 
@@ -197,14 +236,21 @@
                             <i class="bi bi-shield-lock-fill"></i>
                             <span>Roles</span>
                         </a>
+                        <a asp-controller="Settings" asp-action="Index" class="sidebar-link" data-title="Settings">
+                            <i class="bi bi-gear-fill"></i>
+                            <span>Settings</span>
+                        </a>
                     }
                 }
             </nav>
             <div class="sidebar-footer py-1">
-                <a class="sidebar-clinic-link" href="https://www.facebook.com/share/1B3xKJX65H/" target="_blank" data-title="Clinic Page">
-                    <i class="bi bi-facebook "></i>
-                    <span>Clinic Page</span>
-                </a>
+                @if (!string.IsNullOrWhiteSpace(clinic.FacebookUrl))
+                {
+                    <a class="sidebar-clinic-link" href="@clinic.FacebookUrl" target="_blank" rel="noopener" data-title="Clinic Page">
+                        <i class="bi bi-facebook "></i>
+                        <span>Clinic Page</span>
+                    </a>
+                }
             </div>
         </aside>
 
@@ -222,6 +268,10 @@
                     </div>
                 </div>
                 <div class="topbar-actions">
+                    <!-- ⌨️ D2: بحث سريع على الموبايل -->
+                    <button type="button" class="topbar-btn" id="cpMobileBtn" title="بحث سريع">
+                        <i class="bi bi-search"></i>
+                    </button>
                     <!-- 📱 C1: تثبيت التطبيق (بيظهر بس لما الجهاز يسمح بالتثبيت) -->
                     <button type="button" class="topbar-btn" id="pwaInstallBtn" title="تثبيت التطبيق" hidden>
                         <i class="bi bi-download"></i>
@@ -256,10 +306,13 @@
                                 <i class="bi bi-person"></i>
                                 <span>Profile</span>
                             </a>
-                            <a href="#" class="dropdown-item">
-                                <i class="bi bi-gear"></i>
-                                <span>Settings</span>
-                            </a>
+                            @if (User.IsInRole(Roles.Admin.ToString()))
+                            {
+                                <a asp-controller="Settings" asp-action="Index" class="dropdown-item">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Settings</span>
+                                </a>
+                            }
                             <div class="dropdown-divider"></div>
                             <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post" style="margin:0;">
                                 <button type="submit" class="dropdown-item danger">
@@ -279,10 +332,13 @@
         </div>
     </div>
 
-    <!-- Floating Action Button -->
-    <button class="fab" id="fabBtn" title="Quick Action" onclick="showQuickActions()">
-        <i class="bi bi-plus-lg"></i>
-    </button>
+    <!-- ➕ Floating Action Button → قائمة الإجراءات السريعة (مش بيظهر في شاشة الجلسة عشان ما يغطيش أزرارها) -->
+    @if (SignInManager.IsSignedIn(User) && currentController != "Clinical")
+    {
+        <button type="button" class="fab" id="fabBtn" title="إجراء سريع" onclick="showQuickActions()">
+            <i class="bi bi-plus-lg"></i>
+        </button>
+    }
 
     <!-- ================= Scripts ================= -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
@@ -298,6 +354,14 @@
     <!-- App Scripts -->
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/pwa.js" asp-append-version="true" data-base="@Url.Content("~/")"></script>
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <script src="~/js/command-palette.js" asp-append-version="true"
+                data-base="@Url.Content("~/")"
+                data-patients="@(canPatients ? "true" : "false")"
+                data-wa-cc="@clinic.WhatsAppCountryCode"
+                data-actions="@System.Text.Json.JsonSerializer.Serialize(quickActions)"></script>
+    }
     <script src="~/js/login.js"></script>
     <script src="~/js/Users.js"></script>
 
@@ -418,10 +482,7 @@
                 });
             }
 
-            // Quick Actions FAB
-            function showQuickActions() {
-                console.log('Quick actions clicked');
-            }
+            // Quick Actions FAB → معرّفة في command-palette.js (⌨️ D2)
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)

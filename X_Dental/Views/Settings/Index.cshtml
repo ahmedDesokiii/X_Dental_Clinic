@@ -1,0 +1,153 @@
+@model Dental.Core.Settings.ClinicSettings
+@{
+    ViewData["Title"] = "إعدادات العيادة";
+}
+
+<div class="ft-page" dir="rtl">
+    <div class="ft-hero">
+        <div class="ft-hero-icon"><i class="bi bi-gear-wide-connected"></i></div>
+        <div>
+            <h1>إعدادات العيادة</h1>
+            <p>البيانات دي بتظهر في القائمة الجانبية ورسائل التذكير والطباعة</p>
+        </div>
+    </div>
+
+    <form id="settingsForm" enctype="multipart/form-data" class="ft-grid">
+        @Html.AntiForgeryToken()
+
+        <section class="ft-card">
+            <h2><i class="bi bi-hospital"></i> بيانات العيادة</h2>
+
+            <div class="ft-logo-row">
+                <div class="ft-logo-preview" id="logoPreview">
+                    @if (!string.IsNullOrEmpty(Model.LogoPath))
+                    {
+                        <img src="@Url.Content("~" + Model.LogoPath)" alt="logo" />
+                    }
+                    else
+                    {
+                        <i class="bi bi-image"></i>
+                    }
+                </div>
+                <div class="ft-logo-actions">
+                    <label class="ft-btn ft-btn-soft">
+                        <i class="bi bi-upload"></i> اختيار لوجو
+                        <input type="file" name="logo" id="logoInput" accept=".png,.jpg,.jpeg,.webp" hidden />
+                    </label>
+                    @if (!string.IsNullOrEmpty(Model.LogoPath))
+                    {
+                        <label class="ft-check"><input type="checkbox" name="removeLogo" value="true" /> إزالة اللوجو</label>
+                    }
+                    <small>PNG أو JPG — مربع، أقل من 2 ميجا</small>
+                </div>
+            </div>
+
+            <div class="ft-field">
+                <label asp-for="DoctorName">اسم الطبيب / العيادة (يظهر في القائمة)</label>
+                <input asp-for="DoctorName" class="form-control" required />
+            </div>
+            <div class="ft-field">
+                <label asp-for="ClinicName">اسم البرنامج / السطر الفرعي</label>
+                <input asp-for="ClinicName" class="form-control" required />
+            </div>
+            <div class="ft-row">
+                <div class="ft-field">
+                    <label asp-for="Phone">تليفون العيادة</label>
+                    <input asp-for="Phone" class="form-control" inputmode="tel" />
+                </div>
+                <div class="ft-field ft-field-sm">
+                    <label asp-for="WhatsAppCountryCode">كود الدولة</label>
+                    <input asp-for="WhatsAppCountryCode" class="form-control" inputmode="numeric" />
+                </div>
+            </div>
+            <div class="ft-field">
+                <label asp-for="Address">العنوان</label>
+                <input asp-for="Address" class="form-control" />
+            </div>
+            <div class="ft-field">
+                <label asp-for="FacebookUrl">صفحة فيسبوك</label>
+                <input asp-for="FacebookUrl" class="form-control" dir="ltr" />
+            </div>
+        </section>
+
+        <section class="ft-card">
+            <h2><i class="bi bi-whatsapp"></i> رسالة تذكير الموعد</h2>
+            <div class="ft-chips">
+                @foreach (var v in new[] { "{patient}", "{day}", "{date}", "{time}", "{doctor}", "{clinic}", "{phone}", "{address}" })
+                {
+                    <button type="button" class="ft-chip" data-insert="@v">@v</button>
+                }
+            </div>
+            <div class="ft-field">
+                <textarea asp-for="ReminderTemplate" class="form-control" rows="8" id="tplInput"></textarea>
+            </div>
+            <div class="ft-wa-preview">
+                <div class="ft-wa-bubble" id="tplPreview"></div>
+                <small>معاينة برسالة لمريض تجريبي</small>
+            </div>
+        </section>
+
+        <div class="ft-actions">
+            <button type="submit" class="ft-btn ft-btn-primary" id="btnSave">
+                <i class="bi bi-check2-circle"></i> حفظ الإعدادات
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const form = document.getElementById('settingsForm');
+            const tpl = document.getElementById('tplInput');
+            const preview = document.getElementById('tplPreview');
+
+            function val(name) { return (form.querySelector(`[name="${name}"]`)?.value || '').trim(); }
+
+            function render() {
+                const d = new Date(); d.setDate(d.getDate() + 1);
+                const day = d.toLocaleDateString('ar-EG', { weekday: 'long' });
+                const date = d.toLocaleDateString('ar-EG', { day: 'numeric', month: 'long' });
+                const text = (tpl.value || '')
+                    .replaceAll('{patient}', 'أحمد محمد')
+                    .replaceAll('{day}', day)
+                    .replaceAll('{date}', date)
+                    .replaceAll('{time}', ' الساعة 6:00 م')
+                    .replaceAll('{doctor}', val('DoctorName'))
+                    .replaceAll('{clinic}', val('ClinicName'))
+                    .replaceAll('{phone}', val('Phone') || '—')
+                    .replaceAll('{address}', val('Address') ? '📍 ' + val('Address') : '');
+                preview.textContent = text.replace(/\n{2,}/g, '\n');
+            }
+
+            form.addEventListener('input', render);
+            render();
+
+            document.querySelectorAll('.ft-chip').forEach(b => b.addEventListener('click', () => {
+                const v = b.dataset.insert, s = tpl.selectionStart ?? tpl.value.length;
+                tpl.value = tpl.value.slice(0, s) + v + tpl.value.slice(tpl.selectionEnd ?? s);
+                tpl.focus(); tpl.selectionStart = tpl.selectionEnd = s + v.length;
+                render();
+            }));
+
+            document.getElementById('logoInput').addEventListener('change', e => {
+                const f = e.target.files[0]; if (!f) return;
+                const img = document.createElement('img'); img.src = URL.createObjectURL(f);
+                const box = document.getElementById('logoPreview'); box.innerHTML = ''; box.appendChild(img);
+            });
+
+            form.addEventListener('submit', async e => {
+                e.preventDefault();
+                const btn = document.getElementById('btnSave'); btn.disabled = true;
+                try {
+                    const res = await fetch('@Url.Action("Save", "Settings")', { method: 'POST', body: new FormData(form) });
+                    const r = await res.json();
+                    Swal.fire({ icon: r.success ? 'success' : 'error', title: r.message, timer: r.success ? 1600 : undefined, showConfirmButton: !r.success })
+                        .then(() => { if (r.success) location.reload(); });
+                } catch {
+                    Swal.fire({ icon: 'error', title: 'حصل خطأ أثناء الحفظ' });
+                } finally { btn.disabled = false; }
+            });
+        })();
+    </script>
+}

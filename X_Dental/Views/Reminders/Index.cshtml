@@ -1,0 +1,150 @@
+@{
+    ViewData["Title"] = "تذكير المواعيد";
+}
+
+<div class="ft-page" dir="rtl">
+    <div class="ft-hero ft-hero-wa">
+        <div class="ft-hero-icon"><i class="bi bi-whatsapp"></i></div>
+        <div>
+            <h1>تذكير المواعيد على واتساب</h1>
+            <p>ابعت رسالة التذكير لكل مريض بضغطة — الرسالة بتتكتب لوحدها من إعدادات العيادة</p>
+        </div>
+        <div class="ft-hero-stat" id="rmStat">
+            <b id="rmSent">0</b><span>/ <span id="rmTotal">0</span> اتبعتلهم</span>
+            <div class="ft-progress"><i id="rmBar" style="width:0%"></i></div>
+        </div>
+    </div>
+
+    <div class="ft-toolbar">
+        <div class="ft-seg" id="rmDays">
+            <button type="button" data-offset="0">النهارده</button>
+            <button type="button" data-offset="1" class="active">بكرة</button>
+            <button type="button" data-offset="2">بعد بكرة</button>
+        </div>
+        <input type="date" id="rmDate" class="form-control ft-date" />
+        <div class="ft-toolbar-title" id="rmTitle"></div>
+        <button type="button" class="ft-btn ft-btn-wa" id="rmNext">
+            <i class="bi bi-send-fill"></i> ابعت للي عليه الدور
+        </button>
+    </div>
+
+    <div id="rmList" class="ft-list">
+        <div class="ft-skeleton"></div><div class="ft-skeleton"></div><div class="ft-skeleton"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const listUrl = '@Url.Action("GetList", "Reminders")';
+            const markUrl = '@Url.Action("MarkSent", "Reminders")';
+            const detailsUrl = '@Url.Action("Details", "Patients")';
+            const $list = document.getElementById('rmList');
+            const $date = document.getElementById('rmDate');
+            let rows = [];
+
+            const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            const ymd = d => d.toISOString().slice(0, 10);
+            const offsetDate = n => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + n); return ymd(d); };
+
+            const statusText = { Scheduled: 'محجوز', Confirmed: 'مؤكد' };
+
+            function stats() {
+                const sent = rows.filter(r => r.isReminderSent).length;
+                document.getElementById('rmSent').textContent = sent;
+                document.getElementById('rmTotal').textContent = rows.length;
+                document.getElementById('rmBar').style.width = rows.length ? (sent * 100 / rows.length) + '%' : '0%';
+                document.getElementById('rmNext').disabled = !rows.some(r => !r.isReminderSent && r.whatsAppUrl);
+            }
+
+            function card(r) {
+                return `
+                <div class="ft-row-card ${r.isReminderSent ? 'is-sent' : ''}" data-id="${r.id}">
+                    <div class="ft-avatar">${esc((r.patientName || '?').trim().charAt(0))}</div>
+                    <div class="ft-row-main">
+                        <a href="${detailsUrl}/${r.patientId}" class="ft-row-name">${esc(r.patientName)}</a>
+                        <div class="ft-row-meta">
+                            <span><i class="bi bi-hash"></i>${esc(r.patientCode)}</span>
+                            ${r.mobile ? `<span dir="ltr"><i class="bi bi-phone"></i>${esc(r.mobile)}</span>` : '<span class="ft-warn"><i class="bi bi-exclamation-triangle"></i>مفيش رقم</span>'}
+                            ${r.time ? `<span><i class="bi bi-clock"></i>${esc(r.time)}</span>` : ''}
+                            <span class="ft-badge">${statusText[r.status] || esc(r.status)}</span>
+                        </div>
+                        ${r.reason || r.notes ? `<div class="ft-row-note">${esc(r.reason || r.notes)}</div>` : ''}
+                    </div>
+                    <div class="ft-row-actions">
+                        ${r.isReminderSent ? `<span class="ft-sent"><i class="bi bi-check2-all"></i> اتبعت ${esc(r.reminderDate || '')}</span>` : ''}
+                        <button type="button" class="ft-btn ft-btn-soft ft-btn-icon" data-act="preview" title="معاينة الرسالة"><i class="bi bi-eye"></i></button>
+                        ${r.whatsAppUrl ? `<button type="button" class="ft-btn ft-btn-wa" data-act="send"><i class="bi bi-whatsapp"></i> ${r.isReminderSent ? 'ابعت تاني' : 'ابعت'}</button>` : ''}
+                    </div>
+                </div>`;
+            }
+
+            function render() {
+                $list.innerHTML = rows.length
+                    ? rows.map(card).join('')
+                    : `<div class="ft-empty"><i class="bi bi-calendar2-check"></i><b>مفيش مواعيد في اليوم ده</b><span>المواعيد الملغية أو اللي اتحضرت مش بتظهر هنا</span></div>`;
+                stats();
+            }
+
+            async function load(date) {
+                $date.value = date;
+                $list.innerHTML = '<div class="ft-skeleton"></div><div class="ft-skeleton"></div><div class="ft-skeleton"></div>';
+                try {
+                    const res = await fetch(`${listUrl}?date=${date}`, { headers: { 'Accept': 'application/json' } });
+                    const r = await res.json();
+                    if (!r.success) throw new Error(r.message);
+                    rows = r.data;
+                    document.getElementById('rmTitle').textContent = r.title;
+                    render();
+                } catch (e) {
+                    $list.innerHTML = `<div class="ft-empty"><i class="bi bi-wifi-off"></i><b>تعذّر تحميل المواعيد</b><span>${esc(e.message || '')}</span></div>`;
+                }
+            }
+
+            async function send(row) {
+                // نفتح واتساب الأول (لازم يبقى جوه الضغطة عشان المتصفح ما يمنعش النافذة)
+                window.open(row.whatsAppUrl, '_blank', 'noopener');
+                try {
+                    const res = await fetch(markUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'id=' + row.id
+                    });
+                    const r = await res.json();
+                    if (r.success) { row.isReminderSent = true; row.reminderDate = r.reminderDate; render(); }
+                } catch { }
+            }
+
+            $list.addEventListener('click', e => {
+                const btn = e.target.closest('[data-act]'); if (!btn) return;
+                const row = rows.find(x => x.id == btn.closest('[data-id]').dataset.id); if (!row) return;
+                if (btn.dataset.act === 'send') send(row);
+                if (btn.dataset.act === 'preview') {
+                    Swal.fire({
+                        title: row.patientName,
+                        html: `<div class="ft-wa-bubble" style="text-align:right">${esc(row.message)}</div>`,
+                        showCancelButton: !!row.whatsAppUrl,
+                        confirmButtonText: row.whatsAppUrl ? '<i class="bi bi-whatsapp"></i> ابعت' : 'تمام',
+                        cancelButtonText: 'إغلاق'
+                    }).then(x => { if (x.isConfirmed && row.whatsAppUrl) send(row); });
+                }
+            });
+
+            document.getElementById('rmNext').addEventListener('click', () => {
+                const row = rows.find(r => !r.isReminderSent && r.whatsAppUrl);
+                if (row) send(row);
+            });
+
+            document.querySelectorAll('#rmDays button').forEach(b => b.addEventListener('click', () => {
+                document.querySelectorAll('#rmDays button').forEach(x => x.classList.toggle('active', x === b));
+                load(offsetDate(+b.dataset.offset));
+            }));
+            $date.addEventListener('change', () => {
+                document.querySelectorAll('#rmDays button').forEach(x => x.classList.remove('active'));
+                if ($date.value) load($date.value);
+            });
+
+            load(offsetDate(1));
+        })();
+    </script>
+}
