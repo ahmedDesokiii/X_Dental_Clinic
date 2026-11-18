@@ -6,7 +6,11 @@
 @inject RoleManager<ApplicationRole> RoleManager
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @inject Dental.Core.Settings.IClinicSettingsService ClinicSettingsService
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnv
 @{
+    // 🙍 H4: صورة المستخدم في الشريط العلوي
+    var myAvatar = int.TryParse(User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var myId)
+        ? Dental.Controllers.ProfileController.AvatarUrl(HostEnv, myId) : null;
     var clinic = ClinicSettingsService.Get();   // ⚙️ D1
     var csrfToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
 
@@ -44,6 +48,7 @@
     Act(canInventory, "المخزن", "Inventory", "bi-box-seam-fill", "", "inventory stock");
     Act(canMedications, "الأدوية", "Medications", "bi-capsule-pill", "", "medications drugs");
     Act(true, "لوحة التحكم", "", "bi-grid-1x2-fill", "", "dashboard home الرئيسية");
+    Act(true, "ملفي الشخصي", "Profile", "bi-person-circle", "بياناتي، كلمة السر، صلاحياتي", "profile password account حسابي");
     Act(isAdmin, "إعدادات العيادة", "Settings", "bi-gear-fill", "الاسم، اللوجو، رسالة التذكير", "settings");
     Act(isAdmin, "المستخدمين", "Users", "bi-person-badge-fill", "", "users");
 }
@@ -293,7 +298,14 @@
                     <!-- User Menu -->
                     <div class="user-menu" id="userMenu" onclick="toggleUserDropdown()">
                         <div class="user-avatar">
-                            @(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "U")
+                            @if (myAvatar != null)
+                            {
+                                <img src="@Url.Content("~" + myAvatar)" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" />
+                            }
+                            else
+                            {
+                                @(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "U")
+                            }
                         </div>
                         <div class="user-info">
                             <span class="name">@(User.Identity?.Name ?? "User")</span>
@@ -309,7 +321,7 @@
 
                         <!-- Dropdown -->
                         <div class="user-dropdown" id="userDropdown">
-                            <a href="#" class="dropdown-item">
+                            <a asp-controller="Profile" asp-action="Index" class="dropdown-item">
                                 <i class="bi bi-person"></i>
                                 <span>Profile</span>
                             </a>

@@ -1,0 +1,251 @@
+@{
+    ViewData["Title"] = "ملفي";
+}
+
+<div class="ft-page pf-page" dir="rtl">
+
+    <!-- ═══════ Cover ═══════ -->
+    <section class="pf-cover">
+        <div class="pf-cover-bg" aria-hidden="true"></div>
+        <div class="pf-id">
+            <label class="pf-avatar" title="تغيير الصورة">
+                <span id="pfAvatar">…</span>
+                <input type="file" id="pfAvatarInput" accept=".jpg,.jpeg,.png,.webp" hidden />
+                <i class="bi bi-camera-fill pf-cam"></i>
+            </label>
+            <div class="pf-who">
+                <h1 id="pfName">…</h1>
+                <div class="pf-meta">
+                    <span dir="ltr" id="pfUser"></span>
+                    <span id="pfRoles"></span>
+                </div>
+            </div>
+            <div class="pf-cover-actions">
+                <button type="button" class="ft-btn um-btn-glass" id="pfRemoveAvatar" hidden><i class="bi bi-trash3"></i> مسح الصورة</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════ Stats ═══════ -->
+    <div class="um-stats pf-stats" id="pfStats">
+        <div class="um-stat"><i class="bi bi-person-plus"></i><b data-k="patients">–</b><span>مرضى سجلتهم الشهر ده</span></div>
+        <div class="um-stat um-ok"><i class="bi bi-heart-pulse"></i><b data-k="visits">–</b><span>زيارات</span></div>
+        <div class="um-stat um-warn"><i class="bi bi-calendar2-plus"></i><b data-k="appointments">–</b><span>مواعيد حجزتها</span></div>
+        <div class="um-stat um-admin"><i class="bi bi-cash-coin"></i><b data-k="payments">–</b><span id="pfPayLabel">دفعات سجلتها</span></div>
+    </div>
+
+    <div class="pf-grid">
+        <!-- بياناتي -->
+        <section class="ft-card">
+            <h2><i class="bi bi-person-vcard"></i> بياناتي</h2>
+            <form id="pfForm" autocomplete="off">
+                <div class="ft-field"><label>الاسم بالكامل</label><input name="fullName" class="form-control" required /></div>
+                <div class="ft-row">
+                    <div class="ft-field"><label>الموبايل</label><input name="phone" class="form-control" dir="ltr" inputmode="tel" /></div>
+                    <div class="ft-field"><label>البريد</label><input name="email" type="email" class="form-control" dir="ltr" /></div>
+                </div>
+                <div class="ft-field">
+                    <label>النوع</label>
+                    <div class="ft-seg um-seg-full" id="pfGender">
+                        <button type="button" data-g="ذكر">ذكر</button>
+                        <button type="button" data-g="أنثى">أنثى</button>
+                    </div>
+                </div>
+                <div class="ft-field">
+                    <label>اسم الدخول</label>
+                    <input id="pfUserName" class="form-control" dir="ltr" disabled />
+                    <small class="um-hint">اسم الدخول بيغيّره مدير النظام بس.</small>
+                </div>
+                <div class="pf-actions"><button type="submit" class="ft-btn ft-btn-primary"><i class="bi bi-check2-circle"></i> حفظ</button></div>
+            </form>
+        </section>
+
+        <!-- الأمان -->
+        <section class="ft-card">
+            <h2><i class="bi bi-shield-lock"></i> الأمان</h2>
+            <form id="pwForm" autocomplete="off">
+                <div class="ft-field"><label>كلمة السر الحالية</label><input name="current" type="password" class="form-control" dir="ltr" autocomplete="current-password" required /></div>
+                <div class="ft-field">
+                    <label>كلمة السر الجديدة</label>
+                    <div class="um-pass">
+                        <input name="new" type="password" class="form-control" dir="ltr" autocomplete="new-password" required />
+                        <button type="button" class="um-icon-btn" id="pwShow" title="إظهار"><i class="bi bi-eye"></i></button>
+                    </div>
+                    <div class="um-strength"><i id="pwBar"></i></div>
+                    <ul class="pf-rules" id="pwRules">
+                        <li data-r="len">6 حروف على الأقل</li>
+                        <li data-r="up">حرف كبير A-Z</li>
+                        <li data-r="low">حرف صغير a-z</li>
+                        <li data-r="num">رقم</li>
+                        <li data-r="sym">رمز # $ % …</li>
+                    </ul>
+                </div>
+                <div class="ft-field"><label>تأكيد كلمة السر</label><input name="confirm" type="password" class="form-control" dir="ltr" autocomplete="new-password" required /></div>
+                <div class="pf-actions"><button type="submit" class="ft-btn ft-btn-primary"><i class="bi bi-key"></i> تغيير كلمة السر</button></div>
+            </form>
+
+            <div class="pf-sep"></div>
+            <div class="pf-device">
+                <i class="bi bi-laptop"></i>
+                <div><b>الأجهزة التانية</b><small>لو نسيت تعمل خروج من جهاز في العيادة أو موبايل حد</small></div>
+                <button type="button" class="ft-btn ft-btn-soft um-danger" id="pfSignOutOthers"><i class="bi bi-box-arrow-right"></i> اخرج منها كلها</button>
+            </div>
+        </section>
+
+        <!-- صلاحياتي -->
+        <section class="ft-card">
+            <h2><i class="bi bi-grid-3x3-gap"></i> صلاحياتي <span class="pf-count" id="pfPermCount"></span></h2>
+            <div id="pfModules" class="pf-modules"></div>
+            <div class="pf-pref">
+                <div><b>الوضع الليلي</b><small>بيتحفظ على الجهاز ده</small></div>
+                <label class="pm-switch"><input type="checkbox" id="pfDark" /><i></i></label>
+            </div>
+        </section>
+
+        <!-- نشاطي -->
+        <section class="ft-card">
+            <h2><i class="bi bi-activity"></i> آخر نشاط ليا <small class="um-hint">(آخر 30 يوم)</small></h2>
+            <ul class="pf-activity" id="pfActivity"><li class="um-hint">…</li></ul>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const URLS = {
+                data: '@Url.Action("GetData", "Profile")',
+                save: '@Url.Action("Save", "Profile")',
+                pw: '@Url.Action("ChangePassword", "Profile")',
+                out: '@Url.Action("SignOutOthers", "Profile")',
+                avatar: '@Url.Action("UploadAvatar", "Profile")'
+            };
+            const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            const toast = (icon, title) => Swal.fire({ toast: true, position: 'top', icon, title, timer: 2600, showConfirmButton: false });
+            const AT = String.fromCharCode(64);
+            let D = null, gender = '';
+
+            async function post(url, body) {
+                const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : null });
+                return res.json();
+            }
+
+            function setAvatar(url, name) {
+                const el = document.getElementById('pfAvatar');
+                el.innerHTML = url ? `<img src="${esc(url)}" alt="" />` : esc((name || '?').trim().charAt(0));
+                document.getElementById('pfRemoveAvatar').hidden = !url;
+                // الصورة في الشريط العلوي كمان
+                const top = document.querySelector('.user-avatar');
+                if (top) top.innerHTML = url ? `<img src="${esc(url)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" />` : esc((name || '?').trim().charAt(0));
+            }
+
+            function setGender(g) {
+                gender = g || '';
+                document.querySelectorAll('#pfGender button').forEach(b => b.classList.toggle('active', b.dataset.g === gender));
+            }
+
+            async function load() {
+                const res = await fetch(URLS.data, { headers: { 'Accept': 'application/json' } });
+                D = await res.json();
+                if (!D.success) return;
+                const u = D.user;
+                document.getElementById('pfName').textContent = u.fullName;
+                document.getElementById('pfUser').textContent = AT + u.userName;
+                document.getElementById('pfRoles').innerHTML = u.roles.map(r => `<span class="um-role um-tone-${({ Admin: 'admin', Doctor: 'doctor', Reception: 'reception', User: 'user' })[r.name] || 'custom'}">${esc(r.displayName)}</span>`).join('');
+                setAvatar(u.avatar, u.fullName);
+
+                const f = document.getElementById('pfForm').elements;
+                f.fullName.value = u.fullName || ''; f.phone.value = u.phone || ''; f.email.value = u.email || '';
+                document.getElementById('pfUserName').value = u.userName;
+                setGender(u.gender);
+
+                const s = D.stats;
+                const set = (k, v) => document.querySelector(`#pfStats [data-k="${k}"]`).textContent = v;
+                set('patients', s.patients); set('visits', s.visits); set('appointments', s.appointments);
+                set('payments', s.payments);
+                if (s.paymentsTotal != null) document.getElementById('pfPayLabel').textContent = `دفعات سجلتها — ${Number(s.paymentsTotal).toLocaleString('en-US')} ج.م`;
+
+                document.getElementById('pfPermCount').textContent = u.isAdmin ? 'كل الصلاحيات' : `${D.grantedCount} / ${D.totalPermissions}`;
+                document.getElementById('pfModules').innerHTML = D.modules.map(m => {
+                    const lvl = m.granted.length === 0 ? 'none' : m.granted.length === m.total ? 'full' : 'part';
+                    return `<div class="pf-mod pf-${lvl}">
+                                <i class="bi ${esc(m.icon)}"></i>
+                                <div><b>${esc(m.title)}</b><small>${m.granted.length ? m.granted.map(esc).join(' · ') : 'مفيش صلاحية'}</small></div>
+                            </div>`;
+                }).join('') + (u.isAdmin ? `<div class="pf-mod pf-full"><i class="bi bi-gear"></i><div><b>إدارة النظام</b><small>المستخدمين · الأدوار · الإعدادات</small></div></div>` : '');
+
+                const act = D.activity;
+                document.getElementById('pfActivity').innerHTML = act.length ? act.map(a => {
+                    const d = new Date(a.at);
+                    return `<li class="pf-act-${esc(a.tone)}">
+                                <span class="pf-dot"></span>
+                                <div><b>${esc(a.action)} ${esc(a.what)}</b> <small dir="ltr">#${esc(a.entityId)}</small></div>
+                                <time>${d.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })} · ${d.toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' })}</time>
+                            </li>`;
+                }).join('') : '<li class="um-hint">مفيش تعديلات أو مسح من حسابك في آخر 30 يوم.</li>';
+            }
+
+            document.getElementById('pfGender').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setGender(b.dataset.g); });
+
+            document.getElementById('pfForm').addEventListener('submit', async e => {
+                e.preventDefault();
+                const f = e.target.elements;
+                const r = await post(URLS.save, { fullName: f.fullName.value, phone: f.phone.value, email: f.email.value, gender });
+                toast(r.success ? 'success' : 'error', r.message);
+                if (r.success) { document.getElementById('pfName').textContent = f.fullName.value; }
+            });
+
+            // كلمة السر
+            const pw = document.getElementById('pwForm').elements;
+            const rules = { len: p => p.length >= 6, up: p => /[A-Z]/.test(p), low: p => /[a-z]/.test(p), num: p => /\d/.test(p), sym: p => /[^A-Za-z0-9]/.test(p) };
+            pw.new.addEventListener('input', () => {
+                const p = pw.new.value; let ok = 0;
+                document.querySelectorAll('#pwRules li').forEach(li => { const pass = rules[li.dataset.r](p); li.classList.toggle('ok', pass); ok += pass; });
+                const bar = document.getElementById('pwBar');
+                bar.style.width = (ok / 5 * 100) + '%';
+                bar.className = ok === 5 ? 'ok' : ok >= 3 ? 'mid' : 'low';
+            });
+            document.getElementById('pwShow').addEventListener('click', () => { pw.new.type = pw.new.type === 'password' ? 'text' : 'password'; });
+            document.getElementById('pwForm').addEventListener('submit', async e => {
+                e.preventDefault();
+                if (pw.new.value !== pw.confirm.value) return toast('warning', 'التأكيد مش زي كلمة السر الجديدة');
+                const r = await post(URLS.pw, { current: pw.current.value, new: pw.new.value });
+                if (!r.success) return Swal.fire({ icon: 'error', title: 'ما اتغيرتش', html: esc(r.message).replace(/\n/g, '<br>') });
+                e.target.reset(); document.getElementById('pwBar').style.width = '0';
+                document.querySelectorAll('#pwRules li').forEach(li => li.classList.remove('ok'));
+                Swal.fire({ icon: 'success', title: r.message, timer: 2500, showConfirmButton: false });
+            });
+
+            document.getElementById('pfSignOutOthers').addEventListener('click', async () => {
+                const ok = await Swal.fire({ icon: 'question', title: 'تخرج من كل الأجهزة التانية؟', text: 'الجهاز ده هيفضل داخل.', showCancelButton: true, confirmButtonText: 'أيوه', cancelButtonText: 'لا' });
+                if (!ok.isConfirmed) return;
+                const r = await post(URLS.out);
+                toast(r.success ? 'success' : 'error', r.message);
+            });
+
+            // الصورة
+            document.getElementById('pfAvatarInput').addEventListener('change', async e => {
+                const file = e.target.files[0]; if (!file) return;
+                const fd = new FormData(); fd.append('file', file);
+                const res = await fetch(URLS.avatar, { method: 'POST', body: fd });
+                const r = await res.json();
+                toast(r.success ? 'success' : 'error', r.message);
+                if (r.success) setAvatar(r.avatar, D.user.fullName);
+                e.target.value = '';
+            });
+            document.getElementById('pfRemoveAvatar').addEventListener('click', async () => {
+                const res = await fetch(URLS.avatar + '?remove=true', { method: 'POST' });
+                const r = await res.json();
+                toast(r.success ? 'success' : 'error', r.message);
+                if (r.success) setAvatar(null, D.user.fullName);
+            });
+
+            // الوضع الليلي (نفس مفتاح الـ Layout)
+            const dark = document.getElementById('pfDark');
+            dark.checked = document.documentElement.getAttribute('data-theme') === 'dark';
+            dark.addEventListener('change', () => { if (typeof toggleTheme === 'function') toggleTheme(); });
+
+            load();
+        })();
+    </script>
+}
