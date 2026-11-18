@@ -40,6 +40,7 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+    options.Filters.Add(new ModulePermissionFilter());   // 🔒 A3: صلاحيات كل موديول
 });
 builder.Services.AddAntiforgery(options =>
 {
@@ -142,6 +143,7 @@ using (var scope = app.Services.CreateScope())
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
         await Dental.Seeds.DefaultRoles.SeedAsync(userManager, roleManager);
+        await Dental.Seeds.DefaultRoles.SeedPermissionsAsync(roleManager);   // 🔒 A3
         await Dental.Seeds.DefaultUsers.SeedUserAsync(userManager, roleManager);
         await Dental.Seeds.DefaultUsers.SeedAdminAsync(userManager, roleManager);
 
