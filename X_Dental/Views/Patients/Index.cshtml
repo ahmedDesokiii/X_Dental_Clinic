@@ -1354,7 +1354,7 @@
                     type: 'POST',
                     data: { id: id },
                     headers: {
-                        RequestVerificationToken: window.getCsrfToken ? window.getCsrfToken() : 
+                        RequestVerificationToken: window.getCsrfToken ? window.getCsrfToken() : ''
                     },
                     success: function(response) {
                         if (response.success) {
