@@ -99,8 +99,8 @@ namespace Dental.Controllers
                         Amount = pay.Amount,
                         Discount = pay.Discount,
                         Method = pay.Method,
-                        Description = pay.Description,
-                        ReceiptNo = $"REC-{DateTime.Now:yyMMdd}-{Random.Shared.Next(1000, 9999)}"
+                        Description = pay.Description
+                        // رقم الإيصال بيتعمل في محرك الدفع الموحّد (B3)
                     });
                 }
             }
