@@ -1,295 +1,185 @@
-﻿@model PermissionsFormViewModel
-@{
-    ViewData["Title"] = "صلاحيات المستخدم";
+﻿@{
+    ViewData["Title"] = "صلاحيات الدور";
+    var roleId = (int)ViewBag.RoleId;
 }
-@* <div class="card border-0 mb-3" style="background-color:#415E72 !important; border-radius:0 0 0 80px ">
-    <div class="d-flex text-center mx-auto pb-3">
-        <a asp-controller="Roles" asp-action="index" class="text-center fs-4 fw-bold text-decoration-none" style="color:#415E72 !important ">قائمة المجموعات</a>
-        <i class="bi bi-chevron-double-left fw-bold fs-3 mt-2 mx-3" style="color:#415E72 !important"></i>
-        <a class="text-center fs-1 fw-bold text-decoration-none" style="color:#415E72 !important ">@ViewData["Title"]</a>
+
+<div class="ft-page um-page pm-page" dir="rtl">
+
+    <div class="ft-hero um-hero">
+        <a asp-action="Index" class="ft-hero-icon pm-back" title="رجوع للأدوار"><i class="bi bi-arrow-right"></i></a>
+        <div>
+            <h1 id="pmTitle">صلاحيات الدور</h1>
+            <p id="pmSub">اختار الموديولات والصلاحيات المسموحة</p>
+        </div>
+        <div class="ft-hero-stat">
+            <b id="pmCount">0</b><span>/ <span id="pmTotal">0</span> صلاحية</span>
+            <div class="ft-progress"><i id="pmBar" style="width:0%"></i></div>
+        </div>
     </div>
-</div> *@
-<section class="container-fluid my-3" dir="rtl">
-    <form asp-action="ManagePermissions" method="post">
 
-        <!-- Header Card -->
-        <div class="card col-md-10 p-0 mx-auto justify-content-center mt-4">
-            <div class="card-header d-flex bg-info-subtle py-2 justify-content-start position-relative">
-                <div class="px-5">
-                    <h2 class="text-dark">@Model.RoleName</h2>
-                    <h4 class="text-dark">@Model.Details</h4>
-                    <span class="text-dark">إضافة / حذف صلاحيات للمستخدم</span>
-                </div>
+    <div class="pm-admin" id="pmAdmin" hidden>
+        <i class="bi bi-shield-fill-check"></i>
+        <div><b>مدير النظام له كل الصلاحيات تلقائيًا</b><span>ما محتاجش تختار حاجة — ودي الحماية اللي بتمنع إن البرنامج يتقفل على الكل.</span></div>
+    </div>
 
-                
-                <button type="submit" title="حفظ صلاحيات المستخدم" class="btn send-btn position-absolute start-0 top-0 mt-3  ms-3 fs-5  rounded-3 "
-                        asp-route="@Model">
-                    <span class="fw-bold"> حفظ الصلاحيات</span>
-                    <i class="bi bi-floppy2 fs-5 pe-2 fw-bold"></i>
-                </button>
-            </div>
+    <div class="ft-toolbar pm-toolbar" id="pmToolbar">
+        <span class="pm-label"><i class="bi bi-magic"></i> قوالب جاهزة:</span>
+        <button type="button" class="um-chip" data-preset="all">كل الصلاحيات</button>
+        <button type="button" class="um-chip" data-preset="reception">استقبال</button>
+        <button type="button" class="um-chip" data-preset="readOnly">عرض فقط</button>
+        <button type="button" class="um-chip" data-preset="none">مسح الكل</button>
+        <div class="um-search pm-search">
+            <i class="bi bi-search"></i>
+            <input type="search" id="pmSearch" placeholder="ابحث عن صلاحية…" />
+        </div>
+    </div>
+
+    <div class="pm-layout">
+        <div class="pm-modules" id="pmModules">
+            <div class="ft-skeleton um-sk"></div><div class="ft-skeleton um-sk"></div>
         </div>
 
-
-
-        <!-- Search -->
-        <div class="mt-4 col-md-6 mx-auto mb-4">
-            <div class="input-group input-group-lg shadow-sm">
-                <span class="input-group-text bg-info-subtle border-0 rounded-end-3">
-                    <i class="bi bi-search fs-4 text-primary"></i>
-                </span>
-                <input type="text"
-                       id="permissionSearch"
-                       class="form-control border-0 text-center rounded-3 bg-white"
-                       placeholder="ابحث عن اسم الصلاحية أو اسم الموديول..." />
-                <button class="btn btn-outline-secondary d-none" id="clearSearch">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-                
+        <aside class="pm-side">
+            <div class="ft-card">
+                <h2><i class="bi bi-people"></i> مستخدمين الدور ده</h2>
+                <div id="pmUsers" class="pm-users"></div>
+                <a asp-controller="Users" asp-action="Index" class="pm-link">إدارة المستخدمين <i class="bi bi-arrow-left"></i></a>
             </div>
-        </div>
-
-        <!-- Modules Cards -->
-        <div class="col-md-10 mx-auto mt-4">
-            @{
-                var groupedModules = Model.RoleCalims
-                .Select((claim, index) => new { claim, index })
-                .GroupBy(x => x.claim.DisplayValue.Split('.')[1]);
-            }
-            <div class="row my-3">
-                @foreach (var module in groupedModules)
-                {
-                    
-                    var collapseId = $"collapse_{module.Key.Replace(" ", "_")}";
-
-                    <div class="col-md-4 module-card" data-module="@module.Key.ToLower()">
-                        <div class="card mb-4 shadow-sm permission-card">
-                            <div class="card-header fs-5 fw-bold d-flex justify-content-between align-items-center" dir="ltr"
-                                 style="background-color:#415E72 !important; cursor:pointer;"
-                                 data-bs-toggle="collapse"
-                                 data-bs-target="#@collapseId"
-                                 aria-expanded="true">
-
-                                <span class="text-white">
-                                    <i class="bi bi-pin-angle-fill fs-4 pe-3"></i>
-                                    @module.Key
-                                </span>
-
-                                <i class="bi bi-chevron-down text-white"></i>
-                            </div>
-
-                            <div id="@collapseId" class="collapse show">
-                                <div class="card-body p-0">
-
-                                    <table class="table table-hover m-0 table-bordered border-primary-subtle">
-                                        <thead>
-                                            <tr class="text-center">
-                                                <th class="fs-5 fw-bold bg-info-subtle">Permission</th>
-                                                <th class="fs-5 fw-bold bg-info-subtle">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var item in module)
-                                            {
-                                                <tr class="permission-row" data-permission="@item.claim.DisplayValue.Split('.')[2].ToLower()">
-                                                    
-                                                    <td class="text-center fs-6">
-                                                        @item.claim.DisplayValue.Split('.')[2]
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <input hidden asp-for="@Model.RoleCalims[item.index].DisplayValue" />
-                                                        <input type="checkbox"
-                                                               asp-for="@Model.RoleCalims[item.index].IsSelected"
-                                                               class="form-check-input border-1 border-primary fs-5" />
-                                                    </td>
-                                                </tr>
-                                            }
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-
-                }
+            <div class="ft-card pm-tip">
+                <h2><i class="bi bi-lightbulb"></i> إزاي بتشتغل؟</h2>
+                <ul>
+                    <li><b>عرض</b> = يفتح الشاشة ويشوف البيانات.</li>
+                    <li><b>إضافة / تعديل</b> = يحفظ ويغيّر.</li>
+                    <li>المستخدم اللي عليه أكتر من دور بياخد مجموع صلاحياتهم.</li>
+                    <li>الأزرار والقوائم اللي مالوش صلاحية عليها بتستخبى، ولو حاول يوصلها بيترفض.</li>
+                </ul>
             </div>
-        </div>
+        </aside>
+    </div>
 
-    </form>
-</section>
+    <div class="pm-savebar" id="pmSavebar" hidden>
+        <span><i class="bi bi-exclamation-circle"></i> فيه تغييرات لسه ما اتحفظتش</span>
+        <button type="button" class="ft-btn ft-btn-soft" id="pmUndo">تراجع</button>
+        <button type="button" class="ft-btn ft-btn-primary" id="pmSave"><i class="bi bi-check2-circle"></i> حفظ الصلاحيات</button>
+    </div>
+</div>
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
-}
 @section Scripts {
-    <script src="~/js/Roles.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        (function () {
+            const ROLE_ID = @roleId;
+            const URLS = {
+                get: '@Url.Action("GetPermissions", "Roles")',
+                save: '@Url.Action("SavePermissions", "Roles")'
+            };
+            const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            const norm = s => String(s || '').toLowerCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
+            const isView = label => /^(عرض|قائمة|تفاصيل|كشف|تقارير)/.test(label);
 
-            const searchInput = document.getElementById("permissionSearch");
-            if (!searchInput) return;
+            let D = null, saved = new Set(), current = new Set(), q = '';
 
-            // 🔹 Debounce function
-            function debounce(func, delay) {
-                let timeout;
-                return function () {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => {
-                        func.apply(this, arguments);
-                    }, delay);
-                };
+            async function load() {
+                const res = await fetch(`${URLS.get}?roleId=${ROLE_ID}`, { headers: { 'Accept': 'application/json' } });
+                D = await res.json();
+                if (!D.success) { Swal.fire({ icon: 'error', title: D.message }); return; }
+                saved = new Set(D.modules.flatMap(m => m.permissions.filter(p => p.granted).map(p => p.value)));
+                current = new Set(saved);
+                document.getElementById('pmTitle').textContent = `صلاحيات «${D.role.displayName}»`;
+                document.getElementById('pmSub').textContent = D.role.details || 'اختار الموديولات والصلاحيات المسموحة';
+                document.getElementById('pmTotal').textContent = D.modules.reduce((n, m) => n + m.permissions.length, 0);
+                document.getElementById('pmAdmin').hidden = !D.role.isAdmin;
+                document.getElementById('pmToolbar').hidden = D.role.isAdmin;
+                renderUsers(); render();
             }
 
-            // 🔹 Search logic
-            function searchPermissions() {
+            function renderUsers() {
+                const states = { 2: '', 1: ' (معلّق)', 0: ' (معطّل)' };
+                document.getElementById('pmUsers').innerHTML = D.users.length
+                    ? D.users.map(u => `<div class="pm-user"><span class="um-avatar um-avatar-sm">${esc((u.fullName_Ar || u.userName || '?').trim().charAt(0))}</span><span>${esc(u.fullName_Ar)}<small>${states[u.currentState] ?? ''}</small></span></div>`).join('')
+                    : '<div class="um-hint">مفيش مستخدمين على الدور ده لسه</div>';
+            }
 
-                let value = searchInput.value.toLowerCase().trim();
-                let modules = document.querySelectorAll(".module-card");
+            function moduleCard(m) {
+                const perms = m.permissions.filter(p => !q || norm(p.label + ' ' + m.title).includes(q));
+                if (!perms.length) return '';
+                const on = m.permissions.filter(p => current.has(p.value)).length;
+                const state = on === 0 ? 'none' : on === m.permissions.length ? 'full' : 'part';
+                const lock = D.role.isAdmin ? 'disabled' : '';
+                return `
+                <section class="pm-module pm-${state}" data-module="${esc(m.key)}">
+                    <header>
+                        <span class="pm-module-icon"><i class="bi ${esc(m.icon)}"></i></span>
+                        <div class="pm-module-title"><b>${esc(m.title)}</b><small>${esc(m.description)}</small></div>
+                        <span class="pm-module-count">${on}/${m.permissions.length}</span>
+                        <label class="pm-switch" title="الموديول كله">
+                            <input type="checkbox" data-all="${esc(m.key)}" ${state === 'full' ? 'checked' : ''} ${lock} />
+                            <i></i>
+                        </label>
+                    </header>
+                    <div class="pm-perms">
+                        ${perms.map(p => `
+                        <label class="pm-perm ${current.has(p.value) ? 'on' : ''}">
+                            <input type="checkbox" value="${esc(p.value)}" ${current.has(p.value) ? 'checked' : ''} ${lock} />
+                            <span class="pm-perm-kind ${isView(p.label) ? 'view' : 'edit'}">${isView(p.label) ? 'عرض' : 'تعديل'}</span>
+                            <span class="pm-perm-label">${esc(p.label)}</span>
+                            <span class="pm-switch pm-switch-sm"><i></i></span>
+                        </label>`).join('')}
+                    </div>
+                </section>`;
+            }
 
-                modules.forEach(module => {
+            function render() {
+                document.getElementById('pmModules').innerHTML = D.modules.map(moduleCard).join('') || '<div class="ft-empty"><i class="bi bi-search"></i><b>مفيش صلاحية بالاسم ده</b></div>';
+                const n = current.size, total = +document.getElementById('pmTotal').textContent || 1;
+                document.getElementById('pmCount').textContent = n;
+                document.getElementById('pmBar').style.width = (n * 100 / total) + '%';
+                const dirty = !D.role.isAdmin && (n !== saved.size || [...current].some(p => !saved.has(p)));
+                document.getElementById('pmSavebar').hidden = !dirty;
+            }
 
-                    let moduleName = module.dataset.module;
-                    let rows = module.querySelectorAll(".permission-row");
-                    let collapseDiv = module.querySelector(".collapse");
+            document.getElementById('pmModules').addEventListener('change', e => {
+                const t = e.target;
+                if (t.dataset.all) {
+                    const m = D.modules.find(x => x.key === t.dataset.all);
+                    m.permissions.forEach(p => t.checked ? current.add(p.value) : current.delete(p.value));
+                } else if (t.value) {
+                    t.checked ? current.add(t.value) : current.delete(t.value);
+                    // التعديل من غير العرض ملوش معنى → نفعّل عرض نفس الموديول تلقائيًا
+                    if (t.checked) {
+                        const m = D.modules.find(x => x.permissions.some(p => p.value === t.value));
+                        const viewPerm = m?.permissions.find(p => isView(p.label));
+                        if (viewPerm) current.add(viewPerm.value);
+                    }
+                }
+                render();
+            });
 
-                    let found = false;
+            document.getElementById('pmToolbar').addEventListener('click', e => {
+                const b = e.target.closest('[data-preset]'); if (!b) return;
+                current = new Set(D.presets[b.dataset.preset] || []);
+                render();
+            });
+            document.getElementById('pmSearch').addEventListener('input', e => { q = norm(e.target.value.trim()); render(); });
+            document.getElementById('pmUndo').addEventListener('click', () => { current = new Set(saved); render(); });
 
-                    rows.forEach(row => {
-                        let permission = row.dataset.permission;
-
-                        if (
-                            permission.includes(value) ||
-                            moduleName.includes(value)
-                        ) {
-                            row.style.display = "";
-                            found = true;
-                        } else {
-                            row.style.display = "none";
-                        }
+            document.getElementById('pmSave').addEventListener('click', async () => {
+                const btn = document.getElementById('pmSave'); btn.disabled = true;
+                try {
+                    const res = await fetch(URLS.save, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ roleId: ROLE_ID, permissions: [...current] })
                     });
+                    const r = await res.json();
+                    Swal.fire({ toast: true, position: 'top', icon: r.success ? 'success' : 'error', title: r.message, timer: 2800, showConfirmButton: false });
+                    if (r.success) { saved = new Set(current); render(); }
+                } finally { btn.disabled = false; }
+            });
 
-                    // إظهار / إخفاء الموديول
-                    module.style.display = found ? "" : "none";
+            window.addEventListener('beforeunload', e => {
+                if (!document.getElementById('pmSavebar').hidden) { e.preventDefault(); e.returnValue = ''; }
+            });
 
-                    // فتح الـ collapse لو فيه نتيجة
-                    if (value !== "" && found && collapseDiv) {
-                        bootstrap.Collapse
-                            .getOrCreateInstance(collapseDiv)
-                            .show();
-                    }
-
-                    // لما السيرش يكون فاضي
-                    if (value === "") {
-                        rows.forEach(row => row.style.display = "");
-                        module.style.display = "";
-                    }
-                });
-            }
-
-            // 🔹 Apply debounce (300ms)
-            searchInput.addEventListener(
-                "keyup",
-                debounce(searchPermissions, 300)
-            );
-
-        });
-
+            load();
+        })();
     </script>
 }
-@* <section class="container-fluid mt-5">
-    <div class="col-md-1"></div>
-    <form asp-action="ManagePermissions" method="post">
-        <div class="card col-md-10 p-0 mx-auto justify-content-center mt-4">
-            <div class="card-header d-flex bg-info-subtle py-2 justify-content-start">
-                <div class="px-5">
-                    <h2 class="text-dark">@Model.RoleName</h2>
-                    <h4 class="text-dark fs-5">@Model.Details</h4>
-                    <span class="text-dark">إضافة / حذف صلاحيات للمستخدم</span>
-                </div>
-
-
-                <button type="submit" title="حفظ صلاحيات المستخدم" class="btn btn-success fs-5 rounded-3 position-absolute start-0 ms-3 mt-2"
-                        asp-route="@Model">
-                    <i class="bi bi-floppy2 fs-5 fw-bold"></i> <br /> <span class="fw-bold"> حفظ الصـلاحيات</span>
-                </button>
-
-                <div class="row">
-                    <div class="col-md-1"></div>
-                        <div class="col-md-9">
-                        
-                    </div>
-                </div>
-                <div>
-                   
-                </div>
-
-               
-            </div>
-            <div class="card-body row w-75 mx-auto p-0 justify-content-center">
-
-                <div id="Roles" class="tabcontent">
-                    <table class="table table-hover display nowrap  px-0 table-bordered border-primary-subtle" id="tablePermissions">
-                        <thead>
-                            <tr class="text-center">
-                                <th class="text-white text-center fs-5" style="background-color:#415E72 !important;"></th>
-                                <th class="text-white text-center fs-5" style="background-color:#415E72 !important;">الوحدة</th>
-                                <th class="text-white text-center fs-5" style="background-color:#415E72 !important;">الصلاحية</th>
-
-                            </tr>
-                        </thead>
-                        <tbody>
-                          
-                            @for (int i = 0; i < Model.RoleCalims.Count; i++)
-                            {
-                                <tr>
-                                    <td class="text-center">
-                                       
-                                            <input hidden asp-for="@Model.RoleCalims[i].DisplayValue" />
-                                            <input  type="checkbox" asp-for="@Model.RoleCalims[i].IsSelected" class="form-check-input border-1 border-primary fs-5 " />
-                                       
-                                    </td>
-                                    <td class="fw-bold fs-5 px-1  m-0 text-success text-center"><span class="bg-success-subtle p-2 rounded-5">@Model.RoleCalims[i].DisplayValue.Split('.')[1]</span></td>
-                                    <td class="fs-6 text-center">@Model.RoleCalims[i].DisplayValue.Split('.')[2]</td>
-                                </tr>
-                            }
-
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-
-        </div>
-    </form>
-    <div class="col-md-1"></div>
-
-</section>
-
-@section Scripts {
-    <script src="~/js/Roles.js"></script>
-} *@
-
-<style>
-    .send-btn {
-        background: linear-gradient(135deg, #25D366, #128C7E);
-        border: none;
-        color: #fff;
-        border-radius: 10px;
-        padding: 8px 22px;
-        transition: all .25s ease-in-out;
-    }
-
-        .send-btn:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(0,0,0,.15);
-            opacity: .95;
-        }
-
-        .send-btn:disabled {
-            opacity: .6;
-            cursor: not-allowed;
-        }
-
-</style>

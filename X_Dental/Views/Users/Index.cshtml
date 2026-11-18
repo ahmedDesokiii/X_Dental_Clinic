@@ -1,372 +1,409 @@
-﻿@model IEnumerable<UserViewModel>
-@{
-    ViewData["Title"] = "قائمة المستخدمين";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+﻿@{
+    ViewData["Title"] = "المستخدمين";
 }
 
-@section Styles {
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" />
-    <style>
-        #tableUser tfoot th {
-            padding: 4px 8px;
-            background-color: #FCBF49 !important;
-        }
+<div class="ft-page um-page" dir="rtl">
 
-        #tableUser tfoot input {
-            width: 100%;
-            padding: 4px 8px;
-            font-size: 12px;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-        }
+    <div class="ft-hero um-hero">
+        <div class="ft-hero-icon"><i class="bi bi-people-fill"></i></div>
+        <div>
+            <h1>المستخدمين</h1>
+            <p>مين يقدر يدخل البرنامج، وبأي دور، وإيه اللي يقدر يعمله</p>
+        </div>
+        <div class="um-hero-actions">
+            <a asp-controller="Roles" asp-action="Index" class="ft-btn um-btn-glass"><i class="bi bi-shield-lock"></i> الأدوار والصلاحيات</a>
+            <button type="button" class="ft-btn um-btn-white" id="btnNewUser"><i class="bi bi-person-plus-fill"></i> مستخدم جديد</button>
+        </div>
+    </div>
 
-            #tableUser tfoot input:focus {
-                outline: none;
-                border-color: #415E72;
-                box-shadow: 0 0 0 2px rgba(65, 94, 114, 0.15);
-            }
+    <div class="um-stats" id="umStats">
+        <div class="um-stat"><i class="bi bi-people"></i><b data-k="total">–</b><span>إجمالي المستخدمين</span></div>
+        <div class="um-stat um-ok"><i class="bi bi-check-circle"></i><b data-k="active">–</b><span>نشط</span></div>
+        <div class="um-stat um-warn"><i class="bi bi-pause-circle"></i><b data-k="inactive">–</b><span>معلّق / معطّل</span></div>
+        <div class="um-stat um-admin"><i class="bi bi-shield-check"></i><b data-k="admins">–</b><span>مدير نظام</span></div>
+    </div>
 
-        .dataTables_wrapper .dataTables_paginate .paginate_button {
-            padding: 4px 10px;
-            margin: 0 2px;
-            border-radius: 4px;
-        }
+    <div class="ft-toolbar um-toolbar">
+        <div class="um-search">
+            <i class="bi bi-search"></i>
+            <input type="search" id="umSearch" placeholder="ابحث بالاسم أو اسم الدخول أو الموبايل…" />
+        </div>
+        <div class="ft-seg" id="umStateSeg">
+            <button type="button" data-state="all" class="active">الكل</button>
+            <button type="button" data-state="2">نشط</button>
+            <button type="button" data-state="off">موقوف</button>
+        </div>
+        <div class="um-role-filter" id="umRoleFilter"></div>
+    </div>
 
-            .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-                background: #415E72 !important;
-                color: white !important;
-                border: 1px solid #415E72 !important;
-            }
+    <div class="um-grid" id="umGrid">
+        <div class="ft-skeleton um-sk"></div><div class="ft-skeleton um-sk"></div><div class="ft-skeleton um-sk"></div>
+    </div>
+</div>
 
-            .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-                background: #e2e8f0 !important;
-                border: 1px solid #cbd5e1 !important;
-            }
+<!-- ═══════════ محرر المستخدم ═══════════ -->
+<div class="um-drawer" id="umDrawer" hidden dir="rtl">
+    <div class="um-drawer-backdrop" data-close></div>
+    <form class="um-drawer-panel" id="umForm" autocomplete="off">
+        <header class="um-drawer-head">
+            <div class="um-avatar um-avatar-lg" id="umFormAvatar">+</div>
+            <div>
+                <h2 id="umFormTitle">مستخدم جديد</h2>
+                <small id="umFormSub">املا البيانات واختار الدور</small>
+            </div>
+            <button type="button" class="um-x" data-close><i class="bi bi-x-lg"></i></button>
+        </header>
 
-        .spin {
-            animation: spin 1s linear infinite;
-        }
+        <div class="um-drawer-body">
+            <input type="hidden" name="id" />
 
-        @@keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
-}
-
-<!-- Main content -->
-<section class="container-fluid mt-4" dir="rtl">
-    <div class="row">
-        <div class="col-md-1"></div>
-        <div class="col-md-10">
-            <div class="card p-0">
-                <div class="card-header d-flex align-items-center justify-content-start bg-info-subtle py-0">
-                    <div class="col-md-1">
-                        <a title="إضافة مستخدم جديد" class="btn btn-outline-dark border-0 bg-transparent ms-3 fs-1 rounded-3" asp-action="AddUser" asp-controller="Users">
-                            <i class="bi bi-person-fill-add fs-1 fw-bold" style="color:#415E72 !important;"></i>
-                        </a>
-                    </div>
-                    <div class="col-md-10 text-center">
-                        <span class="fs-2 fw-bold" style="color:#415E72 !important;">
-                            قائمة المستخدمين
-                            <i class="bi bi-people pe-2 fs-3" style="color:#415E72 !important;"></i>
-                        </span>
-                    </div>
+            <div class="um-section-title"><i class="bi bi-person-vcard"></i> البيانات الأساسية</div>
+            <div class="ft-field">
+                <label>الاسم بالكامل *</label>
+                <input name="fullName" class="form-control" required />
+            </div>
+            <div class="ft-row">
+                <div class="ft-field">
+                    <label>اسم الدخول (Username) *</label>
+                    <input name="userName" class="form-control" dir="ltr" required autocapitalize="off" spellcheck="false" />
                 </div>
-                <div class="card-body p-0">
-                    <div id="Users" class="tabcontent">
-                        <table class="table table-hover display nowrap px-0 table-bordered border-primary-subtle" id="tableUser" style="width:100%">
-                            <thead>
-                                <tr class="text-center">
-                                    <th class="text-white text-center fs-6" style="background-color:#415E72 !important;">الكود</th>
-                                    <th class="text-white text-center fs-6" style="background-color:#415E72 !important;">الاسـم</th>
-                                    <th class="text-white text-center fs-6" style="background-color:#415E72 !important;">اسم المستخدم</th>
-                                    <th class="text-white text-center fs-6" style="background-color:#415E72 !important;">التليفون</th>
-                                    <th class="text-white text-center fs-6" style="background-color:#415E72 !important;">المجموعات</th>
-                                    <th class="text-white text-center fs-6" style="background-color:#415E72 !important;">الحالة</th>
-                                    <th class="text-white text-center fs-6" style="background-color:#415E72 !important;">اجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Data loaded via AJAX -->
-                            </tbody>
-                            @* <tfoot>
-                                <tr>
-                                    <th>الكود</th>
-                                    <th>الاسـم</th>
-                                    <th>المستخدم</th>
-                                    <th>التليفون</th>
-                                    <th>المجموعات</th>
-                                    <th>الحالة</th>
-                                    <th>اجراءات</th>
-                                </tr>
-                            </tfoot> *@
-                        </table>
-                    </div>
+                <div class="ft-field ft-field-sm">
+                    <label>الكود</label>
+                    <input name="code" class="form-control" dir="ltr" placeholder="تلقائي" />
                 </div>
             </div>
-        </div>
-        <div class="col-md-1"></div>
-    </div>
-</section>
+            <div class="ft-row">
+                <div class="ft-field">
+                    <label>الموبايل</label>
+                    <input name="phone" class="form-control" dir="ltr" inputmode="tel" />
+                </div>
+                <div class="ft-field">
+                    <label>البريد</label>
+                    <input name="email" type="email" class="form-control" dir="ltr" />
+                </div>
+            </div>
+            <div class="ft-field">
+                <label>النوع</label>
+                <div class="ft-seg um-seg-full" id="umGender">
+                    <button type="button" data-g="ذكر">ذكر</button>
+                    <button type="button" data-g="أنثى">أنثى</button>
+                </div>
+            </div>
 
-@Html.AntiForgeryToken()
+            <div class="um-section-title"><i class="bi bi-key"></i> <span id="umPassTitle">كلمة السر *</span></div>
+            <div class="um-pass">
+                <input name="password" type="password" class="form-control" dir="ltr" autocomplete="new-password" />
+                <button type="button" class="um-icon-btn" id="umPassShow" title="إظهار"><i class="bi bi-eye"></i></button>
+                <button type="button" class="um-icon-btn" id="umPassGen" title="توليد كلمة سر قوية"><i class="bi bi-magic"></i></button>
+            </div>
+            <div class="um-strength"><i id="umStrengthBar"></i></div>
+            <small class="um-hint" id="umPassHint">6 حروف على الأقل وفيها: حرف كبير وصغير ورقم ورمز</small>
+
+            <div class="um-section-title"><i class="bi bi-shield-lock"></i> الدور *</div>
+            <div class="um-roles" id="umRoles"></div>
+
+            <div class="um-section-title"><i class="bi bi-grid-3x3-gap"></i> هيقدر يعمل إيه؟</div>
+            <div class="um-effective" id="umEffective"></div>
+        </div>
+
+        <footer class="um-drawer-foot">
+            <button type="button" class="ft-btn ft-btn-soft" data-close>إلغاء</button>
+            <button type="submit" class="ft-btn ft-btn-primary" id="umSave"><i class="bi bi-check2-circle"></i> حفظ</button>
+        </footer>
+    </form>
+</div>
 
 @section Scripts {
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-
     <script>
-        $(document).ready(function () {
-        // ⚡ FIX: Destroy existing DataTable if already initialized
-        if ($.fn.DataTable.isDataTable('#tableUser')) {
-        $('#tableUser').DataTable().destroy();
-        // Remove any existing event handlers on footer inputs
-        $('#tableUser tfoot').off();
-        }
+        (function () {
+            const URLS = {
+                all: '@Url.Action("GetAll", "Users")',
+                save: '@Url.Action("SaveUser", "Users")',
+                reset: '@Url.Action("ResetPassword", "Users")',
+                state: '@Url.Action("SetState", "Users")',
+                perms: '@Url.Action("ManagePermissions", "Roles")'
+            };
+            const AT = String.fromCharCode(64);   // علامة الـ at (بنتجنب كتابتها جوه Razor)
+            const ROLE_COLORS = { Admin: 'admin', Doctor: 'doctor', Reception: 'reception', User: 'user' };
 
-        // Build footer search inputs
-        $('#tableUser tfoot th').each(function () {
-        var title = $(this).text();
-        $(this).html('<input type="text" placeholder="بحث بـ ' + title + '" class="form-control form-control-sm" />');
-        });
+            let D = null, filter = { q: '', state: 'all', role: '' };
+            const $grid = document.getElementById('umGrid');
+            const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            const norm = s => String(s || '').toLowerCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
+            const roleOf = name => D.roles.find(r => r.name === name);
+            const roleTone = name => ROLE_COLORS[name] || 'custom';
+            const toast = (icon, title) => Swal.fire({ toast: true, position: 'top', icon, title, timer: 2600, showConfirmButton: false });
 
-        var table = $('#tableUser').DataTable({
-        processing: true,
-        serverSide: true,
-        responsive: true,
-        autoWidth: true,
-        pageLength: 10,
-        lengthMenu: [10, 25, 50, 100, 200, 400, 1000],
-        ordering: true,
-        retrieve: true,  // ⚡ FIX: Allow re-initialization without error
+            async function api(url, body) {
+                const res = await fetch(url, body ? {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+                } : { headers: { 'Accept': 'application/json' } });
+                return res.json();
+            }
 
-        ajax: {
-        url: '/Users/GetUsersData',
-        type: 'POST',
-        contentType: 'application/json',
-        data: function(d) {
-        return JSON.stringify(d);
-        },
-        error: function(xhr, error, thrown) {
-        console.error('DataTables error:', error, thrown);
-        Swal.fire({
-        title: 'خطأ',
-        text: 'فشل تحميل البيانات من الخادم',
-        icon: 'error',
-        confirmButtonColor: '#415E72'
-        });
-        }
-        },
+            // ───────── تحميل ورسم ─────────
+            async function load() {
+                D = await api(URLS.all);
+                renderStats(); renderRoleFilter(); render();
+            }
 
-        columns: [
-        {
-        data: 'code',
-        name: 'code',
-        className: 'text-center fs-6',
-        searchable: true,
-        orderable: true
-        },
-        {
-        data: 'fullName_Ar',
-        name: 'fullNameAr',
-        className: 'fs-6',
-        render: function(data) {
-        return '<span class="link-dark fw-semibold">' + (data || '-') + '</span>';
-        },
-        searchable: true,
-        orderable: true
-        },
-        {
-        data: 'userName',
-        name: 'userName',
-        className: 'fs-6 text-center',
-        searchable: true,
-        orderable: true
-        },
-        {
-        data: 'phoneNumber',
-        name: 'phoneNumber',
-        className: 'fs-6 text-center',
-        render: function(data) {
-        return data ? '<span style="font-family: monospace; direction: ltr;">' + data + '</span>' : '-';
-        },
-        searchable: true,
-        orderable: true
-        },
-        {
-        data: 'roles',
-        name: 'roles',
-        className: 'fs-6',
-        render: function(data) {
-        if (!data || data.length === 0) return '<span class="text-muted">-</span>';
-        return data.join(' ، ');
-        },
-        searchable: true,
-        orderable: false
-        },
-        {
-        data: 'currentState',
-        name: 'currentState',
-        className: 'text-center',
-        render: function(data) {
-        if (data === 2) {
-        return '<span class="badge bg-success-subtle text-success fw-bold px-2 py-2 rounded-5"><i class="bi bi-check-circle-fill"></i> نشط</span>';
-        } else if (data === 1) {
-        return '<span class="badge bg-warning-subtle text-warning fw-bold px-2 py-2 rounded-5"><i class="bi bi-pause-circle-fill"></i> معلق</span>';
-        } else {
-        return '<span class="badge bg-danger-subtle text-danger fw-bold px-2 py-2 rounded-5"><i class="bi bi-x-circle-fill"></i> غير نشط</span>';
-        }
-        },
-        searchable: true,
-        orderable: true
-        },
-        {
-        data: null,
-        orderable: false,
-        searchable: false,
-        className: 'text-center',
-        render: function(data) {
-        return `
-        <a class="btn fw-bold btn-outline-dark bg-transparent border-0 text-center p-0 mx-1 fs-5"
-        title="مجموعات" href="/Users/ManageRoles?userId=${data.id}">
-        <i class="bi bi-view-stacked"></i>
-        </a>
-        <a class="btn fw-bold btn-outline-dark bg-transparent border-0 p-0 mx-1 fs-5"
-        title="تعديل" href="/Users/EditUser?userId=${data.id}">
-        <i class="bi bi-pencil-square"></i>
-        </a>
-        <button type="button" class="btn fw-bold btn-outline-dark bg-transparent border-0 p-0 mx-1 fs-5"
-        title="حـذف" onclick="deleteUser(${data.id})">
-        <i class="bi bi-trash3-fill"></i>
-        </button>`;
-        }
-        }
-        ],
+            function renderStats() {
+                const u = D.users;
+                const v = {
+                    total: u.length,
+                    active: u.filter(x => x.state === 2).length,
+                    inactive: u.filter(x => x.state !== 2).length,
+                    admins: u.filter(x => x.roles.includes('Admin') && x.state === 2).length
+                };
+                document.querySelectorAll('#umStats [data-k]').forEach(b => b.textContent = v[b.dataset.k]);
+            }
 
-        layout: {
-        topStart: {
-        search: {
-        placeholder: 'ابحث هنا... !'
-        }
-        },
-        topEnd: {
-        pageLength: {
-        menu: [10, 25, 50, 100, 200, 400, 1000]
-        }
-        },
-        bottomEnd: {
-        paging: {
-        buttons: 6
-        }
-        }
-        },
+            function renderRoleFilter() {
+                document.getElementById('umRoleFilter').innerHTML =
+                    `<button type="button" class="um-chip ${filter.role ? '' : 'active'}" data-role="">كل الأدوار</button>` +
+                    D.roles.map(r => `<button type="button" class="um-chip um-tone-${roleTone(r.name)} ${filter.role === r.name ? 'active' : ''}" data-role="${esc(r.name)}">${esc(r.displayName)}</button>`).join('');
+            }
 
-        language: {
-        search: '<i class="bi bi-search"></i>',
-        searchPlaceholder: 'ابحث هنا... !',
-        lengthMenu: '_MENU_',
-        info: 'إظهار _START_ إلى _END_ من أصل _TOTAL_ سجل',
-        zeroRecords: 'لم يعثر على أي سجل',
-        paginate: {
-        first: 'الأول',
-        previous: 'السابق',
-        next: 'التالي',
-        last: 'الأخير'
-        },
-        processing: '<i class="bi bi-arrow-repeat spin"></i> جاري التحميل...'
-        },
+            const stateBadge = u =>
+                u.state === 2 ? (u.lockedOut ? '<span class="um-badge um-b-warn"><i class="bi bi-lock"></i> مقفول مؤقتًا</span>' : '<span class="um-badge um-b-ok"><i class="bi bi-circle-fill"></i> نشط</span>')
+                    : u.state === 1 ? '<span class="um-badge um-b-warn"><i class="bi bi-pause-fill"></i> معلّق</span>'
+                        : '<span class="um-badge um-b-off"><i class="bi bi-slash-circle"></i> معطّل</span>';
 
-        deferRender: true,
+            function card(u) {
+                const primary = u.roles[0] || '';
+                return `
+                <article class="um-card ${u.state !== 2 ? 'is-off' : ''}" data-id="${u.id}">
+                    <div class="um-card-top">
+                        <div class="um-avatar um-tone-${roleTone(primary)}">${esc((u.fullName || u.userName || '?').trim().charAt(0))}</div>
+                        <div class="um-card-id">
+                            <b>${esc(u.fullName)} ${u.isMe ? '<span class="um-me">أنت</span>' : ''}</b>
+                            <small dir="ltr">${AT}${esc(u.userName)}</small>
+                        </div>
+                        ${stateBadge(u)}
+                    </div>
+                    <div class="um-card-roles">
+                        ${u.roles.length ? u.roles.map(r => `<span class="um-role um-tone-${roleTone(r)}">${esc(roleOf(r)?.displayName || r)}</span>`).join('') : '<span class="um-role um-tone-none">بدون دور</span>'}
+                    </div>
+                    <div class="um-card-contact">
+                        ${u.phone ? `<span dir="ltr"><i class="bi bi-phone"></i>${esc(u.phone)}</span>` : ''}
+                        ${u.email ? `<span dir="ltr"><i class="bi bi-envelope"></i>${esc(u.email)}</span>` : ''}
+                        ${u.code ? `<span><i class="bi bi-hash"></i>${esc(u.code)}</span>` : ''}
+                    </div>
+                    <div class="um-card-actions">
+                        <button type="button" class="ft-btn ft-btn-soft" data-act="edit"><i class="bi bi-pencil"></i> تعديل</button>
+                        <button type="button" class="ft-btn ft-btn-soft" data-act="password"><i class="bi bi-key"></i> كلمة السر</button>
+                        ${u.isMe ? '' : (u.state === 2
+                            ? `<button type="button" class="ft-btn ft-btn-soft um-danger" data-act="suspend" title="إيقاف"><i class="bi bi-pause-circle"></i></button>`
+                            : `<button type="button" class="ft-btn ft-btn-soft um-ok-btn" data-act="activate" title="تفعيل"><i class="bi bi-play-circle"></i> تفعيل</button>`)}
+                    </div>
+                </article>`;
+            }
 
-        initComplete: function() {
-        // Apply footer column search
-        var api = this.api();
-        api.columns().every(function () {
-        var that = this;
-        $('input', this.footer()).on('keyup change clear', function () {
-        if (that.search() !== this.value) {
-        that.search(this.value).draw();
-        }
-        });
-        });
-        }
-        });
-        });
+            function render() {
+                const q = norm(filter.q);
+                const list = D.users.filter(u =>
+                    (!q || norm(`${u.fullName} ${u.userName} ${u.phone} ${u.email} ${u.code}`).includes(q)) &&
+                    (filter.state === 'all' || (filter.state === '2' ? u.state === 2 : u.state !== 2)) &&
+                    (!filter.role || u.roles.includes(filter.role)));
+                $grid.innerHTML = list.length ? list.map(card).join('')
+                    : `<div class="ft-empty um-empty"><i class="bi bi-person-x"></i><b>مفيش مستخدمين بالفلتر ده</b></div>`;
+            }
 
-        function deleteUser(id) {
-        Swal.fire({
-        title: 'هل أنت متأكد؟',
-        text: 'سيتم تعطيل المستخدم من النظام',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#415E72',
-        cancelButtonColor: '#64748b',
-        confirmButtonText: 'نعم، احذف!',
-        cancelButtonText: 'إلغاء',
-        reverseButtons: true
-        }).then((result) => {
-        if (result.isConfirmed) {
-        $.ajax({
-        url: '/Users/DeleteUser',
-        type: 'POST',
-        data: { Id: id },
-        headers: {
-        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-        },
-        success: function(response) {
-        if (response.success) {
-        $('#tableUser').DataTable().ajax.reload();
-        Swal.fire({
-        title: 'تم!',
-        text: response.message || 'تم تعطيل المستخدم بنجاح.',
-        icon: 'success',
-        confirmButtonColor: '#415E72',
-        confirmButtonText: 'حسناً',
-        timer: 2000,
-        timerProgressBar: true
-        });
-        } else {
-        Swal.fire({
-        title: 'خطأ',
-        text: response.message || 'حدث خطأ أثناء الحذف',
-        icon: 'error',
-        confirmButtonColor: '#415E72',
-        confirmButtonText: 'حسناً'
-        });
-        }
-        },
-        error: function() {
-        Swal.fire({
-        title: 'خطأ',
-        text: 'فشل الاتصال بالخادم',
-        icon: 'error',
-        confirmButtonColor: '#415E72',
-        confirmButtonText: 'حسناً'
-        });
-        }
-        });
-        }
-        });
-        }
-    </script>
+            // ───────── محرر المستخدم ─────────
+            const $drawer = document.getElementById('umDrawer');
+            const $form = document.getElementById('umForm');
+            const F = n => $form.elements[n];
+            let editing = null, gender = '';
 
-    @if (TempData[Helper.MsgType] != null)
-    {
-        <script>
-            Swal.fire({
-            title: '@TempData[Helper.Title]',
-            text: '@Html.Raw(TempData[Helper.Msg])',
-            confirmButtonText: 'حسناً',
-            icon: '@(TempData[Helper.MsgType]?.ToString() == Helper.Success ? "success" : "error")',
-            confirmButtonColor: '#415E72'
+            function openEditor(u) {
+                editing = u || null;
+                $form.reset();
+                F('id').value = u?.id || '';
+                F('fullName').value = u?.fullName || '';
+                F('userName').value = u?.userName || '';
+                F('code').value = u?.code || '';
+                F('phone').value = u?.phone || '';
+                F('email').value = u?.email || '';
+                setGender(u?.gender || '');
+                F('password').required = !u;
+                F('password').type = 'password';
+                document.getElementById('umPassTitle').textContent = u ? 'كلمة السر (سيبها فاضية لو مش هتغيرها)' : 'كلمة السر *';
+                document.getElementById('umFormTitle').textContent = u ? u.fullName : 'مستخدم جديد';
+                document.getElementById('umFormSub').textContent = u ? (AT + u.userName) : 'املا البيانات واختار الدور';
+                document.getElementById('umFormAvatar').textContent = u ? (u.fullName || '?').trim().charAt(0) : '+';
+                renderRolePicker(u ? u.roles : []);
+                strength();
+                $drawer.hidden = false;
+                document.documentElement.classList.add('cp-open');
+                setTimeout(() => F('fullName').focus(), 50);
+            }
+            function closeEditor() { $drawer.hidden = true; document.documentElement.classList.remove('cp-open'); }
+
+            function setGender(g) {
+                gender = g;
+                document.querySelectorAll('#umGender button').forEach(b => b.classList.toggle('active', b.dataset.g === g));
+            }
+            document.getElementById('umGender').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setGender(b.dataset.g); });
+
+            function renderRolePicker(selected) {
+                const isSelf = editing?.isMe;
+                document.getElementById('umRoles').innerHTML = D.roles.map(r => {
+                    const on = selected.includes(r.name);
+                    const locked = isSelf && r.isAdmin && on;
+                    return `
+                    <label class="um-role-pick um-tone-${roleTone(r.name)} ${on ? 'on' : ''} ${locked ? 'locked' : ''}" title="${locked ? 'ما ينفعش تشيل صلاحية المدير من نفسك' : ''}">
+                        <input type="checkbox" value="${esc(r.name)}" ${on ? 'checked' : ''} ${locked ? 'disabled' : ''} />
+                        <span class="um-role-pick-icon"><i class="bi ${r.isAdmin ? 'bi-shield-fill-check' : 'bi-person-badge'}"></i></span>
+                        <span class="um-role-pick-main">
+                            <b>${esc(r.displayName)}</b>
+                            <small>${r.isAdmin ? 'كل الصلاحيات + إدارة المستخدمين والإعدادات' : (esc(r.details) || (r.permissions.length + ' صلاحية من ' + D.totalPermissions))}</small>
+                        </span>
+                        <i class="bi bi-check-circle-fill um-role-check"></i>
+                    </label>`;
+                }).join('');
+                effective();
+            }
+            document.getElementById('umRoles').addEventListener('change', e => {
+                e.target.closest('.um-role-pick')?.classList.toggle('on', e.target.checked);
+                effective();
             });
-        </script>
-    }
+
+            function selectedRoles() {
+                return [...document.querySelectorAll('#umRoles input')].filter(i => i.checked).map(i => i.value);
+            }
+
+            function effective() {
+                const roles = selectedRoles().map(roleOf).filter(Boolean);
+                const isAdmin = roles.some(r => r.isAdmin);
+                const granted = new Set(roles.flatMap(r => r.permissions));
+                const html = D.modules.map(m => {
+                    const all = D.allPermissions.filter(p => p.split('.')[1] === m.key);
+                    const n = all.filter(p => granted.has(p)).length;
+                    const level = n === 0 ? ['none', 'لا'] : n === all.length ? ['full', 'كامل'] : ['part', 'جزئي'];
+                    return `<div class="um-eff um-eff-${level[0]}" title="${n} من ${all.length}"><i class="bi ${esc(m.icon)}"></i><span>${esc(m.title)}</span><em>${level[1]}</em></div>`;
+                }).join('');
+                document.getElementById('umEffective').innerHTML =
+                    (roles.length ? '' : '<div class="um-hint">اختار دور عشان تشوف الصلاحيات</div>') + html +
+                    `<div class="um-eff ${isAdmin ? 'um-eff-full' : 'um-eff-none'}"><i class="bi bi-gear"></i><span>المستخدمين والإعدادات</span><em>${isAdmin ? 'كامل' : 'لا'}</em></div>`;
+            }
+
+            // كلمة السر
+            function genPassword() {
+                const sets = ['ABCDEFGHJKLMNPQRSTUVWXYZ', 'abcdefghijkmnpqrstuvwxyz', '23456789', '#$%&*!?'];
+                const rnd = n => { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; };
+                let p = sets.map(s => s[rnd(s.length)]);
+                const pool = sets.join('');
+                while (p.length < 10) p.push(pool[rnd(pool.length)]);
+                for (let i = p.length - 1; i > 0; i--) { const j = rnd(i + 1);[p[i], p[j]] = [p[j], p[i]]; }
+                return p.join('');
+            }
+            function score(p) {
+                if (!p) return 0;
+                return [p.length >= 6, /[A-Z]/.test(p), /[a-z]/.test(p), /\d/.test(p), /[^A-Za-z0-9]/.test(p), p.length >= 10].filter(Boolean).length;
+            }
+            function strength() {
+                const s = score(F('password').value);
+                const bar = document.getElementById('umStrengthBar');
+                bar.style.width = (s / 6 * 100) + '%';
+                bar.className = s >= 5 ? 'ok' : s >= 3 ? 'mid' : 'low';
+            }
+            F('password').addEventListener('input', strength);
+            document.getElementById('umPassShow').addEventListener('click', () => { F('password').type = F('password').type === 'password' ? 'text' : 'password'; });
+            document.getElementById('umPassGen').addEventListener('click', () => { F('password').value = genPassword(); F('password').type = 'text'; strength(); });
+
+            $form.addEventListener('submit', async e => {
+                e.preventDefault();
+                const roles = selectedRoles();
+                if (editing?.isMe && editing.roles.includes('Admin') && !roles.includes('Admin')) roles.push('Admin');
+                if (!roles.length) return toast('warning', 'اختار دور واحد على الأقل');
+                const pass = F('password').value;
+                const btn = document.getElementById('umSave'); btn.disabled = true;
+                try {
+                    const r = await api(URLS.save, {
+                        id: +F('id').value || null, fullName: F('fullName').value, userName: F('userName').value,
+                        code: F('code').value, phone: F('phone').value, email: F('email').value,
+                        gender, password: pass || null, roles
+                    });
+                    if (!r.success) return Swal.fire({ icon: 'error', title: 'ما اتحفظش', html: esc(r.message).replace(/\n/g, '<br>') });
+                    closeEditor();
+                    if (pass) showPasswordOnce(F('userName').value, pass, r.message);
+                    else toast('success', r.message);
+                    load();
+                } finally { btn.disabled = false; }
+            });
+
+            function showPasswordOnce(userName, pass, title) {
+                Swal.fire({
+                    icon: 'success', title,
+                    html: `<p>بيانات الدخول — ابعتها للمستخدم دلوقتي، <b>مش هتظهر تاني</b>:</p>
+                           <div class="um-cred" dir="ltr"><span>${esc(userName)}</span><b id="umCredPass">${esc(pass)}</b></div>`,
+                    confirmButtonText: '<i class="bi bi-clipboard"></i> نسخ وإغلاق'
+                }).then(() => navigator.clipboard?.writeText(`${userName}\n${pass}`).catch(() => { }));
+            }
+
+            // ───────── أكشن الكروت ─────────
+            $grid.addEventListener('click', async e => {
+                const b = e.target.closest('[data-act]'); if (!b) return;
+                const u = D.users.find(x => x.id == b.closest('[data-id]').dataset.id); if (!u) return;
+
+                if (b.dataset.act === 'edit') return openEditor(u);
+
+                if (b.dataset.act === 'password') {
+                    const gen = genPassword();
+                    const { value: pass } = await Swal.fire({
+                        title: `كلمة سر جديدة لـ ${u.fullName}`,
+                        input: 'text', inputValue: gen, inputAttributes: { dir: 'ltr' },
+                        html: '<small>اتولدت كلمة سر قوية — تقدر تغيرها. أي جهاز داخل بالحساب ده هيطلب تسجيل دخول تاني.</small>',
+                        showCancelButton: true, confirmButtonText: 'تغيير', cancelButtonText: 'إلغاء',
+                        inputValidator: v => !v ? 'اكتب كلمة السر' : null
+                    });
+                    if (!pass) return;
+                    const r = await api(URLS.reset, { id: u.id, password: pass });
+                    if (!r.success) return Swal.fire({ icon: 'error', title: 'ما اتغيرتش', html: esc(r.message).replace(/\n/g, '<br>') });
+                    showPasswordOnce(u.userName, pass, 'تم تغيير كلمة السر');
+                    return load();
+                }
+
+                if (b.dataset.act === 'suspend') {
+                    const { value: state } = await Swal.fire({
+                        title: `إيقاف ${u.fullName}`,
+                        input: 'radio',
+                        inputOptions: { '1': 'تعليق مؤقت (يقدر يرجع بتفعيل)', '0': 'تعطيل الحساب' },
+                        inputValue: '1',
+                        html: '<small>هيتعمله خروج من كل الأجهزة فورًا.</small>',
+                        showCancelButton: true, confirmButtonText: 'إيقاف', cancelButtonText: 'إلغاء', confirmButtonColor: '#dc2626'
+                    });
+                    if (state == null) return;
+                    const r = await api(URLS.state, { id: u.id, state: +state });
+                    toast(r.success ? 'success' : 'error', r.message);
+                    return load();
+                }
+
+                if (b.dataset.act === 'activate') {
+                    const r = await api(URLS.state, { id: u.id, state: 2 });
+                    toast(r.success ? 'success' : 'error', r.message);
+                    return load();
+                }
+            });
+
+            // ───────── فلاتر ─────────
+            document.getElementById('umSearch').addEventListener('input', e => { filter.q = e.target.value; render(); });
+            document.getElementById('umStateSeg').addEventListener('click', e => {
+                const b = e.target.closest('button'); if (!b) return;
+                filter.state = b.dataset.state;
+                document.querySelectorAll('#umStateSeg button').forEach(x => x.classList.toggle('active', x === b));
+                render();
+            });
+            document.getElementById('umRoleFilter').addEventListener('click', e => {
+                const b = e.target.closest('[data-role]'); if (!b) return;
+                filter.role = b.dataset.role; renderRoleFilter(); render();
+            });
+
+            document.getElementById('btnNewUser').addEventListener('click', () => openEditor(null));
+            $drawer.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeEditor(); });
+            document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$drawer.hidden) closeEditor(); });
+
+            load();
+        })();
+    </script>
 }

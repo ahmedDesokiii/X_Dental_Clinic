@@ -56,20 +56,7 @@ namespace Dental.Seeds
             {
                 await roleManager.CreateAsync(new ApplicationRole(receptionName) { Details = "استقبال — المرضى، المواعيد، تحصيل الدفعات" });
                 var reception = await roleManager.FindByNameAsync(receptionName);
-                if (reception != null) await GrantAsync(roleManager, reception, new[]
-                {
-                    Permissions.Patients.View_Patients,
-                    Permissions.Patients.Add_Patient,
-                    Permissions.Patients.Edit_Patient,
-                    Permissions.Patients.Details_Patient,
-                    Permissions.Clinical.View,
-                    Permissions.Appointments.View,
-                    Permissions.Appointments.Manage,
-                    Permissions.Payments.View,
-                    Permissions.Payments.Add,
-                    Permissions.Diagnosis.View,
-                    Permissions.Medications.View,
-                });
+                if (reception != null) await GrantAsync(roleManager, reception, Permissions.ReceptionDefaults());
             }
 
             await roleManager.AddClaimAsync(admin, new Claim(SeedClaimType, PermissionsSeedV1));

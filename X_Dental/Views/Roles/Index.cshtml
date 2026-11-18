@@ -1,153 +1,147 @@
-﻿@model List<ApplicationRole>
-
-@{
-    ViewData["Title"] = "قائمة المجموعات";
-    int index = 0;
+﻿@{
+    ViewData["Title"] = "الأدوار والصلاحيات";
 }
 
-<!-- Main content -->
-<section class="container-fluid mt-4" dir="rtl">
-    <div class="row">
-        <div class="col-md-1"></div>
-        <div class="col-md-10">
-            <div class="card p-0">
-                <div class="card-header d-flex align-items-center justify-content-start bg-info-subtle py-0">
-                    <div class="col-md-1">
-                        <!-- Button trigger modal -->
-                        <button type="button" title="إضافة مجموعة جديدة" class="btn btn-outline-dark border-0 bg-transparent ms-3 fs-1  rounded-3 " data-bs-toggle="modal" data-bs-target="#exampleModal" onclick="Rest()">
-                            <i class="bi bi-cloud-plus-fill fs-1 fw-bold" style="color:#415E72 !important;"></i>
-                        </button>
-                    </div>
-                    <div class="col-md-10 text-center">
-                        <span class="fs-2 fw-bold" style="color:#415E72 !important;">
-                            قائمة المجموعات
-                            <i class="bi bi-collection pe-2 fs-3" style="color:#415E72 !important;"></i>
-                        </span>
-                    </div>
-                </div>
-                <!-- /.card-header -->
+<div class="ft-page um-page" dir="rtl">
 
-                <div class="card-body p-0">
-                    <!-- Tab links -->
-                    @*  <div class="tab">
-                        <button class="tablinks" onclick="openCity('event', 'Users')" id="defaultOpen">قائمة المستخدمين</button>
-                    </div> *@
-                    <!-- Tab content -->
-                    @if (!Model.Any())
-                    {
-                        <div class="alert  alert-warning mt-5">
-                            <h4 class="alert-heading">لا يوجد مجموعات !</h4>
-                            <p class="mb-0">لم يتم اضافة مجموعات للتطبيق حتي الآن</p>
-                        </div>
-                    }
-                    else
-                    {
-                        <div id="Roles" class="tabcontent">
-                            <table class="table table-hover display  px-0 table-bordered border-primary-subtle" id="tableUser">
-                                <thead>
-                                    <tr class="text-center">
-                                        <th class="text-white text-center fs-6" style="width:5%;background-color:#415E72 !important;"></th>
-                                        <th class="text-white text-center fs-6" style="width:20%;background-color:#415E72 !important;">المجموعة</th>
-                                        <th class="text-white text-center fs-6" style="width:55%;background-color:#415E72 !important;">الوصـف</th>
-                                        <th class="text-white text-center fs-6" style="width:20%;background-color:#415E72 !important;">اجراءات</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var role in Model)
-                                    {
-                                        index++;
-                                        <tr class="text-center">
-                                            <td class="fs-5 text-center fw-bold px-1 py-1 m-0">@index</td>
-                                            <td class="fw-bold fs-5 px-1  m-0 text-success"><span class="bg-success-subtle p-2 rounded-5">@role.Name</span></td>
-                                            <td class="fs-6 m-0">@role.Details</td>
-                                            <td class="py-1 px-1 m-0">
-                                                <a class="btn fw-bold btn-outline-dark bg-transparent border-0 text-center p-0 mx-1 fs-4" title="صلاحيات" asp-controller="Roles" asp-action="ManagePermissions" asp-route-roleId="@role.Id"><i class="bi bi-shield-lock"></i></a>
-                                                <a class="btn fw-bold btn-outline-dark bg-transparent border-0 p-0 mx-1 fs-4" title="تعديل" onclick="Edit('@role.Id','@role.Name','@role.Details')" data-bs-toggle="modal" data-bs-target="#exampleModal"><i class="bi bi-pencil-square"></i></a>
-                                                <a class="btn fw-bold btn-outline-dark bg-transparent border-0 p-0 mx-1 fs-4" title="حذف" asp-controller="Roles" asp-action="DeleteRole" asp-route-Id="@role.Id"> <i class="bi bi-trash3-fill"></i></a>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                                <tfoot class="">
-                                    <tr class="text-center">
-                                        <th style="background-color:#FCBF49 !important;">مسلسل</th>
-                                        <th style="background-color:#FCBF49 !important;">المجموعة</th>
-                                        <th style="background-color:#FCBF49 !important;">الوصف</th>
-                                        <th style="background-color:#FCBF49 !important;">اجراءات</th>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    }
-                </div>
-                <!-- /.card-body -->
-            </div>
-            <!-- /.card -->
-            <!-- /.card -->
+    <div class="ft-hero um-hero">
+        <div class="ft-hero-icon"><i class="bi bi-shield-lock-fill"></i></div>
+        <div>
+            <h1>الأدوار والصلاحيات</h1>
+            <p>كل دور = مجموعة صلاحيات. المستخدم بياخد صلاحيات كل الأدوار اللي عليه.</p>
         </div>
-        <div class="col-md-2"></div>
-        <!-- /.col -->
+        <div class="um-hero-actions">
+            <a asp-controller="Users" asp-action="Index" class="ft-btn um-btn-glass"><i class="bi bi-people"></i> المستخدمين</a>
+            <button type="button" class="ft-btn um-btn-white" id="btnNewRole"><i class="bi bi-plus-circle-fill"></i> دور جديد</button>
+        </div>
     </div>
-    <!-- /.row -->
-</section>
-<!-- /.content -->
 
+    <div class="rl-grid" id="rlGrid">
+        <div class="ft-skeleton um-sk"></div><div class="ft-skeleton um-sk"></div><div class="ft-skeleton um-sk"></div>
+    </div>
 
-<partial name="_SaveRole" model="new RoleFormViewModel()" />
+    <div class="rl-note">
+        <i class="bi bi-info-circle"></i>
+        <span>
+            <b>مدير النظام</b> له كل الصلاحيات تلقائيًا، وهو الوحيد اللي يقدر يدخل على المستخدمين والأدوار والإعدادات.
+            أي تعديل في الصلاحيات بيوصل للمستخدمين فورًا من غير ما يعملوا خروج.
+        </span>
+    </div>
+</div>
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
-}
 @section Scripts {
-    <script src="~/js/Roles.js"></script>
-   
-    @if (!string.IsNullOrEmpty(Context.Session.GetString(Helper.MsgType)))
-    {
-        if (Context.Session.GetString(Helper.MsgType) == Helper.Success)
-        {
-            <script>
-                Swal.fire({
-                    title: '@Context.Session.GetString(Helper.Title)',
-                    text: '@Html.Raw(@Context.Session.GetString(Helper.Msg))',
-                    confirmButtonText: 'Ok',
-                    icon: 'success'
-
-                });
-            </script>
-
-        }
-        else
-        {
-            <script>
-
-                Swal.fire({
-                    title: '@Context.Session.GetString(Helper.Title)',
-                    text: '@Html.Raw(@Context.Session.GetString(Helper.Msg))',
-                    confirmButtonText: 'Ok',
-                    icon: 'warning'
-
-                });
-            </script>
-        }
-        Context.Session.SetString(Helper.MsgType, "");
-    }
-
-
     <script>
+        (function () {
+            const URLS = {
+                all: '@Url.Action("GetAll", "Roles")',
+                save: '@Url.Action("SaveRole", "Roles")',
+                del: '@Url.Action("DeleteRole", "Roles")',
+                perms: '@Url.Action("ManagePermissions", "Roles")'
+            };
+            const TONES = { Admin: 'admin', Doctor: 'doctor', Reception: 'reception', User: 'user' };
+            const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            const toast = (icon, title) => Swal.fire({ toast: true, position: 'top', icon, title, timer: 2600, showConfirmButton: false });
+            let D = null;
 
-        let lbTitleEdit = '@Html.Raw("تعديل بيانات المجموعة")';
-        let lbEdit = '@Html.Raw("حفظ التعديلات")';
-        let lbAddNewRole = '@Html.Raw("إضافة مجموعة جديدة")';
-        let lbbtnSave = '@Html.Raw("حفظ البيانات")';
+            async function load() {
+                const res = await fetch(URLS.all, { headers: { 'Accept': 'application/json' } });
+                D = await res.json();
+                render();
+            }
 
-        let lbTitleMsgDelete = '@Html.Raw("Delete")';
-        let lbTextMsgDelete = '@Html.Raw($"Are you sure delete role ? ")';
-        let lbconfirmButtonText = '@Html.Raw("Yes , Delete it")';
-        let lbcancelButtonText = '@Html.Raw("Cancle")';
+            function card(r) {
+                const pct = Math.round(r.permissionsCount * 100 / D.totalPermissions);
+                const tone = TONES[r.name] || 'custom';
+                return `
+                <article class="rl-card um-tone-${tone}" data-id="${r.id}">
+                    <div class="rl-card-head">
+                        <span class="rl-icon"><i class="bi ${r.isAdmin ? 'bi-shield-fill-check' : 'bi-person-badge-fill'}"></i></span>
+                        <div class="rl-title">
+                            <b>${esc(r.displayName)}</b>
+                            <small dir="ltr">${r.displayName !== r.name ? esc(r.name) : ''}</small>
+                        </div>
+                        ${r.isSystem ? '<span class="rl-sys" title="دور أساسي"><i class="bi bi-lock-fill"></i></span>' : ''}
+                    </div>
+                    <p class="rl-desc">${esc(r.details) || (r.isAdmin ? 'تحكم كامل في البرنامج' : '<span class="um-hint">من غير وصف</span>')}</p>
 
-        let lbTitleDeletedOk = '@Html.Raw("Done")';
-        let lbMsgDeletedOkRole = '@Html.Raw("Role Deleted Successfully")';
-        let lbSuccess = '@Html.Raw(Helper.Success)';
+                    <div class="rl-meter">
+                        <div class="rl-meter-top"><span>الصلاحيات</span><b>${r.isAdmin ? 'الكل' : `${r.permissionsCount} / ${D.totalPermissions}`}</b></div>
+                        <div class="rl-bar"><i style="width:${pct}%"></i></div>
+                    </div>
 
+                    <div class="rl-modules">
+                        ${r.modules.length ? r.modules.map(m => `<span title="${esc(m.title)}"><i class="bi ${esc(m.icon)}"></i></span>`).join('') : '<span class="um-hint">مفيش صلاحيات</span>'}
+                    </div>
+
+                    <div class="rl-foot">
+                        <span class="rl-users"><i class="bi bi-people"></i> ${r.usersCount} مستخدم</span>
+                        <div class="rl-actions">
+                            ${r.isAdmin ? '' : `<a class="ft-btn ft-btn-primary" href="${URLS.perms}?roleId=${r.id}"><i class="bi bi-sliders"></i> الصلاحيات</a>`}
+                            <button type="button" class="ft-btn ft-btn-soft ft-btn-icon" data-act="edit" title="تعديل الاسم والوصف"><i class="bi bi-pencil"></i></button>
+                            ${r.isSystem ? '' : `<button type="button" class="ft-btn ft-btn-soft ft-btn-icon um-danger" data-act="delete" title="مسح"><i class="bi bi-trash3"></i></button>`}
+                        </div>
+                    </div>
+                </article>`;
+            }
+
+            function render() {
+                document.getElementById('rlGrid').innerHTML = D.roles.map(card).join('');
+            }
+
+            async function editRole(r) {
+                const isNew = !r;
+                const copyOpts = D.roles.map(x => `<option value="${x.id}">${esc(x.displayName)}</option>`).join('');
+                const { value } = await Swal.fire({
+                    title: isNew ? 'دور جديد' : `تعديل «${r.displayName}»`,
+                    html: `
+                        <div class="rl-form" dir="rtl">
+                            <label>اسم الدور</label>
+                            <input id="rlName" class="form-control" value="${esc(r?.name || '')}" ${r?.isAdmin ? 'disabled' : ''} placeholder="مثلاً: مساعد طبيب" />
+                            <label>الوصف</label>
+                            <input id="rlDetails" class="form-control" value="${esc(r?.details || '')}" placeholder="مين ياخد الدور ده؟" />
+                            ${isNew ? `<label>ابدأ بصلاحيات</label>
+                                <select id="rlCopy" class="form-select"><option value="">من غير صلاحيات</option>${copyOpts}</select>` : ''}
+                        </div>`,
+                    showCancelButton: true, confirmButtonText: isNew ? 'إنشاء' : 'حفظ', cancelButtonText: 'إلغاء',
+                    focusConfirm: false,
+                    preConfirm: () => {
+                        const name = document.getElementById('rlName').value.trim();
+                        if (name.length < 2) { Swal.showValidationMessage('اكتب اسم الدور'); return false; }
+                        return {
+                            roleId: r?.id || null, name,
+                            details: document.getElementById('rlDetails').value,
+                            copyFromRoleId: isNew ? (+document.getElementById('rlCopy').value || null) : null
+                        };
+                    }
+                });
+                if (!value) return;
+                const res = await fetch(URLS.save, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(value) });
+                const out = await res.json();
+                if (!out.success) return Swal.fire({ icon: 'error', title: out.message });
+                if (isNew && out.roleId) return location.href = `${URLS.perms}?roleId=${out.roleId}`;
+                toast('success', out.message); load();
+            }
+
+            document.getElementById('rlGrid').addEventListener('click', async e => {
+                const b = e.target.closest('[data-act]'); if (!b) return;
+                const r = D.roles.find(x => x.id == b.closest('[data-id]').dataset.id); if (!r) return;
+                if (b.dataset.act === 'edit') return editRole(r);
+                if (b.dataset.act === 'delete') {
+                    const ok = await Swal.fire({
+                        icon: 'warning', title: `مسح دور «${r.displayName}»؟`,
+                        text: r.usersCount ? `عليه ${r.usersCount} مستخدم — لازم تنقلهم الأول.` : 'العملية دي مش هترجع.',
+                        showCancelButton: true, confirmButtonText: 'مسح', cancelButtonText: 'إلغاء', confirmButtonColor: '#dc2626'
+                    });
+                    if (!ok.isConfirmed) return;
+                    const res = await fetch(`${URLS.del}?roleId=${r.id}`, { method: 'POST' });
+                    const out = await res.json();
+                    toast(out.success ? 'success' : 'error', out.message);
+                    load();
+                }
+            });
+
+            document.getElementById('btnNewRole').addEventListener('click', () => editRole(null));
+            load();
+        })();
     </script>
 }

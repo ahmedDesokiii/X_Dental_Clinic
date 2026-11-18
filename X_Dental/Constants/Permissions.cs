@@ -31,6 +31,39 @@
         public static List<string> NonPatientPermissions() =>
             GenerateAllPermissions().Where(p => !p.StartsWith("Permissions.Patients.")).ToList();
 
+        /// <summary>👥 E1 — بيانات عرض كل موديول في شاشة الصلاحيات (الاسم بالعربي، الأيقونة، الوصف).</summary>
+        public static readonly IReadOnlyList<ModuleInfo> ModulesInfo = new List<ModuleInfo>
+        {
+            new("Patients",     "المرضى",               "bi-people-fill",          "ملفات المرضى وبياناتهم الطبية"),
+            new("Clinical",     "الجلسات والسجل الطبي", "bi-heart-pulse-fill",     "الجلسة، الـ Chart، التقويم، خطط العلاج، الروشتات"),
+            new("Appointments", "المواعيد",             "bi-calendar2-week-fill",  "الكالندر وتذكيرات واتساب"),
+            new("Payments",     "المدفوعات",            "bi-cash-coin",            "تحصيل الدفعات، كشوف الحساب، تقارير الإيرادات"),
+            new("Diagnosis",    "التشخيصات والأسعار",   "bi-clipboard2-pulse-fill","قائمة التشخيصات وأسعارها"),
+            new("Medications",  "الأدوية",              "bi-capsule-pill",         "قائمة الأدوية المستخدمة في الروشتات"),
+            new("Laboratory",   "المعمل",               "bi-prescription2",        "حالات المعمل وأسعاره"),
+            new("Inventory",    "المخزن",               "bi-box-seam-fill",        "الخامات والموردين وحركة المخزن"),
+        };
+
+        /// <summary>صلاحيات الاستقبال الافتراضية (بتستخدم في التهيئة وفي "قوالب" شاشة الصلاحيات).</summary>
+        public static List<string> ReceptionDefaults() => new()
+        {
+            Patients.View_Patients, Patients.Add_Patient, Patients.Edit_Patient, Patients.Details_Patient,
+            Clinical.View,
+            Appointments.View, Appointments.Manage,
+            Payments.View, Payments.Add,
+            Diagnosis.View, Medications.View,
+        };
+
+        /// <summary>عرض فقط: كل صلاحيات القراءة من غير أي إضافة أو تعديل.</summary>
+        public static List<string> ReadOnlyDefaults() => new()
+        {
+            Patients.View_Patients, Patients.Details_Patient,
+            Clinical.View, Appointments.View, Payments.View,
+            Diagnosis.View, Medications.View, Laboratory.View, Inventory.View,
+        };
+
+        public record ModuleInfo(string Key, string Title, string Icon, string Description);
+
         // ── المرضى (نفس النصوص القديمة بالظبط) ─────────────
         public static class Patients
         {
