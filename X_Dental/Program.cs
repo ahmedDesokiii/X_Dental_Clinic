@@ -18,8 +18,25 @@ using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// 🛡️ A5: تسجيل الأخطاء في ملفات يومية (Logs/dental-YYYYMMDD.log) — بنحتفظ بآخر 30 يوم
+builder.Host.UseSerilog((ctx, services, cfg) => cfg
+    .ReadFrom.Configuration(ctx.Configuration)
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File(
+        Path.Combine(ctx.HostingEnvironment.ContentRootPath, "Logs", "dental-.log"),
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30,
+        shared: true,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}"));
 //var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ?? throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");;
 
 //Using Local pc
@@ -65,11 +82,11 @@ builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR();
 
-builder.Services.AddLogging(logging =>
-{
-    logging.AddConsole();
-    logging.AddDebug();
-});
+// (الـ logging بقى من Serilog فوق)
+
+// 🛡️ A5: نسخة احتياطية يومية للداتابيز (الإعدادات في appsettings → "Backup")
+builder.Services.AddSingleton<Dental.Core.Backup.DatabaseBackupService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<Dental.Core.Backup.DatabaseBackupService>());
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
     serverOptions.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(30);
