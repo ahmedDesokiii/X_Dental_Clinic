@@ -1,0 +1,86 @@
+/* ============================================================
+ * 📱 C2 — تحسينات الموبايل والتطبيق المثبّت (PWA)
+ * بيتحمّل آخر ملف CSS في الـ Layout.
+ * كل القواعد هنا محصورة في الشاشات الصغيرة أو وضع التطبيق المثبّت،
+ * فشكل الديسكتوب ما بيتغيرش.
+ * ============================================================ */
+
+/* ── زر التثبيت في الشريط العلوي ───────────────────────────── */
+#pwaInstallBtn[hidden] { display: none !important; }
+html.pwa-standalone #pwaInstallBtn { display: none !important; }
+
+/* ── وضع التطبيق المثبّت: مساحة الـ notch وشريط الـ home ─────── */
+html.pwa-standalone .app-topbar {
+    padding-top: env(safe-area-inset-top);
+}
+html.pwa-standalone .app-content {
+    padding-bottom: calc(var(--space-4, 1rem) + env(safe-area-inset-bottom));
+}
+html.pwa-standalone body {
+    overscroll-behavior-y: none;           /* مفيش "سحب لتحديث" بالغلط وسط جلسة */
+    -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+
+    /* مفيش سكرول أفقي للصفحة كلها */
+    html, body { overflow-x: hidden; }
+
+    /* iPhone بيعمل zoom لو الخط أصغر من 16px في الحقول */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    select,
+    textarea,
+    .form-control,
+    .form-select {
+        font-size: 16px !important;
+    }
+
+    /* الجداول: سكرول أفقي جوه الجدول بدل ما تكسر الصفحة */
+    .app-content .table-responsive,
+    .app-content .dataTables_wrapper,
+    .app-content .dt-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .app-content table:not(.no-mobile-scroll) {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+    }
+
+    /* Bootstrap modals: ملء الشاشة على الموبايل */
+    .modal-dialog:not(.modal-sm) {
+        margin: 0;
+        max-width: 100%;
+        min-height: 100%;
+    }
+    .modal-dialog:not(.modal-sm) .modal-content {
+        min-height: 100vh;
+        min-height: 100dvh;
+        border-radius: 0;
+    }
+    .modal-dialog-scrollable:not(.modal-sm) .modal-content { max-height: 100dvh; }
+
+    /* SweetAlert */
+    .swal2-popup:not(.swal2-toast) { width: 92vw !important; max-width: 92vw !important; }
+
+    /* Select2 داخل المودال */
+    .select2-container { max-width: 100% !important; }
+
+    /* أزرار أسهل في اللمس */
+    .btn, .topbar-btn, .theme-toggle, .sidebar-toggle {
+        min-height: 40px;
+    }
+
+    /* صور ومحتوى عريض */
+    .app-content img, .app-content canvas, .app-content svg:not(.bi) {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .app-topbar .topbar-actions { gap: 6px; }
+    .app-topbar .topbar-btn[title="Messages"] { display: none; }   /* زرار غير مستخدم حاليًا */
+}

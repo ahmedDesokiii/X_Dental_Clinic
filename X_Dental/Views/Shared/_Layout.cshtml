@@ -29,7 +29,18 @@
     <meta name="autocomplete" content="off">
     <meta charset="utf-8" />
     <meta name="csrf-token" content="@csrfToken" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- 📱 C1: PWA — تثبيت البرنامج كتطبيق على الموبايل والكمبيوتر -->
+    <meta name="theme-color" content="#0d7377" />
+    <meta name="application-name" content="Dental Suite" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Dental Suite" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="manifest" href="~/manifest.json" />
+    <link rel="apple-touch-icon" href="~/icons/apple-touch-icon.png" />
     <title>@ViewData["Title"] - Dental Clinic</title>
 
     <!-- Local Fonts -->
@@ -72,6 +83,9 @@
     <!-- DataTables (local) -->
     <link rel="stylesheet" href="~/lib/datatables/dataTables.dataTables.min.css" />
     <link rel="stylesheet" href="~/lib/datatables/columnControl.dataTables.css" />
+
+    <!-- 📱 C2: تحسينات الموبايل (آخر CSS عشان تكسب) -->
+    <link rel="stylesheet" href="~/css/mobile.css" asp-append-version="true" />
 
     <!-- SweetAlert (local) -->
     <link href="~/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
@@ -208,6 +222,10 @@
                     </div>
                 </div>
                 <div class="topbar-actions">
+                    <!-- 📱 C1: تثبيت التطبيق (بيظهر بس لما الجهاز يسمح بالتثبيت) -->
+                    <button type="button" class="topbar-btn" id="pwaInstallBtn" title="تثبيت التطبيق" hidden>
+                        <i class="bi bi-download"></i>
+                    </button>
                     <!-- Theme Toggle -->
                     <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
                         <i class="bi bi-moon-fill" id="themeIcon"></i>
@@ -279,6 +297,7 @@
 
     <!-- App Scripts -->
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/pwa.js" asp-append-version="true" data-base="@Url.Content("~/")"></script>
     <script src="~/js/login.js"></script>
     <script src="~/js/Users.js"></script>
 
