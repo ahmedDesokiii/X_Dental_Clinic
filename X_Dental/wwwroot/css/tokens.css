@@ -1,0 +1,121 @@
+/* ============================================================
+ * 🎨 G1 — متغيرات الألوان الموحّدة (Design Tokens)
+ * اتجمعت أوتوماتيك من الـ <style> اللي كانت متكررة جوه الصفحات.
+ * كل متغير هنا كانت قيمته واحدة في كل الصفحات، فنقله هنا ما بيغيرش أي شكل.
+ * المتغيرات اللي ليها قيم مختلفة في صفحات مختلفة لسه في صفحاتها (محتاجة مراجعة بالعين).
+ * أي صفحة جديدة: استخدم المتغيرات دي بدل ما تعرّف ألوان جديدة.
+ * ============================================================ */
+:root {
+    /* misc */
+    --bg: #f8fafc;
+    --border: #e2e8f0;
+    --brand: #0d9488;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --teal: #0d9488;
+    /* brand */
+    --brand-dark: #0f766e;
+    --brand-light: #f0fdfa;
+    /* coral */
+    --coral-300: #f6c6bc;
+    /* dc */
+    --dc-bg: #f0f7f7;
+    --dc-border: rgba(255,255,255,0.6);
+    --dc-bridge: #cffafe;
+    --dc-bridge-line: #06b6d4;
+    --dc-card: rgba(255,255,255,0.82);
+    --dc-card-solid: #ffffff;
+    --dc-coral-300: #f6c6bc;
+    --dc-coral-500: #f2b6a8;
+    --dc-crown: #f3e8ff;
+    --dc-crown-line: #a855f7;
+    --dc-decayed: #fee2e2;
+    --dc-decayed-line: #ef4444;
+    --dc-extracted: #1e293b;
+    --dc-extracted-line: #1e293b;
+    --dc-filling: #ccfbf1;
+    --dc-filling-line: #14b8a6;
+    --dc-fractured: #ffedd5;
+    --dc-fractured-line: #f97316;
+    --dc-glass: rgba(255,255,255,0.72);
+    --dc-healthy: #ffffff;
+    --dc-healthy-line: #0f9b8e;
+    --dc-impacted: #e0e7ff;
+    --dc-impacted-line: #6366f1;
+    --dc-implant: #fce7f3;
+    --dc-implant-line: #ec4899;
+    --dc-ink-400: #94a3b8;
+    --dc-ink-600: #4b6b6c;
+    --dc-ink-900: #0b2e30;
+    --dc-missing-line: #cbd5e1;
+    --dc-rootcanal: #fef3c7;
+    --dc-rootcanal-line: #f59e0b;
+    --dc-shadow-lg: 0 20px 60px rgba(10,77,79,0.12);
+    --dc-shadow-sm: 0 2px 8px rgba(10,77,79,0.04);
+    --dc-sky-100: #c7f2ea;
+    --dc-sky-50: #eafbfc;
+    --dc-teal-100: #c7f2ea;
+    --dc-teal-50: #eafbfc;
+    --dc-teal-500: #14b8a6;
+    --dc-teal-700: #0d7377;
+    --dc-teal-900: #0a4d4f;
+    --dc-treated: #dbeafe;
+    --dc-treated-line: #3b82f6;
+    /* dental */
+    --dental-100: #c7f2ea;
+    --dental-200: #99f6e4;
+    --dental-500: #14b8a6;
+    --dental-600: #0f9b8e;
+    --dental-700: #0d7377;
+    --dental-900: #0a4d4f;
+    /* dp */
+    --dp-disc: #b45309;
+    --dp-due: #b91c1c;
+    --dp-general: #0f9b8e;
+    --dp-general-2: #2dd4bf;
+    --dp-ortho: #7c3aed;
+    --dp-ortho-2: #a78bfa;
+    --dp-paid: #047857;
+    /* ease */
+    --ease-dental: cubic-bezier(.2,.8,.3,1);
+    /* ink */
+    --ink-600: #4b6b6c;
+    --ink-900: #0b2e30;
+    /* lb */
+    --lb-ink-400: #94a3b8;
+    --lb-ink-600: #4b6b6c;
+    --lb-ink-900: #0b2e30;
+    --lb-sky-100: #dcf5f7;
+    --lb-sky-50: #eafbfc;
+    --lb-teal-500: #14b8a6;
+    --lb-teal-600: #0f9b8e;
+    --lb-teal-700: #0d7377;
+    --lb-violet-100: #ede9fe;
+    --lb-violet-600: #7c3aed;
+    /* md */
+    --md-ink-400: #94a3b8;
+    --md-ink-600: #4b6b6c;
+    --md-ink-900: #0b2e30;
+    --md-teal-100: #ccfbf1;
+    --md-teal-50: #f0fdfa;
+    --md-teal-500: #14b8a6;
+    --md-teal-600: #0d9488;
+    --md-teal-700: #0d7377;
+    /* sc */
+    --sc-coral-300: #f6c6bc;
+    --sc-ink-600: #4b6b6c;
+    --sc-ink-900: #0b2e30;
+    --sc-sky-100: #dcf5f7;
+    --sc-sky-50: #eafbfc;
+    --sc-teal-100: #c7f2ea;
+    --sc-teal-500: #14b8a6;
+    --sc-teal-600: #0f9b8e;
+    --sc-teal-700: #0d7377;
+    --sc-teal-800: #0b5f62;
+    --sc-teal-900: #0a4d4f;
+    /* sky */
+    --sky-100: #dcf5f7;
+    --sky-50: #eafbfc;
+    /* teal */
+    --teal-dark: #0f766e;
+}
