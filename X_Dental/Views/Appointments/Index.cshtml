@@ -1,4 +1,10 @@
-﻿@{
+﻿@inject Microsoft.AspNetCore.Authorization.IAuthorizationService Auth
+@inject Dental.Core.Settings.IClinicSettingsService ClinicSettings
+@{
+    // 📅 H3: صلاحية التعديل على المواعيد (سحب وإفلات، أكشن الحالة)
+    var canManageAppts = (await Auth.AuthorizeAsync(User, Dental.Constants.Permissions.Appointments.Manage)).Succeeded;
+}
+@{
     ViewData["Title"] = "Appointments";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -872,6 +878,63 @@
 </style>
 
 <!-- 🔷 Hero -->
+<style>
+    /* 📅 H3 */
+    .patient-slot.is-movable { cursor: grab; }
+    .patient-slot.dragging { opacity: .45; transform: scale(.97); }
+    .week-grid.is-dragging .day-column:not(.is-past) { outline: 2px dashed rgba(20,184,166,.35); outline-offset: -4px; border-radius: 16px; }
+    .day-column.drop-over { background: rgba(20,184,166,.10) !important; outline: 2px solid #14b8a6 !important; }
+    .day-column.is-past { opacity: .78; }
+    .day-header { position: relative; }
+    .day-count { position: absolute; top: 8px; right: 8px; min-width: 20px; height: 20px; border-radius: 99px; background: #0d7377; color: #fff; font-size: .7rem; font-weight: 800; display: grid; place-items: center; padding: 0 6px; }
+    .slot-top { display: flex; align-items: center; gap: 6px; }
+    .slot-top .slot-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .slot-ortho { color: #7c3aed; }
+    .slot-time, .slot-reason { font-size: .75rem; color: #4b6b6c; margin-top: 2px; }
+    .slot-reason { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: .85; }
+    .stat-card.is-clickable { cursor: pointer; transition: transform .15s, box-shadow .15s; }
+    .stat-card.is-clickable:hover { transform: translateY(-2px); }
+    .stat-card.is-filter { outline: 2px solid #0d7377; outline-offset: 2px; }
+    .calendar-header { flex-wrap: wrap; gap: 10px; }
+    .cal-filter { display: inline-flex; align-items: center; gap: 8px; background: #0d7377; color: #fff; border-radius: 99px; padding: 4px 6px 4px 12px; font-size: .8rem; font-weight: 700; }
+    .cal-filter[hidden] { display: none; }
+    .cal-filter button { border: 0; background: rgba(255,255,255,.2); color: #fff; width: 22px; height: 22px; border-radius: 50%; font-size: .65rem; cursor: pointer; }
+    .cal-hint { font-size: .78rem; color: #94a3b8; margin-left: auto; }
+    .ad-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .ad-head strong { display: block; font-size: 1.1rem; color: var(--sc-ink-900); }
+    .ad-avatar { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: #ccfbf1; color: #0d7377; font-weight: 900; font-size: 1.2rem; }
+    .ad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; font-size: .88rem; color: var(--sc-ink-600); margin-bottom: 14px; }
+    .ad-grid i { color: #14b8a6; margin-right: 4px; }
+    .ad-full { grid-column: 1 / -1; color: var(--sc-ink-900); }
+    .ad-muted { color: var(--sc-ink-600); }
+    .ad-ok { color: #15803d; font-weight: 700; }
+    .ad-quick { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ad-q { flex: 1; min-width: 110px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; border-radius: 12px; background: #f0fdfa; color: #0d7377; font-weight: 700; font-size: .85rem; text-decoration: none; border: 1px solid rgba(13,115,119,.15); }
+    .ad-q:hover { background: #ccfbf1; color: #0a4d4f; }
+    .ad-wa { background: #dcfce7; color: #128c7e; border-color: rgba(18,140,126,.2); }
+    #detailsActions { flex-wrap: wrap; gap: 6px; }
+
+    .mob-days { display: none; }
+    @@media (max-width: 768px) {
+        .mob-days { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 0 12px; padding: 2px; }
+        .mob-day { flex: 1 0 46px; border: 1px solid rgba(13,115,119,.15); background: #fff; border-radius: 14px; padding: 8px 4px; display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; cursor: pointer; }
+        .mob-day span { font-size: .68rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; }
+        .mob-day b { font-size: 1.05rem; color: #0b2e30; }
+        .mob-day i { position: absolute; top: -6px; right: -4px; font-style: normal; font-size: .65rem; font-weight: 800; background: #0d7377; color: #fff; border-radius: 99px; padding: 1px 6px; }
+        .mob-day.today b { color: #0d7377; }
+        .mob-day.active { background: #0d7377; border-color: #0d7377; }
+        .mob-day.active span, .mob-day.active b { color: #fff; }
+        .week-grid { display: block !important; }
+        .week-grid .day-column { display: none; }
+        .week-grid .day-column.mobile-active { display: block; }
+        .week-grid .day-column.mobile-active .day-header { display: none; }
+        .stats-bar { display: flex !important; overflow-x: auto; scrollbar-width: none; gap: 8px; }
+        .stats-bar .stat-card { flex: 0 0 auto; min-width: 140px; }
+        .cal-hint { display: none !important; }
+        .ad-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
 <div class="calendar-hero" dir="ltr">
     <div class="hero-content">
         <div class="hero-icon"><i class="bi bi-calendar2-week-fill"></i></div>
@@ -946,6 +1009,9 @@
     </div>
 </div>
 
+<!-- 📅 H3: الأيام على الموبايل -->
+<div class="mob-days" id="mobDays" dir="ltr"></div>
+
 <!-- 🔷 Calendar -->
 <div class="calendar-shell" dir="ltr">
     <div class="calendar-header">
@@ -955,6 +1021,14 @@
             <button class="cal-nav" onclick="shiftWeek(1)" title="Next Week"><i class="bi bi-chevron-right"></i></button>
         </div>
         <h3 class="cal-title" id="weekRange">Loading...</h3>
+        <div class="cal-filter" id="calFilter" hidden>
+            <span id="calFilterText"></span>
+            <button type="button" onclick="setStatusFilter(null)" title="Clear filter"><i class="bi bi-x-lg"></i></button>
+        </div>
+        @if (canManageAppts)
+        {
+            <span class="cal-hint d-none d-lg-inline"><i class="bi bi-arrows-move"></i> Drag an appointment to another day to reschedule</span>
+        }
     </div>
     <div class="week-grid" id="weekGrid">
         <!-- Loading Skeleton -->
@@ -991,6 +1065,40 @@
     <script>
         let currentWeekStart = getStartOfWeek(new Date());
         let selectedAppointmentId = null;
+        // 📅 H3
+        const CAN_MANAGE = @(canManageAppts ? "true" : "false");
+        const WA_CC = '@ClinicSettings.Get().WhatsAppCountryCode';
+        let lastEvents = [], statusFilter = null, mobileDayKey = null, selectedAppt = null;
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const waLink = m => {
+            let d = String(m || '').replace(/\D/g, '');
+            if (d.length < 8) return null;
+            if (d.startsWith('00')) d = d.slice(2);
+            else if (!(d.startsWith(WA_CC) && d.length > 10)) d = WA_CC + d.replace(/^0/, '');
+            return 'https://wa.me/' + d;
+        };
+        const STATUS_GROUPS = {
+            statPending: { label: 'Pending', test: e => e.status === 1 },
+            statConfirmed: { label: 'Confirmed', test: e => e.status === 2 },
+            statCheckedIn: { label: 'Checked In', test: e => e.status === 3 },
+            statInProgress: { label: 'In Progress', test: e => e.status === 4 },
+            statCompleted: { label: 'Completed', test: e => e.status === 5 },
+            statCancelled: { label: 'Cancelled / No-Show', test: e => e.status === 6 || e.status === 7 }
+        };
+        function setStatusFilter(key) {
+            statusFilter = statusFilter === key ? null : key;
+            document.querySelectorAll('#statsBar .stat-card').forEach(c => c.classList.toggle('is-filter', !!statusFilter && c.querySelector('#' + statusFilter) !== null));
+            const f = document.getElementById('calFilter');
+            f.hidden = !statusFilter;
+            if (statusFilter) document.getElementById('calFilterText').textContent = 'Showing: ' + STATUS_GROUPS[statusFilter].label;
+            renderWeek(new Date(currentWeekStart), lastEvents);
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            Object.keys(STATUS_GROUPS).forEach(id => {
+                const card = document.getElementById(id)?.closest('.stat-card');
+                if (card) { card.classList.add('is-clickable'); card.title = 'Filter the calendar'; card.addEventListener('click', () => setStatusFilter(id)); }
+            });
+        });
 
         function getStartOfWeek(date) {
             const d = new Date(date);
@@ -1042,6 +1150,7 @@
                 console.error('Failed to load appointments', err);
             }
 
+            lastEvents = events;
             renderWeek(start, events);
             updateStats(events);
         }
@@ -1090,37 +1199,129 @@
         function renderWeek(weekStart, events) {
             const grid = document.getElementById('weekGrid');
             const today = formatDateOnly(new Date());
+            const shown = statusFilter ? events.filter(STATUS_GROUPS[statusFilter].test) : events;
             grid.innerHTML = '';
 
+            const days = [];
             for (let i = 0; i < 7; i++) {
                 const day = new Date(weekStart);
                 day.setDate(day.getDate() + i);
+                days.push(day);
+            }
+            const keys = days.map(formatDateOnly);
+            if (!mobileDayKey || !keys.includes(mobileDayKey)) mobileDayKey = keys.includes(today) ? today : keys[0];
+
+            days.forEach(day => {
                 const dayKey = formatDateOnly(day);
-                const dayEvents = events.filter(e => formatDateOnly(new Date(e.start)) === dayKey)
+                const dayEvents = shown.filter(e => formatDateOnly(new Date(e.start)) === dayKey)
                     .sort((a, b) => new Date(a.start) - new Date(b.start));
+                const isToday = dayKey === today;
+                const isPast = dayKey < today;
 
                 const col = document.createElement('div');
-                col.className = 'day-column' + (dayKey === today ? ' is-today' : '');
-
-                const isToday = dayKey === today;
+                col.className = 'day-column' + (isToday ? ' is-today' : '') + (isPast ? ' is-past' : '') + (dayKey === mobileDayKey ? ' mobile-active' : '');
+                col.dataset.date = dayKey;
 
                 col.innerHTML = `
-                            <div class="day-header">
-                                ${isToday ? '<div class="today-indicator"></div>' : ''}
-                                <div class="day-name">${dayNames[day.getDay()]}</div>
-                                <div class="day-number">${day.getDate()}</div>
-                            </div>
-                            <div class="day-slots">
-                                ${dayEvents.length === 0 ? '<div class="empty-day"><i class="bi bi-calendar-x"></i>No appointments</div>' : ''}
-                                        ${dayEvents.map((e, idx) => `
-                                            <div class="patient-slot" style="animation-delay: ${idx * 0.05}s" onclick="openDetailsModal(${e.id})">
-                                                <div class="slot-name">${e.patientName}</div>
-                                                <div class="slot-phone"><i class="bi bi-telephone-fill"></i> ${e.patientMobile}</div>
-                                                <span class="slot-status ${e.statusColorClass}">${e.statusText}</span>
-                                            </div>
-                                        `).join('')}
+                    <div class="day-header">
+                        ${isToday ? '<div class="today-indicator"></div>' : ''}
+                        <div class="day-name">${dayNames[day.getDay()]}</div>
+                        <div class="day-number">${day.getDate()}</div>
+                        ${dayEvents.length ? `<span class="day-count">${dayEvents.length}</span>` : ''}
+                    </div>
+                    <div class="day-slots">
+                        ${dayEvents.length === 0 ? '<div class="empty-day"><i class="bi bi-calendar-x"></i>No appointments</div>' : ''}
+                        ${dayEvents.map((e, idx) => {
+                            const movable = CAN_MANAGE && (e.status === 1 || e.status === 2);
+                            const time = new Date(e.start);
+                            const hasTime = !(time.getHours() === 12 && time.getMinutes() === 0) && !(time.getHours() === 0 && time.getMinutes() === 0);
+                            return `
+                            <div class="patient-slot ${movable ? 'is-movable' : ''}" style="animation-delay: ${idx * 0.05}s"
+                                 data-id="${e.id}" ${movable ? 'draggable="true"' : ''} onclick="openDetailsModal(${e.id})">
+                                <div class="slot-top">
+                                    <div class="slot-name">${esc(e.patientName)}</div>
+                                    ${e.patientType === 2 || e.patientType === 3 ? '<i class="bi bi-braces slot-ortho" title="Orthodontics"></i>' : ''}
+                                </div>
+                                <div class="slot-phone"><i class="bi bi-telephone-fill"></i> ${esc(e.patientMobile)}</div>
+                                ${hasTime ? `<div class="slot-time"><i class="bi bi-clock"></i> ${time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>` : ''}
+                                ${e.reason ? `<div class="slot-reason">${esc(e.reason)}</div>` : ''}
+                                <span class="slot-status ${e.statusColorClass}">${esc(e.statusText)}</span>
                             </div>`;
+                        }).join('')}
+                    </div>`;
                 grid.appendChild(col);
+            });
+
+            renderMobileDays(days, shown, today);
+        }
+
+        // 📅 H3: شريط الأيام على الموبايل (عمود واحد في المرة)
+        function renderMobileDays(days, events, today) {
+            const bar = document.getElementById('mobDays');
+            bar.innerHTML = days.map(d => {
+                const k = formatDateOnly(d);
+                const n = events.filter(e => formatDateOnly(new Date(e.start)) === k).length;
+                return `<button type="button" class="mob-day ${k === mobileDayKey ? 'active' : ''} ${k === today ? 'today' : ''}" data-k="${k}">
+                            <span>${dayNames[d.getDay()].slice(0, 3)}</span><b>${d.getDate()}</b>${n ? `<i>${n}</i>` : ''}
+                        </button>`;
+            }).join('');
+        }
+        document.addEventListener('click', e => {
+            const b = e.target.closest('.mob-day'); if (!b) return;
+            mobileDayKey = b.dataset.k;
+            document.querySelectorAll('.mob-day').forEach(x => x.classList.toggle('active', x === b));
+            document.querySelectorAll('.day-column').forEach(c => c.classList.toggle('mobile-active', c.dataset.date === mobileDayKey));
+        });
+
+        // 📅 H3: سحب وإفلات لتأجيل الموعد ليوم تاني
+        let dragId = null;
+        document.addEventListener('dragstart', e => {
+            const slot = e.target.closest?.('.patient-slot.is-movable'); if (!slot) return;
+            dragId = +slot.dataset.id;
+            slot.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', String(dragId));
+            document.getElementById('weekGrid').classList.add('is-dragging');
+        });
+        document.addEventListener('dragend', e => {
+            e.target.closest?.('.patient-slot')?.classList.remove('dragging');
+            document.getElementById('weekGrid').classList.remove('is-dragging');
+            document.querySelectorAll('.day-column.drop-over').forEach(c => c.classList.remove('drop-over'));
+        });
+        document.addEventListener('dragover', e => {
+            const col = e.target.closest?.('.day-column'); if (!col || dragId == null) return;
+            if (col.classList.contains('is-past')) return;
+            e.preventDefault();
+            document.querySelectorAll('.day-column.drop-over').forEach(c => c !== col && c.classList.remove('drop-over'));
+            col.classList.add('drop-over');
+        });
+        document.addEventListener('drop', async e => {
+            const col = e.target.closest?.('.day-column'); if (!col || dragId == null) return;
+            e.preventDefault();
+            const id = dragId; dragId = null;
+            const ev = lastEvents.find(x => x.id === id); if (!ev) return;
+            if (formatDateOnly(new Date(ev.start)) === col.dataset.date) return;
+            await reschedule(id, col.dataset.date, ev);
+        });
+
+        async function reschedule(id, dateKey, ev) {
+            const old = new Date(ev.start);
+            let target = new Date(`${dateKey}T${String(old.getHours()).padStart(2, '0')}:${String(old.getMinutes()).padStart(2, '0')}:00`);
+            const now = new Date();
+            if (target < now) { target = new Date(now.getTime() + 5 * 60000); }   // النهارده بعد الميعاد → بعد 5 دقايق
+            const pad = n => String(n).padStart(2, '0');
+            const local = `${target.getFullYear()}-${pad(target.getMonth() + 1)}-${pad(target.getDate())}T${pad(target.getHours())}:${pad(target.getMinutes())}:00`;
+            try {
+                const res = await fetch('/Appointments/Reschedule', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, newAppointmentDate: local, durationMinutes: ev.durationMinutes || 30 })
+                });
+                const r = await res.json();
+                Swal.fire({ toast: true, position: 'top', icon: r.success ? 'success' : 'error', timer: 2200, showConfirmButton: false,
+                    title: r.success ? `${ev.patientName} → ${new Date(dateKey + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}` : r.message });
+                if (r.success) loadWeek();
+            } catch {
+                Swal.fire({ icon: 'error', title: 'Server connection failed' });
             }
         }
 
@@ -1135,24 +1336,44 @@
             }
             const a = result.data;
 
+            selectedAppt = a;
+            const wa = waLink(a.patientMobile);
+            const d = new Date(a.start);
             document.getElementById('detailsBody').innerHTML = `
-                    <div class="mb-2"><strong style="font-size:1.1rem; color:var(--sc-ink-900);">${a.patientName}</strong> <span class="slot-status ${a.statusColorClass}">${a.statusText}</span></div>
-                    <div class="mb-2" style="color:var(--sc-ink-600); font-size:.85rem;"><i class="bi bi-telephone"></i> ${a.patientMobile}</div>
-                    <div class="mb-2" style="color:var(--sc-ink-600); font-size:.85rem;"><i class="bi bi-calendar3"></i> ${new Date(a.start).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
-                    ${a.reason ? `<div class="mb-2" style="color:var(--sc-ink-900);"><strong>Reason:</strong> ${a.reason}</div>` : ''}
-                    ${a.notes ? `<div class="mb-2" style="color:var(--sc-ink-600);"><strong>Additional Notes:</strong> ${a.notes}</div>` : ''}
-                `;
+                <div class="ad-head">
+                    <div class="ad-avatar">${esc((a.patientName || '?').trim().charAt(0))}</div>
+                    <div>
+                        <strong>${esc(a.patientName)}</strong>
+                        <span class="slot-status ${a.statusColorClass}">${esc(a.statusText)}</span>
+                    </div>
+                </div>
+                <div class="ad-grid">
+                    <div><i class="bi bi-calendar3"></i> ${d.toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                    <div><i class="bi bi-telephone"></i> <span dir="ltr">${esc(a.patientMobile)}</span></div>
+                    ${a.reason ? `<div class="ad-full"><i class="bi bi-chat-left-text"></i> ${esc(a.reason)}</div>` : ''}
+                    ${a.notes ? `<div class="ad-full ad-muted"><i class="bi bi-journal-text"></i> ${esc(a.notes)}</div>` : ''}
+                    ${a.isReminderSent ? '<div class="ad-full ad-ok"><i class="bi bi-whatsapp"></i> Reminder sent</div>' : ''}
+                </div>
+                <div class="ad-quick">
+                    <a href="/Patients/Details/${a.patientId}" class="ad-q"><i class="bi bi-person-vcard"></i> Patient file</a>
+                    <a href="tel:${esc(a.patientMobile)}" class="ad-q"><i class="bi bi-telephone"></i> Call</a>
+                    ${wa ? `<a href="${wa}" target="_blank" rel="noopener" class="ad-q ad-wa"><i class="bi bi-whatsapp"></i> WhatsApp</a>` : ''}
+                </div>
+            `;
 
             const actions = [];
-            if (a.status === 1) {
-                actions.push(`<button class="btn-modal btn-modal-info" onclick="doAction('Confirm')">Confirm</button>`);
-            }
-            if (a.status === 1 || a.status === 2) {
-                actions.push(`<button class="btn-modal btn-modal-save" onclick="doAction('CheckIn')">Check In</button>`);
-                actions.push(`<button class="btn-modal btn-modal-danger" onclick="doAction('Cancel')">Cancel</button>`);
-            }
-            if (a.status === 3 || a.status === 4) {
-                actions.push(`<button class="btn-modal btn-modal-save" onclick="convertToVisit()">Start Visit</button>`);
+            if (CAN_MANAGE) {
+                if (a.status === 1) actions.push(`<button class="btn-modal btn-modal-info" onclick="doAction('Confirm')">Confirm</button>`);
+                if (a.status === 1 || a.status === 2) {
+                    actions.push(`<button class="btn-modal btn-modal-save" onclick="doAction('CheckIn')">Check In</button>`);
+                    actions.push(`<button class="btn-modal btn-modal-info" onclick="askReschedule()"><i class="bi bi-calendar2-range"></i> Reschedule</button>`);
+                    if (formatDateOnly(d) <= formatDateOnly(new Date()))
+                        actions.push(`<button class="btn-modal btn-modal-cancel" onclick="doAction('MarkNoShow')">No-Show</button>`);
+                    actions.push(`<button class="btn-modal btn-modal-danger" onclick="doAction('Cancel')">Cancel</button>`);
+                }
+                if (a.status === 3 || a.status === 4) {
+                    actions.push(`<button class="btn-modal btn-modal-save" onclick="convertToVisit()">Start Visit</button>`);
+                }
             }
             actions.push(`<button class="btn-modal btn-modal-cancel" onclick="closeDetailsModal()">Close</button>`);
 
@@ -1182,9 +1403,23 @@
             }
         }
 
+        // 📅 H3: نوع الزيارة حسب ملف المريض (كانت بتتفتح "عامة" دايمًا)
         async function convertToVisit() {
+            let category = 1;
+            const t = selectedAppt?.patientType;
+            if (t === 2) category = 2;
+            else if (t === 3) {
+                const r = await Swal.fire({
+                    title: 'Visit type', text: 'This patient has general and orthodontic files.',
+                    showDenyButton: true, showCancelButton: true,
+                    confirmButtonText: '<i class="bi bi-heart-pulse"></i> General', denyButtonText: '<i class="bi bi-braces"></i> Orthodontics',
+                    confirmButtonColor: '#0d9488', denyButtonColor: '#7c3aed'
+                });
+                if (r.isDismissed) return;
+                category = r.isDenied ? 2 : 1;
+            }
             try {
-                const res = await fetch(`/Appointments/ConvertToVisit?id=${selectedAppointmentId}&category=1`, { method: 'POST' });
+                const res = await fetch(`/Appointments/ConvertToVisit?id=${selectedAppointmentId}&category=${category}`, { method: 'POST' });
                 const result = await res.json();
                 if (result.success) {
                     window.location.href = `/Clinical/Session?patientId=${result.patientId}&visitId=${result.visitId}`;
@@ -1194,6 +1429,18 @@
             } catch (err) {
                 Swal.fire({ title: 'Error', text: 'Server connection failed', icon: 'error' });
             }
+        }
+
+        async function askReschedule() {
+            const ev = lastEvents.find(x => x.id === selectedAppointmentId) || selectedAppt;
+            const { value } = await Swal.fire({
+                title: 'Reschedule', input: 'date', inputValue: formatDateOnly(new Date()),
+                inputAttributes: { min: formatDateOnly(new Date()) },
+                showCancelButton: true, confirmButtonText: 'Move', confirmButtonColor: '#0d9488'
+            });
+            if (!value) return;
+            closeDetailsModal();
+            await reschedule(selectedAppointmentId, value, ev);
         }
 
         // ⭐ المودال المشترك بينادي دي بعد نجاح الحجز → نعيد تحميل الأسبوع والـ KPIs
