@@ -298,6 +298,7 @@ namespace Dental.Controllers
             Location = ResponseCacheLocation.None,
             NoStore = true
         )]
+        [AllowAnonymous]
         public IActionResult Error()
         {
             return View(new ErrorViewModel

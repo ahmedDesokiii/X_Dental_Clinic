@@ -36,7 +36,23 @@ builder.Services.AddFluentValidationAutoValidation();
 #endregion
 
 
-builder.Services.AddControllersWithViews(); // Adds MVC services\
+// 🔒 A1: كل POST/PUT/DELETE لازم يحمل Antiforgery token (الـ JS بيضيفه أوتوماتيك — wwwroot/js/antiforgery.js)
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+});
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "RequestVerificationToken";
+});
+
+// 🔒 A1: أي صفحة/endpoint مقفول افتراضيًا إلا لو عليه [AllowAnonymous]
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
