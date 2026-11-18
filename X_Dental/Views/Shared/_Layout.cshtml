@@ -4,12 +4,17 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @inject RoleManager<ApplicationRole> RoleManager
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    var csrfToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+}
 
 <!DOCTYPE html>
 <html lang="ar" data-theme="light">
 <head>
     <meta name="autocomplete" content="off">
     <meta charset="utf-8" />
+    <meta name="csrf-token" content="@csrfToken" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Dental Clinic</title>
 
@@ -59,6 +64,7 @@
 
     <!-- JS (core first) - Local -->
     <script src="~/lib/jquery/jquery-3.7.1.min.js"></script>
+    <script src="~/js/antiforgery.js" asp-append-version="true"></script>
     <script src="~/lib/datatables/dataTables.min.js"></script>
     <script src="~/lib/highcharts/highcharts.js"></script>
     <script src="~/lib/moment/moment.min.js"></script>
