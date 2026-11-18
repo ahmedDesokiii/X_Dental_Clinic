@@ -1061,6 +1061,7 @@ namespace Dental.Controllers
         // ✅ Verify Prescription (يفتح من QR)
         // ─────────────────────────────────────────────
         [HttpGet]
+        [AllowAnonymous]   // 🔓 بيتفتح من QR الروشتة بدون تسجيل دخول
         public async Task<IActionResult> VerifyPrescription(int id, string t)
         {
             var prescription = await _context.Prescriptions
