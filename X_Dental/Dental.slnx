@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="../X-RayExporter/X-RayExporter.csproj" Id="5c5db4e4-9520-481c-97b6-21b6338f76b9" />
   <Project Path="Dental.csproj" />
+  <Project Path="../Dental.Tests/Dental.Tests.csproj" />
 </Solution>

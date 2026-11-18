@@ -19,7 +19,17 @@ public class PatientMappingProfile : Profile
             .ForMember(dest => dest.ChronicDiseases,
                 opt => opt.MapFrom(src => src.MedicalInfo != null ? src.MedicalInfo.ChronicDiseases : null))
             .ForMember(dest => dest.CurrentMedications,
-                opt => opt.MapFrom(src => src.MedicalInfo != null ? src.MedicalInfo.CurrentMedications : null));
+                opt => opt.MapFrom(src => src.MedicalInfo != null ? src.MedicalInfo.CurrentMedications : null))
+            // 🐞 B1: الحقول دي ما كانتش بتتقري من MedicalInfo، فشاشة التعديل كانت بتفتح فاضية
+            //        وأول حفظ كان بيمسح التدخين/الحمل/الملاحظات الطبية/التحذيرات
+            .ForMember(dest => dest.SmokingStatus,
+                opt => opt.MapFrom(src => src.MedicalInfo != null ? src.MedicalInfo.SmokingStatus : null))
+            .ForMember(dest => dest.MedicalNotes,
+                opt => opt.MapFrom(src => src.MedicalInfo != null ? src.MedicalInfo.MedicalNotes : src.Notes))
+            .ForMember(dest => dest.IsPregnant,
+                opt => opt.MapFrom(src => src.MedicalInfo != null && src.MedicalInfo.IsPregnant))
+            .ForMember(dest => dest.EmergencyNotes,
+                opt => opt.MapFrom(src => src.MedicalInfo != null ? src.MedicalInfo.EmergencyNotes : null));
 
         CreateMap<Patient, PatientLookupDto>();
 

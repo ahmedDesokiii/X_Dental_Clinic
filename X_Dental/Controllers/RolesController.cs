@@ -133,7 +133,8 @@ namespace Dental.Controllers
 
             var roleClaims = await _roleManager.GetClaimsAsync(role);
 
-            foreach (var claim in roleClaims)
+            // 🔒 A3: نشيل claims الصلاحيات بس (مش أي claims تانية زي SeedVersion)
+            foreach (var claim in roleClaims.Where(c => c.Type == "Permission"))
                 await _roleManager.RemoveClaimAsync(role, claim);
 
             var selectedClaims = model.RoleCalims.Where(c => c.IsSelected).ToList();

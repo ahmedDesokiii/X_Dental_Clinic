@@ -2,7 +2,9 @@
 {
     public enum Roles
     {
-        Admin,  // مدير النظام
-        User    // مستخدم
+        Admin,      // مدير النظام
+        User,       // مستخدم
+        Doctor,     // طبيب
+        Reception   // استقبال
     }
 }

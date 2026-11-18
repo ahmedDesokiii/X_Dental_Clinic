@@ -120,7 +120,7 @@ namespace Dental.Modules.Patients.ServicesPatients
             var patient = _mapper.Map<Patient>(dto);
             patient.PatientCode = await GeneratePatientCodeAsync();
             patient.IsActive = true;
-            patient.CreatedBy = 1;
+            // CreatedBy بيتملى أوتوماتيك بالمستخدم الحالي (A4)
 
             await _context.Patients.AddAsync(patient);
             await _context.SaveChangesAsync();
@@ -165,9 +165,9 @@ namespace Dental.Modules.Patients.ServicesPatients
                     MedicalNotes = dto.MedicalNotes,
                     SmokingStatus = dto.SmokingStatus,
                     IsPregnant = (bool)dto.IsPregnant,
-                    EmergencyNotes = dto.MedicalNotes
-                   
+                    EmergencyNotes = dto.EmergencyNotes   // 🐞 B1
                 };
+                patient.Notes = dto.MedicalNotes;
 
             }
             else
@@ -178,7 +178,7 @@ namespace Dental.Modules.Patients.ServicesPatients
                 patient.MedicalInfo.MedicalNotes = dto.MedicalNotes;
                 patient.MedicalInfo.SmokingStatus = dto.SmokingStatus;
                 patient.MedicalInfo.IsPregnant = (bool)dto.IsPregnant;
-                patient.MedicalInfo.EmergencyNotes = dto.MedicalNotes;
+                patient.MedicalInfo.EmergencyNotes = dto.EmergencyNotes;   // 🐞 B1
                 patient.Notes = dto.MedicalNotes;
             }
 

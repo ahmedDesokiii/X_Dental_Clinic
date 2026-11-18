@@ -17,9 +17,10 @@ namespace Dental.Filters
             return FallbackPolicyProvider.GetDefaultPolicyAsync();
         }
 
-        public Task<AuthorizationPolicy> GetFallbackPolicyAsync()
+        public Task<AuthorizationPolicy?> GetFallbackPolicyAsync()
         {
-            return FallbackPolicyProvider.GetDefaultPolicyAsync();
+            // 🔒 A3: نرجّع الـ FallbackPolicy المعرّفة في Program.cs (login مطلوب)
+            return FallbackPolicyProvider.GetFallbackPolicyAsync();
         }
 
         public Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)

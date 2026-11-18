@@ -23,11 +23,14 @@ namespace Dental.Modules.Clinical.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<OrthoService> _logger;
+        private readonly Dental.Modules.Payments.InterfacesPayments.IPaymentService _payments;   // ⭐ B3
 
-        public OrthoService(ApplicationDbContext context, ILogger<OrthoService> logger)
+        public OrthoService(ApplicationDbContext context, ILogger<OrthoService> logger,
+                            Dental.Modules.Payments.InterfacesPayments.IPaymentService payments)
         {
             _context = context;
             _logger = logger;
+            _payments = payments;
         }
 
         // ════════════════════════════════════════════════════════════
@@ -434,17 +437,11 @@ namespace Dental.Modules.Clinical.Services
 
                 // ================= 2) مدفوعات السيشن → الـ Anchor =================
                 // نفس منطق FinishSession بالظبط، بس الـ VisitId = Anchor (تاريخ الدفع الحقيقي = النهارده)
+                // ⭐ B3: نفس محرك الدفع الموحّد (رقم إيصال مسلسل، الخصم بيتسجل كحركة فيتلغي مع الإيصال،
+                //       وأي زيادة بتتوزع على المتأخرات بنفس قواعد الجلسة العادية)
                 foreach (var pay in validPayments)
                 {
-                    if (pay.Amount > 0)
-                    {
-                        pay.VisitId = anchor.Id;
-                        _context.VisitPayments.Add(pay);
-                        anchor.PaidAmount += pay.Amount;
-                    }
-
-                    if (pay.Discount > 0)
-                        anchor.Discount += pay.Discount;
+                    await _payments.AllocateAsync(anchor, pay.Amount, pay.Discount, pay.Method, pay.Description);
                 }
 
                 // ================= 3) إنهاء الزيارة =================

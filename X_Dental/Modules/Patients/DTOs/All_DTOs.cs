@@ -65,7 +65,9 @@ namespace Dental.Modules.Patients.DTOs
         public string? CurrentMedications { get; set; }
         public string? SmokingStatus { get; set; }
         public string? MedicalNotes { get; set; }
-        
+        public bool IsPregnant { get; set; }
+        public string? EmergencyNotes { get; set; }
+
         // Dental History
         public DateTime? LastVisit { get; set; }
         public DateTime? NextAppointment { get; set; }

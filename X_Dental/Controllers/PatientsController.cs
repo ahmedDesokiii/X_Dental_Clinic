@@ -835,14 +835,15 @@ namespace Dental.Controllers
                 Email = patient.Email,
                 Address = patient.Address,
                 Occupation = patient.Occupation,
-                Notes = patient.MedicalNotes,
+                Notes = patient.Notes,
                 PatientType = patient.PatientType,
                 Allergies = patient.Allergies,
                 ChronicDiseases = patient.ChronicDiseases,
                 CurrentMedications = patient.CurrentMedications,
                 MedicalNotes = patient.MedicalNotes,
                 SmokingStatus = patient.SmokingStatus,
-                EmergencyNotes = patient.MedicalNotes,
+                IsPregnant = patient.IsPregnant,              // 🐞 B1: كان بيرجع false دايمًا
+                EmergencyNotes = patient.EmergencyNotes,      // 🐞 B1: كان بياخد الملاحظات الطبية
 
             };
             return View(model);
@@ -898,7 +899,7 @@ namespace Dental.Controllers
                     patient.MedicalInfo.ChronicDiseases = dto.ChronicDiseases;
                     patient.MedicalInfo.CurrentMedications = dto.CurrentMedications;
                     patient.MedicalInfo.MedicalNotes = dto.MedicalNotes;
-                    patient.MedicalInfo.EmergencyNotes = dto.MedicalNotes;
+                    patient.MedicalInfo.EmergencyNotes = dto.EmergencyNotes;   // 🐞 B1
                     patient.MedicalInfo.SmokingStatus = dto.SmokingStatus;
                     patient.MedicalInfo.IsPregnant = dto.IsPregnant;
                     patient.Notes = dto.MedicalNotes;

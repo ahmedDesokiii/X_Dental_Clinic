@@ -18,15 +18,36 @@ using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// 🛡️ A5: تسجيل الأخطاء في ملفات يومية (Logs/dental-YYYYMMDD.log) — بنحتفظ بآخر 30 يوم
+builder.Host.UseSerilog((ctx, services, cfg) => cfg
+    .ReadFrom.Configuration(ctx.Configuration)
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File(
+        Path.Combine(ctx.HostingEnvironment.ContentRootPath, "Logs", "dental-.log"),
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30,
+        shared: true,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}"));
 //var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ?? throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");;
 
 //Using Local pc
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
           throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(
-    options => options.UseSqlServer(connectionString));
+// 🔒 A4: سجل التعديلات + CreatedBy/ModifiedBy أوتوماتيك
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<Dental.Data.Interceptors.AuditSaveChangesInterceptor>();
+builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
+    options.UseSqlServer(connectionString)
+           .AddInterceptors(sp.GetRequiredService<Dental.Data.Interceptors.AuditSaveChangesInterceptor>()));
 
 builder.Services.AddAutoMapper(cfg => { }, typeof(Program).Assembly);
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
@@ -40,6 +61,7 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+    options.Filters.Add(new ModulePermissionFilter());   // 🔒 A3: صلاحيات كل موديول
 });
 builder.Services.AddAntiforgery(options =>
 {
@@ -60,11 +82,11 @@ builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR();
 
-builder.Services.AddLogging(logging =>
-{
-    logging.AddConsole();
-    logging.AddDebug();
-});
+// (الـ logging بقى من Serilog فوق)
+
+// 🛡️ A5: نسخة احتياطية يومية للداتابيز (الإعدادات في appsettings → "Backup")
+builder.Services.AddSingleton<Dental.Core.Backup.DatabaseBackupService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<Dental.Core.Backup.DatabaseBackupService>());
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
     serverOptions.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(30);
@@ -139,9 +161,16 @@ using (var scope = app.Services.CreateScope())
     var logger = loggerFactory.CreateLogger("app");
     try
     {
+        // تنبيه لو فيه migrations لسه ما اتطبقتش على الداتابيز (Update-Database)
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        var pending = (await db.Database.GetPendingMigrationsAsync()).ToList();
+        if (pending.Count > 0)
+            logger.LogWarning("Pending EF migrations not applied: {Migrations}", string.Join(", ", pending));
+
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
         await Dental.Seeds.DefaultRoles.SeedAsync(userManager, roleManager);
+        await Dental.Seeds.DefaultRoles.SeedPermissionsAsync(roleManager);   // 🔒 A3
         await Dental.Seeds.DefaultUsers.SeedUserAsync(userManager, roleManager);
         await Dental.Seeds.DefaultUsers.SeedAdminAsync(userManager, roleManager);
 
@@ -166,6 +195,24 @@ else
 }
 
 //app.UseHttpsRedirection();
+
+// 🔒 A2: ملفات الأشعة والمستندات (/uploads) ما تتفتحش غير لمستخدم عامل login
+app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/uploads"), uploads =>
+{
+    uploads.UseAuthentication();
+    uploads.Use(async (ctx, next) =>
+    {
+        if (ctx.User?.Identity?.IsAuthenticated != true)
+        {
+            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return;
+        }
+        ctx.Response.Headers["Cache-Control"] = "private, no-store";
+        ctx.Response.Headers["X-Content-Type-Options"] = "nosniff";
+        await next();
+    });
+});
+
 app.UseStaticFiles();
 
 app.UseRouting();
