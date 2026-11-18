@@ -59,6 +59,9 @@ namespace Dental.Filters
                         _ => Permissions.Patients.View_Patients
                     };
 
+                case "Timeline":   // 🕒 F2: الخط الزمني جزء من ملف المريض
+                    return Permissions.Patients.Details_Patient;
+
                 case "Clinical":
                 case "DentalRecords":
                 case "Ortho":

@@ -1,0 +1,101 @@
+@* 🕒 F2 — الخط الزمني للمريض (بيتحمّل أول ما التاب يتفتح) *@
+@model int
+<div class="tl" dir="rtl" id="patientTimeline" data-patient="@Model">
+    <div class="tl-filters" id="tlFilters"></div>
+    <div class="tl-body" id="tlBody">
+        <div class="ft-skeleton tl-sk"></div><div class="ft-skeleton tl-sk"></div><div class="ft-skeleton tl-sk"></div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const URL_GET = '@Url.Action("Get", "Timeline")';
+        const root = document.getElementById('patientTimeline');
+        const patientId = root.dataset.patient;
+        const TYPES = {
+            visit: { label: 'الزيارات', icon: 'bi-heart-pulse-fill' },
+            payment: { label: 'المدفوعات', icon: 'bi-cash-coin' },
+            xray: { label: 'الأشعة', icon: 'bi-image' },
+            rx: { label: 'الروشتات', icon: 'bi-file-earmark-medical' },
+            appointment: { label: 'المواعيد', icon: 'bi-calendar2-event' },
+            document: { label: 'المستندات', icon: 'bi-folder2-open' },
+            created: { label: 'فتح الملف', icon: 'bi-person-plus' }
+        };
+        const TONE_ICON = { ortho: 'bi-braces', refund: 'bi-arrow-counterclockwise', upcoming: 'bi-calendar2-plus', missed: 'bi-calendar2-x' };
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const money = n => Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+        let data = null, active = 'all', loaded = false;
+
+        function monthKey(d) { return d.toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' }); }
+        function ago(d) {
+            const days = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(d).setHours(0, 0, 0, 0)) / 864e5);
+            if (days === 0) return 'النهارده';
+            if (days === 1) return 'امبارح';
+            if (days === -1) return 'بكرة';
+            if (days < 0) return `بعد ${-days} يوم`;
+            if (days < 30) return `من ${days} يوم`;
+            if (days < 365) return `من ${Math.round(days / 30)} شهر`;
+            return `من ${(days / 365).toFixed(1)} سنة`;
+        }
+
+        function item(e) {
+            const d = new Date(e.date);
+            const icon = TONE_ICON[e.tone] || TYPES[e.type]?.icon || 'bi-dot';
+            const time = d.getHours() || d.getMinutes() ? d.toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' }) : '';
+            return `
+            <div class="tl-item tl-${esc(e.tone || e.type)}">
+                <div class="tl-dot"><i class="bi ${icon}"></i></div>
+                <div class="tl-card">
+                    <div class="tl-card-head">
+                        <b>${esc(e.title)}</b>
+                        ${e.subtitle ? `<span class="tl-sub">${esc(e.subtitle)}</span>` : ''}
+                        ${e.amount != null ? `<span class="tl-amount">${money(e.amount)} <small>ج.م</small></span>` : ''}
+                    </div>
+                    <div class="tl-date">${d.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' })}${time ? ' · ' + time : ''} <span>· ${ago(d)}</span></div>
+                    ${e.items && e.items.length ? `<ul>${e.items.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
+                    ${e.image ? `<a href="${esc(e.image)}" target="_blank" class="tl-img"><img src="${esc(e.image)}" alt="" loading="lazy" /></a>` : ''}
+                    <div class="tl-foot">
+                        ${e.badge ? `<span class="tl-badge">${esc(e.badge)}</span>` : ''}
+                        ${e.url ? `<a href="${esc(e.url)}" ${e.type === 'rx' ? 'target="_blank"' : ''} class="tl-link">${e.type === 'rx' ? 'طباعة' : 'فتح'} <i class="bi bi-arrow-left-short"></i></a>` : ''}
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function render() {
+            const list = data.events.filter(e => active === 'all' || e.type === active);
+            let html = '', lastMonth = '';
+            list.forEach(e => {
+                const m = monthKey(new Date(e.date));
+                if (m !== lastMonth) { html += `<div class="tl-month"><span>${m}</span></div>`; lastMonth = m; }
+                html += item(e);
+            });
+            document.getElementById('tlBody').innerHTML = html || '<div class="ft-empty"><i class="bi bi-clock-history"></i><b>مفيش أحداث</b></div>';
+
+            const counts = data.counts || {};
+            document.getElementById('tlFilters').innerHTML =
+                `<button type="button" class="um-chip ${active === 'all' ? 'active' : ''}" data-t="all">الكل <em>${data.events.length}</em></button>` +
+                Object.keys(TYPES).filter(t => counts[t]).map(t =>
+                    `<button type="button" class="um-chip ${active === t ? 'active' : ''}" data-t="${t}"><i class="bi ${TYPES[t].icon}"></i> ${TYPES[t].label} <em>${counts[t]}</em></button>`).join('');
+        }
+
+        document.getElementById('tlFilters').addEventListener('click', e => {
+            const b = e.target.closest('[data-t]'); if (!b) return;
+            active = b.dataset.t; render();
+        });
+
+        window.loadPatientTimeline = async function () {
+            if (loaded) return;
+            loaded = true;
+            try {
+                const res = await fetch(`${URL_GET}?patientId=${patientId}`, { headers: { 'Accept': 'application/json' } });
+                data = await res.json();
+                if (!data.success) throw new Error(data.message);
+                render();
+            } catch (err) {
+                loaded = false;
+                document.getElementById('tlBody').innerHTML = `<div class="ft-empty"><i class="bi bi-wifi-off"></i><b>تعذّر تحميل الخط الزمني</b><span>${esc(err.message || '')}</span></div>`;
+            }
+        };
+    })();
+</script>

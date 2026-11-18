@@ -534,3 +534,51 @@ a.cp2-card:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(10,
 .cp2-remind > span:nth-child(2) { flex: 1; }
 .cp2-bar { width: 60px; height: 6px; border-radius: 99px; background: rgba(0,0,0,.08); overflow: hidden; }
 .cp2-bar i { display: block; height: 100%; background: currentColor; border-radius: inherit; }
+
+/* ============================================================
+ * 🕒 F2 — الخط الزمني للمريض
+ * ============================================================ */
+.tl { font-family: 'Beiruti', 'Segoe UI', system-ui, sans-serif; color: var(--ft-ink-900); }
+.tl-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.tl-filters em { font-style: normal; font-size: .72rem; background: rgba(0,0,0,.08); padding: 0 6px; border-radius: 99px; margin-inline-start: 2px; }
+.tl-filters .active em { background: rgba(255,255,255,.25); }
+.tl-sk { height: 90px; margin-bottom: 10px; }
+.tl-body { position: relative; padding-inline-start: 34px; }
+.tl-body::before { content: ''; position: absolute; top: 6px; bottom: 6px; inset-inline-start: 15px; width: 2px; background: linear-gradient(var(--ft-teal-100), var(--ft-line)); border-radius: 2px; }
+.tl-month { position: relative; margin: 18px 0 10px; margin-inline-start: -34px; }
+.tl-month:first-child { margin-top: 0; }
+.tl-month span { display: inline-block; background: var(--ft-teal-700); color: #fff; font-weight: 800; font-size: .8rem; padding: 3px 12px; border-radius: 99px; position: relative; z-index: 1; }
+.tl-item { position: relative; margin-bottom: 12px; animation: ftIn .3s ease both; }
+.tl-dot {
+    position: absolute; inset-inline-start: -34px; top: 10px; width: 32px; height: 32px; border-radius: 11px;
+    display: grid; place-items: center; color: #fff; background: var(--tl); box-shadow: 0 0 0 4px var(--ft-card); z-index: 1; font-size: .95rem;
+}
+.tl-card { background: var(--ft-card); border: 1px solid var(--ft-line); border-inline-start: 3px solid var(--tl); border-radius: 14px; padding: 12px 14px; box-shadow: var(--ft-shadow); }
+.tl-card-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tl-card-head b { font-weight: 800; }
+.tl-sub { font-size: .76rem; font-weight: 700; padding: 1px 8px; border-radius: 99px; background: var(--tl-bg); color: var(--tl); }
+.tl-amount { margin-inline-start: auto; font-weight: 900; color: var(--tl); }
+.tl-amount small { font-size: .72rem; color: var(--ft-ink-400); font-weight: 700; }
+.tl-date { font-size: .78rem; color: var(--ft-ink-600); margin-top: 2px; }
+.tl-date span { color: var(--ft-ink-400); }
+.tl-card ul { margin: 8px 0 0; padding-inline-start: 18px; font-size: .88rem; line-height: 1.8; }
+.tl-img { display: inline-block; margin-top: 8px; }
+.tl-img img { width: 120px; height: 90px; object-fit: cover; border-radius: 10px; border: 1px solid var(--ft-line); }
+.tl-foot { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.tl-foot:empty { display: none; }
+.tl-badge { font-size: .74rem; font-weight: 800; padding: 2px 9px; border-radius: 99px; background: var(--ft-teal-50); color: var(--ft-ink-600); }
+.tl-link { margin-inline-start: auto; font-size: .82rem; font-weight: 800; color: var(--tl); text-decoration: none; }
+
+.tl-visit       { --tl: #0d7377; --tl-bg: #ccfbf1; }
+.tl-ortho       { --tl: #7c3aed; --tl-bg: #ede9fe; }
+.tl-payment     { --tl: #059669; --tl-bg: #d1fae5; }
+.tl-refund      { --tl: #dc2626; --tl-bg: #fee2e2; }
+.tl-xray        { --tl: #0284c7; --tl-bg: #e0f2fe; }
+.tl-rx          { --tl: #db2777; --tl-bg: #fce7f3; }
+.tl-appointment { --tl: #64748b; --tl-bg: #f1f5f9; }
+.tl-upcoming    { --tl: #ea580c; --tl-bg: #ffedd5; }
+.tl-missed      { --tl: #94a3b8; --tl-bg: #f1f5f9; }
+.tl-document    { --tl: #a16207; --tl-bg: #fef9c3; }
+.tl-created     { --tl: #0f172a; --tl-bg: #e2e8f0; }
+[data-theme="dark"] .tl [class*="tl-"] { --tl-bg: rgba(255,255,255,.07); }
+[data-theme="dark"] .tl-created { --tl: #94a3b8; }

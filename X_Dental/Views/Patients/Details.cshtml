@@ -1327,6 +1327,7 @@
     <div class="tabs-container pt-3 pb-5">
         <div class="tabs-pill-bar">
             <button class="tab-pill active" onclick="switchTab('overview', this)"><i class="bi bi-person-lines-fill"></i> Overview</button>
+            <button class="tab-pill" onclick="switchTab('timeline', this)"><i class="bi bi-clock-history"></i> Timeline</button>
             <button class="tab-pill" onclick="switchTab('prevSessions', this)"><i class="bi bi-archive"></i> Previous Records</button>
             @if (isOrthoPatient)
             {
@@ -1399,6 +1400,11 @@
                     </div>
 
                 </div>
+            </div>
+
+            <!-- 🕒 F2: Tab: Timeline -->
+            <div class="tab-panel" id="timeline">
+                <partial name="_PatientTimeline" model="patient.Id" />
             </div>
 
             <!-- Tab: Previous Sessions -->
@@ -1594,6 +1600,7 @@
             document.getElementById(tabId).classList.add('active');
 
             // Lazy load per-tab data only when first opened
+            if (tabId === 'timeline' && window.loadPatientTimeline) window.loadPatientTimeline();
             if (tabId === 'payments') loadPaymentsTab();
             if (tabId === 'docs' && window.loadDocumentsTab) window.loadDocumentsTab();
             if (tabId === 'prescriptions' && window.loadPatientPrescriptions) window.loadPatientPrescriptions();
