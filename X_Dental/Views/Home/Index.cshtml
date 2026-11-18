@@ -1,6 +1,9 @@
 ﻿@using System.Text.Json
 @model Dental.ViewModels.Dashboards.DashboardViewModel
+@inject Microsoft.AspNetCore.Authorization.IAuthorizationService AuthorizationService
 @{
+    // 🔒 F1: الأرقام المالية للي عنده صلاحية تقارير الإيرادات بس
+    var canMoney = (await AuthorizationService.AuthorizeAsync(User, Dental.Constants.Permissions.Payments.Reports)).Succeeded;
     ViewData["Title"] = "Dashboard";
 }
 @section Styles {
@@ -417,21 +420,44 @@
                 <span class="stat-label">Today's Appointments</span>
             </div>
         </div>
-        <div class="stat-glass">
-            <div class="stat-icon-wrap icon-green"><i class="bi bi-cash-stack"></i></div>
-            <div>
-                <span class="stat-number" data-target="@Model.TotalRevenue" data-mony="true">0</span>
-                <span class="stat-label">Total Revenue</span>
+        @if (canMoney)
+        {
+            <div class="stat-glass">
+                <div class="stat-icon-wrap icon-green"><i class="bi bi-cash-stack"></i></div>
+                <div>
+                    <span class="stat-number" data-target="@Model.TotalRevenue" data-mony="true">0</span>
+                    <span class="stat-label">Total Revenue</span>
+                </div>
             </div>
-        </div>
-        <div class="stat-glass">
-            <div class="stat-icon-wrap icon-red"><i class="bi bi-credit-card-2-front"></i></div>
-            <div>
-                <span class="stat-number" data-target="@Model.TotalDue" data-mony="true">0</span>
-                <span class="stat-label">Outstanding Balances</span>
+            <div class="stat-glass">
+                <div class="stat-icon-wrap icon-red"><i class="bi bi-credit-card-2-front"></i></div>
+                <div>
+                    <span class="stat-number" data-target="@Model.TotalDue" data-mony="true">0</span>
+                    <span class="stat-label">Outstanding Balances</span>
+                </div>
             </div>
-        </div>
+        }
+        else
+        {
+            <div class="stat-glass">
+                <div class="stat-icon-wrap icon-green"><i class="bi bi-person-plus-fill"></i></div>
+                <div>
+                    <span class="stat-number" data-target="@Model.NewPatientsThisMonth">0</span>
+                    <span class="stat-label">New Patients This Month</span>
+                </div>
+            </div>
+            <div class="stat-glass">
+                <div class="stat-icon-wrap icon-red"><i class="bi bi-calendar2-range"></i></div>
+                <div>
+                    <span class="stat-number" data-target="@Model.UpcomingAppointments">0</span>
+                    <span class="stat-label">Upcoming Appointments</span>
+                </div>
+            </div>
+        }
     </div>
+
+    <!-- ===== 📊 F1: نبض العيادة ===== -->
+    <partial name="_ClinicPulse" />
 
     <!-- ===== Graphs ===== -->
     <div class="charts-row1 reveal">
@@ -446,23 +472,26 @@
     </div>
 
     <div class="charts-row2 reveal">
-        <div class="chart-glass">
-            <h5><i class="bi bi-bar-chart-fill"></i> Revenue — Last 6 Months</h5>
-            <div id="chartRevenueBar" style="height: 240px;"></div>
-        </div>
+        @if (canMoney)
+        {
+            <div class="chart-glass">
+                <h5><i class="bi bi-bar-chart-fill"></i> Revenue — Last 6 Months</h5>
+                <div id="chartRevenueBar" style="height: 240px;"></div>
+            </div>
+        }
         <div class="chart-glass">
             <h5><i class="bi bi-list-check"></i> Recent Visits</h5>
             @if (Model.RecentVisits.Any())
             {
                 <table class="info-table">
-                    <thead><tr><th>Patient</th><th>Type</th><th>Amount</th></tr></thead>
+                    <thead><tr><th>Patient</th><th>Type</th>@if (canMoney) { <th>Amount</th> }</tr></thead>
                     <tbody>
                         @foreach (var v in Model.RecentVisits)
                         {
                             <tr>
                                 <td>@v.PatientName</td>
                                 <td>@(v.Category == "General" ? "General" : "Orthodontics")</td>
-                                <td>@v.TotalAmount.ToString("N0") EGP</td>
+                                @if (canMoney) { <td>@v.TotalAmount.ToString("N0") EGP</td> }
                             </tr>
                         }
                     </tbody>
@@ -515,6 +544,7 @@
                 <p class="empty-dash"><i class="bi bi-check2-circle"></i> Nothing expiring within 30 days</p>
             }
         </div>
+        @if (canMoney) {
         <div class="chart-glass alert-panel">
             <h5><i class="bi bi-cash-coin"></i> Top Overdue Patients</h5>
             @if (Model.TopOverduePatients.Any())
@@ -534,6 +564,7 @@
                 <p class="empty-dash"><i class="bi bi-check2-circle"></i> No outstanding balances</p>
             }
         </div>
+        }
     </div>
 
     
@@ -714,8 +745,8 @@
                     colors: ['#14b8a6', '#f59e0b', '#6366f1']
                 }]
             });
-            // Bar: Revenue
-            Highcharts.chart('chartRevenueBar', {
+            // Bar: Revenue (بيظهر بس لصاحب صلاحية التقارير)
+            if (document.getElementById('chartRevenueBar')) Highcharts.chart('chartRevenueBar', {
                 chart: { type: 'column', backgroundColor: 'transparent' },
                 title: { text: null },
                 credits: { enabled: false },

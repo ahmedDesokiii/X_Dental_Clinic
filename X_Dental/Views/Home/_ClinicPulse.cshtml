@@ -1,0 +1,132 @@
+@* 📊 F1 — نبض العيادة: كروت ذكية بتتحمل بعد الصفحة. كل كارت بيظهر بس لو المستخدم عنده صلاحيته. *@
+@inject Dental.Core.Settings.IClinicSettingsService ClinicSettings
+<section class="cp2" id="clinicPulse" dir="rtl" hidden>
+    <div class="cp2-head">
+        <h3><i class="bi bi-activity"></i> نبض العيادة</h3>
+        <span class="cp2-time" id="cp2Time"></span>
+    </div>
+    <div class="cp2-grid" id="cp2Grid"></div>
+</section>
+
+<script>
+    (function () {
+        const URLS = {
+            insights: '@Url.Action("GetInsights", "Home")',
+            statement: '@Url.Action("Statement", "Payments")',
+            details: '@Url.Action("Details", "Patients")',
+            reminders: '@Url.Action("Index", "Reminders")',
+            reports: '@Url.Action("Index", "Payments")',
+            appointments: '@Url.Action("Index", "Appointments")'
+        };
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const money = n => Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+        const CC = '@ClinicSettings.Get().WhatsAppCountryCode';
+        const wa = m => {
+            let d = String(m || '').replace(/\D/g, '');
+            if (d.length < 8) return null;
+            if (d.startsWith('00')) d = d.slice(2);
+            else if (!(d.startsWith(CC) && d.length > 10)) d = CC + d.replace(/^0/, '');
+            return 'https://wa.me/' + d;
+        };
+
+        function spark(points) {
+            const w = 220, h = 46, max = Math.max(1, ...points.map(p => p.total));
+            const step = w / (points.length - 1 || 1);
+            const pts = points.map((p, i) => `${(w - i * step).toFixed(1)},${(h - 4 - (p.total / max) * (h - 10)).toFixed(1)}`);
+            return `<svg class="cp2-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+                <polyline points="${pts.join(' ')} 0,${h} ${w},${h}" class="area"/>
+                <polyline points="${pts.join(' ')}" class="line"/></svg>`;
+        }
+
+        function revenue(r) {
+            const ch = r.changePct;
+            const chip = ch == null ? '' : `<span class="cp2-delta ${ch >= 0 ? 'up' : 'down'}"><i class="bi bi-arrow-${ch >= 0 ? 'up' : 'down'}-right"></i> ${Math.abs(ch)}%</span>`;
+            return `
+            <a class="cp2-card cp2-money" href="${URLS.reports}">
+                <div class="cp2-card-top"><span class="cp2-ic"><i class="bi bi-cash-stack"></i></span><b>الإيرادات</b></div>
+                <div class="cp2-big">${money(r.today)} <small>ج.م</small></div>
+                <div class="cp2-sub">النهارده · ${r.todayReceipts} إيصال</div>
+                ${spark(r.spark)}
+                <div class="cp2-row"><span>شهر ${esc(r.monthName)}</span><b>${money(r.month)} ${chip}</b></div>
+                <div class="cp2-row muted"><span>نفس الفترة الشهر اللي فات</span><span>${money(r.lastMonthToDate)}</span></div>
+                ${r.monthDiscount > 0 ? `<div class="cp2-row muted"><span>خصومات الشهر</span><span>${money(r.monthDiscount)}</span></div>` : ''}
+            </a>`;
+        }
+
+        function receivables(r) {
+            return `
+            <div class="cp2-card cp2-due">
+                <div class="cp2-card-top"><span class="cp2-ic"><i class="bi bi-hourglass-split"></i></span><b>المتأخرات</b></div>
+                <div class="cp2-big">${money(r.total)} <small>ج.م</small></div>
+                <div class="cp2-sub">على ${r.patients} مريض</div>
+                <ul class="cp2-list">
+                    ${r.top.map(p => `
+                    <li>
+                        <a href="${URLS.statement}?patientId=${p.patientId}">${esc(p.name)}</a>
+                        <span class="cp2-meta">${p.daysSince} يوم</span>
+                        <b>${money(p.due)}</b>
+                        ${wa(p.mobile) ? `<a class="cp2-wa" href="${wa(p.mobile)}" target="_blank" rel="noopener" title="واتساب"><i class="bi bi-whatsapp"></i></a>` : ''}
+                    </li>`).join('') || '<li class="cp2-empty">مفيش متأخرات 🎉</li>'}
+                </ul>
+            </div>`;
+        }
+
+        function ortho(o) {
+            return `
+            <div class="cp2-card cp2-ortho">
+                <div class="cp2-card-top"><span class="cp2-ic"><i class="bi bi-braces"></i></span><b>تقويم فات ميعاده</b></div>
+                <div class="cp2-big">${o.count} <small>من ${o.activeCases} حالة</small></div>
+                <div class="cp2-sub">أكتر من ${o.thresholdDays} يوم من غير زيارة ولا موعد جاي</div>
+                <ul class="cp2-list">
+                    ${o.top.map(p => `
+                    <li>
+                        <a href="${URLS.details}/${p.patientId}">${esc(p.name)}</a>
+                        <span class="cp2-meta">${p.daysSince} يوم</span>
+                        ${wa(p.mobile) ? `<a class="cp2-wa" href="${wa(p.mobile)}" target="_blank" rel="noopener" title="واتساب"><i class="bi bi-whatsapp"></i></a>` : ''}
+                    </li>`).join('') || '<li class="cp2-empty">كل حالات التقويم ماشية في مواعيدها ✅</li>'}
+                </ul>
+            </div>`;
+        }
+
+        function appts(a) {
+            const t = a.today;
+            const pct = a.tomorrow ? Math.round(a.tomorrowReminded * 100 / a.tomorrow) : 100;
+            return `
+            <div class="cp2-card cp2-appts">
+                <div class="cp2-card-top"><span class="cp2-ic"><i class="bi bi-calendar2-check"></i></span><b>مواعيد النهارده</b></div>
+                <div class="cp2-tiles">
+                    <a href="${URLS.appointments}"><b>${t.waiting}</b><span>منتظر</span></a>
+                    <a href="${URLS.appointments}"><b>${t.inClinic}</b><span>في العيادة</span></a>
+                    <a href="${URLS.appointments}"><b>${t.done}</b><span>خلص</span></a>
+                    <a href="${URLS.appointments}"><b>${t.missed}</b><span>ما جاش / اتلغى</span></a>
+                </div>
+                <a class="cp2-remind ${pct < 100 ? 'todo' : ''}" href="${URLS.reminders}">
+                    <i class="bi bi-whatsapp"></i>
+                    <span>تذكيرات بكرة: <b>${a.tomorrowReminded} / ${a.tomorrow}</b></span>
+                    <span class="cp2-bar"><i style="width:${pct}%"></i></span>
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </div>`;
+        }
+
+        async function load() {
+            try {
+                const res = await fetch(URLS.insights, { headers: { 'Accept': 'application/json' } });
+                const r = await res.json();
+                if (!r.success) return;
+                const d = r.data, parts = [];
+                if (d.appointments) parts.push(appts(d.appointments));
+                if (d.revenue) parts.push(revenue(d.revenue));
+                if (d.receivables) parts.push(receivables(d.receivables));
+                if (d.orthoOverdue) parts.push(ortho(d.orthoOverdue));
+                if (!parts.length) return;
+                document.getElementById('cp2Grid').innerHTML = parts.join('');
+                document.getElementById('cp2Time').textContent = 'آخر تحديث ' + new Date().toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' });
+                document.getElementById('clinicPulse').hidden = false;
+            } catch { }
+        }
+
+        load();
+        setInterval(load, 5 * 60 * 1000);   // تحديث كل 5 دقايق للشاشة المفتوحة طول اليوم
+    })();
+</script>

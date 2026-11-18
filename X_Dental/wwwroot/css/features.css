@@ -218,7 +218,7 @@ html.cp-open { overflow: hidden; }
  * ➕ Floating Action Button
  * ============================================================ */
 .fab {
-    position: fixed; left: 22px; bottom: calc(22px + env(safe-area-inset-bottom)); z-index: 90;
+    position: fixed; right: 22px; bottom: calc(22px + env(safe-area-inset-bottom)); z-index: 90;   /* يمين: الـ sidebar على الشمال */
     width: 56px; height: 56px; border-radius: 18px; border: 0; color: #fff; font-size: 1.5rem;
     display: grid; place-items: center; cursor: pointer;
     background: linear-gradient(135deg, var(--ft-teal-700), var(--ft-teal-500));
@@ -476,3 +476,61 @@ html.cp-open { overflow: hidden; }
     .pm-savebar { left: 10px; right: 10px; transform: none; flex-wrap: wrap; justify-content: flex-end; }
     .pm-savebar span { width: 100%; }
 }
+
+/* ============================================================
+ * 📊 F1 — نبض العيادة (Dashboard)
+ * ============================================================ */
+.cp2 { margin: 18px 0 22px; font-family: 'Beiruti', 'Segoe UI', system-ui, sans-serif; color: var(--ft-ink-900); }
+.cp2[hidden] { display: none; }
+.cp2-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.cp2-head h3 { font-size: 1.1rem; font-weight: 900; margin: 0; display: flex; gap: 8px; align-items: center; color: var(--ft-teal-700); }
+[data-theme="dark"] .cp2-head h3 { color: var(--ft-teal-500); }
+.cp2-time { font-size: .78rem; color: var(--ft-ink-400); }
+.cp2-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.cp2-card {
+    background: var(--ft-card); border: 1px solid var(--ft-line); border-radius: 18px; padding: 16px; box-shadow: var(--ft-shadow);
+    display: flex; flex-direction: column; gap: 6px; color: inherit; text-decoration: none; animation: ftIn .35s ease both; position: relative; overflow: hidden;
+}
+a.cp2-card:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(10,77,79,.12); color: inherit; }
+.cp2-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.cp2-card-top b { font-weight: 800; }
+.cp2-ic { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; font-size: 1.05rem; background: var(--c-bg); color: var(--c); }
+.cp2-money { --c: #059669; --c-bg: #d1fae5; }
+.cp2-due { --c: #dc2626; --c-bg: #fee2e2; }
+.cp2-ortho { --c: #7c3aed; --c-bg: #ede9fe; }
+.cp2-appts { --c: #0d7377; --c-bg: #ccfbf1; }
+[data-theme="dark"] .cp2-card { --c-bg: rgba(255,255,255,.07); }
+.cp2-big { font-size: 1.7rem; font-weight: 900; line-height: 1.1; color: var(--c); }
+.cp2-big small { font-size: .8rem; font-weight: 700; color: var(--ft-ink-400); }
+.cp2-sub { font-size: .8rem; color: var(--ft-ink-600); }
+.cp2-row { display: flex; justify-content: space-between; align-items: center; font-size: .85rem; padding-top: 6px; border-top: 1px dashed var(--ft-line); }
+.cp2-row.muted { color: var(--ft-ink-400); border-top: 0; padding-top: 0; }
+.cp2-delta { font-size: .72rem; font-weight: 900; padding: 1px 7px; border-radius: 99px; margin-inline-start: 6px; }
+.cp2-delta.up { background: #d1fae5; color: #047857; }
+.cp2-delta.down { background: #fee2e2; color: #b91c1c; }
+.cp2-spark { width: 100%; height: 46px; margin: 4px 0; }
+.cp2-spark .line { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.cp2-spark .area { fill: var(--c); opacity: .08; stroke: none; }
+.cp2-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.cp2-list li { display: flex; align-items: center; gap: 8px; font-size: .86rem; padding: 6px 8px; border-radius: 10px; }
+.cp2-list li:hover { background: var(--ft-teal-50); }
+.cp2-list li > a:first-child { flex: 1; font-weight: 700; color: inherit; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cp2-list li > a:first-child:hover { color: var(--c); }
+.cp2-meta { font-size: .74rem; color: var(--ft-ink-400); }
+.cp2-list b { color: var(--c); font-weight: 900; }
+.cp2-wa { color: #128c7e; font-size: 1.05rem; }
+.cp2-empty { color: var(--ft-ink-400); justify-content: center; }
+.cp2-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.cp2-tiles a { text-align: center; padding: 10px 4px; border-radius: 12px; background: var(--ft-teal-50); color: inherit; text-decoration: none; }
+.cp2-tiles b { display: block; font-size: 1.35rem; font-weight: 900; color: var(--ft-teal-700); }
+.cp2-tiles span { font-size: .72rem; color: var(--ft-ink-600); }
+.cp2-remind {
+    display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 10px 12px; border-radius: 12px;
+    background: #dcfce7; color: #166534; text-decoration: none; font-size: .86rem;
+}
+.cp2-remind.todo { background: #fef9c3; color: #854d0e; }
+[data-theme="dark"] .cp2-remind { background: rgba(34,197,94,.12); color: #86efac; }
+[data-theme="dark"] .cp2-remind.todo { background: rgba(234,179,8,.12); color: #fde047; }
+.cp2-remind > span:nth-child(2) { flex: 1; }
+.cp2-bar { width: 60px; height: 6px; border-radius: 99px; background: rgba(0,0,0,.08); overflow: hidden; }
+.cp2-bar i { display: block; height: 100%; background: currentColor; border-radius: inherit; }

@@ -1,3 +1,4 @@
+using Dental.Models.Clinic;
 using Dental.Models.Inventory;
 using Dental.Models.Patient;
 using Dental.Modules.Patients.Enums;
@@ -43,11 +44,12 @@ namespace Dental.Controllers
                 TotalRevenue = await _context.VisitPayments
                     .Where(p => !p.IsDeleted)
                     .SumAsync(p => (decimal?)p.Amount) ?? 0,
-                // Remaining = TotalAmount - PaidAmount
+                // 🐞 F1: المتبقي الصحيح = الإجمالي - الخصم - المدفوع (الخصم ما كانش بيتطرح)،
+                //        وبنجمع المتبقي الموجب بس (الرصيد الدائن لمريض ما يقللش ديون غيره)
                 TotalDue = await _context.Visits
-                    .Where(v => v.IsActive)
+                    .Where(v => v.IsActive && v.TotalAmount - v.Discount - v.PaidAmount > 0)
                     .SumAsync(v =>
-                        (decimal?)(v.TotalAmount - v.PaidAmount)
+                        (decimal?)(v.TotalAmount - v.Discount - v.PaidAmount)
                     ) ?? 0,
                 NewPatientsThisMonth = await _context.Patients
                     .CountAsync(p =>
@@ -169,14 +171,14 @@ namespace Dental.Controllers
                 // =========================
                 TopOverduePatients = await _context.Visits
                     .AsNoTracking()
-                    .Where(v => v.IsActive && (v.TotalAmount - v.PaidAmount) > 0)
+                    .Where(v => v.IsActive && (v.TotalAmount - v.Discount - v.PaidAmount) > 0)   // 🐞 F1: الخصم
                     .GroupBy(v => new { v.PatientId, v.Patient.FullNameAr, v.Patient.Mobile })
                     .Select(g => new OverduePatientVM
                     {
                         PatientId = g.Key.PatientId,
                         PatientName = g.Key.FullNameAr,
                         Mobile = g.Key.Mobile,
-                        AmountDue = g.Sum(v => v.TotalAmount - v.PaidAmount)
+                        AmountDue = g.Sum(v => v.TotalAmount - v.Discount - v.PaidAmount)
                     })
                     .OrderByDescending(x => x.AmountDue)
                     .Take(5)
@@ -287,6 +289,170 @@ namespace Dental.Controllers
                 );
             }
             return View(model);
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // 📊 F1 — نبض العيادة: كل قسم بيرجع بس لو المستخدم عنده صلاحيته
+        // ════════════════════════════════════════════════════════════
+        [HttpGet]
+        public async Task<IActionResult> GetInsights()
+        {
+            var auth = HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Authorization.IAuthorizationService>();
+            async Task<bool> Can(string p) => (await auth.AuthorizeAsync(User, p)).Succeeded;
+
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+            var result = new Dictionary<string, object?>();
+
+            // ── 1) الإيرادات ──
+            if (await Can(Permissions.Payments.Reports))
+            {
+                var monthStart = new DateTime(today.Year, today.Month, 1);
+                var lastMonthStart = monthStart.AddMonths(-1);
+                var lastMonthSameDay = lastMonthStart.AddDays(Math.Min(today.Day, DateTime.DaysInMonth(lastMonthStart.Year, lastMonthStart.Month)));
+
+                var pays = _context.VisitPayments.AsNoTracking().Where(p => !p.IsDeleted && p.Visit.IsActive);
+
+                var todayTotal = await pays.Where(p => p.PaymentDate >= today && p.PaymentDate < tomorrow).SumAsync(p => (decimal?)p.Amount) ?? 0;
+                var todayReceipts = await pays.Where(p => p.PaymentDate >= today && p.PaymentDate < tomorrow && p.Amount > 0)
+                    .Select(p => p.ReceiptNo ?? p.Id.ToString()).Distinct().CountAsync();
+                var monthTotal = await pays.Where(p => p.PaymentDate >= monthStart && p.PaymentDate < tomorrow).SumAsync(p => (decimal?)p.Amount) ?? 0;
+                var lastMonthToDate = await pays.Where(p => p.PaymentDate >= lastMonthStart && p.PaymentDate < lastMonthSameDay).SumAsync(p => (decimal?)p.Amount) ?? 0;
+                var monthDiscount = await pays.Where(p => p.PaymentDate >= monthStart && p.PaymentDate < tomorrow).SumAsync(p => (decimal?)p.Discount) ?? 0;
+
+                // آخر 14 يوم (للرسم الصغير)
+                var from14 = today.AddDays(-13);
+                var daily = await pays.Where(p => p.PaymentDate >= from14 && p.PaymentDate < tomorrow)
+                    .GroupBy(p => p.PaymentDate.Date)
+                    .Select(g => new { Day = g.Key, Total = g.Sum(x => x.Amount) })
+                    .ToListAsync();
+                var spark = Enumerable.Range(0, 14).Select(i =>
+                {
+                    var d = from14.AddDays(i);
+                    return new { day = d.ToString("dd/MM"), total = daily.FirstOrDefault(x => x.Day == d)?.Total ?? 0 };
+                });
+
+                result["revenue"] = new
+                {
+                    today = todayTotal,
+                    todayReceipts,
+                    month = monthTotal,
+                    lastMonthToDate,
+                    changePct = lastMonthToDate > 0 ? Math.Round((monthTotal - lastMonthToDate) * 100 / lastMonthToDate, 1) : (decimal?)null,
+                    monthDiscount,
+                    monthName = today.ToString("MMMM", new CultureInfo("ar-EG")),
+                    spark
+                };
+            }
+
+            // ── 2) المتأخرات (أكبر مديونيات) ──
+            if (await Can(Permissions.Payments.View))
+            {
+                var open = _context.Visits.AsNoTracking()
+                    .Where(v => v.IsActive && v.TotalAmount - v.Discount - v.PaidAmount > 0);
+
+                var totalDue = await open.SumAsync(v => (decimal?)(v.TotalAmount - v.Discount - v.PaidAmount)) ?? 0;
+                var debtors = await open
+                    .GroupBy(v => v.PatientId)
+                    .Select(g => new
+                    {
+                        PatientId = g.Key,
+                        Due = g.Sum(v => v.TotalAmount - v.Discount - v.PaidAmount),
+                        LastVisit = g.Max(v => v.VisitDate)
+                    })
+                    .OrderByDescending(x => x.Due)
+                    .Take(6)
+                    .ToListAsync();
+                var ids = debtors.Select(d => d.PatientId).ToList();
+                var names = await _context.Patients.AsNoTracking().Where(p => ids.Contains(p.Id))
+                    .Select(p => new { p.Id, p.FullNameAr, p.Mobile }).ToDictionaryAsync(p => p.Id);
+                var debtorsCount = await open.Select(v => v.PatientId).Distinct().CountAsync();
+
+                result["receivables"] = new
+                {
+                    total = totalDue,
+                    patients = debtorsCount,
+                    top = debtors.Select(d => new
+                    {
+                        patientId = d.PatientId,
+                        name = names.GetValueOrDefault(d.PatientId)?.FullNameAr,
+                        mobile = names.GetValueOrDefault(d.PatientId)?.Mobile,
+                        due = d.Due,
+                        daysSince = (int)(today - d.LastVisit.Date).TotalDays
+                    })
+                };
+            }
+
+            // ── 3) مرضى تقويم فاتوا ميعاد الضبط (أكتر من 35 يوم من غير زيارة ومن غير موعد جاي) ──
+            if (await Can(Permissions.Clinical.View))
+            {
+                const int OverdueDays = 35;
+                var activeOrtho = await _context.OrthoCases.AsNoTracking()
+                    .Where(c => !c.IsDeleted && c.Status == OrthoCaseStatus.Active)
+                    .Select(c => c.PatientId).Distinct().ToListAsync();
+
+                var lastVisits = await _context.Visits.AsNoTracking()
+                    .Where(v => v.IsActive && activeOrtho.Contains(v.PatientId))
+                    .GroupBy(v => v.PatientId)
+                    .Select(g => new { PatientId = g.Key, Last = g.Max(v => v.VisitDate) })
+                    .ToListAsync();
+
+                var withFuture = await _context.Appointments.AsNoTracking()
+                    .Where(a => !a.IsDeleted && a.AppointmentDate >= today && activeOrtho.Contains(a.PatientId)
+                             && a.Status != AppointmentStatus.Cancelled && a.Status != AppointmentStatus.NoShow)
+                    .Select(a => a.PatientId).Distinct().ToListAsync();
+
+                var overdue = lastVisits
+                    .Where(x => (today - x.Last.Date).TotalDays > OverdueDays && !withFuture.Contains(x.PatientId))
+                    .OrderByDescending(x => (today - x.Last.Date).TotalDays)
+                    .ToList();
+                var oIds = overdue.Take(6).Select(x => x.PatientId).ToList();
+                var oNames = await _context.Patients.AsNoTracking().Where(p => oIds.Contains(p.Id))
+                    .Select(p => new { p.Id, p.FullNameAr, p.Mobile }).ToDictionaryAsync(p => p.Id);
+
+                result["orthoOverdue"] = new
+                {
+                    count = overdue.Count,
+                    activeCases = activeOrtho.Count,
+                    thresholdDays = OverdueDays,
+                    top = overdue.Take(6).Select(x => new
+                    {
+                        patientId = x.PatientId,
+                        name = oNames.GetValueOrDefault(x.PatientId)?.FullNameAr,
+                        mobile = oNames.GetValueOrDefault(x.PatientId)?.Mobile,
+                        daysSince = (int)(today - x.Last.Date).TotalDays
+                    })
+                };
+            }
+
+            // ── 4) مواعيد النهارده وتذكيرات بكرة ──
+            if (await Can(Permissions.Appointments.View))
+            {
+                var after = tomorrow.AddDays(1);
+                var todayAppts = await _context.Appointments.AsNoTracking()
+                    .Where(a => !a.IsDeleted && a.AppointmentDate >= today && a.AppointmentDate < tomorrow)
+                    .GroupBy(a => a.Status).Select(g => new { g.Key, Count = g.Count() }).ToListAsync();
+                var tmr = await _context.Appointments.AsNoTracking()
+                    .Where(a => !a.IsDeleted && a.AppointmentDate >= tomorrow && a.AppointmentDate < after
+                             && (a.Status == AppointmentStatus.Scheduled || a.Status == AppointmentStatus.Confirmed))
+                    .Select(a => a.IsReminderSent).ToListAsync();
+
+                int C(params AppointmentStatus[] st) => todayAppts.Where(x => st.Contains(x.Key)).Sum(x => x.Count);
+                result["appointments"] = new
+                {
+                    today = new
+                    {
+                        waiting = C(AppointmentStatus.Scheduled, AppointmentStatus.Confirmed),
+                        inClinic = C(AppointmentStatus.CheckedIn, AppointmentStatus.InProgress),
+                        done = C(AppointmentStatus.Completed),
+                        missed = C(AppointmentStatus.NoShow, AppointmentStatus.Cancelled)
+                    },
+                    tomorrow = tmr.Count,
+                    tomorrowReminded = tmr.Count(x => x)
+                };
+            }
+
+            return Json(new { success = true, data = result });
         }
 
         public IActionResult Privacy()
