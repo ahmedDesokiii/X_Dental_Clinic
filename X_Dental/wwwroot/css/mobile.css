@@ -42,7 +42,8 @@ html.pwa-standalone body {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
-    .app-content table:not(.no-mobile-scroll) {
+    /* الجدول اللي جوه غلاف بيعمل scroll (…-wrap / …responsive / …scroll) سايبينه لغلافه */
+    .app-content :not([class*="wrap"]):not([class*="responsive"]):not([class*="scroll"]) > table:not(.no-mobile-scroll) {
         display: block;
         max-width: 100%;
         overflow-x: auto;
@@ -83,4 +84,63 @@ html.pwa-standalone body {
 @media (max-width: 576px) {
     .app-topbar .topbar-actions { gap: 6px; }
     .app-topbar .topbar-btn[title="Messages"] { display: none; }   /* زرار غير مستخدم حاليًا */
+}
+
+/* ============================================================
+ * 📱 G2 — شاشة الجلسة + ملف المريض + المدفوعات
+ * (اتحددت بتحليل الـ CSS بتاع كل صفحة: العروض الثابتة والـ grids اللي ملهاش قواعد موبايل)
+ * ============================================================ */
+
+/* ملف المريض كان ناقصه نفس قاعدة الجلسة للـ hero */
+@media (max-width: 1199.98px) {
+    .clinical-session-page .hero-grid { grid-template-columns: auto 1fr; }
+    .clinical-session-page .hero-actions { flex-direction: row; grid-column: 1 / -1; flex-wrap: wrap; }
+}
+
+@media (max-width: 768px) {
+    .clinical-session-page { padding: 12px 10px 100px !important; }
+
+    /* الهيدر الملون */
+    .session-hero { padding: 18px 14px !important; border-radius: 18px !important; }
+    .session-hero::before, .session-hero::after { max-width: 60vw; }
+    .clinical-session-page .hero-grid { gap: 12px; }
+    .clinical-session-page .hero-avatar { width: 52px; height: 52px; font-size: 1.15rem; border-radius: 16px; }
+    .clinical-session-page .hero-info h1 { font-size: 1.1rem; margin-bottom: 6px; }
+    .clinical-session-page .hero-tags { gap: 5px; }
+    .clinical-session-page .hero-tag { font-size: .74rem; padding: 3px 8px; }
+    .clinical-session-page .hero-actions > * { flex: 1 1 auto; justify-content: center; }
+
+    /* شريط التابات: سطر واحد بيتسحب بالعرض بدل ما يتكسر على سطور */
+    .tabs-pill-bar, .dc-tabs-bar {
+        display: flex !important; flex-wrap: nowrap !important; overflow-x: auto; -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; scroll-snap-type: x proximity; gap: 6px;
+    }
+    .tabs-pill-bar::-webkit-scrollbar, .dc-tabs-bar::-webkit-scrollbar { display: none; }
+    .tabs-pill-bar > *, .dc-tabs-bar > * { flex: 0 0 auto; scroll-snap-align: start; white-space: nowrap; }
+
+    /* روشتة داخل الجلسة: 5 أعمدة → الدوا سطر لوحده والباقي اتنين اتنين */
+    .rx-row { grid-template-columns: 1fr 1fr !important; }
+    .rx-row > :first-child { grid-column: 1 / -1; }
+
+    /* ملخص التقويم */
+    .os-summary { gap: 6px !important; }
+    .os-summary > * { padding: 10px 6px !important; }
+
+    /* شريط الأزرار تحت شاشة الجلسة */
+    .bottom-action-bar { flex-wrap: wrap; gap: 10px; padding: 10px 12px !important; padding-bottom: calc(10px + env(safe-area-inset-bottom)) !important; }
+    .bottom-action-bar .bottom-stats { width: 100%; justify-content: space-between; }
+
+    /* نوافذ السن / الـ chart: ملء العرض */
+    .tooth-modal .modal-glass-xl, .pc-modal .pc-modal-box, .dc-modal .dc-modal-box, .custom-modal-new .modal-box-new {
+        width: calc(100vw - 16px) !important; max-width: calc(100vw - 16px) !important;
+        max-height: calc(100dvh - 16px - env(safe-area-inset-top)); overflow-y: auto;
+    }
+}
+
+@media (max-width: 400px) {
+    .clinical-session-page .hero-metrics,
+    .clinical-session-page .stats-grid,
+    .clinical-session-page .info-grid { grid-template-columns: 1fr 1fr !important; }
+    .clinical-session-page .hero-avatar { display: none; }
+    .clinical-session-page .hero-grid { grid-template-columns: 1fr; }
 }
