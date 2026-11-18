@@ -15,6 +15,8 @@
     'use strict';
 
     var HEADER = 'RequestVerificationToken';
+    // 🐞 H2: بعض الصفحات بتقرا التوكن من input مش موجود فبتبعت "undefined" — نعتبره مش موجود
+    var isBlank = function (v) { return v == null || v === '' || v === 'undefined' || v === 'null'; };
     var SAFE = /^(GET|HEAD|OPTIONS|TRACE)$/i;
 
     function getToken() {
@@ -45,7 +47,7 @@
                     if (token) {
                         init = init ? Object.assign({}, init) : {};
                         var headers = new Headers(init.headers || (isRequest ? input.headers : undefined));
-                        if (!headers.has(HEADER)) headers.set(HEADER, token);
+                        if (isBlank(headers.get(HEADER))) headers.set(HEADER, token);
                         init.headers = headers;
                     }
                 }
@@ -67,7 +69,10 @@
             return xo.apply(this, arguments);
         };
         XMLHttpRequest.prototype.setRequestHeader = function (name, value) {
-            if (String(name).toLowerCase() === HEADER.toLowerCase()) this.__afHasHeader = true;
+            if (String(name).toLowerCase() === HEADER.toLowerCase()) {
+                if (isBlank(value)) return;            // هنحط التوكن الصح في send()
+                this.__afHasHeader = true;
+            }
             return xh.apply(this, arguments);
         };
         XMLHttpRequest.prototype.send = function () {

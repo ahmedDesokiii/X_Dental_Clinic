@@ -14,6 +14,9 @@ namespace Dental.Models.DataTables
         public DataTableSearch Search { get; set; } = new();
 
         public string? CategoryFilter { get; set; }
+
+        /// <summary>👥 H2: فلتر سريع لقائمة المرضى: balance | upcoming | inactive</summary>
+        public string? QuickFilter { get; set; }
     }
 
     public class DataTableColumn

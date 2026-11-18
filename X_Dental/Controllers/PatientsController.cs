@@ -107,6 +107,9 @@ namespace Dental.Controllers
             try
             {
                 var categoryFilter = request.CategoryFilter;
+                var auth = HttpContext.RequestServices.GetRequiredService<IAuthorizationService>();
+                var canMoney = (await auth.AuthorizeAsync(User, Permissions.Payments.View)).Succeeded;
+                var today = DateTime.Today;
 
                 var query = _context.Patients
                     .AsNoTracking()
@@ -121,6 +124,22 @@ namespace Dental.Controllers
                 else if (categoryFilter == "Orthodontics")
                     query = query.Where(p => p.PatientType == Models.Patient.PatientType.Orthodontics || p.PatientType == Models.Patient.PatientType.Both);
 
+                // 👥 H2: فلاتر سريعة
+                switch (request.QuickFilter)
+                {
+                    case "balance" when canMoney:
+                        query = query.Where(p => p.Visits.Any(v => v.IsActive && v.TotalAmount - v.Discount - v.PaidAmount > 0));
+                        break;
+                    case "upcoming":
+                        query = query.Where(p => p.Appointments.Any(a => !a.IsDeleted && a.AppointmentDate >= today
+                                                  && a.Status != AppointmentStatus.Cancelled && a.Status != AppointmentStatus.NoShow));
+                        break;
+                    case "inactive":
+                        var cutoff = today.AddMonths(-6);
+                        query = query.Where(p => p.Visits.Any(v => v.IsActive) && !p.Visits.Any(v => v.IsActive && v.VisitDate >= cutoff));
+                        break;
+                }
+
                 if (!string.IsNullOrWhiteSpace(request.Search?.Value))
                 {
                     var search = request.Search.Value.Trim().ToLower();
@@ -133,7 +152,7 @@ namespace Dental.Controllers
                     );
                 }
 
-                var recordsTotal = await _context.Patients.CountAsync();
+                var recordsTotal = await _context.Patients.CountAsync(p => p.IsActive);
                 var recordsFiltered = await query.CountAsync();
 
                 if (request.Order.Any() && request.Columns.Any())
@@ -148,6 +167,15 @@ namespace Dental.Controllers
                         "fullNameAr" => isAsc ? query.OrderBy(p => p.FullNameAr) : query.OrderByDescending(p => p.FullNameAr),
                         "mobile" => isAsc ? query.OrderBy(p => p.Mobile) : query.OrderByDescending(p => p.Mobile),
                         "age" => isAsc ? query.OrderBy(p => p.DateOfBirth) : query.OrderByDescending(p => p.DateOfBirth),
+                        "lastVisit" => isAsc
+                            ? query.OrderBy(p => p.Visits.Where(v => v.IsActive).Max(v => (DateTime?)v.VisitDate))
+                            : query.OrderByDescending(p => p.Visits.Where(v => v.IsActive).Max(v => (DateTime?)v.VisitDate)),
+                        "balance" when canMoney => isAsc
+                            ? query.OrderBy(p => p.Visits.Where(v => v.IsActive && v.TotalAmount - v.Discount - v.PaidAmount > 0).Sum(v => v.TotalAmount - v.Discount - v.PaidAmount))
+                            : query.OrderByDescending(p => p.Visits.Where(v => v.IsActive && v.TotalAmount - v.Discount - v.PaidAmount > 0).Sum(v => v.TotalAmount - v.Discount - v.PaidAmount)),
+                        "nextSession" => isAsc
+                            ? query.OrderBy(p => p.Appointments.Where(a => !a.IsDeleted && a.AppointmentDate >= today && a.Status != AppointmentStatus.Cancelled).Min(a => (DateTime?)a.AppointmentDate))
+                            : query.OrderByDescending(p => p.Appointments.Where(a => !a.IsDeleted && a.AppointmentDate >= today && a.Status != AppointmentStatus.Cancelled).Min(a => (DateTime?)a.AppointmentDate)),
                         "genderName" => isAsc
                             ? query.OrderBy(p => p.Gender != null ? p.Gender.NameAr : "")
                             : query.OrderByDescending(p => p.Gender != null ? p.Gender.NameAr : ""),
@@ -181,6 +209,11 @@ namespace Dental.Controllers
                         .OrderBy(a => a.AppointmentDate)
                         .Select(a => (DateTime?)a.AppointmentDate)
                         .FirstOrDefault(),
+                        LastVisit = p.Visits.Where(v => v.IsActive).Max(v => (DateTime?)v.VisitDate),
+                        Balance = canMoney
+                            ? p.Visits.Where(v => v.IsActive && v.TotalAmount - v.Discount - v.PaidAmount > 0)
+                                      .Sum(v => (decimal?)(v.TotalAmount - v.Discount - v.PaidAmount)) ?? 0
+                            : null,
 
                     })
                     .ToListAsync();

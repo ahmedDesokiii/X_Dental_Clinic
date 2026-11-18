@@ -22,6 +22,11 @@ namespace Dental.Modules.Patients.DTOs
 
         public DateTime? NextSession { get; set; }
 
+        // 👥 H2
+        public DateTime? LastVisit { get; set; }
+        /// <summary>المتبقي على المريض (null لو المستخدم ملوش صلاحية المدفوعات)</summary>
+        public decimal? Balance { get; set; }
+
         public string TypeBadge => PatientType switch
         {
             PatientType.Orthodontics => "<span class=\"badge bg-info-subtle text-info fw-bold px-2 py-1 rounded-3\"><i class=\"bi bi-braces\"></i> تقويم</span>",

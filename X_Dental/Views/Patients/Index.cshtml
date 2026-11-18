@@ -1,13 +1,69 @@
 ﻿@model Dental.Modules.Patients.ViewModels.PatientIndexViewModel
+@inject Microsoft.AspNetCore.Authorization.IAuthorizationService Auth
+@inject Dental.Core.Settings.IClinicSettingsService ClinicSettings
 
 @{
     ViewData["Title"] = "Patients";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // 👥 H2: الأزرار والأعمدة حسب صلاحيات المستخدم
+    async Task<bool> Can(string p) => (await Auth.AuthorizeAsync(User, p)).Succeeded;
+    var canAdd = await Can(Dental.Constants.Permissions.Patients.Add_Patient);
+    var canEdit = await Can(Dental.Constants.Permissions.Patients.Edit_Patient);
+    var canDelete = await Can(Dental.Constants.Permissions.Patients.Delete_Patient);
+    var canDetails = await Can(Dental.Constants.Permissions.Patients.Details_Patient);
+    var canSession = await Can(Dental.Constants.Permissions.Clinical.Manage);
+    var canMoney = await Can(Dental.Constants.Permissions.Payments.View);
 }
 
 @section Styles {
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" />
+    <style>
+        /* 👥 H2: فلاتر سريعة + خلايا جديدة + كروت الموبايل */
+        .pl-quick { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 16px 12px; }
+        .pl-q { border: 1px solid rgba(13,115,119,.15); background: #fff; color: #4b6b6c; border-radius: 99px; padding: 6px 14px; font-weight: 700; font-size: .85rem; cursor: pointer; transition: all .15s; }
+        .pl-q i { margin-inline-end: 4px; }
+        .pl-q:hover { border-color: #14b8a6; color: #0d7377; }
+        .pl-q.active { background: #0d7377; border-color: #0d7377; color: #fff; }
+        [data-theme="dark"] .pl-q { background: transparent; color: #94a3b8; border-color: rgba(148,163,184,.25); }
+        .pl-phone { display: inline-flex; align-items: center; gap: 6px; }
+        .pl-ic { width: 26px; height: 26px; border-radius: 8px; display: inline-grid; place-items: center; background: #f0fdfa; color: #0d7377; font-size: .8rem; text-decoration: none; opacity: .0; transition: opacity .15s; }
+        tr:hover .pl-ic, .pl-ic:focus { opacity: 1; }
+        .pl-wa { color: #128c7e; background: #dcfce7; }
+        .pl-last { font-size: .85rem; color: #4b6b6c; font-weight: 600; }
+        .pl-last.old { color: #b45309; }
+        .pl-due { font-weight: 900; color: #dc2626; background: #fef2f2; padding: 2px 10px; border-radius: 99px; font-size: .85rem; }
+        .pl-paid { color: #16a34a; font-weight: 900; }
+        tr.pl-clickable { cursor: pointer; }
+
+        @@media (hover: none) { .pl-ic { opacity: 1; } }
+
+        @@media (max-width: 768px) {
+            .pl-quick { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+            .pl-q { flex: 0 0 auto; }
+            /* الجدول يتحول لكروت */
+            #tablePatients thead { display: none; }
+            #tablePatients, #tablePatients tbody { display: block !important; width: 100% !important; }
+            #tablePatients tbody tr {
+                display: grid !important; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center;
+                background: var(--ft-card, #fff); border: 1px solid rgba(13,115,119,.12); border-radius: 16px;
+                padding: 12px 14px; margin-bottom: 10px; box-shadow: 0 6px 18px rgba(10,77,79,.06);
+            }
+            #tablePatients tbody td { display: block; border: 0 !important; padding: 0 !important; text-align: start !important; white-space: normal; }
+            #tablePatients tbody td:nth-child(1) { order: 2; justify-self: end; }                 /* code */
+            #tablePatients tbody td:nth-child(2) { order: 1; }                                     /* name */
+            #tablePatients tbody td:nth-child(3) { order: 3; grid-column: 1 / -1; }                /* phone */
+            #tablePatients tbody td:nth-child(4), #tablePatients tbody td:nth-child(5) { display: none; }  /* gender, age */
+            #tablePatients tbody td:nth-child(6) { order: 4; }                                     /* type */
+            #tablePatients tbody td:nth-child(7) { order: 5; justify-self: end; }                  /* last visit */
+            #tablePatients tbody td:nth-child(8) { order: 6; }                                     /* next */
+            #tablePatients tbody td:nth-child(9) { order: 7; justify-self: end; }                  /* balance / actions */
+            #tablePatients tbody td:last-child { order: 9; grid-column: 1 / -1; padding-top: 8px !important; border-top: 1px dashed rgba(13,115,119,.15) !important; }
+            #tablePatients tbody td:last-child .row-actions-cell { justify-content: space-between; }
+            #tablePatients tbody td.dataTables_empty { grid-column: 1 / -1; text-align: center !important; }
+        }
+    </style>
+    <link rel="stylesheet" href="~/lib/datatables-1.13/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="~/lib/datatables-1.13/responsive.dataTables.min.css" />
     <style>
         :root {
             --card-grad: linear-gradient(145deg, rgba(255,255,255,.94), rgba(255,255,255,.68));
@@ -920,9 +976,12 @@
                         <p>Manage patient files, visits &amp; treatments in one place</p>
                     </div>
                 </div>
-                <button type="button" class="btn-add-patient" onclick="openPatientModal()">
-                    <i class="bi bi-person-plus-fill"></i> Add New Patient
-                </button>
+                @if (canAdd)
+                {
+                    <button type="button" class="btn-add-patient" onclick="openPatientModal()">
+                        <i class="bi bi-person-plus-fill"></i> Add New Patient
+                    </button>
+                }
             </div>
 
             <!-- ═══════ STATS ═══════ -->
@@ -974,6 +1033,17 @@
                     <div class="filter-bar-end" id="filterBarEnd"></div>
                 </div>
 
+                <!-- 👥 H2: فلاتر سريعة -->
+                <div class="pl-quick" id="quickFilters">
+                    <button type="button" class="pl-q active" data-q=""><i class="bi bi-people"></i> All patients</button>
+                    <button type="button" class="pl-q" data-q="upcoming"><i class="bi bi-calendar2-check"></i> Has upcoming appointment</button>
+                    @if (canMoney)
+                    {
+                        <button type="button" class="pl-q" data-q="balance"><i class="bi bi-cash-coin"></i> Has balance due</button>
+                    }
+                    <button type="button" class="pl-q" data-q="inactive"><i class="bi bi-moon-stars"></i> No visit in 6 months</button>
+                </div>
+
                 <div class="card-body p-0 position-relative">
                     <div class="table-loading-overlay" id="tableLoadingOverlay">
                         <div class="loading-pulse">
@@ -991,7 +1061,9 @@
                                     <th class="text-center fs-6">Gender</th>
                                     <th class="text-center fs-6">Age</th>
                                     <th class="text-center fs-6">File Type</th>
+                                    <th class="text-center fs-6">Last Visit</th>
                                     <th class="text-center fs-6">Next Session</th>
+                                    @if (canMoney) { <th class="text-center fs-6">Balance</th> }
                                     <th class="text-center fs-6">Actions</th>
                                 </tr>
                             </thead>
@@ -1010,13 +1082,37 @@
 <div id="patientModalContainer"></div>
 
 @section Scripts {
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="~/lib/datatables-1.13/jquery.dataTables.min.js"></script>
+    <script src="~/lib/datatables-1.13/dataTables.responsive.min.js"></script>
 
     <script>
         $(document).ready(function() {
 
             var currentCategoryFilter = '';
+            var currentQuickFilter = '';
+            const PL = {
+                canEdit: @(canEdit ? "true" : "false"), canDelete: @(canDelete ? "true" : "false"),
+                canDetails: @(canDetails ? "true" : "false"), canSession: @(canSession ? "true" : "false"),
+                canMoney: @(canMoney ? "true" : "false"), cc: '@ClinicSettings.Get().WhatsAppCountryCode'
+            };
+            const waLink = m => {
+                let d = String(m || '').replace(/\D/g, '');
+                if (d.length < 8) return null;
+                if (d.startsWith('00')) d = d.slice(2);
+                else if (!(d.startsWith(PL.cc) && d.length > 10)) d = PL.cc + d.replace(/^0/, '');
+                return 'https://wa.me/' + d;
+            };
+            const relDate = iso => {
+                if (!iso) return null;
+                const d = new Date(iso), t = new Date(); t.setHours(0, 0, 0, 0);
+                const x = new Date(d); x.setHours(0, 0, 0, 0);
+                const days = Math.round((t - x) / 864e5);
+                if (days <= 0) return 'Today';
+                if (days === 1) return 'Yesterday';
+                if (days < 30) return days + ' days ago';
+                if (days < 365) return Math.round(days / 30) + ' mo ago';
+                return (days / 365).toFixed(1) + ' yr ago';
+            };
 
             /* Animated counter */
             function animateCount(el, target) {
@@ -1046,7 +1142,7 @@
             var table = $('#tablePatients').DataTable({
                 processing: true,
                 serverSide: true,
-                responsive: true,
+                responsive: window.innerWidth > 768,   // 👥 H2: على الموبايل بنعرض كروت بدل إخفاء الأعمدة
                 autoWidth: false,
                 pageLength: 10,
                 lengthMenu: [10, 25, 50, 100, 200, 400, 1000],
@@ -1058,6 +1154,7 @@
                     contentType: 'application/json',
                     data: function(d) {
                         d.categoryFilter = currentCategoryFilter;
+                        d.quickFilter = currentQuickFilter;
                         return JSON.stringify(d);
                     },
                     error: function(xhr, error, thrown) {
@@ -1091,7 +1188,13 @@
                     {
                         data: 'phone', name: 'phone', className: 'fs-6 text-center',
                         render: function(data) {
-                            return data ? `<span style="font-family:Candara;direction:ltr;">${data}</span>` : '-';
+                            if (!data) return '-';
+                            const wa = waLink(data);
+                            return `<div class="pl-phone">
+                                        <span style="font-family:Candara;direction:ltr;">${data}</span>
+                                        <a class="pl-ic" href="tel:${data}" title="Call" onclick="event.stopPropagation()"><i class="bi bi-telephone"></i></a>
+                                        ${wa ? `<a class="pl-ic pl-wa" href="${wa}" target="_blank" rel="noopener" title="WhatsApp" onclick="event.stopPropagation()"><i class="bi bi-whatsapp"></i></a>` : ''}
+                                    </div>`;
                         }
                     },
                     { data: 'genderBadge', name: 'genderName', className: 'text-center', searchable: false },
@@ -1100,6 +1203,15 @@
                         render: function(data) { return data || '<span class="text-muted">-</span>'; }
                     },
                     { data: 'categoryBadge', name: 'category', className: 'text-center', orderable: false, searchable: false },
+                    {
+                        data: 'lastVisit', name: 'lastVisit', className: 'text-center',
+                        render: function(data) {
+                            const r = relDate(data);
+                            if (!r) return '<span class="text-muted">—</span>';
+                            const old = (Date.now() - new Date(data)) / 864e5 > 180;
+                            return `<span class="pl-last ${old ? 'old' : ''}" title="${new Date(data).toLocaleDateString('en-GB')}">${r}</span>`;
+                        }
+                    },
                     {
                         data: 'nextSession', name: 'nextSession', className: 'text-center',
                         render: function(data) {
@@ -1114,26 +1226,33 @@
                             return `<span class="badge ${cls}">${label}</span>`;
                         }
                     },
+                    ...(PL.canMoney ? [{
+                        data: 'balance', name: 'balance', className: 'text-center',
+                        render: function(data) {
+                            const n = Number(data || 0);
+                            return n > 0 ? `<span class="pl-due">${n.toLocaleString('en-US')}</span>` : '<span class="pl-paid"><i class="bi bi-check2"></i></span>';
+                        }
+                    }] : []),
                     {
                         data: null, orderable: false, searchable: false, className: 'text-center',
                         render: function(data) {
-                            return `<div class="row-actions-cell">
-                                        <a class="btn-row-session" title="Start a new session"
+                            return `<div class="row-actions-cell" onclick="event.stopPropagation()">
+                                        ${PL.canSession ? `<a class="btn-row-session" title="Start a new session"
                                            href="/Patients/NewSession?patientId=${data.id}">
                                             <i class="bi bi-clipboard2-pulse"></i> New Session
-                                        </a>
-                                        <a class="action-icon-btn fs-5" title="View details"
+                                        </a>` : ''}
+                                        ${PL.canDetails ? `<a class="action-icon-btn fs-5" title="View details"
                                            href="/Patients/Details/${data.id}">
                                             <i class="bi bi-eye"></i>
-                                        </a>
-                                        <a class="action-icon-btn fs-5" title="Edit"
+                                        </a>` : ''}
+                                        ${PL.canEdit ? `<a class="action-icon-btn fs-5" title="Edit"
                                            href="javascript:void(0)" onclick="openPatientModal(${data.id})">
                                             <i class="bi bi-pencil-square"></i>
-                                        </a>
-                                        <button type="button" class="action-icon-btn danger fs-5" title="Delete"
+                                        </a>` : ''}
+                                        ${PL.canDelete ? `<button type="button" class="action-icon-btn danger fs-5" title="Delete"
                                                 onclick="deletePatient(${data.id})">
                                             <i class="bi bi-trash3-fill"></i>
-                                        </button>
+                                        </button>` : ''}
                                     </div>`;
                         }
                     }
@@ -1151,6 +1270,11 @@
                 },
 
                 deferRender: true,
+
+                createdRow: function(row, data) {
+                    row.dataset.id = data.id;
+                    if (PL.canDetails) row.classList.add('pl-clickable');
+                },
 
                 drawCallback: function() {
                     $('#tablePatients tbody tr').each(function(index) {
@@ -1172,6 +1296,22 @@
 
             $('#tablePatients').on('processing.dt', function(e, settings, processing) {
                 $('#tableLoadingOverlay').toggleClass('show', processing);
+            });
+
+            // 👥 H2: الضغط على الصف يفتح ملف المريض
+            $('#tablePatients tbody').on('click', 'tr.pl-clickable', function(e) {
+                if (e.target.closest('a,button,input')) return;
+                const id = this.dataset.id;
+                if (!id) return;
+                if (e.ctrlKey || e.metaKey) window.open('/Patients/Details/' + id, '_blank');
+                else location.href = '/Patients/Details/' + id;
+            });
+
+            $('#quickFilters').on('click', '.pl-q', function() {
+                $('#quickFilters .pl-q').removeClass('active');
+                $(this).addClass('active');
+                currentQuickFilter = $(this).data('q') || '';
+                table.ajax.reload();
             });
 
             $('.pill-btn').on('click', function() {
@@ -1214,8 +1354,7 @@
                     type: 'POST',
                     data: { id: id },
                     headers: {
-                        RequestVerificationToken:
-                            $('input[name="__RequestVerificationToken"]').val()
+                        RequestVerificationToken: window.getCsrfToken ? window.getCsrfToken() : 
                     },
                     success: function(response) {
                         if (response.success) {
